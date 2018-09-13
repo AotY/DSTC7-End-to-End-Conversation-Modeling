@@ -6,7 +6,7 @@ python preprocess.py \
     -conversations_num_save_path ./../data/train.convos.num.txt \
     -responses_num_save_path ./../data/train.facts.num.txt \
     -min_count 3 \
-    -max_vocab_size 2e5 \
+    -max_vocab_size 8e4 \
 
 
 
