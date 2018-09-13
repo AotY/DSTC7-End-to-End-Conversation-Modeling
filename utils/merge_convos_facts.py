@@ -50,10 +50,12 @@ if __name__ == '__main__':
     # get optional parameters
     parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    merge_convos_facts_opt(parser, logger)
+    merge_convos_facts_opt(parser)
     opt = parser.parse_args()
 
     merge(opt, logger)
+
+    logger.info('Merge finished.')
 
 
 
