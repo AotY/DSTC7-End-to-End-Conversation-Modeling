@@ -112,7 +112,7 @@ datas, may be conversations + responses or conversations individually.
 
 def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=None):
     freq_dict = {}
-
+    max_vocab_size = int(max_vocab_size)
     for data in datas:
         for token in data:
             freq_dict.setdefault(token, 0)
