@@ -33,7 +33,8 @@ data-official/train.convos.txt: $(OFFICIAL_TRAIN_CONVOS)
 data-official/train.facts.txt: $(OFFICIAL_TRAIN_FACTS)
 	cat $+ > $@
 
-## Note: there is no point in removing the '--blind' flag in order to peek at the reference responses (gold), as the organizers will rely on different responses to compute BLEU, etc.
+## Note: there is no point in removing the '--blind' flag in order to peek at the reference responses (gold),
+## as the organizers will rely on different responses to compute BLEU, etc.
 data-official-test/%.facts.txt data-official-test/%.convos.txt: reddit/RC_%.bz2 reddit/RS_%.bz2 data-official-test/.create lists/test.hashes
 	python src/create_official_data.py --rsinput=reddit/RS_$(*F).bz2 --rcinput=reddit/RC_$(*F).bz2 --subreddit_filter=lists/subreddits-official.txt --domain_filter=lists/domains-official.txt --pickle=data-official-test/$(*F).pkl --facts=data-official-test/$(*F).facts.txt --convos=data-official-test/$(*F).convos.txt --anchoronly=True --use_cc=True --test=lists/test.hashes --blind=True > logs/$(*F).log 2> logs/$(*F).err
 

@@ -1,19 +1,28 @@
 # Data Extraction for DSTC7: End-to-End Conversation Modeling 
 
-Task 2 uses conversational data extracted from Reddit. Each conversation in this setup is _grounded_, as each conversation in this data is about a specific web page that was linked at the start of the conversation. This page provides code to extract the data from a Reddit [dump](http://files.pushshift.io/reddit/comments/) and from [Common Crawl](http://commoncrawl.org/). The former data provides the conversation, while the latter offers the grounding. We provide code instead of actual data, as we are unable to directly release this data.
+Task 2 uses conversational data extracted from Reddit. Each conversation in this setup is _grounded_, 
+as each conversation in this data is about a specific web page that was linked at the start of the conversation. 
+This page provides code to extract the data from a Reddit [dump](http://files.pushshift.io/reddit/comments/) and 
+from [Common Crawl](http://commoncrawl.org/). The former data provides the conversation, 
+while the latter offers the grounding. We provide code instead of actual data, as we are unable to directly release this data.
 
 (Note: the older and now obsolete setup to create the "trial" data can be found [here](https://github.com/DSTC-MSR/DSTC7-End-to-End-Conversation-Modeling/tree/master/data_extraction/trial).)
 
-If you run into any problem creating the data, please check the [FAQ](https://github.com/DSTC-MSR-NLP/DSTC7-End-to-End-Conversation-Modeling/tree/master/data_extraction#FAQ) section below. Otherwise, feel free to contact us at: <dstc7-task2@microsoft.com> (if so, please email us a zip file of all the log files in the `logs` directory).
+If you run into any problem creating the data, please check the [FAQ](https://github.com/DSTC-MSR-NLP/DSTC7-End-to-End-Conversation-Modeling/tree/master/data_extraction#FAQ) section below. 
+Otherwise, feel free to contact us at: <dstc7-task2@microsoft.com> (if so, please email us a zip file of all the log files in the `logs` directory).
 
 ## Requirements
 
-This page assumes you are running a UNIX environment (Linux, macOS, etc.) If you are on Windows, please either use its Ubuntu subsystem (instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install-win10)) or any third-party UNIX-like environment such as [Cygwin](https://www.cygwin.com/). Creating the data requires a fair amount of disk space to store Reddit dump files locally, i.e., 500 GB total. You will also need the following programs:
+This page assumes you are running a UNIX environment (Linux, macOS, etc.) If you are on Windows, 
+please either use its Ubuntu subsystem (instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install-win10)) or 
+any third-party UNIX-like environment such as [Cygwin](https://www.cygwin.com/). 
+Creating the data requires a fair amount of disk space to store Reddit dump files locally, i.e., 500 GB total. 
+You will also need the following programs:
 
 * `Python 3.x`, with modules:
    * `nltk`
    * `beautifulsoup4`
-   * `chardet`
+   * `chardet` (Universal encoding detector for Python 2 and 3
 * `make`
 
 To install the above Python modules, you can run:
@@ -25,21 +34,36 @@ Please also run set `PYTHONIOENCODING=UTF-8` in your environment, e.g., by runni
 
 ## Create official data (train and dev):
 
-First, make sure that Python and all required modules are installed, for example by generating a subset of the data (January 2011):
+First, make sure that Python and all required modules are installed, 
+for example by generating a subset of the data (January 2011):
 
 ```make data-official/2011-01.convos.txt```
 
-If the target file is missing after running that command, that probably means Python or one of its modules is missing, is the wrong version, or is misconfigured. Please inspect logs files in `logs/*.log` or `logs/*.err` to find the cause of the problem (please refer to the "Requirements" section above). 
+If the target file is missing after running that command, 
+that probably means Python or one of its modules is missing, is the wrong version, 
+or is misconfigured. Please inspect logs files in `logs/*.log` or `logs/*.err` to 
+find the cause of the problem (please refer to the "Requirements" section above). 
 
 If everything is setup properly, please run the following command to create the official training data:
-
+x
 ```make -j4```
 
-This will run the extraction pipeline with 4 processes. Depending on your number of cores on your machine, you might want to increase or descrease that number. This will take 2-5 days to run, depending on the number of processes selected. This will create two tab-separated (tsv) files `data/train.convos.txt` and `data/train.facts.txt`, which respectively contain the conversational data and grounded text ("facts"). This will also create two files for the dev set.
+This will run the extraction pipeline with 4 processes. Depending on your number of cores on your machine, 
+you might want to increase or descrease that number. This will take 2-5 days to run, 
+depending on the number of processes selected. This will create two tab-separated (tsv) 
+files `data/train.convos.txt` and `data/train.facts.txt`, which respectively contain the 
+conversational data and grounded text ("facts"). This will also create two files for the dev set.
 
-The data is generated from Reddit and the web, so some of it is noisy and occasionally contains offensive language. While we mostly selected Reddit boards (i.e., "subreddits") and web domains that are mostly "safe for work", explicit and offensive language sometimes appears in the data and we did not attempt to eliminate it further (for the sake of simplicity and reproducibility of our pipeline).
+The data is generated from Reddit and the web, so some of it is noisy and occasionally 
+contains offensive language. While we mostly selected Reddit boards (i.e., "subreddits") 
+and web domains that are mostly "safe for work", explicit and offensive language 
+sometimes appears in the data and we did not attempt to eliminate it further
+ (for the sake of simplicity and reproducibility of our pipeline).
 
-Note: if you set a large number of processes, the server hosting the Reddit data (`files.pushshift.io`) might complain about "too many open connections". If so, you might want to use the makefile to first create all `reddit\*.bz2` files and only then run e.g. `make -j7`.
+Note: if you set a large number of processes, the server hosting the Reddit 
+data (`files.pushshift.io`) might complain about "too many open connections". If so, 
+you might want to use the makefile to first create all `reddit\*.bz2` files and 
+only then run e.g. `make -j7`.
 
 Generated data files (see data description below):
 1. `train.convos.txt`: Conversations of the training set
@@ -50,17 +74,24 @@ Generated data files (see data description below):
 Role of each dataset:
 1. TRAIN: do anything you want with this data (train, analyze, etc.);
 2. DEV: you may tune model hyperparameters on this data, but you may NOT train any model directly on that;
-3. TEST (official release Sept 10): The blind test set will provide facts and conversational contexts, but the gold responses will be hidden (replaced with `__UNDISCLOSED__`). 
+3. TEST (official release Sept 10): The blind test set will provide facts and conversational contexts, 
+but the gold responses will be hidden (replaced with `__UNDISCLOSED__`). 
 
-If you participate in the challenge and plan to send us system outputs, **please do NOT use any other training data**, other than the data provided on this page.
+If you participate in the challenge and plan to send us system outputs, 
+**please do NOT use any other training data**, other than the data provided on this page.
 
 ## Data description:
 
-Each conversation in this dataset consist of Reddit `submission` and its following discussion-like `comments`. In this data, we restrict ourselves to submissions that provide a `URL` along with a `title` (see [example Reddit submission](https://www.reddit.com/r/todayilearned/comments/f2ruz/til_a_woman_fell_30000_feet_from_an_airplane_and/), which refers to [this web page](https://en.wikipedia.org/wiki/Vesna_Vulovi%C4%87)). The web page scraped from the URL provides grounding or context to the conversation, and is additional (non-conversational) input that models can condition on to produce responses that are more informative and contentful. 
+Each conversation in this dataset consist of Reddit `submission` and 
+its following discussion-like `comments`. In this data, we restrict ourselves to 
+submissions that provide a `URL` along with a `title` 
+(see [example Reddit submission](https://www.reddit.com/r/todayilearned/comments/f2ruz/til_a_woman_fell_30000_feet_from_an_airplane_and/), which refers to [this web page](https://en.wikipedia.org/wiki/Vesna_Vulovi%C4%87)). The web page scraped from the URL provides grounding or context to the conversation, and is additional (non-conversational) input that models can condition on to produce responses that are more informative and contentful. 
 
 ### Conversation file:
 
-Each line of `train.convos.txt` and `dev.convos.txt` contains a Reddit response and its preceding conversational context. Long conversational contexts are truncated by keeping the last 100 words. The file contains 5 columns:
+Each line of `train.convos.txt` and `dev.convos.txt` contains a Reddit response and its preceding 
+conversational context. Long conversational contexts are truncated by keeping the last 100 words. 
+The file contains 5 columns:
 
 1. hash value (only for sanity check)
 2. subreddit name
@@ -76,7 +107,10 @@ The converational context may contain:
 
 ### Facts file:
 
-Each line of `train.facts.txt` and `dev.facts.txt` contains a "fact", either a sentence, paragraph (or other snippet of text) relevant to the current conversation. Use conversation IDs to find the facts relevant to each conversation. Note: facts relevant to a given conversation are ordered as they appear on the original web page. The file contains 3 columns:
+Each line of `train.facts.txt` and `dev.facts.txt` contains a "fact", either a sentence, 
+paragraph (or other snippet of text) relevant to the current conversation. Use conversation IDs to 
+find the facts relevant to each conversation. Note: facts relevant to a given conversation are ordered 
+as they appear on the original web page. The file contains 3 columns:
 
 1. hash value (only for sanity check)
 2. subreddit name
@@ -84,7 +118,13 @@ Each line of `train.facts.txt` and `dev.facts.txt` contains a "fact", either a s
 4. domain name
 5. fact
 
-To produce the facts relevant to each conversation, we extracted the text of the page using an html-to-text converter ([BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)), but kept the most important tags intact (`<title>, <h1-6>, <p>, etc`). As web formatting differs substantially from domain to domain and common tags like `<p>` may not be used in some domains, we decided to keep all the text of the original page (however, we do remove javascript and style code). As some of the fact data tend to be noisy, you may want restrict yourself to facts delimited by these tags.
+To produce the facts relevant to each conversation, we extracted the text of the page using 
+an html-to-text converter ([BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)), 
+but kept the most important tags intact (`<title>, <h1-6>, <p>, etc`). As web formatting differs 
+substantially from domain to domain and common tags like `<p>` may not be used in some domains, 
+we decided to keep all the text of the original page (however, we do remove javascript and style code). 
+As some of the fact data tend to be noisy, 
+you may want restrict yourself to facts delimited by these tags.
 
 
 #### Labeled anchors
