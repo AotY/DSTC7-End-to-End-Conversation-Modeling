@@ -40,6 +40,9 @@ def read_convos(convos_file_path, logger=None):
     # responses_score = []
     # dialogues_turn = []
 
+    conversation_max_length = 0
+    response_max_length = 0
+
     n = 0
     for line in lines:
         n += 1
@@ -54,10 +57,15 @@ def read_convos(convos_file_path, logger=None):
         if conversation == 'START' or len(conversation.rstrip()) == 0:  # skip if source has nothing
             continue
 
-        conversations.append(tokenizer.preprocess(conversation))
-        responses.append(tokenizer.preprocess(response))
+        conversation_tokens = tokenizer.preprocess(conversation)
+        conversation_max_length = max(conversation_max_length, len(conversation_tokens))
+        conversations.append(tokenizer.preprocess(conversation_tokens))
 
-    return conversations, responses
+        response_tokens = tokenizer.preprocess(response)
+        response_max_length = max(response_max_length, len(response_tokens))
+        responses.append(response_tokens)
+
+    return conversations, responses, conversation_max_length, response_max_length
 
 '''
 Read facts file.
@@ -162,7 +170,10 @@ if __name__ == '__main__':
     preprocess_opt(parser)
     opt = parser.parse_args()
 
-    conversations, responses = read_convos(opt.convos_file_path, logger)
+    conversations, responses, conversation_max_length, response_max_length = read_convos(opt.convos_file_path, logger)
+    logger.info('conversation_max_length: %d ' % conversation_max_length)
+    logger.info('response_max_length: %d ' % response_max_length)
+
     # # facts = read_facts(opt.facts_file_path)
     #
     # stat_frequency(conversations, ['conversations'], None, None, logger)
