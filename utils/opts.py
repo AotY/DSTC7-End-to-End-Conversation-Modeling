@@ -49,7 +49,7 @@ def preprocess_opt(parser):
                        help="Ignores all words with total frequency lower than this.")
 
     group.add_argument('-max_vocab_size',
-                       type=int,
                        default=2e5,
+                       type=float,
                        help="Limits the RAM during vocabulary building. Every 10 million word types need about 1GB of RAM.")
 
