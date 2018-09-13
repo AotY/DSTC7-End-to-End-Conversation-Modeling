@@ -143,11 +143,9 @@ def build_vocab(freq_list):
 def generate_num(datas, vocab, save_path):
     nums = []
     for tokens in datas:
-        nums.append(' '.join(vocab.words_to_id(tokens)))
+        nums.append(' '.join([str(id) for id in vocab.words_to_id(tokens)]))
     with open(save_path, 'a', encoding="utf-8") as f:
         f.write('\n'.join(nums))
-
-
 
 
 if __name__ == '__main__':
@@ -165,16 +163,18 @@ if __name__ == '__main__':
     opt = parser.parse_args()
 
     conversations, responses = read_convos(opt.convos_file_path, logger)
-    # facts = read_facts(opt.facts_file_path)
-
-    stat_frequency(conversations, ['conversations'], None, None, logger)
-    stat_frequency(responses, ['responses'], None, None, logger)
-
-    datas = conversations + responses
-    datas_name = ['conversations', 'responses']
-    sorted_freq_list = stat_frequency(datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
-
-    vocab = build_vocab(sorted_freq_list)
+    # # facts = read_facts(opt.facts_file_path)
+    #
+    # stat_frequency(conversations, ['conversations'], None, None, logger)
+    # stat_frequency(responses, ['responses'], None, None, logger)
+    #
+    # datas = conversations + responses
+    # datas_name = ['conversations', 'responses']
+    # sorted_freq_list = stat_frequency(datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
+    #
+    # vocab = build_vocab(sorted_freq_list)
+    vocab = Vocab()
+    vocab.load()
     logger.info('vocab_size: %s' % vocab.get_vocab_size())
 
     generate_num(conversations, vocab, opt.conversations_num_save_path)
