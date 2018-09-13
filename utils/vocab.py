@@ -34,12 +34,21 @@ class Vocab(object):
     def get_vocab_size(self):
         return len(self.word2idx)
 
+    '''word to id '''
     def word_to_id(self, word):
-        return self.word2idx.get(word, UNK)
+        return self.word2idx.get(word, self.unkid)
 
     def words_to_id(self, words):
         word_ids = [self.word_to_id(cur_word) for cur_word in words]
         return word_ids
+
+    '''id to  word'''
+    def id_to_word(self, id):
+        return self.idx2word.get(id, UNK)
+
+    def ids_to_word(self, ids):
+        words = [self.id_to_word(id) for id in ids]
+        return words
 
     def build_for_frequency(self, freq_list):
         cur_id = 4  # because of the unk, pad, sos, and eos tokens.
