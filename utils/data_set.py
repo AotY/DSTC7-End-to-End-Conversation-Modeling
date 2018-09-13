@@ -21,56 +21,40 @@ class Seq2seqDataSet:
         """
 
     def __init__(self,
-                 path_source, path_target, path_vocab,
-                 max_seq_len=32,
+                 path_conversations, path_responses, path_vocab,
+                 max_seq_len=50,
                  test_split=0.2,  # how many hold out as vali data
-                 read_txt=True,
+                 vocab_size=8e4 + 4,
+                 vocab=None
                  ):
 
-        # load token dictionary
-
-        self.index2token = {0: ''}
-        self.token2index = {'': 0}
         self.max_seq_len = max_seq_len
+        self.vocab = vocab
+        self.vocab_size = vocab_size
+        self.read_txt(path_conversations, path_responses, test_split)
 
-        with open(path_vocab, encoding="utf-8") as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            token = line.strip('\n').strip()
-            if len(token) == 0:
-                break
-            self.index2token[i + 1] = token
-            self.token2index[token] = i + 1
-
-        self.SOS = self.token2index[SOS]
-        self.EOS = self.token2index[EOS]
-        self.UNK = self.token2index[UNK]
-        self.num_tokens = len(self.token2index) - 1  # not including 0-th (padding)
-        print('num_tokens: %i' % self.num_tokens)
-
-        if read_txt:
-            self.read_txt(path_source, path_target, test_split)
-
-    def read_txt(self, path_source, path_target, test_split):
+    def read_txt(self, path_conversations, path_responses, test_split):
         print('loading data from txt files...')
         # load source-target pairs, tokenized
 
         seqs = dict()
-        for k, path in [('source', path_source), ('target', path_target)]:
+        for k, path in [('conversation', path_conversations), ('response', path_responses)]:
             seqs[k] = []
+
             with open(path, encoding="utf-8") as f:
                 lines = f.readlines()
+
             for line in lines:
                 seq = []
                 for c in line.strip('\n').strip().split(' '):
                     i = int(c)
-                    if i <= self.num_tokens:  # delete the "unkown" words
-                        seq.append(i)
+                    seq.append(i)
+
                 seqs[k].append(seq[-min(self.max_seq_len - 2, len(seq)):])
-        self.pairs = list(zip(seqs['source'], seqs['target']))
+
+        self.pairs = list(zip(seqs['conversation'], seqs['response']))
 
         # train-test split
-
         np.random.shuffle(self.pairs)
         self.n_train = int(len(self.pairs) * (1. - test_split))
 
@@ -79,6 +63,7 @@ class Seq2seqDataSet:
             'test': (self.n_train, len(self.pairs)),
         }
         self.i_sample = dict()
+
         self.reset()
 
     def reset(self):
@@ -88,23 +73,34 @@ class Seq2seqDataSet:
     def all_loaded(self, task):
         return self.i_sample[task] == self.i_sample_range[task][1]
 
+
     def load_data(self, task, max_num_sample_loaded=None):
+        '''
+
+        :param task: train or test
+        :param max_num_sample_loaded: similar to
+        :return: encoder_input_data, decoder_input_data, decoder_target_data, source_texts, target_texts
+        '''
 
         i_sample = self.i_sample[task]
+
         if max_num_sample_loaded is None:
             max_num_sample_loaded = self.i_sample_range[task][1] - i_sample
+
         i_sample_next = min(i_sample + max_num_sample_loaded, self.i_sample_range[task][1])
+
         num_samples = i_sample_next - i_sample
+
         self.i_sample[task] = i_sample_next
 
         print('building %s data from %i to %i' % (task, i_sample, i_sample_next))
 
         encoder_input_data = np.zeros((num_samples, self.max_seq_len))
         decoder_input_data = np.zeros((num_samples, self.max_seq_len))
-        decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.num_tokens + 1))  # +1 as mask_zero
+        decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.vocab_size + 1))  # +1 as mask_zero
 
-        source_texts = []
-        target_texts = []
+        conversation_texts = []
+        response_texts = []
 
         for i in range(num_samples):
 
@@ -112,21 +108,21 @@ class Seq2seqDataSet:
             if not bool(seq_target) or not bool(seq_source):
                 continue
 
-            if seq_target[-1] != self.EOS:
-                seq_target.append(self.EOS)
+            if seq_target[-1] != EOS:
+                seq_target.append(EOS)
 
-            source_texts.append(' '.join([self.index2token[j] for j in seq_source]))
-            target_texts.append(' '.join([self.index2token[j] for j in seq_target]))
+            conversation_texts.append(' '.join([self.vocab.words_to_id(j) for j in seq_source]))
+            response_texts.append(' '.join([self.vocab.words_to_id(j) for j in seq_target]))
 
             for t, token_index in enumerate(seq_source):
                 encoder_input_data[i, t] = token_index
 
-            decoder_input_data[i, 0] = self.SOS
+            decoder_input_data[i, 0] = SOS
             for t, token_index in enumerate(seq_target):
                 decoder_input_data[i, t + 1] = token_index
                 decoder_target_data[i, t, token_index] = 1.
 
-        return encoder_input_data, decoder_input_data, decoder_target_data, source_texts, target_texts
+        return encoder_input_data, decoder_input_data, decoder_target_data, conversation_texts, response_texts
 
 
 class KDataSet:
