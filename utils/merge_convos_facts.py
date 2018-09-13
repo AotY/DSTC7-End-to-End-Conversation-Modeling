@@ -24,13 +24,13 @@ def merge(opt, logger):
             if file_name.endswith('convos.txt'):
                 logger.info("merge %s" % (file_name))
                 file_path = os.path.join(convos_facts_folder, file_name)
-                with open(file_path) as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     convos_file.writelines(f.readlines())
 
             elif file_name.endswith('facts.txt'):
                 logger.info("merge %s" % (file_name))
                 file_path = os.path.join(convos_facts_folder, file_name)
-                with open(file_path) as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     facts_file.writelines(f.readlines())
             else:
                 continue
