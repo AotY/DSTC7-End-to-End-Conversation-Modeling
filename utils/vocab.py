@@ -7,12 +7,8 @@
 """
 from __future__ import division
 from __future__ import print_function
-
-import os
-import json
+import pickle
 import logging
-
-from utils.tokenize import Tokenize
 
 logger = logging.getLogger(__name__)
 
@@ -35,58 +31,45 @@ class Vocab(object):
         self.word2idx[SOS] = 2
         self.word2idx[EOS] = 3
 
-        self.tokenize = Tokenize()
+    def get_vocab_size(self):
+        return len(self.word2idx)
 
-    def build_vocab(self, corpus_path_list, min_count=None, max_size=None, lower=None):
-        '''
-            corpus_path_list, the path of corpus list
-                each line includes multi-column sequence (separated by '\t')
-                Words in each sequence are separated by space ' '.
-            min_count,
-                according to min_count, this fun should remove words
-                who's number is lower than that in the process of building vocabulary.
-                default is None, maintaining all words.
-                (int, option 5, 10, ...)
-        '''
-        # count word
-        word_count = {}
-        for corpus_path in corpus_path_list:
-            # check there exists the corpus_path or not.
-            if not os.path.exists(corpus_path):
-                logger.info('The path {} doese not exist for building vocabulary'.format(corpus_path))
-                continue
+    def word_to_id(self, word):
+        return self.word2idx.get(word, UNK)
 
-            with open(corpus_path, "r", encoding='utf-8') as f:
-                for line in f:
+    def words_to_id(self, words):
+        word_ids = [self.word_to_id(cur_word) for cur_word in words]
+        return word_ids
 
-                    words = self.tokenize.preprocess(line.rstrip())
+    def build_for_frequency(self, freq_list):
+        cur_id = 4  # because of the unk, pad, sos, and eos tokens.
+        for word, _ in freq_list:
+            self.word2idx[word] = cur_id
+            cur_id += 1
 
-                    for word in words:
-                        word_count[word] = word_count.get(word, 0) + 1
-                        # or try ... except ...
-
-        # cut with min_count
-        if min_count is None:
-            word_list = word_count.items()
-        else:
-            word_list = [(word, count) for word, count in word_count.items() if count > min_count]
-
-        # sort word
-        ranked_word_list = sorted(word_list, key=lambda d: d[1], reverse=True)
-
-        if max_size is not None:
-            ranked_word_list = ranked_word_list[:max_size]
-
-        # build word2idx and idx2word
-        self.init_vocab()
-
-        for word, _ in ranked_word_list:
-            self.word2idx[word] = len(self.word2idx)
-
-        logger.info("original vocab {}; pruned to {} with min_count {}".
-                    format(len(word_count), len(self.word2idx), min_count))
-
+        # init idx2word
         self.idx2word = {v: k for k, v in self.word2idx.items()}
+
+
+    '''save and restore'''
+    def save(self):
+        if len(self.idx2word) == 0:
+            raise RuntimeError("Save vocab after call build_for_frequency()")
+
+        pickle.dump(self.word2idx, open('vocab_word2idx.dict', 'wb'))
+        # pickle.dump(self.idx2word, open('./vocab_idx2word.dict', 'wb'))
+
+    def load(self):
+        try:
+            self.word2idx = pickle.load(open('vocab_word2idx.dict', 'rb'))
+            self.idx2word = {v: k for k, v in self.word2idx.items()}
+        except:
+            raise RuntimeError("Make sure vocab_word2idx.dict exists.")
+
+
+
+
+    ''' wordid '''
 
     @property
     def unkid(self):
@@ -111,6 +94,8 @@ class Vocab(object):
         """return the id of padding
         """
         return self.word2idx.get(EOS, 3)
+
+    '''words '''
 
     @property
     def unk(self):

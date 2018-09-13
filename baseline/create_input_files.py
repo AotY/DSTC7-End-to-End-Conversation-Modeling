@@ -1,7 +1,6 @@
 import os, queue
 from baseline import SOS_token, EOS_token, UNK_token
 
-
 def main(path_txt, fld_out, max_vocab_size=2e4,):
     with open(path_txt, encoding="utf-8") as f:
         lines = f.readlines()
@@ -69,9 +68,11 @@ def main(path_txt, fld_out, max_vocab_size=2e4,):
     with open(path['source'], 'a', encoding="utf-8") as f:
         f.write('\n'.join(nums))
 
+
     nums = []
     for tokens in targets:
         nums.append(' '.join([token2index.get(token, token2index[UNK_token]) for token in tokens]))
+
     with open(path['target'], 'a', encoding="utf-8") as f:
         f.write('\n'.join(nums))
 

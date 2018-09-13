@@ -22,11 +22,13 @@ def merge(opt, logger):
         # Return a list containing the names of the files in the directory.
         for file_name in os.listdir(convos_facts_folder):
             if file_name.endswith('convos.txt'):
+                logger.info("merge %s" % (file_name))
                 file_path = os.path.join(convos_facts_folder, file_name)
                 with open(file_path) as f:
                     convos_file.writelines(f.readlines())
 
             elif file_name.endswith('facts.txt'):
+                logger.info("merge %s" % (file_name))
                 file_path = os.path.join(convos_facts_folder, file_name)
                 with open(file_path) as f:
                     facts_file.writelines(f.readlines())
@@ -46,12 +48,12 @@ if __name__ == '__main__':
     logger.info("Running %s", ' '.join(sys.argv))
 
     # get optional parameters
-    parser = argparse.ArgumentParser(description='train_embedding.py',
+    parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     merge_convos_facts_opt(parser, logger)
     opt = parser.parse_args()
 
-    merge(opt, )
+    merge(opt, logger)
 
 
 
