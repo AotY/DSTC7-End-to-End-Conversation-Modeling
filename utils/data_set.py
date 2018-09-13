@@ -4,105 +4,134 @@ from __future__ import absolute_import, division, print_function
 import logging
 import numpy as np
 
+import os
+import sys
+import logging
+import argparse
 
-class DSTCDataSet:
-    def __init__(self, post_file, response_file, label_file, vocab, num_timesteps):
-        self._vocab = vocab
-        self._num_timesteps = num_timesteps
+from vocab import Vocab
+from vocab import PAD, SOS, EOS, UNK
 
-        # matrix
-        self._posts = []
-        self._responses = []
 
-        # vector
-        self._labels = []
+class Seq2seqDataSet:
+    """
+        assumptions of the data files
+        * SOS and EOS are top 2 tokens
+        * dictionary ordered by frequency
+        """
 
-        self._indicator = 0
+    def __init__(self,
+                 path_source, path_target, path_vocab,
+                 max_seq_len=32,
+                 test_split=0.2,  # how many hold out as vali data
+                 read_txt=True,
+                 ):
 
-        self._parse_file(post_file, response_file, label_file)
+        # load token dictionary
 
-    def _parse_file(self, post_file, response_file, label_file):
-        print('Loading data from {}, {}, {}'.format(post_file, response_file, label_file))
+        self.index2token = {0: ''}
+        self.token2index = {'': 0}
+        self.max_seq_len = max_seq_len
 
-        with open(post_file, 'r') as f:
-            posts = f.readlines()
+        with open(path_vocab, encoding="utf-8") as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines):
+            token = line.strip('\n').strip()
+            if len(token) == 0:
+                break
+            self.index2token[i + 1] = token
+            self.token2index[token] = i + 1
 
-        with open(response_file, 'r') as f:
-            responses = f.readlines()
+        self.SOS = self.token2index[SOS]
+        self.EOS = self.token2index[EOS]
+        self.UNK = self.token2index[UNK]
+        self.num_tokens = len(self.token2index) - 1  # not including 0-th (padding)
+        print('num_tokens: %i' % self.num_tokens)
 
-        with open(label_file, 'r') as f:
-            labels = f.readlines()
+        if read_txt:
+            self.read_txt(path_source, path_target, test_split)
 
-        for post, response, label in zip(posts, responses, labels):
-            id_post_words = self._vocab.sentence_to_id(post.strip('\n'))
-            id_post_words = id_post_words[0: self._num_timesteps]
+    def read_txt(self, path_source, path_target, test_split):
+        print('loading data from txt files...')
+        # load source-target pairs, tokenized
 
-            id_response_words = self._vocab.sentence_to_id(response.strip('\n'))
-            id_response_words = id_response_words[0: self._num_timesteps]
+        seqs = dict()
+        for k, path in [('source', path_source), ('target', path_target)]:
+            seqs[k] = []
+            with open(path, encoding="utf-8") as f:
+                lines = f.readlines()
+            for line in lines:
+                seq = []
+                for c in line.strip('\n').strip().split(' '):
+                    i = int(c)
+                    if i <= self.num_tokens:  # delete the "unkown" words
+                        seq.append(i)
+                seqs[k].append(seq[-min(self.max_seq_len - 2, len(seq)):])
+        self.pairs = list(zip(seqs['source'], seqs['target']))
 
-            padding_num_post = self._num_timesteps - len(id_post_words)
-            padding_num_response = self._num_timesteps - len(id_response_words)
+        # train-test split
 
-            id_post_words = id_post_words + [
-                self._vocab.unk for i in range(padding_num_post)]
+        np.random.shuffle(self.pairs)
+        self.n_train = int(len(self.pairs) * (1. - test_split))
 
-            id_response_words = id_response_words + [
-                self._vocab.unk for i in range(padding_num_response)]
+        self.i_sample_range = {
+            'train': (0, self.n_train),
+            'test': (self.n_train, len(self.pairs)),
+        }
+        self.i_sample = dict()
+        self.reset()
 
-            self._posts.append(id_post_words)
-            self._responses.append(id_response_words)
-            self._labels.append(label.strip('\n'))
+    def reset(self):
+        for task in self.i_sample_range:
+            self.i_sample[task] = self.i_sample_range[task][0]
 
-        self._posts = np.asarray(self._posts, dtype=np.int32)
-        self._responses = np.asarray(self._responses, dtype=np.int32)
-        self._labels = np.asanyarray(self._labels, dtype=np.int32)
+    def all_loaded(self, task):
+        return self.i_sample[task] == self.i_sample_range[task][1]
 
-        self._random_shuffle()
+    def load_data(self, task, max_num_sample_loaded=None):
 
-    def _random_shuffle(self):
-        p = np.random.permutation(len(self._posts))
-        self._posts = self._posts[p]
-        self._responses = self._responses[p]
-        self._labels = self._labels[p]
+        i_sample = self.i_sample[task]
+        if max_num_sample_loaded is None:
+            max_num_sample_loaded = self.i_sample_range[task][1] - i_sample
+        i_sample_next = min(i_sample + max_num_sample_loaded, self.i_sample_range[task][1])
+        num_samples = i_sample_next - i_sample
+        self.i_sample[task] = i_sample_next
 
-    # next batch method for classification problem
-    def next_batch_4classification(self, batch_size):
-        end_indicator = self._indicator + batch_size
+        print('building %s data from %i to %i' % (task, i_sample, i_sample_next))
 
-        if end_indicator > len(self._posts):
-            self._random_shuffle()
-            self._indicator = 0
-            end_indicator = batch_size
+        encoder_input_data = np.zeros((num_samples, self.max_seq_len))
+        decoder_input_data = np.zeros((num_samples, self.max_seq_len))
+        decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.num_tokens + 1))  # +1 as mask_zero
 
-        if end_indicator > len(self._posts):
-            raise Exception("batch_size: %d is too large" % batch_size)
+        source_texts = []
+        target_texts = []
 
-        batch_posts = self._posts[self._indicator: end_indicator]
-        batch_responses = self._responses[self._indicator: end_indicator]
-        batch_labels = self._labels[self._indicator: end_indicator]
+        for i in range(num_samples):
 
-        self._indicator = end_indicator
+            seq_source, seq_target = self.pairs[i_sample + i]
+            if not bool(seq_target) or not bool(seq_source):
+                continue
 
-        return batch_posts, batch_responses, batch_labels
+            if seq_target[-1] != self.EOS:
+                seq_target.append(self.EOS)
 
-    # next batch method for generation problem
-    def next_batch_4generation(self, batch_size):
-        end_indicator = self._indicator + batch_size
+            source_texts.append(' '.join([self.index2token[j] for j in seq_source]))
+            target_texts.append(' '.join([self.index2token[j] for j in seq_target]))
 
-        if end_indicator > len(self._posts):
-            self._random_shuffle()
-            self._indicator = 0
-            end_indicator = batch_size
+            for t, token_index in enumerate(seq_source):
+                encoder_input_data[i, t] = token_index
 
-        if end_indicator > len(self._posts):
-            raise Exception("batch_size: %d is too large" % batch_size)
+            decoder_input_data[i, 0] = self.SOS
+            for t, token_index in enumerate(seq_target):
+                decoder_input_data[i, t + 1] = token_index
+                decoder_target_data[i, t, token_index] = 1.
 
-        batch_posts = self._posts[self._indicator: end_indicator]
-        batch_responses = self._responses[self._indicator: end_indicator]
+        return encoder_input_data, decoder_input_data, decoder_target_data, source_texts, target_texts
 
-        self._indicator = end_indicator
 
-        return batch_posts, batch_responses
+class KDataSet:
+    def __init__(self):
+        pass
 
 
 if __name__ == '__main__':
