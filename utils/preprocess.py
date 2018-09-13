@@ -173,8 +173,8 @@ if __name__ == '__main__':
     preprocess_opt(parser)
     opt = parser.parse_args()
 
-    logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size) \
- \
+    logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
+
     conversations, responses, conversation_max_length, response_max_length = read_convos(opt.convos_file_path, logger)
     logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
