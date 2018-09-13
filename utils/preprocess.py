@@ -59,7 +59,7 @@ def read_convos(convos_file_path, logger=None):
 
         conversation_tokens = tokenizer.preprocess(conversation)
         conversation_max_length = max(conversation_max_length, len(conversation_tokens))
-        conversations.append(tokenizer.preprocess(conversation_tokens))
+        conversations.append(conversation_tokens)
 
         response_tokens = tokenizer.preprocess(response)
         response_max_length = max(response_max_length, len(response_tokens))
