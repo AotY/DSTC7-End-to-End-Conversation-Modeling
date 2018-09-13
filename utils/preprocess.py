@@ -27,7 +27,7 @@ tokenizer = Tokenize()
 '''
 Read convos file.
 '''
-def read_convos(convos_file_path, logger):
+def read_convos(convos_file_path, logger=None):
     with open(convos_file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
@@ -96,7 +96,7 @@ Statistical frequency
 datas, may be conversations + responses or conversations individually.
 '''
 
-def stat_frequency(datas, datas_name, min_count, max_vocab_size, logger):
+def stat_frequency(datas, datas_name, min_count=None, max_vocab_size=None, logger=None):
     freq_dict = {}
 
     for data in datas:
@@ -161,10 +161,10 @@ if __name__ == '__main__':
     # get optional parameters
     parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    preprocess_opt(parser, logger)
+    preprocess_opt(parser)
     opt = parser.parse_args()
 
-    conversations, responses = read_convos(opt.convos_file_path)
+    conversations, responses = read_convos(opt.convos_file_path, logger)
     # facts = read_facts(opt.facts_file_path)
 
     stat_frequency(conversations, ['conversations'], None, None, logger)
