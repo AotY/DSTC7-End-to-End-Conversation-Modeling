@@ -4,12 +4,14 @@ import sys
 import logging
 import argparse
 
-from collections import Counter
-
+import numpy as np
 from vocab import Vocab
 from vocab import PAD, SOS, EOS, UNK
 from tokenize import Tokenize
 from opts import preprocess_opt
+from embedding.embedding_opt import train_embedding_opt
+from embedding.utils import build_vocab_word2vec, build_vocab_fastText
+from embedding import train_embedding
 
 '''
 Generate
@@ -45,6 +47,9 @@ def read_convos(convos_file_path, logger=None):
     conversation_max_length = 0
     response_max_length = 0
 
+    conversations_length_distribution = {}
+    responses_length_distribution = {}
+
     n = 0
     for line in lines:
         n += 1
@@ -61,13 +66,19 @@ def read_convos(convos_file_path, logger=None):
 
         conversation_tokens = tokenizer.preprocess(conversation)
         conversation_max_length = max(conversation_max_length, len(conversation_tokens))
+
+        conversations_length_distribution[len(conversation_tokens)] = conversations_length_distribution.get(
+            len(conversation_tokens), 0) + 1
+
         conversations.append(conversation_tokens)
 
         response_tokens = tokenizer.preprocess(response)
         response_max_length = max(response_max_length, len(response_tokens))
+        responses_length_distribution[len(response_tokens)] = responses_length_distribution.get(len(response_tokens),
+                                                                                                0) + 1
         responses.append(response_tokens)
 
-    return conversations, responses, conversation_max_length, response_max_length
+    return conversations, responses, conversations_length_distribution, conversation_max_length, responses_length_distribution, response_max_length
 
 
 '''
@@ -159,6 +170,13 @@ def generate_num(datas, vocab, save_path):
         f.write('\n'.join(nums))
 
 
+def save_distribution(distribution, name):
+    with open(name + '.len.distribution.txt', 'w', encoding="utf-8") as f:
+        f.write('length\tcount')
+        for length, count in distribution.items():
+            f.write('%d\t%d' % (length, count))
+
+
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
     logger = logging.getLogger(program)
@@ -170,14 +188,21 @@ if __name__ == '__main__':
     # get optional parameters
     parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
     preprocess_opt(parser)
+    train_embedding_opt(parser)
     opt = parser.parse_args()
 
     logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
 
-    conversations, responses, conversation_max_length, response_max_length = read_convos(opt.convos_file_path, logger)
+    conversations, responses, conversations_length_distribution, conversation_max_length, responses_length_distribution, response_max_length = read_convos(
+        opt.convos_file_path, logger)
     logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
+
+    # save lens distribution
+    save_distribution(conversations_length_distribution, 'conversations')
+    save_distribution(responses_length_distribution, 'responses')
 
     # facts = read_facts(opt.facts_file_path)
 
@@ -189,11 +214,59 @@ if __name__ == '__main__':
     sorted_freq_list = stat_frequency(datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
     vocab = build_vocab(sorted_freq_list)
-    # vocab = Vocab()
-    # vocab.load()
     logger.info('vocab_size: %s' % vocab.get_vocab_size())  # 93423
 
     generate_num(conversations, vocab, opt.conversations_num_save_path)
     generate_num(responses, vocab, opt.responses_num_save_path)
+
+    ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
+
+    # google word2vec
+    pre_trained_embedding, out_of_vocab_count = build_vocab_word2vec(
+        None,
+        vocab,
+        vocab.get_vocab_size(),
+        opt.google_vec_file,
+        opt.google_vec_dim,
+        opt.binary,
+        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
+
+    np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+            pre_trained_embedding)
+    logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+
+    # fastText
+    pre_trained_embedding, out_of_vocab_count = build_vocab_fastText(
+        None,
+        vocab,
+        vocab.get_vocab_size(),
+        opt.fasttext_vec_file,
+        opt.fasttext_vec_dim,
+        opt.binary,
+        os.path.join(opt.save_path,
+                     'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
+
+    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+            pre_trained_embedding)
+    logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+
+    # training own word embedding.
+    max_sentence_length = (int)(conversation_max_length * 3.0 / 4)
+    word2vec_model = train_embedding.start_train(datas, opt, max_sentence_length, opt.word_embedding_model_name)
+    logger.info('train word embedding has finished.  %s' % vocab.get_vocab_size())
+
+    pre_trained_embedding, out_of_vocab_count = build_vocab_word2vec(
+        word2vec_model,
+        vocab,
+        vocab.get_vocab_size(),
+        None,
+        opt.size,
+        None,
+        os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.txt' % int(vocab.get_vocab_size())))
+
+    np.save(os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.npy') % int(vocab.get_vocab_size()),
+            pre_trained_embedding)
+
+    logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     logger.info('Preprocess finished.')

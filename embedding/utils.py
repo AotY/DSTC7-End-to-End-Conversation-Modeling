@@ -12,48 +12,48 @@ import codecs
 import numpy as np
 from gensim.test.utils import datapath, get_tmpfile
 from gensim.models import KeyedVectors
-from gensim.models import Word2Vec
 
 '''
 buid vocab embedding from word2vec
 '''
 
 
-def build_vocab_word2vec(vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file):
+def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger=None):
+
+    # init
+    pre_trained_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
+
     pad_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     sos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     eos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
 
     # load any vectors from the word2vec
-    print("Load word2vec file: {} to gensim model. \n".format(vec_file))
+    logger.info("Load word2vec file: {} to gensim model. \n".format(vec_file))
 
-    # fname, fvocab=None, binary=False, encoding='utf8'
-    word2vec_model = KeyedVectors.load_word2vec_format(fname=vec_file, binary=True)
+    if word2vec_model is None:
+        if binary:
+            word2vec_model = KeyedVectors.load_word2vec_format(fname=vec_file, binary=True)
+        else:
+            word2vec_model = KeyedVectors.load_word2vec_format(fname=vec_file, binary=False)
+
+    save_f = open(save_vec_file, 'w', encoding='utf-8')
 
     out_of_vocab_count = 0
 
-    if binary:
-        save_f = codecs.open(pre_trained_vocab_embedding_file, 'w', encoding='utf-8')
-    else:
-        save_f = codecs.open(pre_trained_vocab_embedding_file, 'wb', encoding='utf-8')
-
     header = "%d %d\n" % (vocab_size, embedding_dim)
+
     # write header
     save_f.write(header)
 
-    for word in vocab.word2idx.keys():
-        if word == vocab.pad:
-            print('word: ', vocab.pad)
+    for id, word in vocab.idx2word.iteritems():
+        if id == vocab.padid:
             word_embedding = pad_embedding
-        elif word == vocab.sos:
-            print('word: ', vocab.sos)
+        elif word == vocab.sosid:
             word_embedding = sos_embedding
-        elif word == vocab.eos:
-            print('word: ', vocab.eos)
+        elif word == vocab.eosid:
             word_embedding = eos_embedding
-        elif word == vocab.unk:
-            print('word: ', vocab.unk)
+        elif word == vocab.unkid:
             word_embedding = unk_embedding
         else:
             try:
@@ -62,13 +62,15 @@ def build_vocab_word2vec(vocab, vocab_size, vec_file, embedding_dim, binary, pre
                 out_of_vocab_count += 1
                 word_embedding = unk_embedding
 
+        pre_trained_embedding[id] = word_embedding
+
         vector_str = ' '.join([str(s) for s in word_embedding])
         save_f.write('%s %s\n' % (word, vector_str))
 
     save_f.close()
     del word2vec_model
 
-    return out_of_vocab_count
+    return pre_trained_embedding, out_of_vocab_count
 
 
 def load_word_embedding_for_lookup(vocab, vocab_size, vec_file, embedding_dim, binary):
@@ -88,7 +90,7 @@ def load_word_embedding_for_lookup(vocab, vocab_size, vec_file, embedding_dim, b
         word2vec_vocab_size, word2vec_embedding_dim = map(int, header.split())
         binary_len = np.dtype('float32').itemsize * word2vec_embedding_dim
 
-        for line in xrange(word2vec_vocab_size):
+        for line in range(word2vec_vocab_size):
             word = []
             while True:
                 ch = f.read(1)
@@ -180,8 +182,8 @@ buid vocab embedding from fastText
 '''
 
 
-def build_vocab_fastText(vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file):
-    return build_vocab_word2vec(vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file)
+def build_vocab_fastText(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file):
+    return build_vocab_word2vec(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file)
 
 
 if __name__ == '__main__':
