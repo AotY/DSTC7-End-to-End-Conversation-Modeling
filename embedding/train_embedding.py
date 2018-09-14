@@ -51,8 +51,10 @@ def start_train(source, opt, max_sentence_length, word_embedding_model_name):
         'iter': opt.epochs
     }
 
-    word2vec = Word2Vec(LineSentence(source, max_sentence_length=max_sentence_length),
-                        **params)
+    # word2vec = Word2Vec(LineSentence(source, max_sentence_length=max_sentence_length),
+    #                     **params)
+
+    word2vec = Word2Vec(source, **params)
 
     # word2vec = Word2Vec(
     #     MemoryOptimalSentences(
