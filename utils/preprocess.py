@@ -219,7 +219,8 @@ if __name__ == '__main__':
     sorted_freq_list = stat_frequency(datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
     vocab = build_vocab(sorted_freq_list)
-    logger.info('vocab_size: %s' % vocab.get_vocab_size())  # 93423
+    vocab_size = int(vocab.get_vocab_size())
+    logger.info('vocab_size: %s' % vocab_size)  # 93423
 
     generate_num(conversations, vocab, opt.conversations_num_save_path)
     generate_num(responses, vocab, opt.responses_num_save_path)
@@ -227,24 +228,22 @@ if __name__ == '__main__':
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
     # google word2vec
-    pre_trained_embedding, out_of_vocab_count = build_vocab_word2vec(
+    vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
         None,
         vocab,
         vocab.get_vocab_size(),
         opt.google_vec_file,
         opt.google_vec_dim,
         opt.binary,
-        os.path.join(opt.save_path,
-                     'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)),
         logger)
 
-    np.save(os.path.join(opt.save_path,
-                         'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
-            pre_trained_embedding)
+    np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
+            vocab_embedding)
     logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     # fastText
-    pre_trained_embedding, out_of_vocab_count = build_vocab_fastText(
+    vocab_embedding, out_of_vocab_count = build_vocab_fastText(
         None,
         vocab,
         vocab.get_vocab_size(),
@@ -252,31 +251,29 @@ if __name__ == '__main__':
         opt.fasttext_vec_dim,
         opt.binary,
         os.path.join(opt.save_path,
-                     'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
-        logger)
+                     'fasttext_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)), logger)
 
-    np.save(os.path.join(opt.save_path,
-                         'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
-            pre_trained_embedding)
+    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
+            vocab_embedding)
     logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     # training own word embedding.
     max_sentence_length = (int)(conversation_max_length * 3.0 / 4)
     word2vec_model = train_embedding.start_train(datas, opt, max_sentence_length, opt.word_embedding_model_name)
-    logger.info('train word embedding has finished.  %s' % vocab.get_vocab_size())
+    logger.info('train word embedding has finished. ')
 
-    pre_trained_embedding, out_of_vocab_count = build_vocab_word2vec(
+    vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
         word2vec_model,
         vocab,
         vocab.get_vocab_size(),
         None,
         opt.size,
         None,
-        os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.txt' % int(vocab.get_vocab_size())),
+        os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.txt' % vocab_size),
         logger)
 
-    np.save(os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.npy') % int(vocab.get_vocab_size()),
-            pre_trained_embedding)
+    np.save(os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.npy' % vocab_size),
+            vocab_embedding)
 
     logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
