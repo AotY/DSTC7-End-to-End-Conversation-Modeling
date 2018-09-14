@@ -249,9 +249,8 @@ if __name__ == '__main__':
         vocab.get_vocab_size(),
         opt.fasttext_vec_file,
         opt.fasttext_vec_dim,
-        opt.binary,
-        os.path.join(opt.save_path,
-                     'fasttext_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)), logger)
+        None,
+        os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)), logger)
 
     np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
             vocab_embedding)
