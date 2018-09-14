@@ -52,10 +52,6 @@ def preprocess_opt(parser):
                        type=str,
                        help="Model name for own trained word embedding model.")
 
-    group.add_argument('--word_embedding_model_name',
-                       type=str,
-                       help="Model name for own trained word embedding model.")
-
     group.add_argument('--google_vec_file',
                        type=str,
                        help="Google word2vec pretrained word embedding file.")
