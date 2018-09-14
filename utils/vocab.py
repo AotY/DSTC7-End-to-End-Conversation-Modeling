@@ -76,8 +76,6 @@ class Vocab(object):
             raise RuntimeError("Make sure vocab_word2idx.dict exists.")
 
 
-
-
     ''' wordid '''
 
     @property

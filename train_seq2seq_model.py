@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import argparse
-import random
+import os
+import sys
 import time
 import math
+import random
+import logging
+import argparse
 
+import numpy as np
 import matplotlib.pyplot as plt
+
+from utils.data_set import Seq2seqDataSet
 
 plt.switch_backend('agg')
 import matplotlib.ticker as ticker
@@ -17,28 +23,106 @@ import torch
 import torch.nn as nn
 from torch import optim
 
-from utils.vocab import SOS, EOS
+from utils.vocab import Vocab
+from train_evaluate_opt import data_set_opt, train_seq2seq_opt
+from utils.vocab import SOS, EOS, UNK, PAD
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from seq2seq_model import Seq2SeqModel
 
-teacher_forcing_ratio = 0.5
+program = os.path.basename(sys.argv[0])
+logger = logging.getLogger(program)
+
+logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
+logging.root.setLevel(level=logging.INFO)
+logger.info("Running %s", ' '.join(sys.argv))
+
+# get optional parameters
+parser = argparse.ArgumentParser(description=program,
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+data_set_opt(parser)
+train_seq2seq_opt(parser)
+opt = parser.parse_args()
+
+device = opt.device
+logging.info("device: %s" % device)
+
+if opt.use_teacher_forcing:
+    teacher_forcing_ratio = opt.teacher_forcing_ratio
+    logging.info("teacher_forcing_ratio: %f" % teacher_forcing_ratio)
+
+torch.manual_seed(opt.seed)
 
 
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion,
-          max_length=MAX_LENGTH):
-    encoder_hidden = encoder.initHidden()
+def trainIters(seq2seq_model, seq2seq_dataset, batch_size, epochs, batch_per_load, log_interval=200, plot_every=100,
+               lr=0.001):
+    start = time.time()
+    plot_losses = []
 
-    encoder_optimizer.zero_grad()
-    decoder_optimizer.zero_grad()
+    print_loss_total = 0  # Reset every print_every
+    plot_loss_total = 0  # Reset every plot_every
 
-    input_length = input_tensor.size(0)
-    target_length = target_tensor.size(0)
+    seq2seq_model_optimizer = optim.Adam(
+        params=seq2seq_model.parameters(),
+        lr=lr)
 
-    encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()  # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
+
+    max_load = np.ceil(seq2seq_dataset.n_train / batch_size / batch_per_load)
+
+    for epoch in range(epochs):
+
+        load = 0
+        seq2seq_dataset.reset()
+        while not seq2seq_dataset.all_loaded('train'):
+            load += 1
+            logger.info('\n***** Epoch %i/%i - load %.2f perc *****' % (epoch + 1, epochs, 100 * load / max_load))
+            encoder_input_data, decoder_input_data, decoder_target_data, _, _ = seq2seq_dataset.load_data('train',
+                                                                                                          batch_size * batch_per_load)
+            loss = train(seq2seq_model, encoder_input_data, decoder_input_data,
+                         decoder_target_data, seq2seq_model_optimizer, criterion, batch_size)
+
+            print_loss_total += loss
+            plot_loss_total += loss
+
+            if load % log_interval == 0:
+                print_loss_avg = print_loss_total / log_interval
+                print_loss_total = 0
+                logger.info('%s (%d %d%%) %.4f' % (timeSince(start, iter / max_load),
+                                                   load, load / max_load * 100, print_loss_avg))
+
+            if load % plot_every == 0:
+                plot_loss_avg = plot_loss_total / plot_every
+                plot_losses.append(plot_loss_avg)
+                plot_loss_total = 0
+
+    showPlot(plot_losses)
+
+
+def train(seq2seq_model,
+          encoder_input_data,
+          encoder_input_lengths,
+          decoder_input_data,
+          decoder_input_lengths,
+          decoder_target_data,
+          decoder_target_lengths,
+          seq2seq_model_optimizer,
+          criterion,
+          batch_size):
+
+
+    (dialog_encoder_final_state, dialog_encoder_memory_bank), (
+    dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns) = seq2seq_model.forward(
+        dialog_encoder_src=encoder_input_data,  # LongTensor
+        dialog_encoder_src_lengths=encoder_input_lengths,
+        dialog_decoder_tgt=decoder_input_data,
+    )
+
+    seq2seq_model_optimizer.zero_grad()
 
     loss = 0
 
-    for ei in range(input_length):
+    for ei in range(encoder_input_lengths):
         encoder_output, encoder_hidden = encoder(
             input_tensor[ei], encoder_hidden)
         encoder_outputs[ei] = encoder_output[0, 0]
@@ -47,71 +131,87 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     decoder_hidden = encoder_hidden
 
-    use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-
-    if use_teacher_forcing:
-        # Teacher forcing: Feed the target as the next input
-        for di in range(target_length):
-            decoder_output, decoder_hidden, decoder_attention = decoder(
-                decoder_input, decoder_hidden, encoder_outputs)
-            loss += criterion(decoder_output, target_tensor[di])
-            decoder_input = target_tensor[di]  # Teacher forcing
-
+    if opt.use_teacher_forcing:
+        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
     else:
-        # Without teacher forcing: use its own predictions as the next input
-        for di in range(target_length):
-            decoder_output, decoder_hidden, decoder_attention = decoder(
-                decoder_input, decoder_hidden, encoder_outputs)
-            topv, topi = decoder_output.topk(1)
-            decoder_input = topi.squeeze().detach()  # detach from history as input
+        use_teacher_forcing = False
 
-            loss += criterion(decoder_output, target_tensor[di])
-            if decoder_input.item() == EOS:
-                break
+    # Teacher forcing: Feed the target as the next input
+    # if use_teacher_forcing:
+    #     for di in range(target_length):
+    #         decoder_output, decoder_hidden, decoder_attention = decoder(
+    #             decoder_input, decoder_hidden, encoder_outputs)
+    #         loss += criterion(decoder_output, decoder_target_data[di])
+    #         decoder_input = decoder_target_data[di]  # Teacher forcing
+    #
+    # else:  # Without teacher forcing: use its own predictions as the next input
+    #     for di in range(decoder_target_lengths):
+    #         decoder_output, decoder_hidden, decoder_attention = decoder(
+    #             decoder_input, decoder_hidden, encoder_outputs)
+    #         topv, topi = decoder_output.topk(1)
+    #         decoder_input = topi.squeeze().detach()  # detach from history as input
+    #
+    #         loss += criterion(decoder_output, target_tensor[di])
+    #         if decoder_input.item() == EOS:
+    #             break
 
     loss.backward()
 
-    encoder_optimizer.step()
-    decoder_optimizer.step()
+    seq2seq_model_optimizer.step()
 
-    return loss.item() / target_length
+    return loss.item() / decoder_target_lengths
 
 
-def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, learning_rate=0.01):
-    start = time.time()
-    plot_losses = []
-    print_loss_total = 0  # Reset every print_every
-    plot_loss_total = 0  # Reset every plot_every
+def evaluate(encoder, decoder, sentence, max_length=MAX_LENGTH):
+    with torch.no_grad():
+        input_tensor = tensorFromSentence(input_lang, sentence)
+        input_length = input_tensor.size()[0]
+        encoder_hidden = encoder.initHidden()
 
-    encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
-    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
-    training_pairs = [tensorsFromPair(random.choice(pairs))
-                      for i in range(n_iters)]
-    criterion = nn.NLLLoss()
+        encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
 
-    for iter in range(1, n_iters + 1):
-        training_pair = training_pairs[iter - 1]
-        input_tensor = training_pair[0]
-        target_tensor = training_pair[1]
+        for ei in range(input_length):
+            encoder_output, encoder_hidden = encoder(input_tensor[ei],
+                                                     encoder_hidden)
+            encoder_outputs[ei] += encoder_output[0, 0]
 
-        loss = train(input_tensor, target_tensor, encoder,
-                     decoder, encoder_optimizer, decoder_optimizer, criterion)
-        print_loss_total += loss
-        plot_loss_total += loss
+        decoder_input = torch.tensor([[SOS_token]], device=device)  # SOS
 
-        if iter % print_every == 0:
-            print_loss_avg = print_loss_total / print_every
-            print_loss_total = 0
-            print('%s (%d %d%%) %.4f' % (timeSince(start, iter / n_iters),
-                                         iter, iter / n_iters * 100, print_loss_avg))
+        decoder_hidden = encoder_hidden
 
-        if iter % plot_every == 0:
-            plot_loss_avg = plot_loss_total / plot_every
-            plot_losses.append(plot_loss_avg)
-            plot_loss_total = 0
+        decoded_words = []
+        decoder_attentions = torch.zeros(max_length, max_length)
 
-    showPlot(plot_losses)
+        for di in range(max_length):
+            decoder_output, decoder_hidden, decoder_attention = decoder(
+                decoder_input, decoder_hidden, encoder_outputs)
+            decoder_attentions[di] = decoder_attention.data
+            topv, topi = decoder_output.data.topk(1)
+            if topi.item() == EOS_token:
+                decoded_words.append('<EOS>')
+                break
+            else:
+                decoded_words.append(output_lang.index2word[topi.item()])
 
+            decoder_input = topi.squeeze().detach()
+
+        return decoded_words, decoder_attentions[:di + 1]
+
+
+def dialog(self, input_text):
+    source_seq_int = []
+    for token in input_text.strip().strip('\n').split(' '):
+        source_seq_int.append(self.dataset.token2index.get(token, self.dataset.UNK))
+    return self._infer(np.atleast_2d(source_seq_int))
+
+
+def interact(self):
+    while True:
+        print('----- please input -----')
+        input_text = input()
+        if not bool(input_text):
+            break
+        print(self.dialog(input_text))
 
 
 def asMinutes(s):
@@ -138,8 +238,64 @@ def showPlot(points):
 
 
 if __name__ == '__main__':
-    hidden_size = 256
-    # encoder1 = EncoderRNN(input_lang.n_words, hidden_size).to(device)
-    # attn_decoder1 = AttnDecoderRNN(hidden_size, output_lang.n_words, dropout_p=0.1).to(device)
-    #
-    # trainIters(encoder1, attn_decoder1, 75000, print_every=5000)
+    vocab = Vocab()
+    vocab.load()
+
+    seq2seq_dataset = Seq2seqDataSet(
+        path_conversations=opt.path_conversations,
+        path_responses=opt.path_responses,
+
+        dialog_encoder_vocab_size=opt.dialog_encoder_vocab_size,
+        dialog_encoder_max_length=opt.dialog_encoder_max_length,
+        dialog_encoder_vocab=vocab,
+
+        dialog_decoder_vocab_size=opt.dialog_encoder_vocab_size,
+        dialog_decoder_max_length=opt.dialog_encoder_max_length,
+        dialog_decoder_vocab=vocab,
+
+        test_split=opt.test_split,  # how many hold out as vali data
+        device=device,
+        logger=logger
+    )
+
+    # load pre-trained embedding
+    dialog_encoder_pretrained_embedding_weight = None
+    dialog_decoder_pretrained_embedding_weight = None
+
+    seq2seq_model = Seq2SeqModel(
+                             dialog_encoder_vocab_size=opt.dialog_encoder_vocab_size,
+                             dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
+                             dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
+                             dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
+                             dialog_encoder_dropout_rate=opt.dialog_encoder_dropout_rate,
+                             dialog_encoder_max_length=opt.dialog_encoder_max_length,
+                             dialog_encoder_clip_grads=opt.dialog_encoder_clip_grads,
+                             dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
+                             dialog_encoder_pretrained_embedding_weight=dialog_encoder_pretrained_embedding_weight,
+
+                             dialog_decoder_vocab_size=opt.dialog_decoder_vocab_size,
+                             dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
+                             dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
+                             dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
+                             dialog_decoder_dropout_rate=opt.dialog_decoder_dropout_rate,
+                             dialog_decoder_max_length=opt.dialog_decoder_max_length,
+                             dialog_decoder_clip_grads=opt.dialog_decoder_clip_grads,
+                             dialog_decoder_bidirectional=opt.dialog_decoder_bidirectional,
+                             dialog_decoder_pretrained_embedding_weight=dialog_decoder_pretrained_embedding_weight)
+
+    '''
+    if opt.mode == 'train':
+        train()
+    else:
+        load_models()
+
+    if opt.mode in ['train', 'continue']:
+        s2s.train(batch_size, epochs, lr=learning_rate)
+    else:
+        if mode == 'eval':
+            s2s.build_model_test()
+            s2s.evaluate()
+        elif mode == 'interact':
+            s2s.interact()
+            
+    '''
