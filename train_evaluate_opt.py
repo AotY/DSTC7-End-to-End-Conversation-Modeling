@@ -11,12 +11,12 @@ def data_set_opt(parser):
 
     group.add_argument('--path_conversations',
                        type=str,
-                       default='./data/train.convos.num.txt',
+                       default='./data/train.conversations.num.txt',
                        help='location of the conversations num. ')
 
     group.add_argument('--path_responses',
                        type=str,
-                       default='./data/train.convos.num.txt',
+                       default='./data/train.responses.num.txt',
                        help='location of the responses num. ')
 
     group.add_argument('--path_facts',
