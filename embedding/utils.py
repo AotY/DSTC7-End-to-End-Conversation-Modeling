@@ -18,7 +18,7 @@ buid vocab embedding from word2vec
 '''
 
 
-def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger=None):
+def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger):
 
     # init
     pre_trained_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
@@ -29,7 +29,7 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
     unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
 
     # load any vectors from the word2vec
-    logger.info("Load word2vec file: {} to gensim model. \n".format(vec_file))
+    logger.info("Load file: {} to gensim model. \n".format(vec_file))
 
     if word2vec_model is None:
         if binary:
@@ -182,8 +182,8 @@ buid vocab embedding from fastText
 '''
 
 
-def build_vocab_fastText(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file):
-    return build_vocab_word2vec(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file)
+def build_vocab_fastText(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file, logger):
+    return build_vocab_word2vec(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file, logger)
 
 
 if __name__ == '__main__':
