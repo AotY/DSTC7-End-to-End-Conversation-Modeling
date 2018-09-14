@@ -14,7 +14,6 @@ from embedding.embedding_opt import train_embedding_opt
 from embedding.utils import build_vocab_word2vec, build_vocab_fastText
 from embedding import train_embedding
 
-
 '''
 Generate
 
@@ -236,7 +235,8 @@ if __name__ == '__main__':
         opt.google_vec_dim,
         opt.binary,
         os.path.join(opt.save_path,
-                     'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
+                     'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+        logger)
 
     np.save(os.path.join(opt.save_path,
                          'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
@@ -252,7 +252,8 @@ if __name__ == '__main__':
         opt.fasttext_vec_dim,
         opt.binary,
         os.path.join(opt.save_path,
-                     'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
+                     'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+        logger)
 
     np.save(os.path.join(opt.save_path,
                          'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
@@ -271,7 +272,8 @@ if __name__ == '__main__':
         None,
         opt.size,
         None,
-        os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.txt' % int(vocab.get_vocab_size())))
+        os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.txt' % int(vocab.get_vocab_size())),
+        logger)
 
     np.save(os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.npy') % int(vocab.get_vocab_size()),
             pre_trained_embedding)
