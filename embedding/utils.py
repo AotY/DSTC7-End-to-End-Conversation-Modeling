@@ -21,7 +21,7 @@ buid vocab embedding from word2vec
 def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger):
 
     # init
-    pre_trained_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
+    vocab_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
     pad_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     sos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
@@ -62,7 +62,7 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
                 out_of_vocab_count += 1
                 word_embedding = unk_embedding
 
-        pre_trained_embedding[id] = word_embedding
+        vocab_embedding[id] = word_embedding
 
         vector_str = ' '.join([str(s) for s in word_embedding])
         save_f.write('%s %s\n' % (word, vector_str))
@@ -70,7 +70,7 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
     save_f.close()
     del word2vec_model
 
-    return pre_trained_embedding, out_of_vocab_count
+    return vocab_embedding, out_of_vocab_count
 
 
 def load_word_embedding_for_lookup(vocab, vocab_size, vec_file, embedding_dim, binary):
