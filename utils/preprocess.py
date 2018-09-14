@@ -4,14 +4,16 @@ import sys
 import logging
 import argparse
 
+sys.path.append('..')
+
 import numpy as np
 from vocab import Vocab
-from vocab import PAD, SOS, EOS, UNK
 from tokenize import Tokenize
 from utils_opts import preprocess_opt
-from ..embedding.embedding_opt import train_embedding_opt
-from ..embedding.utils import build_vocab_word2vec, build_vocab_fastText
-from ..embedding import train_embedding
+from embedding.embedding_opt import train_embedding_opt
+from embedding.utils import build_vocab_word2vec, build_vocab_fastText
+from embedding import train_embedding
+
 
 '''
 Generate
