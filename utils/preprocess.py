@@ -8,7 +8,7 @@ sys.path.append('..')
 
 import numpy as np
 from vocab import Vocab
-from tokenize import Tokenize
+from tokenizer import Tokenizer
 from utils_opts import preprocess_opt
 from embedding.embedding_opt import train_embedding_opt
 from embedding.utils import build_vocab_word2vec, build_vocab_fastText
@@ -25,7 +25,7 @@ and
 fact_num.txt
 '''
 
-tokenizer = Tokenize()
+tokenizer = Tokenizer()
 
 '''
 Read convos file.
