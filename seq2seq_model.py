@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,7 +24,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_rnn_type='LSTM',
                  dialog_encoder_dropout_rate=0.5,
                  dialog_encoder_max_length=32,
-                 dialog_encoder_rnn_units=512,
+                 # dialog_encoder_rnn_units=512,
                  dialog_encoder_clip_grads=1.0,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_pretrained_embedding_weight=None,
@@ -35,7 +35,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_rnn_type='LSTM',
                  dialog_decoder_dropout_rate=0.5,
                  dialog_decoder_max_length=32,
-                 dialog_decoder_rnn_units=512,
+                 # dialog_decoder_rnn_units=512,
                  dialog_decoder_clip_grads=1.0,
                  dialog_decoder_bidirectional=True,
                  dialog_decoder_pretrained_embedding_weight=None,
@@ -52,7 +52,7 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_rnn_type = dialog_encoder_rnn_type
         self.dialog_encoder_dropout_rate = dialog_encoder_dropout_rate
         self.dialog_encoder_max_length = dialog_encoder_max_length
-        self.dialog_encoder_rnn_units = dialog_encoder_rnn_units
+        # self.dialog_encoder_rnn_units = dialog_encoder_rnn_units
         self.dialog_encoder_clip_grads = dialog_encoder_clip_grads
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
         self.dialog_encoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
@@ -64,7 +64,7 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_rnn_type = dialog_decoder_rnn_type
         self.dialog_decoder_dropout_rate = dialog_decoder_dropout_rate
         self.dialog_decoder_max_length = dialog_decoder_max_length
-        self.dialog_decoder_rnn_units = dialog_decoder_rnn_units
+        # self.dialog_decoder_rnn_units = dialog_decoder_rnn_units
         self.dialog_decoder_clip_grads = dialog_decoder_clip_grads
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pretrained_embedding_weight = dialog_decoder_pretrained_embedding_weight
@@ -74,11 +74,12 @@ class Seq2SeqModel(nn.Module):
         ''''Ps: dialog_encoder, facts_encoder, and dialog_decoder may have different
             word embeddings.
         '''
-        self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size, self.dialog_encoder_hidden_size)
+        self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
         # pretrained_weight is a numpy matrix of shape (num_embeddings, embedding_dim)
         self.dialog_encoder_embedding.weight.data.copy_(
             torch.from_numpy(self.dialog_encoder_pretrained_embedding_weight))
 
+        self.dialog_decoder_embedding = self.dialog_encoder_embedding
         '''
         self.dialog_decoder_embedding = nn.Embedding(self.dialog_decoder_vocab_size, self.dialog_decoder_hidden_size)
         self.dialog_decoder_embedding.weight.data.copy_(
@@ -108,7 +109,7 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialog_decoder_num_layers,
             hidden_size=self.dialog_decoder_hidden_size,
             dropout=self.dialog_decoder_dropout_rate,
-            embeddings=self.dialog_encoder_embedding  # maybe replace by dialog_decoder_embedding
+            embeddings=self.dialog_decoder_embedding  # maybe replace by dialog_decoder_embedding
         )
 
     '''
@@ -118,20 +119,20 @@ class Seq2SeqModel(nn.Module):
     def forward(self,
                 dialog_encoder_src,  # LongTensor
                 dialog_encoder_src_lengths,
-                dialog_encoder_initial_state,
 
-                dialog_decoder_tgt,
-                dialog_decoder_initial_state,
-
+                dialog_decoder_tgt
                 ):
+
+        dialog_encoder_initial_state_scale = 1.0 / math.sqrt(3.0 / self.dialog_encoder_hidden_size)
+        dialog_encoder_initial_state = torch.rand(self.dialog_encoder_hidden_size, self.dialog_encoder_hidden_size)
+        dialog_encoder_initial_state = (-dialog_encoder_initial_state_scale - dialog_encoder_initial_state_scale) * dialog_encoder_initial_state + dialog_encoder_initial_state_scale
 
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
-            dialog_encoder_src,
+            src=dialog_encoder_src,
             lengths=dialog_encoder_src_lengths,
             encoder_state=dialog_encoder_initial_state,  # the source memory_bank lengths.
         )
-
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
@@ -141,7 +142,6 @@ class Seq2SeqModel(nn.Module):
             state=dialog_encoder_final_state,
             memory_lengths=dialog_encoder_src_lengths
         )
-
 
         return (
             (dialog_encoder_final_state, dialog_encoder_memory_bank),

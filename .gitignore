@@ -4,6 +4,8 @@
 ### Data
 data/
 
+### models
+models/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
