@@ -7,7 +7,7 @@ Tokenise a reddit sequence.
 import re
 
 
-class Tokenize:
+class Tokenizer:
     def __init__(self):
         emoticons_str = r"""
                     (?:
@@ -44,6 +44,6 @@ class Tokenize:
 
 if __name__ == '__main__':
     sequence = 'RT @marcobonzanini: just an example! :D http://example.com #NLP'
-    tokenize = Tokenize()
+    tokenize = Tokenizer()
     print(tokenize.preprocess(sequence, lowercase=True))
     # ['RT', '@marcobonzanini', ':', 'just', 'an', 'example', '!', ':D', 'http://example.com', '#NLP']
