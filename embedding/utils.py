@@ -195,7 +195,8 @@ def build_vocab_fastText(fasttest_model, vocab, vocab_size, vec_file, embedding_
     logger.info("Load fasttest file: {} to gensim model. \n".format(vec_file))
 
     if fasttest_model is None:
-        fasttest_model = FastText.load_fasttext_format(vec_file)
+        # fasttest_model = FastText.load_fasttext_format(vec_file)
+        fasttest_model = KeyedVectors.load_word2vec_format(vec_file, binary=False)
 
     save_f = open(save_vec_file, 'w', encoding='utf-8')
 
