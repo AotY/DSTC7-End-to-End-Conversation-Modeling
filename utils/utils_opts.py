@@ -57,7 +57,7 @@ def preprocess_opt(parser):
                        help="Google word2vec pretrained word embedding file.")
 
     group.add_argument('--google_vec_dim',
-                       type=str,
+                       type=int,
                        help="Google word2vec pretrained word embedding dim.")
 
     group.add_argument('--fasttext_vec_file',
@@ -65,7 +65,7 @@ def preprocess_opt(parser):
                        help="fasttext pretrained word embedding file.")
 
     group.add_argument('--fasttext_vec_dim',
-                       type=str,
+                       type=int,
                        help="fasttext pretrained word embedding dim.")
 
     group.add_argument('--binary', action='store_true', help='is binary format.')
