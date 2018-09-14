@@ -228,19 +228,19 @@ if __name__ == '__main__':
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
     # google word2vec
-    vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
-        None,
-        vocab,
-        vocab.get_vocab_size(),
-        opt.google_vec_file,
-        opt.google_vec_dim,
-        opt.binary,
-        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)),
-        logger)
-
-    np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
-            vocab_embedding)
-    logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+    # vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
+    #     None,
+    #     vocab,
+    #     vocab.get_vocab_size(),
+    #     opt.google_vec_file,
+    #     opt.google_vec_dim,
+    #     opt.binary,
+    #     os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)),
+    #     logger)
+    #
+    # np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
+    #         vocab_embedding)
+    # logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     # fastText
     vocab_embedding, out_of_vocab_count = build_vocab_fastText(
