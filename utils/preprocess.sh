@@ -11,7 +11,7 @@ python preprocess.py \
     --word_embedding_model_name v1.0_word_embedding \
     --google_vec_file /home/taoqing/Research/data/GoogleNews-vectors-negative300.bin \
     --google_vec_dim 300 \
-    --fasttext_vec_file /home/taoqing/Research/data/crawl-300d-2M-subword \
+    --fasttext_vec_file /home/taoqing/Research/data/crawl-300d-2M-subword.vec \
     --fasttext_vec_dim 300 \
     --binary \
     --size 300 \
