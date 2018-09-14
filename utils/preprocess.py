@@ -80,8 +80,8 @@ def read_convos(convos_file_path, logger=None):
         responses.append(response_tokens)
 
         # for test
-        if n == 1e3:
-            break
+        # if n == 1e3:
+        #     break
 
     return conversations, responses, conversations_length_distribution, conversation_max_length, responses_length_distribution, response_max_length
 
@@ -228,33 +228,33 @@ if __name__ == '__main__':
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
     # google word2vec
-    # vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
-    #     None,
-    #     vocab,
-    #     vocab.get_vocab_size(),
-    #     opt.google_vec_file,
-    #     opt.google_vec_dim,
-    #     opt.binary,
-    #     os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)),
-    #     logger)
-    #
-    # np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
-    #         vocab_embedding)
-    # logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
-    #
-    # # fastText
-    # vocab_embedding, out_of_vocab_count = build_vocab_fastText(
-    #     None,
-    #     vocab,
-    #     vocab.get_vocab_size(),
-    #     opt.fasttext_vec_file,
-    #     opt.fasttext_vec_dim,
-    #     None,
-    #     os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)), logger)
-    #
-    # np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
-    #         vocab_embedding)
-    # logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+    vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
+        None,
+        vocab,
+        vocab.get_vocab_size(),
+        opt.google_vec_file,
+        opt.google_vec_dim,
+        opt.binary,
+        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)),
+        logger)
+
+    np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
+            vocab_embedding)
+    logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+
+    # fastText
+    vocab_embedding, out_of_vocab_count = build_vocab_fastText(
+        None,
+        vocab,
+        vocab.get_vocab_size(),
+        opt.fasttext_vec_file,
+        opt.fasttext_vec_dim,
+        None,
+        os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)), logger)
+
+    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
+            vocab_embedding)
+    logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     # training own word embedding.
     max_sentence_length = (int)(conversation_max_length * 3.0 / 4)
