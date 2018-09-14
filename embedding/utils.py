@@ -12,7 +12,7 @@ import codecs
 import numpy as np
 from gensim.test.utils import datapath, get_tmpfile
 from gensim.models import KeyedVectors
-
+from gensim.models import FastText
 '''
 buid vocab embedding from word2vec
 '''
@@ -182,9 +182,55 @@ buid vocab embedding from fastText
 '''
 
 
-def build_vocab_fastText(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file, logger):
-    return build_vocab_word2vec(model, vocab, vocab_size, vec_file, embedding_dim, binary, pre_trained_vocab_embedding_file, logger)
+def build_vocab_fastText(fasttest_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger):
+    # init
+    vocab_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
+    pad_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+    sos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+    eos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+
+    # load any vectors from the word2vec
+    logger.info("Load fasttest file: {} to gensim model. \n".format(vec_file))
+
+    if fasttest_model is None:
+        fasttest_model = FastText.load_fasttext_format(vec_file)
+
+    save_f = open(save_vec_file, 'w', encoding='utf-8')
+
+    out_of_vocab_count = 0
+
+    header = "%d %d\n" % (vocab_size, embedding_dim)
+
+    # write header
+    save_f.write(header)
+
+    for id, word in vocab.idx2word.items():
+        if id == vocab.padid:
+            word_embedding = pad_embedding
+        elif word == vocab.sosid:
+            word_embedding = sos_embedding
+        elif word == vocab.eosid:
+            word_embedding = eos_embedding
+        elif word == vocab.unkid:
+            word_embedding = unk_embedding
+        else:
+            try:
+                word_embedding = fasttest_model[word]
+            except KeyError:
+                out_of_vocab_count += 1
+                word_embedding = unk_embedding
+
+        vocab_embedding[id] = word_embedding
+
+        vector_str = ' '.join([str(s) for s in word_embedding])
+        save_f.write('%s %s\n' % (word, vector_str))
+
+    save_f.close()
+    del fasttest_model
+
+    return vocab_embedding, out_of_vocab_count
 
 if __name__ == '__main__':
     # Load vocab and confirm opt.vocab_size
