@@ -46,7 +46,7 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
     # write header
     save_f.write(header)
 
-    for id, word in vocab.idx2word.iteritems():
+    for id, word in vocab.idx2word.items():
         if id == vocab.padid:
             word_embedding = pad_embedding
         elif word == vocab.sosid:
