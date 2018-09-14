@@ -8,7 +8,7 @@ import numpy as np
 from vocab import Vocab
 from vocab import PAD, SOS, EOS, UNK
 from tokenize import Tokenize
-from opts import preprocess_opt
+from utils_opts import preprocess_opt
 from embedding.embedding_opt import train_embedding_opt
 from embedding.utils import build_vocab_word2vec, build_vocab_fastText
 from embedding import train_embedding
@@ -77,6 +77,10 @@ def read_convos(convos_file_path, logger=None):
         responses_length_distribution[len(response_tokens)] = responses_length_distribution.get(len(response_tokens),
                                                                                                 0) + 1
         responses.append(response_tokens)
+
+        # for test
+        if n == 1e3:
+            break
 
     return conversations, responses, conversations_length_distribution, conversation_max_length, responses_length_distribution, response_max_length
 
@@ -229,9 +233,11 @@ if __name__ == '__main__':
         opt.google_vec_file,
         opt.google_vec_dim,
         opt.binary,
-        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
+        os.path.join(opt.save_path,
+                     'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
 
-    np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+    np.save(os.path.join(opt.save_path,
+                         'google_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
             pre_trained_embedding)
     logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
@@ -246,7 +252,8 @@ if __name__ == '__main__':
         os.path.join(opt.save_path,
                      'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)))
 
-    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
+    np.save(os.path.join(opt.save_path,
+                         'fasttext_vec_for_vocab.%d.%dd.txt' % (int(vocab.get_vocab_size()), opt.google_vec_dim)),
             pre_trained_embedding)
     logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
