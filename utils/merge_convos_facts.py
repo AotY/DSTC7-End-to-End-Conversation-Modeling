@@ -6,7 +6,7 @@ import os
 import argparse
 import logging
 
-from opts import merge_convos_facts_opt
+from utils_opts import merge_convos_facts_opt
 
 '''
 merge data-official-2011,  data-official-2012-13
