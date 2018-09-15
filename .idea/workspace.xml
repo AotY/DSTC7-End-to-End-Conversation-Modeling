@@ -86,13 +86,13 @@
       <file leaf-file-name="train_seq2seq_model.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="274">
-              <caret line="220" column="91" lean-forward="false" selection-start-line="220" selection-start-column="49" selection-end-line="220" selection-end-column="91" />
+            <state relative-caret-position="220">
+              <caret line="313" column="61" lean-forward="false" selection-start-line="313" selection-start-column="61" selection-end-line="313" selection-end-column="61" />
               <folding>
                 <element signature="e#25#34#0" expanded="true" />
-                <marker date="1536998149403" expanded="false" signature="4890:5142" ph="..." />
-                <marker date="1536998149403" expanded="false" signature="6010:6631" ph="..." />
-                <marker date="1536998149403" expanded="false" signature="8367:9059" ph="..." />
+                <marker date="1536998483144" expanded="false" signature="4890:5142" ph="..." />
+                <marker date="1536998483144" expanded="false" signature="6010:6631" ph="..." />
+                <marker date="1536998483144" expanded="false" signature="8413:9105" ph="..." />
               </folding>
             </state>
           </provider>
@@ -155,7 +155,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>items</find>
       <find>vocab</find>
       <find>tokenize</find>
       <find>tokenizer</find>
@@ -185,6 +184,7 @@
       <find>max_grad_norm</find>
       <find>test_split</find>
       <find>dialog_encoder_max_length</find>
+      <find>dialog_encoder_vocab_size</find>
     </findStrings>
     <replaceStrings>
       <replace>num_layers</replace>
@@ -990,13 +990,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="274">
-          <caret line="220" column="91" lean-forward="false" selection-start-line="220" selection-start-column="49" selection-end-line="220" selection-end-column="91" />
+        <state relative-caret-position="220">
+          <caret line="313" column="61" lean-forward="false" selection-start-line="313" selection-start-column="61" selection-end-line="313" selection-end-column="61" />
           <folding>
             <element signature="e#25#34#0" expanded="true" />
-            <marker date="1536998149403" expanded="false" signature="4890:5142" ph="..." />
-            <marker date="1536998149403" expanded="false" signature="6010:6631" ph="..." />
-            <marker date="1536998149403" expanded="false" signature="8367:9059" ph="..." />
+            <marker date="1536998483144" expanded="false" signature="4890:5142" ph="..." />
+            <marker date="1536998483144" expanded="false" signature="6010:6631" ph="..." />
+            <marker date="1536998483144" expanded="false" signature="8413:9105" ph="..." />
           </folding>
         </state>
       </provider>
