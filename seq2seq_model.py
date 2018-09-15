@@ -92,7 +92,7 @@ class Seq2SeqModel(nn.Module):
                                                    self.dialog_decoder_pad_id,
                                                    self.dialog_decoder_dropout_rate)
 
-        if dialog_encoder_embedding is not None:
+        if self.dialog_encoder_pretrained_embedding_weight is not None:
             # pretrained_weight is a numpy matrix of shape (num_embeddings, embedding_dim)
             self.dialog_encoder_embedding.weight.data.copy_(
                 torch.from_numpy(self.dialog_encoder_pretrained_embedding_weight))
@@ -164,7 +164,6 @@ class Seq2SeqModel(nn.Module):
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
         decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
-
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
         dialog_decoder_attns = self.dialog_decoder.forward(
             tgt=dialog_decoder_tgt,
