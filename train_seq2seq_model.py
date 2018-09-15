@@ -86,8 +86,7 @@ def train_epochs(seq2seq_model=None,
             encoder_input_data, \
             decoder_input_data, \
             decoder_target_data, \
-            conversation_texts, response_texts, \
-            _, _ = seq2seq_dataset.load_data('train', batch_size * batch_per_load)
+            conversation_texts, response_texts = seq2seq_dataset.load_data('train', batch_size * batch_per_load)
 
             # train and get cur loss
             loss = train(seq2seq_model,
