@@ -246,7 +246,8 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type)
 
     if use_gpu:
-        seq2seq_model.cuda()
+        seq2seq_model.set_cuda()
+        # seq2seq_model.cuda()
 
     return seq2seq_model
 
