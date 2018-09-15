@@ -28,8 +28,8 @@
       <file leaf-file-name="data_set.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/misc/data_set.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="139" column="34" lean-forward="false" selection-start-line="139" selection-start-column="16" selection-end-line="139" selection-end-column="34" />
+            <state relative-caret-position="308">
+              <caret line="118" column="82" lean-forward="false" selection-start-line="118" selection-start-column="82" selection-end-line="118" selection-end-column="82" />
               <folding>
                 <element signature="e#25#89#0" expanded="true" />
               </folding>
@@ -50,8 +50,8 @@
       <file leaf-file-name="seq2seq_model.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="190" column="45" lean-forward="false" selection-start-line="190" selection-start-column="45" selection-end-line="190" selection-end-column="45" />
+            <state relative-caret-position="316">
+              <caret line="171" column="61" lean-forward="false" selection-start-line="171" selection-start-column="54" selection-end-line="171" selection-end-column="61" />
               <folding>
                 <element signature="e#25#36#0" expanded="true" />
               </folding>
@@ -74,7 +74,7 @@
       <file leaf-file-name="misc_opts.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/misc/misc_opts.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1633">
+            <state relative-caret-position="624">
               <caret line="72" column="41" lean-forward="false" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="41" />
               <folding />
             </state>
@@ -84,7 +84,7 @@
       <file leaf-file-name="train_seq2seq_model.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="130">
+            <state relative-caret-position="-1808">
               <caret line="175" column="15" lean-forward="false" selection-start-line="175" selection-start-column="15" selection-end-line="175" selection-end-column="15" />
               <folding>
                 <element signature="e#25#34#0" expanded="true" />
@@ -487,7 +487,7 @@
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39975095" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -867,34 +867,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/misc/misc_opts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1633">
-          <caret line="72" column="41" lean-forward="false" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="41" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="251">
-          <caret line="81" column="23" lean-forward="false" selection-start-line="81" selection-start-column="13" selection-end-line="81" selection-end-column="23" />
-          <folding>
-            <element signature="e#24#55#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="190" column="45" lean-forward="false" selection-start-line="190" selection-start-column="45" selection-end-line="190" selection-end-column="45" />
-          <folding>
-            <element signature="e#25#36#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Optim.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="116">
@@ -911,19 +883,6 @@
           <caret line="165" column="0" lean-forward="true" selection-start-line="165" selection-start-column="0" selection-end-line="165" selection-end-column="0" />
           <folding>
             <element signature="e#24#55#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="130">
-          <caret line="175" column="15" lean-forward="false" selection-start-line="175" selection-start-column="15" selection-end-line="175" selection-end-column="15" />
-          <folding>
-            <element signature="e#25#34#0" expanded="true" />
-            <marker date="1537009205930" expanded="false" signature="4890:5142" ph="..." />
-            <marker date="1537009205930" expanded="false" signature="5969:6590" ph="..." />
-            <marker date="1537009205930" expanded="false" signature="8640:9332" ph="..." />
           </folding>
         </state>
       </provider>
@@ -946,10 +905,51 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1808">
+          <caret line="175" column="15" lean-forward="false" selection-start-line="175" selection-start-column="15" selection-end-line="175" selection-end-column="15" />
+          <folding>
+            <element signature="e#25#34#0" expanded="true" />
+            <marker date="1537009205930" expanded="false" signature="4890:5142" ph="..." />
+            <marker date="1537009205930" expanded="false" signature="5969:6590" ph="..." />
+            <marker date="1537009205930" expanded="false" signature="8640:9332" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/misc_opts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="624">
+          <caret line="72" column="41" lean-forward="false" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="251">
+          <caret line="81" column="23" lean-forward="false" selection-start-line="81" selection-start-column="13" selection-end-line="81" selection-end-column="23" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="316">
+          <caret line="171" column="61" lean-forward="false" selection-start-line="171" selection-start-column="54" selection-end-line="171" selection-end-column="61" />
+          <folding>
+            <element signature="e#25#36#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/misc/data_set.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="139" column="34" lean-forward="false" selection-start-line="139" selection-start-column="16" selection-end-line="139" selection-end-column="34" />
+        <state relative-caret-position="308">
+          <caret line="118" column="82" lean-forward="false" selection-start-line="118" selection-start-column="82" selection-end-line="118" selection-end-column="82" />
           <folding>
             <element signature="e#25#89#0" expanded="true" />
           </folding>
