@@ -293,7 +293,7 @@ if __name__ == '__main__':
     #     model_opt = opt
 
     vocab = Vocab()
-    vocab.load()
+    vocab.load(opt.vocab_save_path)
     vocab_size = vocab.get_vocab_size()
 
     seq2seq_dataset = Seq2seqDataSet(

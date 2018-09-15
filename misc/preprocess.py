@@ -163,7 +163,7 @@ build vocab
 def build_vocab(freq_list):
     vocab = Vocab()
     vocab.build_for_frequency(freq_list)
-    vocab.save()
+    vocab.save(opt.vocab_save_path)
     return vocab
 
 

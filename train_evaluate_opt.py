@@ -25,6 +25,10 @@ def data_set_opt(parser):
                        type=str,
                        help='location of save files. ')
 
+    group.add_argument('--vocab_save_path',
+                       type=str,
+                       help='location of save vocab dict file. ')
+
     group.add_argument('--min_count',
                        type=int,
                        default=3,
