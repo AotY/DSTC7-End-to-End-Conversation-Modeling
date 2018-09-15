@@ -2,6 +2,7 @@
 from __future__ import division
 from __future__ import print_function
 
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +11,7 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence as pack
 from torch.nn.utils.rnn import pad_packed_sequence as unpack
 
-from utils import aeq, rnn_factory
+from modules.utils import aeq, rnn_factory
 
 
 class EncoderBase(nn.Module):
@@ -92,21 +93,27 @@ class RNNEncoder(EncoderBase):
 
     def __init__(self, rnn_type, bidirectional, num_layers,
                  hidden_size, dropout=0, embeddings=None):
+
         super(RNNEncoder, self).__init__()
         assert embeddings is not None
 
         num_directions = 2 if bidirectional else 1
+
         assert hidden_size % num_directions == 0
-        hidden_size = hidden_size // num_directions
+
+        self.hidden_size = hidden_size // num_directions
+
         self.embeddings = embeddings
 
         self.rnn = rnn_factory(rnn_type,
                                input_size=embeddings.embedding_size,
-                               hidden_size=hidden_size,
+                               hidden_size=self.hidden_size,
                                num_layers=num_layers,
                                dropout=dropout,
                                bidirectional=bidirectional)
+
         self.encoder_type = 'rnn'
+
         self.rnn_type = rnn_type
 
     def forward(self, src, lengths=None, encoder_state=None):
@@ -126,10 +133,14 @@ class RNNEncoder(EncoderBase):
 
         # rank the sequences according to their lengths
         input_length = Variable(lengths)
+
         if src.is_cuda:
             input_length = input_length.cuda()
-        new_input_length, length_inds = torch.sort(input_length, descending=True)
-        new_src = torch.index_select(src, 1, length_inds)
+
+        new_input_length, length_indexs = torch.sort(input_length, descending=True)
+
+        new_src = torch.index_select(src, 1, length_indexs)
+
         src, lengths = (new_src, new_input_length.data)
 
         emb = self.embeddings(src)
@@ -147,7 +158,8 @@ class RNNEncoder(EncoderBase):
             memory_bank = nn.utils.rnn.pad_packed_sequence(memory_bank)[0]
 
         # map to input order
-        _, out_order = torch.sort(length_inds)
+        _, out_order = torch.sort(length_indexs)
+
         if isinstance(encoder_final, tuple):
             out_memory_bank, out_encode_final = (torch.index_select(memory_bank, 1, out_order),
                                                  (torch.index_select(encoder_final[0], 1, out_order),
@@ -156,6 +168,13 @@ class RNNEncoder(EncoderBase):
             out_memory_bank, out_encode_final = (torch.index_select(memory_bank, 1, out_order),
                                                  torch.index_select(encoder_final, 1, out_order))
         return (out_encode_final, out_memory_bank)
+
+
+    def init_hidden(self):
+        initial_state_scale = 1.0 / math.sqrt(3.0 / self.hidden_size)
+        initial_state = torch.rand(self.hidden_size, self.hidden_size)
+        initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
+        return initial_state
 
 
 #

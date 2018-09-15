@@ -187,11 +187,13 @@ class Seq2Seq:
         # build layers
         embeding = Embedding(
             self.dataset.num_tokens + 1,  # +1 as mask_zero
-            self.token_embed_dim, mask_zero=True,
+            self.token_embed_dim,
+            mask_zero=True,
             name='embeding')
 
         encoder_inputs = Input(shape=(None,), name='encoder_inputs')
         encoder_rnns = []
+
         for i in range(self.encoder_depth):
             encoder_rnns.append(GRU(
                 self.rnn_units,
@@ -199,6 +201,7 @@ class Seq2Seq:
                 return_sequences=True,
                 name='encoder_rnn_%i' % i,
             ))
+
 
         decoder_inputs = Input(shape=(None,), name='decoder_inputs')
         decoder_rnns = []
@@ -209,6 +212,7 @@ class Seq2Seq:
                 return_sequences=True,
                 name='decoder_rnn_%i' % i,
             ))
+
 
         decoder_softmax = Dense(
             self.dataset.num_tokens + 1,  # +1 as mask_zero
@@ -224,6 +228,7 @@ class Seq2Seq:
 
         decoder_outputs = Dropout(self.dropout_rate)(decoder_outputs)
         decoder_outputs = decoder_softmax(decoder_outputs)
+
         self.model_train = Model(
             [encoder_inputs, decoder_inputs],  # [input sentences, ground-truth target sentences],
             decoder_outputs)  # shifted ground-truth sentences

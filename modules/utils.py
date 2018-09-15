@@ -70,7 +70,7 @@ def recall(probas, k, group_size):
     test_size = 10
     n_batches = len(probas) // test_size
     n_correct = 0
-    for i in xrange(n_batches):
+    for i in range(n_batches):
         batch = np.array(probas[i * test_size:(i + 1) * test_size])[:group_size]
         try:
             indices = np.argpartition(batch.reshape((-1,)), -k)[-k:]
