@@ -3,7 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="edc92e08-afee-4336-bb6c-dd2c64d2efb5" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_seq2seq_model.py" afterPath="$PROJECT_DIR$/train_seq2seq_model.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_evaluate_opt.py" afterPath="$PROJECT_DIR$/train_evaluate_opt.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_seq2seq_model.sh" afterPath="$PROJECT_DIR$/train_seq2seq_model.sh" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -81,11 +82,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="train_seq2seq_model.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="train_seq2seq_model.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="389">
-              <caret line="66" column="26" lean-forward="false" selection-start-line="66" selection-start-column="26" selection-end-line="66" selection-end-column="26" />
+            <state relative-caret-position="130">
+              <caret line="175" column="15" lean-forward="false" selection-start-line="175" selection-start-column="15" selection-end-line="175" selection-end-column="15" />
               <folding>
                 <element signature="e#25#34#0" expanded="true" />
                 <marker date="1537009205930" expanded="false" signature="4890:5142" ph="..." />
@@ -96,11 +97,23 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="train_evaluate_opt.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Optim.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/Optim.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="116">
+              <caret line="18" column="64" lean-forward="true" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="64" />
+              <folding>
+                <element signature="e#25#56#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="train_evaluate_opt.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2737">
-              <caret line="120" column="66" lean-forward="false" selection-start-line="120" selection-start-column="26" selection-end-line="120" selection-end-column="66" />
+            <state relative-caret-position="348">
+              <caret line="174" column="40" lean-forward="true" selection-start-line="174" selection-start-column="40" selection-end-line="174" selection-end-column="40" />
               <folding>
                 <element signature="e#24#55#0" expanded="true" />
               </folding>
@@ -111,8 +124,8 @@
       <file leaf-file-name="train_seq2seq_model.sh" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="69">
-              <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+            <state relative-caret-position="554">
+              <caret line="35" column="23" lean-forward="false" selection-start-line="35" selection-start-column="19" selection-end-line="35" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -130,18 +143,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="preprocess.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/misc/preprocess.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3726">
-              <caret line="165" column="11" lean-forward="false" selection-start-line="165" selection-start-column="11" selection-end-line="165" selection-end-column="11" />
-              <folding>
-                <element signature="e#24#33#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -153,8 +154,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>vocab</find>
-      <find>tokenize</find>
       <find>tokenizer</find>
       <find>pre_trained_embedding</find>
       <find>max_vocab_size</find>
@@ -183,6 +182,8 @@
       <find>test_split</find>
       <find>dialog_encoder_max_length</find>
       <find>dialog_encoder_vocab_size</find>
+      <find>optim_method</find>
+      <find>adam</find>
     </findStrings>
     <replaceStrings>
       <replace>num_layers</replace>
@@ -249,10 +250,10 @@
         <option value="$PROJECT_DIR$/misc/preprocess.sh" />
         <option value="$PROJECT_DIR$/misc/vocab.py" />
         <option value="$PROJECT_DIR$/misc/misc_opts.py" />
-        <option value="$PROJECT_DIR$/train_evaluate_opt.py" />
-        <option value="$PROJECT_DIR$/train_seq2seq_model.sh" />
         <option value="$PROJECT_DIR$/seq2seq_model.py" />
         <option value="$PROJECT_DIR$/train_seq2seq_model.py" />
+        <option value="$PROJECT_DIR$/train_evaluate_opt.py" />
+        <option value="$PROJECT_DIR$/train_seq2seq_model.sh" />
       </list>
     </option>
   </component>
@@ -636,6 +637,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="281">
           <caret line="29" column="34" lean-forward="false" selection-start-line="29" selection-start-column="34" selection-end-line="29" selection-end-column="34" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -788,16 +790,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Optim.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="241">
-          <caret line="100" column="16" lean-forward="false" selection-start-line="100" selection-start-column="16" selection-end-line="100" selection-end-column="16" />
-          <folding>
-            <element signature="e#25#56#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/GlobalAttention.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="580">
@@ -809,6 +801,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="214">
           <caret line="41" column="4" lean-forward="false" selection-start-line="41" selection-start-column="4" selection-end-line="41" selection-end-column="4" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -903,16 +896,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2737">
-          <caret line="120" column="66" lean-forward="false" selection-start-line="120" selection-start-column="26" selection-end-line="120" selection-end-column="66" />
-          <folding>
-            <element signature="e#24#55#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="251">
@@ -920,14 +903,6 @@
           <folding>
             <element signature="e#24#55#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="69">
-          <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -943,13 +918,41 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="389">
-          <caret line="66" column="26" lean-forward="false" selection-start-line="66" selection-start-column="26" selection-end-line="66" selection-end-column="26" />
+        <state relative-caret-position="130">
+          <caret line="175" column="15" lean-forward="false" selection-start-line="175" selection-start-column="15" selection-end-line="175" selection-end-column="15" />
           <folding>
             <element signature="e#25#34#0" expanded="true" />
             <marker date="1537009205930" expanded="false" signature="4890:5142" ph="..." />
             <marker date="1537009205930" expanded="false" signature="5969:6590" ph="..." />
             <marker date="1537009205930" expanded="false" signature="8640:9332" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Optim.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="116">
+          <caret line="18" column="64" lean-forward="true" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="64" />
+          <folding>
+            <element signature="e#25#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="554">
+          <caret line="35" column="23" lean-forward="false" selection-start-line="35" selection-start-column="19" selection-end-line="35" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="348">
+          <caret line="174" column="40" lean-forward="true" selection-start-line="174" selection-start-column="40" selection-end-line="174" selection-end-column="40" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
           </folding>
         </state>
       </provider>
