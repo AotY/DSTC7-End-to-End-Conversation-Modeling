@@ -11,12 +11,10 @@ def data_set_opt(parser):
 
     group.add_argument('--conversations_num_path',
                        type=str,
-                       require=True,
                        help='location of the conversations num. ')
 
     group.add_argument('--responses_num_path',
                        type=str,
-                       require=True,
                        help='location of the responses num. ')
 
     group.add_argument('--facts_num_path',
