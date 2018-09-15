@@ -132,8 +132,8 @@ class Seq2seqDataSet:
                 seq_response.append(self.dialog_encoder_vocab.eosid)
 
             conversation_texts.append(
-                ' '.join([str(self.dialog_encoder_vocab.ids_to_word(j)) for j in seq_conversation]))
-            response_texts.append(' '.join([str(self.dialog_decoder_vocab.ids_to_word(j)) for j in seq_response]))
+                ' '.join([str(self.dialog_encoder_vocab.id_to_word(j)) for j in seq_conversation]))
+            response_texts.append(' '.join([str(self.dialog_decoder_vocab.id_to_word(j)) for j in seq_response]))
 
             for t, token_id in enumerate(seq_conversation):
                 # encoder_input_data[i, t] = token_id
