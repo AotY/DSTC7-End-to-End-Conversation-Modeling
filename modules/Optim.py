@@ -14,6 +14,7 @@ class Optim(object):
     rate scheduling beyond what is currently available.
     Also implements necessary methods for training RNNs such
     as grad manipulations.
+
     Args:
       method (:obj:`str`): one of [sgd, adagrad, adadelta, adam]
       lr (float): learning rate
@@ -35,6 +36,7 @@ class Optim(object):
     # https://arxiv.org/pdf/1706.03762.pdf, particularly the value beta2=0.98
     # was used there however, beta2=0.999 is still arguably the more
     # established value, so we use that here as well
+
     def __init__(self, method, lr, max_grad_norm,
                  lr_decay=1, start_decay_at=None,
                  beta1=0.9, beta2=0.999,
@@ -42,6 +44,7 @@ class Optim(object):
                  decay_method=None,
                  warmup_steps=4000,
                  model_size=None):
+
         self.last_ppl = None
         self.lr = lr
         self.original_lr = lr
@@ -115,3 +118,6 @@ class Optim(object):
 
         self.last_ppl = ppl
         self.optimizer.param_groups[0]['lr'] = self.lr
+
+if __name__ == '__main__':
+    pass

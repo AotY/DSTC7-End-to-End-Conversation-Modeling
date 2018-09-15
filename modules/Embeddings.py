@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import math
 
-from utils import aeq
+from modules.utils import aeq
 
 
 class PositionalEncoding(nn.Module):
@@ -62,11 +62,13 @@ class Embeddings(nn.Module):
         dropout (float): dropout probability.
     """
 
-    def __init__(self, word_vec_size,
+    def __init__(self,
+                 word_vec_size,
                  word_vocab_size,
                  word_padding_idx,
-                 dropout=0,
+                 dropout_ratio=0.0,
                  sparse=False):
+
         super(Embeddings, self).__init__()
         self.word_padding_idx = word_padding_idx
 
@@ -88,6 +90,8 @@ class Embeddings(nn.Module):
         # looking up the embeddings for each word and feature in the
         # input. Model parameters may require the sequence to contain
         # additional operations as well.
+
+        self.dropout = nn.Dropout(p=dropout_ratio)
 
     @property
     def word_lut(self):
@@ -121,6 +125,7 @@ class Embeddings(nn.Module):
         # aeq(nfeat, len(self.emb_luts))
 
         emb = self.embeddings(input)
+        emb = self.dropout(emb)
 
         out_length, out_batch, emb_size = emb.size()
         aeq(in_length, out_length)
