@@ -30,6 +30,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_clip_grads=1.0,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_pretrained_embedding_weight=None,
+                 dialog_encoder_pad_id=1,
 
                  dialog_decoder_vocab_size=None,
                  dialog_decoder_hidden_size=300,
@@ -41,6 +42,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_clip_grads=1.0,
                  dialog_decoder_bidirectional=True,
                  dialog_decoder_pretrained_embedding_weight=None,
+                 dialog_decoder_pad_id=1,
                  dialog_decoder_attention_type='dot'
                  ):
         super(Seq2SeqModel, self).__init__()
@@ -59,6 +61,7 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_clip_grads = dialog_encoder_clip_grads
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
         self.dialog_encoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
+        self.dialog_encoder_pad_id = dialog_encoder_pad_id
 
         '''Dialog decoder parameters'''
         self.dialog_decoder_vocab_size = dialog_decoder_vocab_size
@@ -71,6 +74,7 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_clip_grads = dialog_decoder_clip_grads
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pretrained_embedding_weight = dialog_decoder_pretrained_embedding_weight
+        self.dialog_decoder_pad_id = dialog_decoder_pad_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
 
         # num_embeddings, embedding_dim

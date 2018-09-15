@@ -165,7 +165,7 @@ def dialog(self, input_text):
     return self._infer(np.atleast_2d(source_seq_int))
 
 
-def build_optim(model, opt, checkpoint):
+def build_optim(model, opt, checkpoint=None):
     if opt.train_from:
         logger.info('Loading optimizer from checkpoint.')
         optim = checkpoint['optim']
@@ -213,7 +213,7 @@ def tally_parameters(model):
     logger.info('project: ', dec)
 
 
-def build_model(opt, dialog_encoder_vocab_size, dialog_decoder_vocab_size, checkpoint=None):
+def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None):
     logger.info('Building model...')
 
     # load pre-trained embedding
@@ -221,7 +221,7 @@ def build_model(opt, dialog_encoder_vocab_size, dialog_decoder_vocab_size, check
     dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
     seq2seq_model = Seq2SeqModel(
-        dialog_encoder_vocab_size=dialog_encoder_vocab_size,
+        dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
         dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
         dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
         dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
@@ -230,8 +230,9 @@ def build_model(opt, dialog_encoder_vocab_size, dialog_decoder_vocab_size, check
         dialog_encoder_clip_grads=opt.dialog_encoder_clip_grads,
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_pretrained_embedding_weight=dialog_encoder_pretrained_embedding_weight,
+        dialog_encoder_pad_id=dialog_encoder_vocab.padid,
 
-        dialog_decoder_vocab_size=dialog_decoder_vocab_size,
+        dialog_decoder_vocab_size=dialog_decoder_vocab.get_vocab_size(),
         dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
         dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
         dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
@@ -240,6 +241,7 @@ def build_model(opt, dialog_encoder_vocab_size, dialog_decoder_vocab_size, check
         dialog_decoder_clip_grads=opt.dialog_decoder_clip_grads,
         dialog_decoder_bidirectional=opt.dialog_decoder_bidirectional,
         dialog_decoder_pretrained_embedding_weight=dialog_decoder_pretrained_embedding_weight,
+        dialog_decoder_pad_id=dialog_decoder_vocab.padid,
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type)
 
     if use_gpu:
@@ -311,7 +313,7 @@ if __name__ == '__main__':
         logger=logger
     )
 
-    seq2seq_model = build_model(opt, vocab_size, vocab_size, vocab)
+    seq2seq_model = build_model(opt, vocab, vocab, None)
     # tally_parameters(seq2seq_model)
     # check_save_model_path()
 
