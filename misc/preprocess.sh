@@ -6,6 +6,7 @@ python preprocess.py \
     --conversations_num_save_path ./../data/train.conversations.num.txt \
     --responses_num_save_path ./../data/train.responses.num.txt \
     --save_path ./../data \
+    --vocab_save_path ./../data/vocab_word2idx.dict \
     --min_count 3 \
     --max_vocab_size 8e4 \
     --word_embedding_model_name v1.0_word_embedding \
