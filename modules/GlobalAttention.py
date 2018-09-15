@@ -5,7 +5,8 @@ from __future__ import print_function
 import torch
 import torch.nn as nn
 
-from utils import aeq, sequence_mask
+from modules.utils import aeq, sequence_mask
+
 
 class Bottle(nn.Module):
     def forward(self, input):
@@ -77,8 +78,8 @@ class GlobalAttention(nn.Module):
 
         self.dim = dim
         self.attn_type = attn_type
-        assert (self.attn_type in ["dot", "general", "mlp"]), (
-            "Please select a valid attention type.")
+        assert (self.attn_type in ["dot", "general", "mlp"]), \
+            ("Please select a valid attention type.")
 
         if self.attn_type == "general":
             self.linear_in = nn.Linear(dim, dim, bias=False)

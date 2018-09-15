@@ -2,8 +2,29 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="edc92e08-afee-4336-bb6c-dd2c64d2efb5" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/misc/__init__.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/__init__.py" afterPath="$PROJECT_DIR$/baseline/main.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/data_set.py" afterPath="$PROJECT_DIR$/misc/data_set.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/merge.sh" afterPath="$PROJECT_DIR$/misc/merge.sh" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/merge_convos_facts.py" afterPath="$PROJECT_DIR$/misc/merge_convos_facts.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/preprocess.py" afterPath="$PROJECT_DIR$/misc/preprocess.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/preprocess.sh" afterPath="$PROJECT_DIR$/misc/preprocess.sh" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/tokenizer.py" afterPath="$PROJECT_DIR$/misc/tokenizer.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/utils_opts.py" afterPath="$PROJECT_DIR$/misc/utils_opts.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/utils/vocab.py" afterPath="$PROJECT_DIR$/misc/vocab.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/merge_convos_facts.py" afterPath="$PROJECT_DIR$/utils/merge_convos_facts.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/baseline/baseline.py" afterPath="$PROJECT_DIR$/baseline/baseline.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Decoder.py" afterPath="$PROJECT_DIR$/modules/Decoder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Embeddings.py" afterPath="$PROJECT_DIR$/modules/Embeddings.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Encoder.py" afterPath="$PROJECT_DIR$/modules/Encoder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/GlobalAttention.py" afterPath="$PROJECT_DIR$/modules/GlobalAttention.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Optim.py" afterPath="$PROJECT_DIR$/modules/Optim.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/utils.py" afterPath="$PROJECT_DIR$/modules/utils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/seq2seq_model.py" afterPath="$PROJECT_DIR$/seq2seq_model.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_evaluate_opt.py" afterPath="$PROJECT_DIR$/train_evaluate_opt.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_kg_model.py" afterPath="$PROJECT_DIR$/train_kg_model.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_seq2seq_model.py" afterPath="$PROJECT_DIR$/train_seq2seq_model.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_seq2seq_model.sh" afterPath="$PROJECT_DIR$/train_seq2seq_model.sh" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -14,43 +35,79 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$Decoder.coverage" NAME="Decoder Coverage Results" MODIFIED="1536762038348" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
-    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$Encoder.coverage" NAME="Encoder Coverage Results" MODIFIED="1536761967148" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
+    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$Encoder.coverage" NAME="Encoder Coverage Results" MODIFIED="1536988796716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
     <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$main2.coverage" NAME="main2 Coverage Results" MODIFIED="1536755609458" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/baseline" />
-    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$main.coverage" NAME="main Coverage Results" MODIFIED="1536847224297" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/baseline" />
+    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$beam_search.coverage" NAME="beam_search Coverage Results" MODIFIED="1536942608984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/PycharmProjects/AskQA/test" />
+    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$main.coverage" NAME="main Coverage Results" MODIFIED="1536982197575" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/baseline" />
     <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$tokenize.coverage" NAME="tokenize Coverage Results" MODIFIED="1536763043955" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/preprocess" />
+    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$Optim.coverage" NAME="Optim Coverage Results" MODIFIED="1536924381340" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
+    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$utils.coverage" NAME="utils Coverage Results" MODIFIED="1536930923187" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
+    <SUITE FILE_PATH="coverage/DSTC7_End_to_End_Conversation_Modeling$train_seq2seq_model.coverage" NAME="train_seq2seq_model Coverage Results" MODIFIED="1536988903522" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="embedding_opt.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/embedding/embedding_opt.py">
+      <file leaf-file-name="data_set.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/misc/data_set.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="790">
-              <caret line="49" column="29" lean-forward="false" selection-start-line="49" selection-start-column="29" selection-end-line="49" selection-end-column="29" />
+            <state relative-caret-position="715">
+              <caret line="146" column="52" lean-forward="true" selection-start-line="146" selection-start-column="52" selection-end-line="146" selection-end-column="52" />
               <folding>
-                <element signature="e#24#55#0" expanded="true" />
+                <element signature="e#25#89#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utils_opts.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/utils_opts.py">
+      <file leaf-file-name="Encoder.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="654">
-              <caret line="67" column="31" lean-forward="false" selection-start-line="67" selection-start-column="31" selection-end-line="67" selection-end-column="31" />
+            <state relative-caret-position="780">
+              <caret line="152" column="49" lean-forward="false" selection-start-line="152" selection-start-column="49" selection-end-line="152" selection-end-column="49" />
               <folding>
                 <element signature="e#24#55#0" expanded="true" />
+                <marker date="1536988793014" expanded="false" signature="1384:2780" ph="..." />
+                <marker date="1536988793014" expanded="false" signature="6624:9068" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="preprocess.sh" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/preprocess.sh">
+      <file leaf-file-name="seq2seq_model.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="19" lean-forward="true" selection-start-line="0" selection-start-column="19" selection-end-line="0" selection-end-column="19" />
-              <folding />
+            <state relative-caret-position="-687">
+              <caret line="164" column="54" lean-forward="false" selection-start-line="164" selection-start-column="54" selection-end-line="164" selection-end-column="54" />
+              <folding>
+                <element signature="e#25#36#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Decoder.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/Decoder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="224">
+              <caret line="196" column="32" lean-forward="false" selection-start-line="196" selection-start-column="32" selection-end-line="196" selection-end-column="32" />
+              <folding>
+                <element signature="e#24#55#0" expanded="true" />
+                <marker date="1536988856761" expanded="false" signature="10582:13065" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="train_seq2seq_model.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="262">
+              <caret line="132" column="27" lean-forward="false" selection-start-line="132" selection-start-column="27" selection-end-line="132" selection-end-column="27" />
+              <folding>
+                <element signature="e#25#34#0" expanded="true" />
+                <marker date="1536996101214" expanded="false" signature="4890:5142" ph="..." />
+                <marker date="1536996101214" expanded="false" signature="6010:6631" ph="..." />
+                <marker date="1536996101214" expanded="false" signature="8347:9039" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -58,8 +115,8 @@
       <file leaf-file-name="train_evaluate_opt.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="28" column="33" lean-forward="true" selection-start-line="28" selection-start-column="33" selection-end-line="28" selection-end-column="33" />
+            <state relative-caret-position="236">
+              <caret line="34" column="36" lean-forward="false" selection-start-line="34" selection-start-column="26" selection-end-line="34" selection-end-column="36" />
               <folding>
                 <element signature="e#24#55#0" expanded="true" />
               </folding>
@@ -67,67 +124,33 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="preprocess.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/preprocess.py">
+      <file leaf-file-name="train_seq2seq_model.sh" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="487">
-              <caret line="162" column="27" lean-forward="false" selection-start-line="162" selection-start-column="27" selection-end-line="162" selection-end-column="27" />
-              <folding>
-                <element signature="e#24#33#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="merge_convos_facts.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/utils/merge_convos_facts.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-928">
-              <caret line="8" column="15" lean-forward="false" selection-start-line="8" selection-start-column="15" selection-end-line="8" selection-end-column="15" />
+            <state relative-caret-position="525">
+              <caret line="31" column="22" lean-forward="false" selection-start-line="31" selection-start-column="22" selection-end-line="31" selection-end-column="22" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="npyio.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/numpy/lib/npyio.py">
+      <file leaf-file-name="vocab.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/misc/vocab.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="179">
-              <caret line="485" column="0" lean-forward="true" selection-start-line="485" selection-start-column="0" selection-end-line="485" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/embedding/utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-65">
-              <caret line="198" column="81" lean-forward="false" selection-start-line="198" selection-start-column="81" selection-end-line="198" selection-end-column="81" />
+            <state relative-caret-position="1618">
+              <caret line="87" column="8" lean-forward="false" selection-start-line="87" selection-start-column="8" selection-end-line="87" selection-end-column="8" />
               <folding>
-                <element signature="e#100#131#0" expanded="true" />
+                <element signature="e#133#164#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="train_embedding.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/embedding/train_embedding.py">
+      <file leaf-file-name="clip_grad.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/clip_grad.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="68" column="0" lean-forward="true" selection-start-line="68" selection-start-column="0" selection-end-line="69" selection-end-column="3" />
-              <folding>
-                <element signature="e#85#116#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="word2vec.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/gensim/models/word2vec.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="211">
-              <caret line="1037" column="8" lean-forward="false" selection-start-line="1037" selection-start-column="8" selection-end-line="1037" selection-end-column="8" />
+            <state relative-caret-position="214">
+              <caret line="41" column="4" lean-forward="false" selection-start-line="41" selection-start-column="4" selection-end-line="41" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -144,29 +167,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>tgt</find>
-      <find>lengths</find>
-      <find>memory_lengths</find>
-      <find>state</find>
-      <find>attns</find>
-      <find>sys</find>
-      <find>n</find>
-      <find>word</find>
-      <find>path_target</find>
-      <find>n_train</find>
-      <find>i_sample</find>
-      <find>-</find>
-      <find>test_split</find>
-      <find>max_seq_len</find>
-      <find>if opt.use_teacher_forcing:</find>
-      <find>dialog_decoder_initial_state</find>
-      <find>vocab_size</find>
-      <find>store</find>
-      <find>max_sentence_length</find>
-      <find>min_count</find>
-      <find>preprocess_opt</find>
-      <find>lower</find>
-      <find>binary</find>
       <find>items</find>
       <find>vocab</find>
       <find>tokenize</find>
@@ -174,13 +174,40 @@
       <find>pre_trained_embedding</find>
       <find>max_vocab_size</find>
       <find>word_embedding_model_name</find>
+      <find>print_loss_total</find>
+      <find>print_loss_avg</find>
+      <find>encoder_input_data</find>
+      <find>optim</find>
+      <find>method</find>
+      <find>print</find>
+      <find>beam</find>
+      <find>beam search</find>
+      <find>DecoderState</find>
+      <find>num_layers</find>
+      <find>beam_update</find>
+      <find>RNNDecoderState</find>
+      <find>init_decoder_state</find>
+      <find>StdRNNDecoder</find>
+      <find>GlobalAttention</find>
+      <find>state</find>
+      <find>build_model</find>
+      <find>use_gpu</find>
+      <find>token_index</find>
+      <find>plot_every</find>
+      <find>max_grad_norm</find>
+      <find>dialog_encoder_max_length</find>
+      <find>test_split</find>
     </findStrings>
     <replaceStrings>
       <replace>num_layers</replace>
       <replace>path_responses</replace>
       <replace>300</replace>
       <replace>--</replace>
+      <replace>log_loss_total</replace>
       <replace>vocab_embedding</replace>
+      <replace>log_loss_avg</replace>
+      <replace>logger.info</replace>
+      <replace>token_id</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -190,21 +217,14 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/data_extraction/Makefile" />
-        <option value="$PROJECT_DIR$/modules/utils.py" />
-        <option value="$PROJECT_DIR$/modules/Optim.py" />
-        <option value="$PROJECT_DIR$/modules/Embeddings.py" />
-        <option value="$PROJECT_DIR$/modules/GlobalAttention.py" />
-        <option value="$PROJECT_DIR$/baseline/baseline.py" />
         <option value="$PROJECT_DIR$/data_extraction/logs/RC_2011-01.bz2.log" />
         <option value="$PROJECT_DIR$/baseline/main2.py" />
         <option value="$PROJECT_DIR$/data_extraction/src/create_official_data.py" />
         <option value="$PROJECT_DIR$/data_extraction/README.md" />
-        <option value="$PROJECT_DIR$/modules/Decoder.py" />
         <option value="$PROJECT_DIR$/preprocess/token.py" />
         <option value="$PROJECT_DIR$/preprocess/tokenize.py" />
         <option value="$PROJECT_DIR$/preprocess/vocab.py" />
         <option value="$PROJECT_DIR$/embedding/embedding_score.py" />
-        <option value="$PROJECT_DIR$/modules/Encoder.py" />
         <option value="$PROJECT_DIR$/train_kg_model.py" />
         <option value="$PROJECT_DIR$/evaluate_kd_model.py" />
         <option value="$PROJECT_DIR$/kg_model.py" />
@@ -214,26 +234,37 @@
         <option value="$PROJECT_DIR$/utils/opts.py" />
         <option value="$PROJECT_DIR$/embedding/train_opt.py" />
         <option value="$PROJECT_DIR$/utils/merge.sh" />
-        <option value="$PROJECT_DIR$/baseline/main.py" />
         <option value="$PROJECT_DIR$/train_seq2seq_opt.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/utils/vocab.py" />
         <option value="$PROJECT_DIR$/evaluate_seq2seq_model.py" />
-        <option value="$PROJECT_DIR$/utils/data_set.py" />
-        <option value="$PROJECT_DIR$/seq2seq_model.py" />
         <option value="$PROJECT_DIR$/embedding/embedding.sh" />
         <option value="$PROJECT_DIR$/seq2seq_model.sh" />
-        <option value="$PROJECT_DIR$/train_seq2seq_model.sh" />
-        <option value="$PROJECT_DIR$/train_seq2seq_model.py" />
         <option value="$PROJECT_DIR$/embedding/embedding_opt.py" />
         <option value="$PROJECT_DIR$/utils/utils_opts.py" />
         <option value="$PROJECT_DIR$/utils/tokenizer.py" />
         <option value="$PROJECT_DIR$/embedding/utils.py" />
         <option value="$PROJECT_DIR$/embedding/train_embedding.py" />
         <option value="$PROJECT_DIR$/utils/preprocess.sh" />
-        <option value="$PROJECT_DIR$/train_evaluate_opt.py" />
         <option value="$PROJECT_DIR$/utils/preprocess.py" />
         <option value="$PROJECT_DIR$/utils/merge_convos_facts.py" />
+        <option value="$PROJECT_DIR$/modules/Optim.py" />
+        <option value="$PROJECT_DIR$/modules/utils.py" />
+        <option value="$USER_HOME$/PycharmProjects/AskQA/test/beam_search.py" />
+        <option value="$PROJECT_DIR$/baseline/baseline.py" />
+        <option value="$PROJECT_DIR$/baseline/main.py" />
+        <option value="$PROJECT_DIR$/utils/data_set.py" />
+        <option value="$PROJECT_DIR$/modules/Encoder.py" />
+        <option value="$PROJECT_DIR$/modules/Decoder.py" />
+        <option value="$PROJECT_DIR$/modules/Embeddings.py" />
+        <option value="$PROJECT_DIR$/modules/GlobalAttention.py" />
+        <option value="$PROJECT_DIR$/misc/preprocess.py" />
+        <option value="$PROJECT_DIR$/train_evaluate_opt.py" />
+        <option value="$PROJECT_DIR$/train_seq2seq_model.sh" />
+        <option value="$PROJECT_DIR$/misc/vocab.py" />
+        <option value="$PROJECT_DIR$/misc/data_set.py" />
+        <option value="$PROJECT_DIR$/train_seq2seq_model.py" />
+        <option value="$PROJECT_DIR$/seq2seq_model.py" />
       </list>
     </option>
   </component>
@@ -243,7 +274,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds">
     <option name="x" value="-2" />
     <option name="y" value="23" />
     <option name="width" value="1440" />
@@ -277,17 +308,22 @@
             <path>
               <item name="DSTC7-End-to-End-Conversation-Modeling" type="b2602c69:ProjectViewProjectNode" />
               <item name="DSTC7-End-to-End-Conversation-Modeling" type="462c0819:PsiDirectoryNode" />
+              <item name="baseline" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="DSTC7-End-to-End-Conversation-Modeling" type="b2602c69:ProjectViewProjectNode" />
+              <item name="DSTC7-End-to-End-Conversation-Modeling" type="462c0819:PsiDirectoryNode" />
               <item name="embedding" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="DSTC7-End-to-End-Conversation-Modeling" type="b2602c69:ProjectViewProjectNode" />
               <item name="DSTC7-End-to-End-Conversation-Modeling" type="462c0819:PsiDirectoryNode" />
-              <item name="modules" type="462c0819:PsiDirectoryNode" />
+              <item name="misc" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="DSTC7-End-to-End-Conversation-Modeling" type="b2602c69:ProjectViewProjectNode" />
               <item name="DSTC7-End-to-End-Conversation-Modeling" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
+              <item name="modules" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -302,7 +338,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="add_unversioned_files" value="true" />
-    <property name="SearchEverywhereHistoryKey" value="opt&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;train&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_evaluate_opt.py&#10;tra&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;voca&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/vocab.py&#10;opts&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;pre&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/preprocess.py&#10;v&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/vocab.py&#10;k&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/kg_model.py" />
+    <property name="SearchEverywhereHistoryKey" value="voca&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/vocab.py&#10;pro&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/preprocess.py&#10;pre&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/preprocess.sh&#10;se&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/seq2seq_model.py&#10;seq&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/seq2seq_model.py&#10;tra&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;v&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/vocab.py&#10;da&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/data_set.py&#10;train&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;opt&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;opts&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;k&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/kg_model.py" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -323,25 +359,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.main">
-    <configuration name="Decoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/modules" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="DSTC7-End-to-End-Conversation-Modeling" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/modules/Decoder.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-    </configuration>
+  <component name="RunManager" selected="Python.train_seq2seq_model">
     <configuration name="Encoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -356,6 +374,24 @@
       <module name="DSTC7-End-to-End-Conversation-Modeling" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/modules/Encoder.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+    </configuration>
+    <configuration name="beam_search" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/PycharmProjects/AskQA/test" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="DSTC7-End-to-End-Conversation-Modeling" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/PycharmProjects/AskQA/test/beam_search.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -378,56 +414,56 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
     </configuration>
-    <configuration name="main2" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="train_seq2seq_model" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/baseline" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="DSTC7-End-to-End-Conversation-Modeling" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/baseline/main2.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_seq2seq_model.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
     </configuration>
-    <configuration name="tokenize" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="utils" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/preprocess" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/modules" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="DSTC7-End-to-End-Conversation-Modeling" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/preprocess/tokenize.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/modules/utils.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.main" />
-      <item index="1" class="java.lang.String" itemvalue="Python.main2" />
-      <item index="2" class="java.lang.String" itemvalue="Python.Encoder" />
-      <item index="3" class="java.lang.String" itemvalue="Python.Decoder" />
-      <item index="4" class="java.lang.String" itemvalue="Python.tokenize" />
+      <item index="1" class="java.lang.String" itemvalue="Python.utils" />
+      <item index="2" class="java.lang.String" itemvalue="Python.beam_search" />
+      <item index="3" class="java.lang.String" itemvalue="Python.train_seq2seq_model" />
+      <item index="4" class="java.lang.String" itemvalue="Python.Encoder" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.main" />
-        <item index="1" class="java.lang.String" itemvalue="Python.tokenize" />
-        <item index="2" class="java.lang.String" itemvalue="Python.Decoder" />
-        <item index="3" class="java.lang.String" itemvalue="Python.Encoder" />
-        <item index="4" class="java.lang.String" itemvalue="Python.main2" />
+        <item index="0" class="java.lang.String" itemvalue="Python.train_seq2seq_model" />
+        <item index="1" class="java.lang.String" itemvalue="Python.Encoder" />
+        <item index="2" class="java.lang.String" itemvalue="Python.main" />
+        <item index="3" class="java.lang.String" itemvalue="Python.beam_search" />
+        <item index="4" class="java.lang.String" itemvalue="Python.utils" />
       </list>
     </recent_temporary>
   </component>
@@ -457,18 +493,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-2" y="23" width="1440" height="877" extended-state="6" />
+    <frame x="-2" y="23" width="1440" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1881259" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11516452" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39975095" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -477,7 +514,6 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -491,10 +527,10 @@
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1881259" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11516452" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
@@ -510,126 +546,18 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="7" />
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/baseline/main.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="9" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/data_extraction/trial/src/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="46">
-          <caret line="2" column="0" lean-forward="true" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data_extraction/src/create_official_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5106">
-          <caret line="462" column="21" lean-forward="false" selection-start-line="462" selection-start-column="21" selection-end-line="462" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data_extraction/trial/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="143">
-            <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data_extraction/Makefile">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="413">
-          <caret line="58" column="26" lean-forward="false" selection-start-line="58" selection-start-column="26" selection-end-line="58" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/GlobalAttention.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="163">
-          <caret line="32" column="16" lean-forward="false" selection-start-line="32" selection-start-column="6" selection-end-line="32" selection-end-column="21" />
-          <folding>
-            <element signature="e#24#55#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="271">
-          <caret line="44" column="32" lean-forward="false" selection-start-line="44" selection-start-column="28" selection-end-line="44" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/cuda/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="26">
-          <caret line="209" column="12" lean-forward="false" selection-start-line="209" selection-start-column="6" selection-end-line="209" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/evaluate_kd_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="460">
-          <caret line="20" column="19" lean-forward="false" selection-start-line="20" selection-start-column="19" selection-end-line="20" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/embedding/embedding_score.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="69">
-          <caret line="114" column="3" lean-forward="true" selection-start-line="114" selection-start-column="3" selection-end-line="114" selection-end-column="3" />
-          <folding>
-            <element signature="e#24#55#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/posix.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="273">
-          <caret line="568" column="69" lean-forward="true" selection-start-line="568" selection-start-column="4" selection-end-line="568" selection-end-column="69" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/sys.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/builtins.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="258">
-          <caret line="339" column="4" lean-forward="false" selection-start-line="339" selection-start-column="4" selection-end-line="339" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/click/parser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-101">
-          <caret line="164" column="8" lean-forward="false" selection-start-line="164" selection-start-column="8" selection-end-line="164" selection-end-column="8" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data_extraction/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="-116">
-            <caret line="160" column="17" lean-forward="false" selection-start-line="160" selection-start-column="3" selection-end-line="160" selection-end-column="17" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/baseline/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="FIRST">
@@ -637,16 +565,6 @@
             <caret line="37" column="3" lean-forward="true" selection-start-line="37" selection-start-column="3" selection-end-line="37" selection-end-column="3" />
           </first_editor>
           <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/baseline/baseline.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="478">
-          <caret line="39" column="4" lean-forward="false" selection-start-line="39" selection-start-column="4" selection-end-line="152" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#26#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -691,7 +609,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/baseline/main.py" />
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="FIRST">
@@ -703,7 +620,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/merge.sh">
+    <entry file="file://$PROJECT_DIR$/misc/merge.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="115">
           <caret line="3" column="6" lean-forward="false" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="6" />
@@ -749,96 +666,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/loss.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="91" column="29" lean-forward="true" selection-start-line="90" selection-start-column="8" selection-end-line="91" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/optim/adam.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="281">
           <caret line="29" column="34" lean-forward="false" selection-start-line="29" selection-start-column="34" selection-end-line="29" selection-end-column="34" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/module.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1080">
-          <caret line="739" column="8" lean-forward="false" selection-start-line="739" selection-start-column="8" selection-end-line="739" selection-end-column="8" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Decoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="556">
-          <caret line="222" column="0" lean-forward="false" selection-start-line="222" selection-start-column="0" selection-end-line="222" selection-end-column="0" />
-          <folding>
-            <element signature="e#24#55#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1538">
-          <caret line="131" column="25" lean-forward="false" selection-start-line="131" selection-start-column="25" selection-end-line="131" selection-end-column="25" />
-          <folding>
-            <element signature="e#24#55#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="509">
-          <caret line="147" column="89" lean-forward="false" selection-start-line="146" selection-start-column="12" selection-end-line="147" selection-end-column="89" />
-          <folding>
-            <element signature="e#25#36#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="46">
-          <caret line="2" column="29" lean-forward="false" selection-start-line="2" selection-start-column="29" selection-end-line="2" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2399">
-          <caret line="283" column="114" lean-forward="false" selection-start-line="283" selection-start-column="114" selection-end-line="283" selection-end-column="114" />
-          <folding>
-            <element signature="e#25#34#0" expanded="true" />
-            <marker date="1536908013741" expanded="false" signature="5449:6831" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/vocab.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="274">
-          <caret line="34" column="32" lean-forward="false" selection-start-line="34" selection-start-column="24" selection-end-line="34" selection-end-column="32" />
-          <folding>
-            <element signature="e#133#164#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/data_set.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1875">
-          <caret line="121" column="55" lean-forward="false" selection-start-line="121" selection-start-column="55" selection-end-line="121" selection-end-column="55" />
-          <folding>
-            <element signature="e#25#89#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -850,7 +682,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/tokenizer.py">
+    <entry file="file://$PROJECT_DIR$/misc/tokenizer.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="207">
           <caret line="9" column="15" lean-forward="false" selection-start-line="9" selection-start-column="6" selection-end-line="9" selection-end-column="15" />
@@ -876,14 +708,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/numpy/lib/npyio.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="179">
-          <caret line="485" column="0" lean-forward="true" selection-start-line="485" selection-start-column="0" selection-end-line="485" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/gensim/models/word2vec.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="211">
@@ -892,22 +716,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/utils_opts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="654">
-          <caret line="67" column="31" lean-forward="false" selection-start-line="67" selection-start-column="31" selection-end-line="67" selection-end-column="31" />
-          <folding>
-            <element signature="e#24#55#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/embedding/embedding_opt.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="790">
           <caret line="49" column="29" lean-forward="false" selection-start-line="49" selection-start-column="29" selection-end-line="49" selection-end-column="29" />
           <folding>
-            <element signature="e#24#55#0" expanded="true" />
+            <element signature="e#24#55#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -915,46 +729,292 @@
     <entry file="file://$PROJECT_DIR$/embedding/train_embedding.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="391">
-          <caret line="68" column="0" lean-forward="true" selection-start-line="68" selection-start-column="0" selection-end-line="69" selection-end-column="3" />
+          <caret line="68" column="0" lean-forward="false" selection-start-line="68" selection-start-column="0" selection-end-line="69" selection-end-column="3" />
           <folding>
             <element signature="e#85#116#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
+    <entry file="file://$PROJECT_DIR$/misc/merge_convos_facts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="28" column="33" lean-forward="true" selection-start-line="28" selection-start-column="33" selection-end-line="28" selection-end-column="33" />
+        <state relative-caret-position="385">
+          <caret line="53" column="27" lean-forward="false" selection-start-line="53" selection-start-column="27" selection-end-line="53" selection-end-column="27" />
           <folding>
-            <element signature="e#24#55#0" expanded="true" />
+            <element signature="e#25#35#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/preprocess.sh">
+    <entry file="file://$PROJECT_DIR$/modules/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
-          <caret line="0" column="19" lean-forward="true" selection-start-line="0" selection-start-column="19" selection-end-line="0" selection-end-column="19" />
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/preprocess.py">
+    <entry file="file://$PROJECT_DIR$/misc/utils_opts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="487">
-          <caret line="162" column="27" lean-forward="false" selection-start-line="162" selection-start-column="27" selection-end-line="162" selection-end-column="27" />
+        <state relative-caret-position="463">
+          <caret line="65" column="0" lean-forward="true" selection-start-line="62" selection-start-column="4" selection-end-line="65" selection-end-column="0" />
+          <folding>
+            <element signature="e#24#55#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/numpy/lib/npyio.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="258">
+          <caret line="267" column="4" lean-forward="false" selection-start-line="267" selection-start-column="4" selection-end-line="267" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/linear.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="402">
+          <caret line="54" column="20" lean-forward="true" selection-start-line="54" selection-start-column="20" selection-end-line="54" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/functional.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="387">
+          <caret line="1009" column="4" lean-forward="false" selection-start-line="1009" selection-start-column="4" selection-end-line="1009" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/math.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/PycharmProjects/AskQA/test/beam_search.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="23" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseline/baseline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="567">
+          <caret line="233" column="29" lean-forward="false" selection-start-line="233" selection-start-column="29" selection-end-line="233" selection-end-column="29" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/codecs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="151">
+          <caret line="308" column="0" lean-forward="false" selection-start-line="308" selection-start-column="0" selection-end-line="308" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseline/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="253">
+          <caret line="11" column="22" lean-forward="true" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/activation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="362">
+          <caret line="775" column="8" lean-forward="false" selection-start-line="775" selection-start-column="8" selection-end-line="775" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="720" column="18" lean-forward="false" selection-start-line="720" selection-start-column="8" selection-end-line="720" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="253">
+          <caret line="11" column="7" lean-forward="false" selection-start-line="11" selection-start-column="7" selection-end-line="11" selection-end-column="7" />
+          <folding>
+            <element signature="e#25#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/preprocess.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="7" column="23" lean-forward="true" selection-start-line="7" selection-start-column="23" selection-end-line="7" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/preprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="308">
+          <caret line="180" column="28" lean-forward="false" selection-start-line="180" selection-start-column="28" selection-end-line="180" selection-end-column="28" />
           <folding>
             <element signature="e#24#33#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/merge_convos_facts.py">
+    <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-928">
-          <caret line="8" column="15" lean-forward="false" selection-start-line="8" selection-start-column="15" selection-end-line="8" selection-end-column="15" />
+        <state relative-caret-position="184">
+          <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Optim.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="100" column="16" lean-forward="false" selection-start-line="100" selection-start-column="16" selection-end-line="100" selection-end-column="16" />
+          <folding>
+            <element signature="e#25#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/GlobalAttention.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="580">
+          <caret line="76" column="47" lean-forward="true" selection-start-line="76" selection-start-column="47" selection-end-line="76" selection-end-column="47" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/clip_grad.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="214">
+          <caret line="41" column="4" lean-forward="false" selection-start-line="41" selection-start-column="4" selection-end-line="41" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/loss.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="253">
+          <caret line="193" column="29" lean-forward="false" selection-start-line="193" selection-start-column="23" selection-end-line="193" selection-end-column="29" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23">
+          <caret line="1" column="18" lean-forward="true" selection-start-line="1" selection-start-column="18" selection-end-line="1" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/rnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-239">
+          <caret line="174" column="32" lean-forward="false" selection-start-line="174" selection-start-column="24" selection-end-line="174" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/vocab.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1618">
+          <caret line="87" column="8" lean-forward="false" selection-start-line="87" selection-start-column="8" selection-end-line="87" selection-end-column="8" />
+          <folding>
+            <element signature="e#133#164#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="31" column="22" lean-forward="false" selection-start-line="31" selection-start-column="22" selection-end-line="31" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="236">
+          <caret line="34" column="36" lean-forward="false" selection-start-line="34" selection-start-column="26" selection-end-line="34" selection-end-column="36" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/data_set.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="715">
+          <caret line="146" column="52" lean-forward="true" selection-start-line="146" selection-start-column="52" selection-end-line="146" selection-end-column="52" />
+          <folding>
+            <element signature="e#25#89#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="780">
+          <caret line="152" column="49" lean-forward="false" selection-start-line="152" selection-start-column="49" selection-end-line="152" selection-end-column="49" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+            <marker date="1536988793014" expanded="false" signature="1384:2780" ph="..." />
+            <marker date="1536988793014" expanded="false" signature="6624:9068" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="262">
+          <caret line="132" column="27" lean-forward="false" selection-start-line="132" selection-start-column="27" selection-end-line="132" selection-end-column="27" />
+          <folding>
+            <element signature="e#25#34#0" expanded="true" />
+            <marker date="1536996101214" expanded="false" signature="4890:5142" ph="..." />
+            <marker date="1536996101214" expanded="false" signature="6010:6631" ph="..." />
+            <marker date="1536996101214" expanded="false" signature="8347:9039" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="224">
+          <caret line="196" column="32" lean-forward="false" selection-start-line="196" selection-start-column="32" selection-end-line="196" selection-end-column="32" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+            <marker date="1536988856761" expanded="false" signature="10582:13065" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-687">
+          <caret line="164" column="54" lean-forward="false" selection-start-line="164" selection-start-column="54" selection-end-line="164" selection-end-column="54" />
+          <folding>
+            <element signature="e#25#36#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

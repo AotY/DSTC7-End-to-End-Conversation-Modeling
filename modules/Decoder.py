@@ -7,9 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from torch.autograd import Variable
-from utils import aeq, rnn_factory
-from GlobalAttention import GlobalAttention
-
+from modules.utils import aeq, rnn_factory
+from modules.GlobalAttention import GlobalAttention
 
 class DecoderState(object):
     """Interface for grouping together the current state of a recurrent
@@ -47,17 +46,17 @@ class RNNDecoderState(DecoderState):
             detach,
     """
 
-    def __init__(self, hidden_size, rnnstate):
+    def __init__(self, hidden_size, rnn_state):
         """
         Args:
             hidden_size (int): the size of hidden layer of the decoder.
-            rnnstate: final hidden state from the encoder.
+            rnn_state: final hidden state from the encoder.
                 transformed to shape: layers x batch x (directions*dim).
         """
-        if not isinstance(rnnstate, tuple):
-            self.hidden = (rnnstate,)
+        if not isinstance(rnn_state, tuple):
+            self.hidden = (rnn_state,)
         else:
-            self.hidden = rnnstate
+            self.hidden = rnn_state
         self.coverage = None
 
         # Init the input feed.
@@ -70,11 +69,12 @@ class RNNDecoderState(DecoderState):
     def _all(self):
         return self.hidden + (self.input_feed,)
 
-    def update_state(self, rnnstate, input_feed, coverage=None):
-        if not isinstance(rnnstate, tuple):
-            self.hidden = (rnnstate,)
+    def update_state(self, rnn_state, input_feed, coverage=None):
+        if not isinstance(rnn_state, tuple):
+            self.hidden = (rnn_state,)
         else:
-            self.hidden = rnnstate
+            self.hidden = rnn_state
+
         self.input_feed = input_feed
         self.coverage = coverage
 
@@ -129,9 +129,11 @@ class DecoderBase(nn.Module):
                  bidirectional_encoder, num_layers,
                  hidden_size, attn_type=None,
                  dropout=0.0, embeddings=None):
+
         super(DecoderBase, self).__init__()
 
         assert embeddings is not None
+
         # Basic attributes.
         self.decoder_type = 'rnn'
         self.bidirectional_encoder = bidirectional_encoder
@@ -150,9 +152,7 @@ class DecoderBase(nn.Module):
 
         # Set up the standard attention.
         if self.attn_type is not None:
-            self.attn = GlobalAttention(self.hidden_size,
-                                        attn_type=self.attn_type)
-            #
+            self.attn = GlobalAttention(self.hidden_size, attn_type=self.attn_type)
 
     def init_decoder_state(self, src, memory_bank, encoder_final):
         def _fix_enc_hidden(h):
@@ -163,9 +163,7 @@ class DecoderBase(nn.Module):
             return h
 
         if isinstance(encoder_final, tuple):  # LSTM
-            return RNNDecoderState(self.hidden_size,
-                                   tuple([_fix_enc_hidden(enc_hid)
-                                          for enc_hid in encoder_final]))
+            return RNNDecoderState(self.hidden_size, tuple([_fix_enc_hidden(enc_hid) for enc_hid in encoder_final]))
         else:  # GRU
             return RNNDecoderState(self.hidden_size,
                                    _fix_enc_hidden(encoder_final))
@@ -216,6 +214,7 @@ class DecoderBase(nn.Module):
 
         # Concatenates sequence of tensors along a new dimension.
         decoder_outputs = torch.stack(decoder_outputs)
+
         for k in attns:
             attns[k] = torch.stack(attns[k])
 
@@ -271,10 +270,12 @@ class StdRNNDecoder(DecoderBase):
             rnn_output, decoder_final = self.rnn(emb, state.hidden)
 
         # Check
+
         tgt_len, tgt_batch = tgt.size()
         output_len, output_batch, _ = rnn_output.size()
         aeq(tgt_len, output_len)
         aeq(tgt_batch, output_batch)
+
         # END
 
         # Calculate the attention.

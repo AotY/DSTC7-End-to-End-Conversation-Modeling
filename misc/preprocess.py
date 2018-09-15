@@ -177,9 +177,9 @@ def generate_num(datas, vocab, save_path):
 
 def save_distribution(distribution, name):
     with open(name + '.len.distribution.txt', 'w', encoding="utf-8") as f:
-        f.write('length\tcount')
+        f.write('length\tcount\n')
         for length, count in distribution.items():
-            f.write('%d\t%d' % (length, count))
+            f.write('%d\t%d\n' % (length, count))
 
 
 if __name__ == '__main__':

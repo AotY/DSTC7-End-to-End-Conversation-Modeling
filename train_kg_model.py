@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 from torch import optim
 
-from utils.vocab import SOS, EOS
+from misc.vocab import SOS, EOS
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

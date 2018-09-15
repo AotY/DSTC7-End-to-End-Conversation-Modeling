@@ -9,20 +9,23 @@ def data_set_opt(parser):
     # Data options
     group = parser.add_argument_group('Data Set Opt.')
 
-    group.add_argument('--path_conversations',
+    group.add_argument('--conversations_num_path',
                        type=str,
-                       default='./data/train.conversations.num.txt',
+                       require=True,
                        help='location of the conversations num. ')
 
-    group.add_argument('--path_responses',
+    group.add_argument('--responses_num_path',
                        type=str,
-                       default='./data/train.responses.num.txt',
+                       require=True,
                        help='location of the responses num. ')
 
-    group.add_argument('--path_facts',
+    group.add_argument('--facts_num_path',
                        type=str,
-                       default='./data/train.facts.num.txt',
                        help='location of the facts num. ')
+
+    group.add_argument('--save_path',
+                       type=str,
+                       help='location of save files. ')
 
     group.add_argument('--min_count',
                        type=int,
@@ -36,25 +39,33 @@ def data_set_opt(parser):
 
 
 def train_seq2seq_opt(parser):
-    # Data options
+
     group = parser.add_argument_group('Train Seq2seq Model.')
 
     '''dialog encoder parameters'''
-    group.add_argument('--dialog_encoder_vocab_size',
-                       default=8e5 + 4,
-                       type=float,
-                       help="Dialog encoder vocab size. Because encoder and decoder can have different vocab")
+    # group.add_argument('--dialog_encoder_vocab_size',
+    #                    default=8e5 + 4,
+    #                    type=float,
+    #                    help="Dialog encoder vocab size. Because encoder and decoder can have different vocab")
 
-    group.add_argument('--dialog_encoder_hidden_size', type=int, default=300,
+    group.add_argument('--dialog_encoder_hidden_size',
+                       type=int,
+                       default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument('--dialog_encoder_num_layers', type=int, default=2,
+    group.add_argument('--dialog_encoder_num_layers',
+                       type=int,
+                       default=2,
                        help='number of layers')
 
-    group.add_argument('--dialog_encoder_rnn_type', type=str, default='LSTM',
+    group.add_argument('--dialog_encoder_rnn_type',
+                       type=str,
+                       default='LSTM',
                        help='type of recurrent net (RNN, LSTM, GRU)')
 
-    group.add_argument('--dialog_encoder_dropout_rate', type=int, default=300,
+    group.add_argument('--dialog_encoder_dropout_rate',
+                       type=float,
+                       default=0.8,
                        help='size of word embeddings')
 
     group.add_argument('--dialog_encoder_max_length',
@@ -62,7 +73,9 @@ def train_seq2seq_opt(parser):
                        type=float,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_encoder_clip_grads', type=float, default=0.25,
+    group.add_argument('--dialog_encoder_clip_grads',
+                       type=float,
+                       default=1,
                        help='gradient clipping')
 
     group.add_argument('--dialog_encoder_bidirectional', action='store_true',
@@ -71,6 +84,8 @@ def train_seq2seq_opt(parser):
     group.add_argument('--dialog_encoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog encoder.')
+
+
 
     '''dialog decoder parameters'''
     group.add_argument('--dialog_decoder_vocab_size',
@@ -87,15 +102,15 @@ def train_seq2seq_opt(parser):
     group.add_argument('--dialog_decoder_rnn_type', type=str, default='LSTM',
                        help='type of recurrent net (RNN, LSTM, GRU)')
 
-    group.add_argument('--dialog_decoder_dropout_rate', type=int, default=300,
+    group.add_argument('--dialog_decoder_dropout_rate', type=float, default=0.8,
                        help='size of word embeddings')
 
     group.add_argument('--dialog_decoder_max_length',
                        default=50,
-                       type=float,
+                       type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_decoder_clip_grads', type=float, default=0.25,
+    group.add_argument('--dialog_decoder_clip_grads', type=float, default=1,
                        help='gradient clipping')
 
     group.add_argument('--dialog_decoder_bidirectional', action='store_true',
@@ -105,13 +120,19 @@ def train_seq2seq_opt(parser):
                        type=str,
                        help='pre-trained embedding for dialog decoder.')
 
+    group.add_argument('--dialog_decoder_attention_type',
+                       type=str,
+                       default='dot',
+                       help='dialog decoder attention type. "dot", "general", or "mlp" ')
+
+
 
 
     ''' train parameters '''
-    group.add_argument('--lr', type=float, default=20,
+    group.add_argument('--lr', type=float, default=0.001,
                        help='initial learning rate')
 
-    group.add_argument('--epochs', type=int, default=40,
+    group.add_argument('--epochs', type=int, default=5,
                        help='upper epoch limit')
 
     group.add_argument('--batch_size', type=int, default=128, metavar='N',
@@ -139,7 +160,7 @@ def train_seq2seq_opt(parser):
     group.add_argument('--device',
                        type=str,
                        default='cuda',
-                       help='use CUDA or CPU.')
+                       help='use cuda or cpu.')
 
     group.add_argument('--log_interval', type=int, default=200, metavar='N',
                        help='report interval')
