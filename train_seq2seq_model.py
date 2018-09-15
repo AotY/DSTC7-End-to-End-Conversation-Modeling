@@ -217,7 +217,7 @@ def build_model(opt, checkpoint=None):
     logger.info('Building model...')
 
     # load pre-trained embedding
-    dialog_encoder_pretrained_embedding_weight = np.load(opt.vocab_embedding_file)
+    dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
     dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
     seq2seq_model = Seq2SeqModel(
