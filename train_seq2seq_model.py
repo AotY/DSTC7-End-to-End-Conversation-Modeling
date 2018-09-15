@@ -166,26 +166,26 @@ def dialog(self, input_text):
 
 
 def build_optim(model, opt, checkpoint=None):
-    if opt.train_from:
-        logger.info('Loading optimizer from checkpoint.')
-        optim = checkpoint['optim']
-        optim.optimizer.load_state_dict(
-            checkpoint['optim'].optimizer.state_dict())
-    else:
-        logger.info('Making optimizer for training.')
-        optim = Optim(
-            opt.optim_method,
-            opt.lr,
-            opt.dialog_encoder_clip_grads,
-            # lr_decay=opt.learning_rate_decay,
-            # start_decay_at=opt.start_decay_at,
-            # beta1=opt.adam_beta1,
-            # beta2=opt.adam_beta2,
-            # adagrad_accum=opt.adagrad_accumulator_init,
-            # decay_method=opt.decay_method,
-            # warmup_steps=opt.warmup_steps,
-            # model_size=opt.rnn_size
-        )
+    # if opt.train_from:
+    #     logger.info('Loading optimizer from checkpoint.')
+    #     optim = checkpoint['optim']
+    #     optim.optimizer.load_state_dict(
+    #         checkpoint['optim'].optimizer.state_dict())
+    # else:
+    logger.info('Make optimizer for training.')
+    optim = Optim(
+        opt.optim_method,
+        opt.lr,
+        opt.dialog_encoder_clip_grads,
+        # lr_decay=opt.learning_rate_decay,
+        # start_decay_at=opt.start_decay_at,
+        # beta1=opt.adam_beta1,
+        # beta2=opt.adam_beta2,
+        # adagrad_accum=opt.adagrad_accumulator_init,
+        # decay_method=opt.decay_method,
+        # warmup_steps=opt.warmup_steps,
+        # model_size=opt.rnn_size
+    )
 
     optim.set_parameters(model.parameters())
 
