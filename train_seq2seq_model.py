@@ -217,6 +217,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
     logger.info('Building model...')
 
     # load pre-trained embedding
+    logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
     dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
     dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
