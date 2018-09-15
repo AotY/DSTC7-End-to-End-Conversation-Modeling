@@ -172,6 +172,14 @@ def train_seq2seq_opt(parser):
                        default='./models/seq2seq.model.pt',
                        help='path to save the final model')
 
+    group.add_argument('--optim_method',
+                       type=str,
+                       default='adam',
+                       help='''
+                       method (:obj:`str`): one of [sgd, adagrad, adadelta, adam]
+                       ''')
+
+
 
 def evaluate_seq2seq_model_opt(parser):
     pass

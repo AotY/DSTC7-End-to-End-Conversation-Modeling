@@ -33,6 +33,7 @@ python train_seq2seq_model.py \
     --log_interval 200 \
     --save ./models/seq2seq.model.pt \
     --test_split 0.2 \
+    --optim_method adam \
 
 
 /
