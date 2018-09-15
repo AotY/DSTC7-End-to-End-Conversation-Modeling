@@ -116,7 +116,7 @@ class Seq2seqDataSet:
         # decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.vocab_size + 1))  # +1 as mask_zero
         # decoder_target_data = np.zeros((num_samples, self.dialog_decoder_max_length, self.dialog_decoder_vocab_size))
         # decoder_target_data = np.zeros((self.dialog_decoder_max_length, num_samples, self.dialog_decoder_vocab_size))
-        decoder_target_data = np.ones((num_samples, self.dialog_decoder_max_length))
+        decoder_target_data = np.ones((self.dialog_decoder_max_length, num_samples))
 
         conversation_texts = []
         response_texts = []
