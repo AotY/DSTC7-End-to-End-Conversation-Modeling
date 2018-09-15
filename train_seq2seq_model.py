@@ -213,7 +213,7 @@ def tally_parameters(model):
     logger.info('project: ', dec)
 
 
-def build_model(opt, checkpoint=None):
+def build_model(opt, dialog_encoder_vocab_size, dialog_decoder_vocab_size, checkpoint=None):
     logger.info('Building model...')
 
     # load pre-trained embedding
@@ -221,7 +221,7 @@ def build_model(opt, checkpoint=None):
     dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
     seq2seq_model = Seq2SeqModel(
-        dialog_encoder_vocab_size=opt.dialog_encoder_vocab_size,
+        dialog_encoder_vocab_size=dialog_encoder_vocab_size,
         dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
         dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
         dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
@@ -231,7 +231,7 @@ def build_model(opt, checkpoint=None):
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_pretrained_embedding_weight=dialog_encoder_pretrained_embedding_weight,
 
-        dialog_decoder_vocab_size=opt.dialog_decoder_vocab_size,
+        dialog_decoder_vocab_size=dialog_decoder_vocab_size,
         dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
         dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
         dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
@@ -311,7 +311,7 @@ if __name__ == '__main__':
         logger=logger
     )
 
-    seq2seq_model = build_model(opt)
+    seq2seq_model = build_model(opt, vocab_size, vocab_size, vocab)
     # tally_parameters(seq2seq_model)
     # check_save_model_path()
 
