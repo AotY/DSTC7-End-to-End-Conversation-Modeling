@@ -72,7 +72,7 @@ def train_seq2seq_opt(parser):
 
     group.add_argument('--dialog_encoder_max_length',
                        default=50,
-                       type=float,
+                       type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
     group.add_argument('--dialog_encoder_clip_grads',
