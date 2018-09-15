@@ -4,12 +4,10 @@ import math
 import torch
 import torch.nn as nn
 
-
 from modules.Encoder import RNNEncoder
 from modules.Decoder import StdRNNDecoder
 from modules.Decoder import RNNDecoderState
 from modules.Embeddings import Embeddings
-
 
 
 class Seq2SeqModel(nn.Module):
@@ -117,7 +115,6 @@ class Seq2SeqModel(nn.Module):
             embeddings=self.dialog_encoder_embedding
         )
 
-
         # Dialog Decoder with Attention
         # rnn_type,
         # bidirectional_encoder, num_layers,
@@ -183,7 +180,6 @@ class Seq2SeqModel(nn.Module):
         # 1. first strategy: use top1. 2, use beam search strategy
         dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size))
 
-
         for batch_index in range(batch_size):
             decoder_linear_output = self.dialog_decoder_linear(dialog_decoder_memory_bank[:, batch_index, :])
             decoder_linear_output = self.dialog_decoder_softmax(decoder_linear_output)
@@ -196,6 +192,10 @@ class Seq2SeqModel(nn.Module):
 
         return ((dialog_encoder_final_state, dialog_encoder_memory_bank),
                 (dialog_decoder_memory_bank, dialog_decoder_final_state, dialog_decoder_attns, dialog_decoder_outputs))
+
+    def set_cuda(self):
+        self.dialog_encoder.cuda()
+        self.dialog_decoder.cuda()
 
     # beam search  tensor.numpy()
     def beam_search_decoder(self, memory_bank, beam_size):
