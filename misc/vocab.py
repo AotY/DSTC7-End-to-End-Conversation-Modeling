@@ -61,16 +61,16 @@ class Vocab(object):
 
 
     '''save and restore'''
-    def save(self):
+    def save(self, path='vocab_idx2word.dict'):
         if len(self.idx2word) == 0:
             raise RuntimeError("Save vocab after call build_for_frequency()")
 
-        pickle.dump(self.word2idx, open('vocab_word2idx.dict', 'wb'))
+        pickle.dump(self.word2idx, open(path, 'wb'))
         # pickle.dump(self.idx2word, open('./vocab_idx2word.dict', 'wb'))
 
-    def load(self):
+    def load(self, path='vocab_idx2word.dict'):
         try:
-            self.word2idx = pickle.load(open('vocab_word2idx.dict', 'rb'))
+            self.word2idx = pickle.load(open(path, 'rb'))
             self.idx2word = {v: k for k, v in self.word2idx.items()}
         except:
             raise RuntimeError("Make sure vocab_word2idx.dict exists.")
