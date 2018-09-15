@@ -117,19 +117,13 @@ class Vocab(object):
         return PAD
 
     @property
-    def sosid(self):
+    def sos(self):
         """return the id of padding
         """
         return SOS
 
     @property
-    def eosid(self):
+    def eos(self):
         """return the id of padding
         """
         return EOS
-
-    '''value for pad'''
-
-    @property
-    def for_padding_value(self):
-        return -1
