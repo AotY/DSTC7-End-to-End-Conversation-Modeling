@@ -94,10 +94,10 @@ class Seq2SeqModel(nn.Module):
 
         if self.dialog_encoder_pretrained_embedding_weight is not None:
             # pretrained_weight is a numpy matrix of shape (num_embeddings, embedding_dim)
-            self.dialog_encoder_embedding.weight.data.copy_(
+            self.dialog_encoder_embedding.embeddings.weight.data.copy_(
                 torch.from_numpy(self.dialog_encoder_pretrained_embedding_weight))
 
-            self.dialog_decoder_embedding.weight.data.copy_(
+            self.dialog_decoder_embedding.embeddings.weight.data.copy_(
                 torch.from_numpy(self.dialog_decoder_pretrained_embedding_weight))
 
         '''
