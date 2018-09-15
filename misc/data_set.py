@@ -1,19 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
-import logging
-import numpy as np
 
-import os
-import sys
-import logging
-import argparse
 
 import torch
-
-from vocab import Vocab
-from vocab import PAD, SOS, EOS, UNK
-
+import numpy as np
 
 class Seq2seqDataSet:
     """
@@ -25,15 +16,12 @@ class Seq2seqDataSet:
     def __init__(self,
                  path_conversations,
                  path_responses,
-
                  dialog_encoder_vocab_size=8e4 + 4,
                  dialog_encoder_max_length=50,
                  dialog_encoder_vocab=None,
-
                  dialog_decoder_vocab_size=8e4 + 4,
                  dialog_decoder_max_length=50,
                  dialog_decoder_vocab=None,
-
                  test_split=0.2,  # how many hold out as vali data
                  device=None,
                  logger=None
@@ -52,7 +40,7 @@ class Seq2seqDataSet:
         self.read_txt(path_conversations, path_responses, test_split)
 
     def read_txt(self, path_conversations, path_responses, test_split):
-        print('loading data from txt files...')
+        self.logger.info('loading data from txt files...')
         # load source-target pairs, tokenized
 
         seqs = dict()
@@ -115,14 +103,20 @@ class Seq2seqDataSet:
 
         self.logger.info('building %s data from %i to %i' % (task, i_sample, i_sample_next))
 
-        encoder_input_data = np.zeros((num_samples, self.dialog_encoder_max_length))
-        encoder_input_lengths = np.zeros((num_samples, ))
+        encoder_input_data = np.ones((num_samples, self.dialog_encoder_max_length)) * self.dialog_decoder_vocab.padid
+        # encoder_input_data = np.ones((self.dialog_encoder_max_length, num_samples),
+        #                              dtype=np.int32) * self.dialog_encoder_vocab.padid
+        # encoder_input_lengths = np.ones((num_samples,))  # * self.dialog_encoder_max_length
 
-        decoder_input_data = np.zeros((num_samples, self.dialog_decoder_max_length))
-        decoder_input_lengths = np.zeros((num_samples, ))
+        decoder_input_data = np.ones((num_samples, self.dialog_decoder_max_length)) * self.dialog_decoder_vocab.padid
+        # decoder_input_data = np.ones((self.dialog_decoder_max_length, num_samples),
+        #                              dtype=np.int32) * self.dialog_decoder_vocab.padid
+        # decoder_input_lengths = np.ones((num_samples,))  #* self.dialog_decoder_max_length
 
         # decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.vocab_size + 1))  # +1 as mask_zero
-        decoder_target_data = np.zeros((num_samples, self.dialog_encoder_max_length, self.dialog_decoder_vocab_size))
+        # decoder_target_data = np.zeros((num_samples, self.dialog_decoder_max_length, self.dialog_decoder_vocab_size))
+        # decoder_target_data = np.zeros((self.dialog_decoder_max_length, num_samples, self.dialog_decoder_vocab_size))
+        decoder_target_data = np.ones((self.dialog_decoder_max_length, num_samples))
 
         conversation_texts = []
         response_texts = []
@@ -134,25 +128,36 @@ class Seq2seqDataSet:
             if not bool(seq_response) or not bool(seq_conversation):
                 continue
 
-            if seq_response[-1] != EOS:
-                seq_response.append(EOS)
+            if seq_response[-1] != self.dialog_encoder_vocab.eosid:
+                seq_response.append(self.dialog_encoder_vocab.eosid)
 
-            conversation_texts.append(' '.join([self.dialog_encoder_vocab.words_to_id(j) for j in seq_conversation]))
-            response_texts.append(' '.join([self.dialog_decoder_vocab.words_to_id(j) for j in seq_response]))
+            conversation_texts.append(' '.join([self.dialog_encoder_vocab.ids_to_word(j) for j in seq_conversation]))
+            response_texts.append(' '.join([self.dialog_decoder_vocab.ids_to_word(j) for j in seq_response]))
 
-            for t, token_index in enumerate(seq_conversation):
-                encoder_input_data[i, t] = token_index
+            for t, token_id in enumerate(seq_conversation):
+                # encoder_input_data[i, t] = token_id
+                encoder_input_data[t, i] = token_id
 
-            decoder_input_data[i, 0] = SOS
-            for t, token_index in enumerate(seq_response):
-                decoder_input_data[i, t + 1] = token_index
-                decoder_target_data[i, t, token_index] = 1.
+            decoder_input_data[0, i] = self.dialog_decoder_vocab.sosid
+            # decoder_input_data[i, 0] = self.dialog_decoder_vocab_vocab.sosid
+            for t, token_id in enumerate(seq_response):
+                # decoder_input_data[i, t + 1] = token_id
+                # decoder_target_data[i, t, token_id] = 1.
+                decoder_input_data[t + 1, i] = token_id
+                decoder_target_data[t, i] = token_id
 
+        # To long tensor
         encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long, device=self.device)
+        # encoder_input_lengths = torch.tensor(encoder_input_lengths, dtype=torch.long, device=self.device)
         decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long, device=self.device)
+        # decoder_input_lengths = torch.tensor(decoder_input_lengths, dtype=torch.long, device=self.device)
         decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long, device=self.device)
 
-        return encoder_input_data, decoder_input_data, decoder_target_data, conversation_texts, response_texts
+        return num_samples, \
+               encoder_input_data, \
+               decoder_input_data, \
+               decoder_target_data, \
+               conversation_texts, response_texts
 
 
 class KDataSet:

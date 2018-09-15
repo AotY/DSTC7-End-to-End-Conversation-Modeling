@@ -127,3 +127,9 @@ class Vocab(object):
         """return the id of padding
         """
         return EOS
+
+    '''value for pad'''
+
+    @property
+    def for_padding_value(self):
+        return -1
