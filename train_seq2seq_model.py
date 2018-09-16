@@ -117,8 +117,13 @@ def train(seq2seq_model,
           batch_size,
           vocab,
           opt):
-    encoder_input_lengths = torch.Tensor((batch_size,)) * opt.dialog_encoder_max_length
-    decoder_input_lengths = torch.Tensor((batch_size,)) * opt.dialog_decoder_max_length
+
+    encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
+    decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
+
+    # encoder_input_lengths = encoder_input_lengths.view(1, -1)
+    # decoder_input_lengths = decoder_input_lengths.view(1, -1)
+
     # decoder_input_lengths = decoder_input_data[0]
 
     # output, encoder_input_lengths = pack_padded_sequence(sequence=encoder_input_data,
