@@ -13,6 +13,7 @@ python train_seq2seq_model.py \
     --dialog_encoder_dropout_rate 0.8 \
     --dialog_encoder_max_length 32 \
     --dialog_encoder_clip_grads 1 \
+    --dialog_encoder_bidirectional \
     --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/google_vec_for_vocab.80004.300d.npy \
     --dialog_decoder_hidden_size 300 \
     --dialog_decoder_num_layers 2 \
