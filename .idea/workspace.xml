@@ -28,7 +28,7 @@
       <file leaf-file-name="data_set.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/misc/data_set.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
+            <state relative-caret-position="3349">
               <caret line="161" column="0" lean-forward="false" selection-start-line="156" selection-start-column="15" selection-end-line="161" selection-end-column="0" />
               <folding>
                 <element signature="e#25#89#0" expanded="true" />
@@ -37,23 +37,61 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="preprocess.sh" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/misc/preprocess.sh">
+      <file leaf-file-name="seq2seq_model.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="368">
-              <caret line="16" column="14" lean-forward="false" selection-start-line="16" selection-start-column="14" selection-end-line="16" selection-end-column="14" />
+            <state relative-caret-position="502">
+              <caret line="156" column="46" lean-forward="false" selection-start-line="156" selection-start-column="20" selection-end-line="156" selection-end-column="46" />
+              <folding>
+                <element signature="e#25#36#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Encoder.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="378">
+              <caret line="27" column="0" lean-forward="false" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
+              <folding>
+                <element signature="e#24#55#0" expanded="true" />
+                <marker date="1536988793014" expanded="false" signature="1384:2780" ph="..." />
+                <marker date="1536988793014" expanded="false" signature="6624:9068" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="264">
+              <caret line="21" column="48" lean-forward="false" selection-start-line="21" selection-start-column="39" selection-end-line="21" selection-end-column="48" />
+              <folding>
+                <element signature="e#25#56#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="builtins.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/builtins.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="7498">
+              <caret line="326" column="58" lean-forward="false" selection-start-line="326" selection-start-column="58" selection-end-line="326" selection-end-column="58" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="seq2seq_model.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
+      <file leaf-file-name="GlobalAttention.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/GlobalAttention.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="316">
-              <caret line="171" column="61" lean-forward="false" selection-start-line="171" selection-start-column="54" selection-end-line="171" selection-end-column="61" />
+            <state relative-caret-position="3795">
+              <caret line="171" column="32" lean-forward="false" selection-start-line="171" selection-start-column="19" selection-end-line="171" selection-end-column="32" />
               <folding>
-                <element signature="e#25#36#0" expanded="true" />
+                <element signature="e#24#55#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -62,7 +100,7 @@
       <file leaf-file-name="Embeddings.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="251">
+            <state relative-caret-position="1679">
               <caret line="81" column="23" lean-forward="false" selection-start-line="81" selection-start-column="13" selection-end-line="81" selection-end-column="23" />
               <folding>
                 <element signature="e#24#55#0" expanded="true" />
@@ -74,7 +112,7 @@
       <file leaf-file-name="misc_opts.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/misc/misc_opts.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="624">
+            <state relative-caret-position="1633">
               <caret line="72" column="41" lean-forward="false" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="41" />
               <folding />
             </state>
@@ -84,48 +122,14 @@
       <file leaf-file-name="train_seq2seq_model.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420">
-              <caret line="86" column="33" lean-forward="true" selection-start-line="86" selection-start-column="33" selection-end-line="86" selection-end-column="33" />
+            <state relative-caret-position="203">
+              <caret line="121" column="42" lean-forward="false" selection-start-line="121" selection-start-column="42" selection-end-line="121" selection-end-column="42" />
               <folding>
                 <element signature="e#25#34#0" expanded="true" />
-                <marker date="1537015105504" expanded="false" signature="4870:5122" ph="..." />
-                <marker date="1537015105504" expanded="false" signature="5949:6570" ph="..." />
-                <marker date="1537015105504" expanded="false" signature="8620:9312" ph="..." />
+                <marker date="1537077072709" expanded="false" signature="4997:5249" ph="..." />
+                <marker date="1537077072709" expanded="false" signature="6076:6697" ph="..." />
+                <marker date="1537077072709" expanded="false" signature="8747:9439" ph="..." />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Optim.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/Optim.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="116">
-              <caret line="18" column="64" lean-forward="true" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="64" />
-              <folding>
-                <element signature="e#25#56#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="train_evaluate_opt.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/train_evaluate_opt.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="141">
-              <caret line="165" column="0" lean-forward="true" selection-start-line="165" selection-start-column="0" selection-end-line="165" selection-end-column="0" />
-              <folding>
-                <element signature="e#24#55#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="train_seq2seq_model.sh" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="554">
-              <caret line="35" column="23" lean-forward="false" selection-start-line="35" selection-start-column="19" selection-end-line="35" selection-end-column="23" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -133,7 +137,7 @@
       <file leaf-file-name="vocab.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/misc/vocab.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2944">
+            <state relative-caret-position="2875">
               <caret line="128" column="0" lean-forward="false" selection-start-line="128" selection-start-column="0" selection-end-line="128" selection-end-column="0" />
               <folding>
                 <element signature="e#133#164#0" expanded="true" />
@@ -153,7 +157,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>tokenizer</find>
       <find>pre_trained_embedding</find>
       <find>max_vocab_size</find>
       <find>word_embedding_model_name</find>
@@ -182,6 +185,7 @@
       <find>dialog_encoder_max_length</find>
       <find>dialog_encoder_vocab_size</find>
       <find>adam</find>
+      <find>sequence_mask</find>
       <find>optim_method</find>
     </findStrings>
     <replaceStrings>
@@ -262,7 +266,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds">
     <option name="x" value="-2" />
     <option name="y" value="23" />
     <option name="width" value="1440" />
@@ -476,7 +480,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-2" y="23" width="1440" height="877" extended-state="6" />
+    <frame x="-2" y="23" width="1440" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11516452" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
@@ -541,16 +545,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/baseline/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="390">
-            <caret line="37" column="3" lean-forward="true" selection-start-line="37" selection-start-column="3" selection-end-line="37" selection-end-column="3" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/baseline/create_input_files.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="318">
@@ -636,7 +630,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="281">
           <caret line="29" column="34" lean-forward="false" selection-start-line="29" selection-start-column="34" selection-end-line="29" selection-end-column="34" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -723,6 +716,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="387">
           <caret line="1009" column="4" lean-forward="false" selection-start-line="1009" selection-start-column="4" selection-end-line="1009" selection-end-column="4" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -779,28 +773,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="253">
-          <caret line="11" column="7" lean-forward="false" selection-start-line="11" selection-start-column="7" selection-end-line="11" selection-end-column="7" />
-          <folding>
-            <element signature="e#25#56#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/GlobalAttention.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="580">
-          <caret line="76" column="47" lean-forward="true" selection-start-line="76" selection-start-column="47" selection-end-line="76" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/clip_grad.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="214">
           <caret line="41" column="4" lean-forward="false" selection-start-line="41" selection-start-column="4" selection-end-line="41" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -816,6 +792,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="23">
           <caret line="1" column="18" lean-forward="true" selection-start-line="1" selection-start-column="18" selection-end-line="1" selection-end-column="18" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -823,6 +800,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-239">
           <caret line="174" column="32" lean-forward="false" selection-start-line="174" selection-start-column="24" selection-end-line="174" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -831,20 +811,8 @@
         <state relative-caret-position="224">
           <caret line="196" column="32" lean-forward="false" selection-start-line="196" selection-start-column="32" selection-end-line="196" selection-end-column="32" />
           <folding>
-            <element signature="e#24#55#0" expanded="true" />
+            <element signature="e#24#55#0" expanded="false" />
             <marker date="1536988856761" expanded="false" signature="10582:13065" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="780">
-          <caret line="152" column="49" lean-forward="false" selection-start-line="152" selection-start-column="49" selection-end-line="152" selection-end-column="49" />
-          <folding>
-            <element signature="e#24#55#0" expanded="true" />
-            <marker date="1536988793014" expanded="false" signature="1384:2780" ph="..." />
-            <marker date="1536988793014" expanded="false" signature="6624:9068" ph="..." />
           </folding>
         </state>
       </provider>
@@ -853,9 +821,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3726">
           <caret line="165" column="11" lean-forward="false" selection-start-line="165" selection-start-column="11" selection-end-line="165" selection-end-column="11" />
-          <folding>
-            <element signature="e#24#33#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -863,7 +828,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="368">
           <caret line="16" column="14" lean-forward="false" selection-start-line="16" selection-start-column="14" selection-end-line="16" selection-end-column="14" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -891,13 +855,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="554">
           <caret line="35" column="23" lean-forward="false" selection-start-line="35" selection-start-column="19" selection-end-line="35" selection-end-column="23" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/misc/vocab.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2944">
+        <state relative-caret-position="2875">
           <caret line="128" column="0" lean-forward="false" selection-start-line="128" selection-start-column="0" selection-end-line="128" selection-end-column="0" />
           <folding>
             <element signature="e#133#164#0" expanded="true" />
@@ -907,7 +870,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/misc/misc_opts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="624">
+        <state relative-caret-position="1633">
           <caret line="72" column="41" lean-forward="false" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="41" />
           <folding />
         </state>
@@ -915,7 +878,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="251">
+        <state relative-caret-position="1679">
           <caret line="81" column="23" lean-forward="false" selection-start-line="81" selection-start-column="13" selection-end-line="81" selection-end-column="23" />
           <folding>
             <element signature="e#24#55#0" expanded="true" />
@@ -923,10 +886,50 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/modules/GlobalAttention.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3795">
+          <caret line="171" column="32" lean-forward="false" selection-start-line="171" selection-start-column="19" selection-end-line="171" selection-end-column="32" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/builtins.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7498">
+          <caret line="326" column="58" lean-forward="false" selection-start-line="326" selection-start-column="58" selection-end-line="326" selection-end-column="58" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="264">
+          <caret line="21" column="48" lean-forward="false" selection-start-line="21" selection-start-column="39" selection-end-line="21" selection-end-column="48" />
+          <folding>
+            <element signature="e#25#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="27" column="0" lean-forward="false" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
+          <folding>
+            <element signature="e#24#55#0" expanded="true" />
+            <marker date="1536988793014" expanded="false" signature="1384:2780" ph="..." />
+            <marker date="1536988793014" expanded="false" signature="6624:9068" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="171" column="61" lean-forward="false" selection-start-line="171" selection-start-column="54" selection-end-line="171" selection-end-column="61" />
+        <state relative-caret-position="502">
+          <caret line="156" column="46" lean-forward="false" selection-start-line="156" selection-start-column="20" selection-end-line="156" selection-end-column="46" />
           <folding>
             <element signature="e#25#36#0" expanded="true" />
           </folding>
@@ -935,7 +938,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/misc/data_set.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
+        <state relative-caret-position="3349">
           <caret line="161" column="0" lean-forward="false" selection-start-line="156" selection-start-column="15" selection-end-line="161" selection-end-column="0" />
           <folding>
             <element signature="e#25#89#0" expanded="true" />
@@ -945,13 +948,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="86" column="33" lean-forward="true" selection-start-line="86" selection-start-column="33" selection-end-line="86" selection-end-column="33" />
+        <state relative-caret-position="203">
+          <caret line="121" column="42" lean-forward="false" selection-start-line="121" selection-start-column="42" selection-end-line="121" selection-end-column="42" />
           <folding>
             <element signature="e#25#34#0" expanded="true" />
-            <marker date="1537015105504" expanded="false" signature="4870:5122" ph="..." />
-            <marker date="1537015105504" expanded="false" signature="5949:6570" ph="..." />
-            <marker date="1537015105504" expanded="false" signature="8620:9312" ph="..." />
+            <marker date="1537077072709" expanded="false" signature="4997:5249" ph="..." />
+            <marker date="1537077072709" expanded="false" signature="6076:6697" ph="..." />
+            <marker date="1537077072709" expanded="false" signature="8747:9439" ph="..." />
           </folding>
         </state>
       </provider>
