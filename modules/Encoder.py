@@ -97,13 +97,16 @@ class RNNEncoder(EncoderBase):
         super(RNNEncoder, self).__init__()
         assert embeddings is not None
 
-        num_directions = 2 if bidirectional else 1
+        self.num_directions = 2 if bidirectional else 1
 
-        assert hidden_size % num_directions == 0
+        self.num_layers = num_layers
 
-        self.hidden_size = hidden_size // num_directions
+        assert hidden_size % self.num_directions == 0
+
+        self.hidden_size = hidden_size // self.num_directions
 
         self.embeddings = embeddings
+
 
         self.rnn = rnn_factory(rnn_type,
                                input_size=embeddings.embedding_size,
@@ -170,9 +173,9 @@ class RNNEncoder(EncoderBase):
         return (out_encode_final, out_memory_bank)
 
 
-    def init_hidden(self):
+    def init_hidden(self, batch_size):
         initial_state_scale = 1.0 / math.sqrt(3.0 / self.hidden_size)
-        initial_state = torch.rand(self.hidden_size, self.hidden_size)
+        initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
         initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
         return initial_state
 
