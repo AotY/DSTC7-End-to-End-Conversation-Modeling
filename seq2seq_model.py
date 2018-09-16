@@ -150,6 +150,7 @@ class Seq2SeqModel(nn.Module):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
         dialog_encoder_initial_state = self.dialog_encoder.init_hidden(batch_size)
+        print("dialog_encoder_initial_state shape: {} ".format(dialog_encoder_initial_state.shape))
 
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(

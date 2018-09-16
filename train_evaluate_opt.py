@@ -98,7 +98,9 @@ def train_seq2seq_opt(parser):
     group.add_argument('--dialog_decoder_hidden_size', type=int, default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument('--dialog_decoder_num_layers', type=int, default=2,
+    group.add_argument('--dialog_decoder_num_layers',
+                       type=int,
+                       default=2,
                        help='number of layers')
 
     group.add_argument('--dialog_decoder_rnn_type', type=str, default='LSTM',

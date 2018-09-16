@@ -174,8 +174,9 @@ class RNNEncoder(EncoderBase):
 
 
     def init_hidden(self, batch_size):
-        initial_state_scale = 1.0 / math.sqrt(3.0 / self.hidden_size)
+        initial_state_scale = math.sqrt(3.0 / self.hidden_size)
         initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+        print("initial_state shape: {} ".format(initial_state.shape))
         initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
         return initial_state
 
