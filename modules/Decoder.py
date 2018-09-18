@@ -217,7 +217,7 @@ class DecoderBase(nn.Module):
 
         # print('decoder_final shape: {}'.format(decoder_final.shape))
         print('decoder_outputs shape: {}'.format(decoder_outputs.shape))
-        print('attns shape: {}'.format(attns.shape))
+        # print('attns shape: {}'.format(attns.shape))
 
         # Concatenates sequence of tensors along a new dimension.
         decoder_outputs = torch.stack((decoder_outputs, ))
