@@ -136,11 +136,11 @@ class DecoderBase(nn.Module):
 
         # Basic attributes.
         self.decoder_type = 'rnn'
-        self.num_directions = 2 if bidirectional_encoder else 1
+        # self.num_directions = 2 if bidirectional_encoder else 1
         # self.bidirectional_encoder = bidirectional_encoder
         self.num_layers = num_layers
-        self.hidden_size = hidden_size // self.num_directions
-        # self.hidden_size = hidden_size
+        # self.hidden_size = hidden_size // self.num_directions
+        self.hidden_size = hidden_size
         self.embeddings = embeddings
         self.dropout = nn.Dropout(dropout)
         self.attn_type = attn_type
@@ -156,7 +156,8 @@ class DecoderBase(nn.Module):
         if self.attn_type is not None:
             self.attn = GlobalAttention(self.hidden_size, attn_type=self.attn_type)
 
-    def init_decoder_state(self, src, memory_bank, encoder_final):
+    def init_decoder_state(self, encoder_final):
+    # def init_decoder_state(self, src, memory_bank, encoder_final):
         def _fix_enc_hidden(h):
             # The encoder hidden is  (layers*directions) x batch x dim.
             # We need to convert it to layers x batch x (directions*dim).
