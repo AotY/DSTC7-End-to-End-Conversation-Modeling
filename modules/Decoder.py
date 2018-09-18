@@ -136,9 +136,11 @@ class DecoderBase(nn.Module):
 
         # Basic attributes.
         self.decoder_type = 'rnn'
-        self.bidirectional_encoder = bidirectional_encoder
+        self.num_directions = 2 if bidirectional_encoder else 1
+        # self.bidirectional_encoder = bidirectional_encoder
         self.num_layers = num_layers
-        self.hidden_size = hidden_size
+        self.hidden_size = hidden_size // self.num_directions
+        # self.hidden_size = hidden_size
         self.embeddings = embeddings
         self.dropout = nn.Dropout(dropout)
         self.attn_type = attn_type
@@ -164,7 +166,7 @@ class DecoderBase(nn.Module):
 
         if isinstance(encoder_final, tuple):  # LSTM
             return RNNDecoderState(self.hidden_size, tuple([_fix_enc_hidden(enc_hid) for enc_hid in encoder_final]))
-        else:  # GRU
+        else:  # GRU RNN
             return RNNDecoderState(self.hidden_size,
                                    _fix_enc_hidden(encoder_final))
 
@@ -242,7 +244,7 @@ class StdRNNDecoder(DecoderBase):
     def _run_forward_pass(self, tgt, memory_bank, state, memory_lengths=None):
         """
         Private helper for running the specific RNN forward pass.
-        Must be overriden by all subclasses.
+        Must be overrided by all subclasses.
         Args:
             tgt (LongTensor): a sequence of input tokens tensors
                                  [tgt_len x batch].
