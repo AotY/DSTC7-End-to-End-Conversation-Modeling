@@ -171,6 +171,8 @@ class GlobalAttention(nn.Module):
 
         if memory_lengths is not None:
             mask = sequence_mask(memory_lengths)
+            if memory_bank.is_cuda:
+                mask = mask.cuda()
             mask = mask.unsqueeze(1)  # Make it broadcastable.
             align.data.masked_fill_(1 - mask, -float('inf'))
 
