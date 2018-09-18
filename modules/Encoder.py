@@ -154,12 +154,11 @@ class RNNEncoder(EncoderBase):
         print("emb shape: {} ".format(emb.shape))
         
         packed_emb = emb
-        if lengths is not None:
-            # Lengths data is wrapped inside a Variable.
-            lengths = lengths.view(-1).tolist()
-            packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
+        # if lengths is not None:
+        #     # Lengths data is wrapped inside a Variable.
+        #     lengths = lengths.view(-1).tolist()
+        #     packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
 
-        #
         print("encoder_state shape: {} ".format(encoder_state.shape))
 
         memory_bank, encoder_final = self.rnn(packed_emb, encoder_state)
