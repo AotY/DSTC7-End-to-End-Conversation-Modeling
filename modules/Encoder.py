@@ -160,6 +160,9 @@ class RNNEncoder(EncoderBase):
             packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
 
         #
+        print("packed_emb shape: {} ".format(packed_emb.shape))
+        print("encoder_state shape: {} ".format(encoder_state.shape))
+
         memory_bank, encoder_final = self.rnn(packed_emb, encoder_state)
 
         if lengths is not None:
