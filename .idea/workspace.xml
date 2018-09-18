@@ -28,7 +28,7 @@
       <file leaf-file-name="data_set.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/misc/data_set.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="299">
+            <state relative-caret-position="1569">
               <caret line="137" column="59" lean-forward="true" selection-start-line="137" selection-start-column="59" selection-end-line="137" selection-end-column="59" />
               <folding>
                 <element signature="e#25#89#0" expanded="true" />
@@ -52,12 +52,34 @@
       <file leaf-file-name="Encoder.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="164" column="56" lean-forward="false" selection-start-line="164" selection-start-column="46" selection-end-line="164" selection-end-column="56" />
+            <state relative-caret-position="406">
+              <caret line="185" column="44" lean-forward="false" selection-start-line="185" selection-start-column="40" selection-end-line="185" selection-end-column="44" />
               <folding>
                 <element signature="e#24#55#0" expanded="true" />
-                <marker date="1537240023527" expanded="false" signature="1384:2780" ph="..." />
-                <marker date="1537240023527" expanded="false" signature="6910:9354" ph="..." />
+                <marker date="1537242127455" expanded="false" signature="1384:2780" ph="..." />
+                <marker date="1537242127455" expanded="false" signature="7308:9752" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="rnn.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/rnn.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="3910">
+              <caret line="176" column="0" lean-forward="true" selection-start-line="176" selection-start-column="0" selection-end-line="176" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="rnn.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/rnn.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="363">
+              <caret line="143" column="0" lean-forward="true" selection-start-line="143" selection-start-column="0" selection-end-line="143" selection-end-column="0" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -66,8 +88,8 @@
       <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="828">
-              <caret line="42" column="4" lean-forward="false" selection-start-line="42" selection-start-column="4" selection-end-line="42" selection-end-column="4" />
+            <state relative-caret-position="218">
+              <caret line="42" column="15" lean-forward="false" selection-start-line="42" selection-start-column="4" selection-end-line="42" selection-end-column="15" />
               <folding>
                 <element signature="e#25#56#0" expanded="true" />
               </folding>
@@ -87,14 +109,22 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Embeddings.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/Embeddings.py">
+      <file leaf-file-name="train_seq2seq_model.sh" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="126" column="0" lean-forward="true" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
-              <folding>
-                <element signature="e#24#55#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="90">
+              <caret line="11" column="33" lean-forward="false" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="33" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/embedding/utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="23">
+              <caret line="198" column="81" lean-forward="false" selection-start-line="198" selection-start-column="81" selection-end-line="198" selection-end-column="81" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -125,7 +155,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>optim</find>
       <find>method</find>
       <find>print</find>
       <find>beam</find>
@@ -155,6 +184,7 @@
       <find>self.num_directions</find>
       <find>memory_bank, encoder_final = self.rnn(packed_emb, encoder_state)</find>
       <find>encoder_state</find>
+      <find>encoder_type</find>
     </findStrings>
     <replaceStrings>
       <replace>num_layers</replace>
@@ -219,11 +249,11 @@
         <option value="$PROJECT_DIR$/misc/misc_opts.py" />
         <option value="$PROJECT_DIR$/misc/vocab.py" />
         <option value="$PROJECT_DIR$/train_seq2seq_model.py" />
-        <option value="$PROJECT_DIR$/train_seq2seq_model.sh" />
         <option value="$PROJECT_DIR$/train_evaluate_opt.py" />
         <option value="$PROJECT_DIR$/modules/Embeddings.py" />
         <option value="$PROJECT_DIR$/misc/data_set.py" />
         <option value="$PROJECT_DIR$/seq2seq_model.py" />
+        <option value="$PROJECT_DIR$/train_seq2seq_model.sh" />
         <option value="$PROJECT_DIR$/modules/Encoder.py" />
       </list>
     </option>
@@ -297,7 +327,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="add_unversioned_files" value="true" />
-    <property name="SearchEverywhereHistoryKey" value="encoder&#9;RUN_CONFIGURATION&#9;Encoder&#10;enc&#9;RUN_CONFIGURATION&#9;Encoder&#10;train&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;Encoder&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/modules/Encoder.py&#10;da&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/data_set.py&#10;vo&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/vocab.py&#10;voca&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/vocab.py&#10;pro&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/preprocess.py&#10;pre&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/preprocess.sh&#10;se&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/seq2seq_model.py&#10;seq&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/seq2seq_model.py&#10;tra&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;v&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/vocab.py&#10;opt&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;opts&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;k&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/kg_model.py" />
+    <property name="SearchEverywhereHistoryKey" value="RNN.&#9;FILE&#9;file:///Users/LeonTao/anaconda3/lib/python3.6/site-packages/torch/nn/utils/rnn.py&#10;encoder&#9;RUN_CONFIGURATION&#9;Encoder&#10;enc&#9;RUN_CONFIGURATION&#9;Encoder&#10;train&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;Encoder&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/modules/Encoder.py&#10;da&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/data_set.py&#10;vo&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/vocab.py&#10;voca&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/vocab.py&#10;pro&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/preprocess.py&#10;pre&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/misc/preprocess.sh&#10;se&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/seq2seq_model.py&#10;seq&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/seq2seq_model.py&#10;tra&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/train_seq2seq_model.py&#10;v&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/vocab.py&#10;opt&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;opts&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/utils/opts.py&#10;k&#9;FILE&#9;file:///Users/LeonTao/Trio/DSTC7/DSTC7-End-to-End-Conversation-Modeling/kg_model.py" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -455,7 +485,7 @@
     <frame x="0" y="23" width="1440" height="877" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.116595134" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.116595134" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -485,15 +515,15 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.116595134" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.116595134" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39975095" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39975095" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
@@ -517,13 +547,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/baseline/create_input_files.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="318">
-          <caret line="66" column="39" lean-forward="false" selection-start-line="66" selection-start-column="39" selection-end-line="66" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/tensor.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="348">
@@ -615,13 +638,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="217">
           <caret line="556" column="34" lean-forward="false" selection-start-line="556" selection-start-column="34" selection-end-line="556" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/embedding/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-65">
-          <caret line="198" column="81" lean-forward="false" selection-start-line="198" selection-start-column="81" selection-end-line="198" selection-end-column="81" />
         </state>
       </provider>
     </entry>
@@ -751,16 +767,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/rnn.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-239">
-          <caret line="174" column="32" lean-forward="false" selection-start-line="174" selection-start-column="24" selection-end-line="174" selection-end-column="32" />
-          <folding>
-            <element signature="e#0#34#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/misc/preprocess.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3726">
@@ -797,16 +803,6 @@
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-260646202/builtins.py" />
-    <entry file="file://$PROJECT_DIR$/modules/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="828">
-          <caret line="42" column="4" lean-forward="false" selection-start-line="42" selection-start-column="4" selection-end-line="42" selection-end-column="4" />
-          <folding>
-            <element signature="e#25#56#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Decoder.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="705">
@@ -825,24 +821,6 @@
           <folding>
             <element signature="e#24#55#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/misc/data_set.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
-          <caret line="137" column="59" lean-forward="true" selection-start-line="137" selection-start-column="59" selection-end-line="137" selection-end-column="59" />
-          <folding>
-            <element signature="e#25#89#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="79">
-          <caret line="10" column="31" lean-forward="false" selection-start-line="10" selection-start-column="6" selection-end-line="10" selection-end-column="31" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -877,6 +855,24 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/embedding/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23">
+          <caret line="198" column="81" lean-forward="false" selection-start-line="198" selection-start-column="81" selection-end-line="198" selection-end-column="81" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/misc/data_set.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1569">
+          <caret line="137" column="59" lean-forward="true" selection-start-line="137" selection-start-column="59" selection-end-line="137" selection-end-column="59" />
+          <folding>
+            <element signature="e#25#89#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="295">
@@ -887,14 +883,50 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/modules/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="42" column="15" lean-forward="false" selection-start-line="42" selection-start-column="4" selection-end-line="42" selection-end-column="15" />
+          <folding>
+            <element signature="e#25#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/utils/rnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3910">
+          <caret line="176" column="0" lean-forward="true" selection-start-line="176" selection-start-column="0" selection-end-line="176" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/lib/python3.6/site-packages/torch/nn/modules/rnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="363">
+          <caret line="143" column="0" lean-forward="true" selection-start-line="143" selection-start-column="0" selection-end-line="143" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_seq2seq_model.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="11" column="33" lean-forward="false" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Encoder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="164" column="56" lean-forward="false" selection-start-line="164" selection-start-column="46" selection-end-line="164" selection-end-column="56" />
+        <state relative-caret-position="406">
+          <caret line="185" column="44" lean-forward="false" selection-start-line="185" selection-start-column="40" selection-end-line="185" selection-end-column="44" />
           <folding>
             <element signature="e#24#55#0" expanded="true" />
-            <marker date="1537240023527" expanded="false" signature="1384:2780" ph="..." />
-            <marker date="1537240023527" expanded="false" signature="6910:9354" ph="..." />
+            <marker date="1537242127455" expanded="false" signature="1384:2780" ph="..." />
+            <marker date="1537242127455" expanded="false" signature="7308:9752" ph="..." />
           </folding>
         </state>
       </provider>
