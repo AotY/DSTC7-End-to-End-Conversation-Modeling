@@ -215,11 +215,15 @@ class DecoderBase(nn.Module):
         final_output = decoder_outputs[-1]
         state.update_state(decoder_final, final_output.unsqueeze(0))
 
+        print('decoder_final shape: {}'.format(decoder_final.shape))
+        print('decoder_outputs shape: {}'.format(decoder_outputs.shape))
+        print('attns shape: {}'.format(attns.shape))
+
         # Concatenates sequence of tensors along a new dimension.
-        decoder_outputs = torch.stack(decoder_outputs)
+        decoder_outputs = torch.stack((decoder_outputs, ))
 
         for k in attns:
-            attns[k] = torch.stack(attns[k])
+            attns[k] = torch.stack((attns[k], ))
 
         return decoder_outputs, state, attns
 
