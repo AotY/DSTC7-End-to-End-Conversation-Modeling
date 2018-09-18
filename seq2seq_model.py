@@ -199,10 +199,12 @@ class Seq2SeqModel(nn.Module):
         for batch_index in range(batch_size):
             decoder_linear_output = self.dialog_decoder_linear(dialog_decoder_memory_bank[:, batch_index, :])
             decoder_linear_output = self.dialog_decoder_softmax(decoder_linear_output)
-
+            print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
             beam_search_output = self.beam_search_decoder(decoder_linear_output, beam_size=beam_size)
             # top 1
             beam_search_output = beam_search_output[0]
+            print("beam_search_output shape: {}".format(beam_search_output.shape))
+
             beam_search_output = torch.Tensor(beam_search_output).view(-1)
             dialog_decoder_outputs[:, batch_index] = beam_search_output
 
@@ -219,7 +221,8 @@ class Seq2SeqModel(nn.Module):
     def beam_search_decoder(self, memory_bank, beam_size):
 
         if isinstance(memory_bank, torch.Tensor):
-            memory_bank = memory_bank.numpy()
+            # memory_bank = memory_bank.numpy()
+            memory_bank = memory_bank.detach().numpy()
 
         sequences = [[list(), 1.0]]
         # walk over each step in sequence
