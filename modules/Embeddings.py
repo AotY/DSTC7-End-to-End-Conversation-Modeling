@@ -122,6 +122,9 @@ class Embeddings(nn.Module):
             `FloatTensor`: word embeddings `[len x batch x embedding_size]`
         """
         in_length, in_batch = input.size()
+        print("in_length: {}", in_length)
+        print("in_batch: {}", in_batch)
+
         # aeq(nfeat, len(self.emb_luts))
 
         emb = self.embeddings(input)

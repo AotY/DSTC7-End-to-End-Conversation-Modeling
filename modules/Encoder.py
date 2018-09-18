@@ -146,15 +146,20 @@ class RNNEncoder(EncoderBase):
 
         src, lengths = (new_src, new_input_length.data)
 
+        print("src shape: {} ".format(src.shape))
+
         emb = self.embeddings(src)
         s_len, batch, emb_dim = emb.size()  # len, batch, emb_dim
 
+        print("emb shape: {} ".format(emb.shape))
+        
         packed_emb = emb
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
             lengths = lengths.view(-1).tolist()
             packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
 
+        #
         memory_bank, encoder_final = self.rnn(packed_emb, encoder_state)
 
         if lengths is not None:
@@ -176,7 +181,6 @@ class RNNEncoder(EncoderBase):
     def init_hidden(self, batch_size):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
         initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
-        print("initial_state shape: {} ".format(initial_state.shape))
         initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
         return initial_state
 
