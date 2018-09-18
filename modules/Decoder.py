@@ -137,7 +137,7 @@ class DecoderBase(nn.Module):
         # Basic attributes.
         self.decoder_type = 'rnn'
         # self.num_directions = 2 if bidirectional_encoder else 1
-        # self.bidirectional_encoder = bidirectional_encoder
+        self.bidirectional_encoder = bidirectional_encoder
         self.num_layers = num_layers
         # self.hidden_size = hidden_size // self.num_directions
         self.hidden_size = hidden_size
