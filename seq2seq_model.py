@@ -170,7 +170,8 @@ class Seq2SeqModel(nn.Module):
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
-        decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
+        # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
+        decoder_state = self.dialog_decoder.init_decoder_state()
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
         dialog_decoder_attns = self.dialog_decoder.forward(
             tgt=dialog_decoder_tgt,
@@ -178,6 +179,7 @@ class Seq2SeqModel(nn.Module):
             state=decoder_state,
             memory_lengths=dialog_decoder_tgt_lengths
         )
+
 
         # beam search  dialog_decoder_memory_bank -> [tgt_len x batch x hidden]
         # batch_size = dialog_decoder_memory_bank.shape[1]
@@ -206,6 +208,8 @@ class Seq2SeqModel(nn.Module):
     def set_cuda(self):
         self.dialog_encoder.cuda()
         self.dialog_decoder.cuda()
+        self.dialog_decoder_linear.cuda()
+        self.dialog_decoder_softmax.cuda()
 
     # beam search  tensor.numpy()
     def beam_search_decoder(self, memory_bank, beam_size):
