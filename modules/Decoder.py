@@ -283,7 +283,7 @@ class StdRNNDecoder(DecoderBase):
 
         # Calculate the attention.
         if self.attn_type is not None:
-            decoder_outputs, p_attn = self.attn(
+            decoder_outputs, p_attn = self.attn.forward(
                 rnn_output.transpose(0, 1).contiguous(),
                 memory_bank.transpose(0, 1),
                 memory_lengths=memory_lengths)
