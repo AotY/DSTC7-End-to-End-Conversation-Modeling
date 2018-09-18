@@ -87,6 +87,7 @@ class GlobalAttention(nn.Module):
             self.linear_context = BottleLinear(dim, dim, bias=False)
             self.linear_query = nn.Linear(dim, dim, bias=True)
             self.v = BottleLinear(dim, 1, bias=False)
+
         # mlp wants it with bias
         out_bias = self.attn_type == "mlp"
         self.linear_out = nn.Linear(dim * 2, dim, bias=out_bias)

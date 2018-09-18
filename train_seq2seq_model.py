@@ -121,6 +121,10 @@ def train(seq2seq_model,
     encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
     decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
 
+    if use_gpu:
+        encoder_input_lengths.cuda()
+        decoder_input_lengths.cuda()
+
     # encoder_input_lengths = encoder_input_lengths.view(1, -1)
     # decoder_input_lengths = decoder_input_lengths.view(1, -1)
 
