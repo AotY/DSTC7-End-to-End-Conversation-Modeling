@@ -107,7 +107,6 @@ class RNNEncoder(EncoderBase):
 
         self.embeddings = embeddings
 
-
         self.rnn = rnn_factory(rnn_type,
                                input_size=embeddings.embedding_size,
                                hidden_size=self.hidden_size,
@@ -154,14 +153,15 @@ class RNNEncoder(EncoderBase):
         print("emb shape: {} ".format(emb.shape))
         
         packed_emb = emb
-        # if lengths is not None:
-        #     # Lengths data is wrapped inside a Variable.
-        #     lengths = lengths.view(-1).tolist()
-        #     packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
+        if lengths is not None:
+            # Lengths data is wrapped inside a Variable.
+            lengths = lengths.view(-1).tolist()
+            packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
 
         print("encoder_state shape: {} ".format(encoder_state.shape))
+        print("type of self.rnn: {} ".format(type(self.rnn)))
 
-        memory_bank, encoder_final = self.rnn(packed_emb, encoder_state)
+        memory_bank, encoder_final = self.rnn.forward(packed_emb, encoder_state)
 
         if lengths is not None:
             memory_bank = nn.utils.rnn.pad_packed_sequence(memory_bank)[0]
@@ -181,7 +181,14 @@ class RNNEncoder(EncoderBase):
 
     def init_hidden(self, batch_size):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
-        initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+
+        if self.rnn_type == 'RNN':
+            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+        elif self.rnn_type == 'LSTM':
+            initial_state = torch.rand((2, self.num_directions * self.num_layers, batch_size, self.hidden_size))
+        elif self.rnn_type == 'GRU':
+            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+
         initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
         return initial_state
 
