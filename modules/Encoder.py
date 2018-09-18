@@ -160,7 +160,6 @@ class RNNEncoder(EncoderBase):
             packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
 
         #
-        print("packed_emb shape: {} ".format(packed_emb.shape))
         print("encoder_state shape: {} ".format(encoder_state.shape))
 
         memory_bank, encoder_final = self.rnn(packed_emb, encoder_state)
@@ -178,8 +177,8 @@ class RNNEncoder(EncoderBase):
         else:
             out_memory_bank, out_encode_final = (torch.index_select(memory_bank, 1, out_order),
                                                  torch.index_select(encoder_final, 1, out_order))
-        return (out_encode_final, out_memory_bank)
 
+        return (out_encode_final, out_memory_bank)
 
     def init_hidden(self, batch_size):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
