@@ -222,6 +222,8 @@ class Seq2SeqModel(nn.Module):
 
         if isinstance(memory_bank, torch.Tensor):
             # memory_bank = memory_bank.numpy()
+            if memory_bank.is_cuda:
+                memory_bank = memory_bank.cpu()
             memory_bank = memory_bank.detach().numpy()
 
         sequences = [[list(), 1.0]]

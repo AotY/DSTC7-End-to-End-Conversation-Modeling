@@ -40,8 +40,8 @@
       <file leaf-file-name="seq2seq_model.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="276">
-              <caret line="206" column="0" lean-forward="true" selection-start-line="206" selection-start-column="0" selection-end-line="206" selection-end-column="0" />
+            <state relative-caret-position="627">
+              <caret line="225" column="41" lean-forward="false" selection-start-line="225" selection-start-column="30" selection-end-line="225" selection-end-column="41" />
               <folding>
                 <element signature="e#25#36#0" expanded="true" />
               </folding>
@@ -856,16 +856,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/misc/data_set.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="582">
-          <caret line="152" column="26" lean-forward="false" selection-start-line="152" selection-start-column="8" selection-end-line="152" selection-end-column="26" />
-          <folding>
-            <element signature="e#25#89#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/train_seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="93">
@@ -918,10 +908,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/misc/data_set.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="582">
+          <caret line="152" column="26" lean-forward="false" selection-start-line="152" selection-start-column="8" selection-end-line="152" selection-end-column="26" />
+          <folding>
+            <element signature="e#25#89#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/seq2seq_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="276">
-          <caret line="206" column="0" lean-forward="true" selection-start-line="206" selection-start-column="0" selection-end-line="206" selection-end-column="0" />
+        <state relative-caret-position="627">
+          <caret line="225" column="41" lean-forward="false" selection-start-line="225" selection-start-column="30" selection-end-line="225" selection-end-column="41" />
           <folding>
             <element signature="e#25#36#0" expanded="true" />
           </folding>
