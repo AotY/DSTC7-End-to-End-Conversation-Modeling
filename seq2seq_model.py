@@ -41,7 +41,8 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_bidirectional=True,
                  dialog_decoder_pretrained_embedding_weight=None,
                  dialog_decoder_pad_id=1,
-                 dialog_decoder_attention_type='dot'
+                 dialog_decoder_attention_type='dot',
+                 use_gpu=True
                  ):
         super(Seq2SeqModel, self).__init__()
 
@@ -75,6 +76,8 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
 
+
+        self.use_gpu = use_gpu
         # num_embeddings, embedding_dim
         ''''Ps: dialog_encoder, facts_encoder, and dialog_decoder may have different
             word embeddings.
@@ -154,6 +157,9 @@ class Seq2SeqModel(nn.Module):
 
         print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
         print("dialog_encoder_src_lengths size : {}".format(dialog_encoder_src_lengths.shape))
+
+        if self.use_gpu:
+            dialog_encoder_initial_state = dialog_encoder_initial_state.cuda()
 
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
