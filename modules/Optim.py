@@ -73,8 +73,10 @@ class Optim(object):
         elif self.method == 'adadelta':
             self.optimizer = optim.Adadelta(self.params, lr=self.lr)
         elif self.method == 'adam':
-            self.optimizer = optim.Adam(self.params, lr=self.lr,
-                                        betas=self.betas, eps=1e-9)
+            self.optimizer = optim.Adam(self.params,
+                                        lr=self.lr,
+                                        betas=self.betas,
+                                        eps=1e-9)
         else:
             raise RuntimeError("Invalid optim method: " + self.method)
 
@@ -99,6 +101,7 @@ class Optim(object):
 
         if self.max_grad_norm:
             clip_grad_norm(self.params, self.max_grad_norm)
+
         self.optimizer.step()
 
     def update_learning_rate(self, ppl, epoch):
@@ -118,6 +121,9 @@ class Optim(object):
 
         self.last_ppl = ppl
         self.optimizer.param_groups[0]['lr'] = self.lr
+
+    def zero_grad(self):
+        self.optimizer.zero_grad()
 
 if __name__ == '__main__':
     pass
