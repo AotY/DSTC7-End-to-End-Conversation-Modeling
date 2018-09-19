@@ -345,7 +345,7 @@ if __name__ == '__main__':
                  seq2seq_dataset=seq2seq_dataset,
                  batch_size=opt.batch_size,
                  epochs=opt.epochs,
-                 batch_per_load=10,
+                 batch_per_load=1,
                  log_interval=opt.log_interval,
                  optimizer=optimizer,
                  criterion=criterion,
