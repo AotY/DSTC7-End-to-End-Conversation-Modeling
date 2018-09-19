@@ -134,8 +134,8 @@ class Seq2SeqModel(nn.Module):
         )
 
         self.dialog_decoder_linear = nn.Linear(self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
-        self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
-        # self.dialog_decoder_softmax = nn.Softmax(dim=1)
+        # self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
+        self.dialog_decoder_softmax = nn.Softmax(dim=1)
 
     '''
     Seq2SeqModel forward
