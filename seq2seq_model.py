@@ -6,7 +6,6 @@ import torch.nn as nn
 
 from modules.Encoder import RNNEncoder
 from modules.Decoder import StdRNNDecoder
-from modules.Decoder import RNNDecoderState
 from modules.Embeddings import Embeddings
 
 
