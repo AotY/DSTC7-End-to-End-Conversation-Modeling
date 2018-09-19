@@ -117,7 +117,6 @@ def train(seq2seq_model,
           batch_size,
           vocab,
           opt):
-
     encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
     decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
 
@@ -152,6 +151,14 @@ def train(seq2seq_model,
     loss = 0
 
     #  Compute loss
+    if dialog_decoder_outputs.is_cuda:
+        dialog_decoder_outputs = dialog_decoder_outputs.cpu()
+        decoder_target_data = decoder_target_data.cpu()
+
+    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
+                                                         dialog_decoder_outputs.shape[1])
+    decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape(1))
+
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
     loss.backward()
