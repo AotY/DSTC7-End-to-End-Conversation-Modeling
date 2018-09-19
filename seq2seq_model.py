@@ -197,7 +197,10 @@ class Seq2SeqModel(nn.Module):
         dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size))
 
         for batch_index in range(batch_size):
+            dialog_decoder_output = dialog_decoder_memory_bank[:, batch_index, :]
+            print("dialog_decoder_output shape: {}".format(dialog_decoder_output.shape))
             decoder_linear_output = self.dialog_decoder_linear(dialog_decoder_memory_bank[:, batch_index, :])
+            print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
             decoder_linear_output = self.dialog_decoder_softmax(decoder_linear_output)
             print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
             beam_search_output = self.beam_search_decoder(decoder_linear_output, beam_size=beam_size)
@@ -229,6 +232,7 @@ class Seq2SeqModel(nn.Module):
         sequences = [[list(), 1.0]]
         # walk over each step in sequence
         for row in memory_bank:
+            print("row shape: {}".format(row.shape))
             all_candidates = list()
             # expand each current candidate
             for i in range(len(sequences)):
