@@ -216,7 +216,7 @@ class DecoderBase(nn.Module):
         state.update_state(decoder_final, final_output.unsqueeze(0))
 
         # print('decoder_final shape: {}'.format(decoder_final.shape))
-        print('decoder_outputs shape: {}'.format(decoder_outputs.shape))
+        # print('decoder_outputs shape: {}'.format(decoder_outputs.shape))
         # print('attns shape: {}'.format(attns.shape))
 
         # Concatenates sequence of tensors along a new dimension.
