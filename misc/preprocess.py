@@ -40,10 +40,11 @@ def read_convos(convos_file_path, logger=None):
     conversations = []
     responses = []
 
-    # subreddit_names = []
-    # conversation_ids = []
-    # responses_score = []
-    # dialogues_turn = []
+    subreddit_names = []
+    conversation_ids = []
+    responses_scores = []
+    dialogues_turns = []
+    hash_values = []
 
     conversation_max_length = 0
     response_max_length = 0
@@ -65,6 +66,7 @@ def read_convos(convos_file_path, logger=None):
         if conversation == 'START' or len(conversation.rstrip()) == 0:  # skip if source has nothing
             continue
 
+        # url --> TAG
         conversation_tokens = tokenizer.preprocess(conversation)
         conversation_max_length = max(conversation_max_length, len(conversation_tokens))
 
@@ -79,11 +81,19 @@ def read_convos(convos_file_path, logger=None):
                                                                                                 0) + 1
         responses.append(response_tokens)
 
+        subreddit_names.append(sub[1])
+        conversation_ids.append(sub[2])
+        responses_scores.append(sub[3])
+        dialogues_turns.append(sub[4])
+
         # for test
         # if n == 1e3:
         #     break
 
-    return conversations, responses, conversations_length_distribution, conversation_max_length, responses_length_distribution, response_max_length
+    return conversations, responses, \
+           conversations_length_distribution, conversation_max_length, \
+           responses_length_distribution, response_max_length, \
+           subreddit_names, conversation_ids, responses_scores, dialogues_turns
 
 
 '''
@@ -98,9 +108,9 @@ def read_facts(facts_file_path, logger):
     # 读取  facts，保存到
     facts = []
 
-    # subreddit_names = []
-    # conversation_ids = []
-    # domain_names = []
+    subreddit_names = []
+    conversation_ids = []
+    domain_names = []
 
     n = 0
     for line in lines:
@@ -116,8 +126,11 @@ def read_facts(facts_file_path, logger):
             continue
 
         facts.append(tokenizer.preprocess(fact))
+        subreddit_names.append(sub[1])
+        conversation_ids.append(sub[2])
+        domain_names.append(sub[3])
 
-    return facts
+    return facts, subreddit_names, conversation_ids, domain_names
 
 
 '''
@@ -182,6 +195,11 @@ def save_distribution(distribution, name):
             f.write('%d\t%d\n' % (length, count))
 
 
+
+def save_data_to_pair(conversation, response, subreddit_name, conversation_id):
+    pass
+
+
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
     logger = logging.getLogger(program)
@@ -200,19 +218,24 @@ if __name__ == '__main__':
 
     logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
 
-    conversations, responses, conversations_length_distribution, conversation_max_length, responses_length_distribution, response_max_length = read_convos(
-        opt.convos_file_path, logger)
+    conversations, responses, \
+    conversations_length_distribution, conversation_max_length, \
+    responses_length_distribution, response_max_length, \
+    subreddit_names, conversation_ids, responses_scores, dialogues_turns = read_convos(opt.convos_file_path, logger)
+
     logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
+
+    # re-save conversations, responses, and facts
+    # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
+    save_data_to_pair(conversations, responses, subreddit_names, conversation_ids)
+
+    facts, subreddit_names, conversation_ids, domain_names = read_facts(opt.facts_file_path, logger)
+    # save to elasticsearch
 
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
     save_distribution(responses_length_distribution, 'responses')
-
-    # facts = read_facts(opt.facts_file_path)
-
-    # re save conversations, responses, and facts
-    # (%s\t%s\t\%s) conversation, response, and id
 
     stat_frequency(conversations, ['conversations'], 0, 0, logger)
     stat_frequency(responses, ['responses'], 0, 0, logger)

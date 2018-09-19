@@ -66,7 +66,7 @@ def train_epochs(seq2seq_model=None,
                  seq2seq_dataset=None,
                  batch_size=128,
                  epochs=5,
-                 batch_per_load=10,
+                 batch_per_load=1,
                  log_interval=200,
                  optimizer=None,
                  criterion=None,
@@ -117,7 +117,7 @@ def train_epochs(seq2seq_model=None,
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
                                  seq2seq_dataset=seq2seq_dataset,
                                  batch_size=128,
-                                 batch_per_load=10,
+                                 batch_per_load=batch_per_load,
                                  criterion=None,
                                  opt=opt
                                  )
@@ -204,10 +204,11 @@ evaluate model.
 def evaluate(seq2seq_model=None,
              seq2seq_dataset=None,
              batch_size=128,
-             batch_per_load=10,
+             batch_per_load=1,
              criterion=None,
              opt=None):
     loss_total = 0
+
     while not seq2seq_dataset.all_loaded('test'):
         # load data
         num_samples, \
