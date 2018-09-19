@@ -206,13 +206,19 @@ class Seq2SeqModel(nn.Module):
             print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
             decoder_linear_output = self.dialog_decoder_softmax(decoder_linear_output)
             print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
-            beam_search_output = self.beam_search_decoder(decoder_linear_output, beam_size=beam_size)
-            # top 1
-            beam_search_output = beam_search_output[0]
-            print("beam_search_output shape: {}".format(beam_search_output.shape))
 
-            beam_search_output = torch.Tensor(beam_search_output).view(-1)
-            dialog_decoder_outputs[:, batch_index] = beam_search_output
+            topv, topi = decoder_linear_output.topk(1)
+            print("topv shape: {}".format(topv.shape))
+            print("topi shape: {}".format(topi.shape))
+
+            # beam_search_output = self.beam_search_decoder(decoder_linear_output, beam_size=beam_size)
+            # top 1
+            # beam_search_output = beam_search_output[0]
+            # print("beam_search_output shape: {}".format(beam_search_output.shape))
+
+            # beam_search_output = torch.Tensor(beam_search_output).view(-1)
+            # dialog_decoder_outputs[:, batch_index] = beam_search_output
+            dialog_decoder_outputs[:, batch_index] = topi.squeeze().detach()
 
         return ((dialog_encoder_final_state, dialog_encoder_memory_bank),
                 (dialog_decoder_memory_bank, dialog_decoder_final_state, dialog_decoder_attns, dialog_decoder_outputs))
