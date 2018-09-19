@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+from __future__ import print_function
+
 import os
 import sys
 import time
@@ -9,6 +12,7 @@ import logging
 import argparse
 
 import numpy as np
+import shutil
 
 import torch
 import torch.nn as nn
@@ -104,8 +108,27 @@ def train_epochs(seq2seq_model=None,
             if load % log_interval == 0:
                 log_loss_avg = log_loss_total / log_interval
                 log_loss_total = 0
-                logger.info('%s (%d %d%%) %.4f' % (timeSince(start, iter / max_load),
-                                                   load, load / max_load * 100, log_loss_avg))
+                logger.info('train ----> %s (%d %d%%) %.4f' % (timeSince(start, epoch / max_load),
+                                                               load, load / max_load * 100, log_loss_avg))
+
+        evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
+                                 seq2seq_dataset=seq2seq_dataset,
+                                 batch_size=128,
+                                 batch_per_load=10,
+                                 criterion=None,
+                                 opt=opt
+                                 )
+
+        logger.info('evaluate ----> %.4f' % (evaluate_loss))
+
+        # save model of each epoch
+        save_state = {
+            'epoch': epoch,
+            'state_dict': seq2seq_model.state_dict(),
+            'optimizer': optimizer
+        }
+        save_checkpoint(save_state, False,
+                        filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d.pth' % epoch))
 
 
 def train(seq2seq_model,
@@ -126,14 +149,11 @@ def train(seq2seq_model,
 
     # encoder_input_lengths = encoder_input_lengths.view(1, -1)
     # decoder_input_lengths = decoder_input_lengths.view(1, -1)
-
     # decoder_input_lengths = decoder_input_data[0]
-
     # output, encoder_input_lengths = pack_padded_sequence(sequence=encoder_input_data,
     #                                                      batch_first=False,
     #                                                      padding_value=vocab.padid,
     #                                                      total_length=None)
-
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
     (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
@@ -171,6 +191,61 @@ def train(seq2seq_model,
     #     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
     # else:
     #     use_teacher_forcing = False
+
+
+'''
+evaluate model.
+'''
+
+
+def evaluate(seq2seq_model=None,
+             seq2seq_dataset=None,
+             batch_size=128,
+             batch_per_load=10,
+             criterion=None,
+             opt=None):
+    loss_total = 0
+    while not seq2seq_dataset.all_loaded('test'):
+        # load data
+        num_samples, \
+        encoder_input_data, \
+        decoder_input_data, \
+        decoder_target_data, \
+        conversation_texts, response_texts = seq2seq_dataset.load_data('test', batch_size * batch_per_load)
+
+        # train and get cur loss
+        encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
+        decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
+
+        if use_gpu:
+            encoder_input_lengths.cuda()
+            decoder_input_lengths.cuda()
+
+        (dialog_encoder_final_state, dialog_encoder_memory_bank), \
+        (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
+            = seq2seq_model.forward(
+            dialog_encoder_src=encoder_input_data,  # LongTensor
+            dialog_encoder_src_lengths=encoder_input_lengths,
+            dialog_decoder_tgt=decoder_input_data,
+            dialog_decoder_tgt_lengths=decoder_input_lengths,
+            use_teacher_forcing=opt.use_teacher_forcing,
+            teacher_forcing_ratio=opt.teacher_forcing_ratio,
+            batch_size=batch_size)
+
+        #  Compute loss
+        if dialog_decoder_outputs.is_cuda:
+            dialog_decoder_outputs = dialog_decoder_outputs.cpu()
+            decoder_target_data = decoder_target_data.cpu()
+
+        dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
+                                                             dialog_decoder_outputs.shape[1])
+        decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape[1])
+
+        loss = criterion(dialog_decoder_outputs, decoder_target_data)
+
+        loss_total += loss.item() / decoder_input_lengths
+
+    return loss_total
 
 
 def dialog(self, input_text):
@@ -267,6 +342,28 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
     return seq2seq_model
 
 
+def save_checkpoint(state, is_best, filename='checkpoint.pth'):
+    '''
+    Saving a model in pytorch.
+    :param state: is a dict object, including epoch, optimizer, model etc.
+    :param is_best: whether is the best model.
+    :param filename: save filename.
+    :return:
+    '''
+    torch.save(state, filename)
+    if is_best:
+        shutil.copy(filename, 'model_best.pth')
+
+
+def load_checkpoint(model, optimizer, filename='checkpoint.pth'):
+    logger.info("Loding checkpoint '{}'".format(filename))
+    checkpoint = torch.load(filename)
+    epoch = checkpoint['epoch']
+    best_prec1 = checkpoint['best_prec1']
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+
+
 def interact(self):
     while True:
         logger.info('----- please input -----')
@@ -288,15 +385,6 @@ def timeSince(since, percent):
     es = s / (percent)
     rs = es - s
     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
-
-
-def showPlot(points):
-    plt.figure()
-    fig, ax = plt.subplots()
-    # this locator puts ticks at regular intervals
-    loc = ticker.MultipleLocator(base=0.2)
-    ax.yaxis.set_major_locator(loc)
-    plt.plot(points)
 
 
 if __name__ == '__main__':
@@ -345,7 +433,7 @@ if __name__ == '__main__':
                  seq2seq_dataset=seq2seq_dataset,
                  batch_size=opt.batch_size,
                  epochs=opt.epochs,
-                 batch_per_load=1,
+                 batch_per_load=opt.batch_per_load,
                  log_interval=opt.log_interval,
                  optimizer=optimizer,
                  criterion=criterion,
