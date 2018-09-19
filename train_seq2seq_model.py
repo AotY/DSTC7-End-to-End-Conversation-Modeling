@@ -157,7 +157,7 @@ def train(seq2seq_model,
 
     dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
                                                          dialog_decoder_outputs.shape[1])
-    decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape(1))
+    decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape[1])
 
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
 

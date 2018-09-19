@@ -189,6 +189,9 @@ class Seq2SeqModel(nn.Module):
         # dialog_decoder_outputs [tgt_len x batch x beam_size]?
         # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, self.dialog_decoder_hidden_size))
         # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, self.dialog_decoder_vocab_size))
+        print("dialog_decoder_memory_bank shape: {}".format(dialog_decoder_memory_bank.shape))
+        dialog_decoder_memory_bank = dialog_decoder_memory_bank[0]
+        print("dialog_decoder_memory_bank shape: {}".format(dialog_decoder_memory_bank.shape))
 
         dialog_decoder_outputs = self.dialog_decoder_softmax(self.dialog_decoder_linear(dialog_decoder_memory_bank))
         print("dialog_decoder_outputs shape: {}".format(dialog_decoder_outputs.shape))
@@ -199,9 +202,6 @@ class Seq2SeqModel(nn.Module):
         # 1. first strategy: use top1. 2, use beam search strategy
         dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size))
 
-        print("dialog_decoder_memory_bank shape: {}".format(dialog_decoder_memory_bank.shape))
-        dialog_decoder_memory_bank = dialog_decoder_memory_bank[0]
-        print("dialog_decoder_memory_bank shape: {}".format(dialog_decoder_memory_bank.shape))
         
         for batch_index in range(batch_size):
             dialog_decoder_output = dialog_decoder_memory_bank[:, batch_index, :]
