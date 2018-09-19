@@ -169,10 +169,10 @@ def train_seq2seq_opt(parser):
     group.add_argument('--log_interval', type=int, default=200, metavar='N',
                        help='report interval')
 
-    group.add_argument('--save',
+    group.add_argument('--model_save_path',
                        type=str,
-                       default='./models/seq2seq.model.pt',
-                       help='path to save the final model')
+                       default='./models',
+                       help='path to save models')
 
     group.add_argument('--optim_method',
                        type=str,
@@ -181,6 +181,10 @@ def train_seq2seq_opt(parser):
                        method (:obj:`str`): one of [sgd, adagrad, adadelta, adam]
                        ''')
 
+    group.add_argument('--batch_per_load',
+                       type=int,
+                       default=1,
+                       help='each batch load: batch_size * batch_per_load')
 
 
 def evaluate_seq2seq_model_opt(parser):

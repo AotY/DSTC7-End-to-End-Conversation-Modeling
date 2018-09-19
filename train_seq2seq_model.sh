@@ -32,9 +32,10 @@ python train_seq2seq_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 200 \
-    --save ./models/seq2seq.model.pt \
+    --model_save_path ./models \
     --test_split 0.2 \
     --optim_method adam \
+    --batch_per_load 1 \
 
 
 /
