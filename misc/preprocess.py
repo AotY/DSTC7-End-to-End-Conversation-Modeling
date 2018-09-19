@@ -7,9 +7,9 @@ import argparse
 sys.path.append('..')
 
 import numpy as np
-from vocab import Vocab
-from tokenizer import Tokenizer
-from utils_opts import preprocess_opt
+from misc.vocab import Vocab
+from misc.tokenizer import Tokenizer
+from misc.misc_opts import preprocess_opt
 from embedding.embedding_opt import train_embedding_opt
 from embedding.utils import build_vocab_word2vec, build_vocab_fastText
 from embedding import train_embedding
@@ -210,6 +210,9 @@ if __name__ == '__main__':
     save_distribution(responses_length_distribution, 'responses')
 
     # facts = read_facts(opt.facts_file_path)
+
+    # re save conversations, responses, and facts
+    # (%s\t%s\t\%s) conversation, response, and id
 
     stat_frequency(conversations, ['conversations'], 0, 0, logger)
     stat_frequency(responses, ['responses'], 0, 0, logger)
