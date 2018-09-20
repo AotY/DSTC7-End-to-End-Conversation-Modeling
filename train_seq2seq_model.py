@@ -61,36 +61,33 @@ if opt.use_teacher_forcing:
 
 torch.manual_seed(opt.seed)
 
-
+''''''
 def train_epochs(seq2seq_model=None,
                  seq2seq_dataset=None,
-                 batch_size=128,
-                 epochs=5,
-                 batch_per_load=1,
-                 log_interval=200,
                  optimizer=None,
                  criterion=None,
                  vocab=None,
                  opt=None):
+
     start = time.time()
 
     log_loss_total = 0  # Reset every logger.info_every
 
-    max_load = np.ceil(seq2seq_dataset.n_train / batch_size / batch_per_load)
+    max_load = np.ceil(seq2seq_dataset.n_train / opt.batch_size / opt.batch_per_load)
 
-    for epoch in range(epochs):
+    for epoch in range(opt.start_epoch, opt.epochs):
         load = 0
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger.info('\n***** Epoch %i/%i - load %.2f perc *****' % (epoch + 1, epochs, 100 * load / max_load))
+            logger.info('\n************ Epoch %i/%i - load %.2f perc ************' % (epoch + 1, opt.epochs, 100 * load / max_load))
 
             # load data
             num_samples, \
             encoder_input_data, \
             decoder_input_data, \
             decoder_target_data, \
-            conversation_texts, response_texts = seq2seq_dataset.load_data('train', batch_size * batch_per_load)
+            conversation_texts, response_texts = seq2seq_dataset.load_data('train', opt.batch_size * opt.batch_per_load)
 
             # train and get cur loss
             loss = train(seq2seq_model,
@@ -105,30 +102,25 @@ def train_epochs(seq2seq_model=None,
 
             log_loss_total += loss
 
-            if load % log_interval == 0:
-                log_loss_avg = log_loss_total / log_interval
+            if load % opt.log_interval == 0:
+                log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
                 logger.info('log_loss_avg type : {}'.format(type(log_loss_avg)))
-                logger.info('train ----> %s (%d %d%%) ' % (timeSince(start, load / max_load),
-                                                               load, load / max_load * 100))
-                # logger.info('train ----> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
-                #                                                load, load / max_load * 100, log_loss_avg))
+                logger.info('train ----> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
+                                                               load, load / max_load * 100, log_loss_avg))
 
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
                                  seq2seq_dataset=seq2seq_dataset,
-                                 batch_size=128,
-                                 batch_per_load=batch_per_load,
                                  criterion=criterion,
-                                 opt=opt
-                                 )
+                                 opt=opt)
 
-        logger.info('evaluate ----> %.4f' % (evaluate_loss))
+        logger.info('evaluate ----> %.4f' % evaluate_loss)
 
         # save model of each epoch
         save_state = {
             'epoch': epoch,
             'state_dict': seq2seq_model.state_dict(),
-            'optimizer': optimizer
+            'optimizer': optimizer.optimizer.state_dict()
         }
         save_checkpoint(save_state, False,
                         filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d.pth' % epoch))
@@ -203,23 +195,23 @@ evaluate model.
 
 def evaluate(seq2seq_model=None,
              seq2seq_dataset=None,
-             batch_size=128,
-             batch_per_load=1,
              criterion=None,
              opt=None):
+
     loss_total = 0
 
     while not seq2seq_dataset.all_loaded('test'):
+
         # load data
         num_samples, \
         encoder_input_data, \
         decoder_input_data, \
         decoder_target_data, \
-        conversation_texts, response_texts = seq2seq_dataset.load_data('test', batch_size * batch_per_load)
+        conversation_texts, response_texts = seq2seq_dataset.load_data('test', opt.batch_size * opt.batch_per_load)
 
         # train and get cur loss
-        encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
-        decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
+        encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
+        decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
         if use_gpu:
             encoder_input_lengths.cuda()
@@ -234,7 +226,7 @@ def evaluate(seq2seq_model=None,
             dialog_decoder_tgt_lengths=decoder_input_lengths,
             use_teacher_forcing=opt.use_teacher_forcing,
             teacher_forcing_ratio=opt.teacher_forcing_ratio,
-            batch_size=batch_size)
+            batch_size=num_samples)
 
         #  Compute loss
         if dialog_decoder_outputs.is_cuda:
@@ -259,13 +251,7 @@ def dialog(self, input_text):
     return self._infer(np.atleast_2d(source_seq_int))
 
 
-def build_optim(model, opt, checkpoint=None):
-    # if opt.train_from:
-    #     logger.info('Loading optimizer from checkpoint.')
-    #     optim = checkpoint['optim']
-    #     optim.optimizer.load_state_dict(
-    #         checkpoint['optim'].optimizer.state_dict())
-    # else:
+def build_optim(model, opt):
     logger.info('Make optimizer for training.')
     optim = Optim(
         opt.optim_method,
@@ -284,13 +270,6 @@ def build_optim(model, opt, checkpoint=None):
     optim.set_parameters(model.parameters())
 
     return optim
-
-
-def check_save_model_path():
-    save_model_path = os.path.abspath(opt.save_model)
-    model_dirname = os.path.dirname(save_model_path)
-    if not os.path.exists(model_dirname):
-        os.makedirs(model_dirname)
 
 
 def tally_parameters(model):
@@ -341,7 +320,6 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
 
     if use_gpu:
         seq2seq_model.set_cuda()
-        # seq2seq_model.cuda()
 
     return seq2seq_model
 
@@ -354,18 +332,16 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
     :param filename: save filename.
     :return:
     '''
+    save_path = os.path.join(opt.model_save_path, filename)
     torch.save(state, filename)
     if is_best:
         shutil.copy(filename, 'model_best.pth')
 
 
-def load_checkpoint(model, optimizer, filename='checkpoint.pth'):
+def load_checkpoint(filename='checkpoint.pth'):
     logger.info("Loding checkpoint '{}'".format(filename))
     checkpoint = torch.load(filename)
-    epoch = checkpoint['epoch']
-    best_prec1 = checkpoint['best_prec1']
-    model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
+    return checkpoint
 
 
 def interact(self):
@@ -393,15 +369,16 @@ def timeSince(since, percent):
 
 if __name__ == '__main__':
     # Load checkpoint if we resume from a previous training.
-    # if opt.train_from:
-    #     logger.info('Loading checkpoint from %s' % opt.train_from)
-    #     checkpoint = torch.load(opt.train_from, map_location=lambda storage, loc: storage)
-    #     model_opt = checkpoint['opt']
-    #     # I don't like reassigning attributes of opt: it's not clear.
-    #     opt.start_epoch = checkpoint['epoch'] + 1
-    # else:
-    #     checkpoint = None
-    #     model_opt = opt
+
+    if opt.train_from:
+        logger.info('Loading checkpoint from %s' % opt.train_from)
+        checkpoint = load_checkpoint(filename='checkpoint.pth')
+        opt.start_epoch = checkpoint['epoch'] + 1
+        # checkpoint = torch.load(opt.train_from, map_location=lambda storage, loc: storage)
+
+        # I don't like reassigning attributes of opt: it's not clear.
+    else:
+        checkpoint = None
 
     vocab = Vocab()
     vocab.load(opt.vocab_save_path)
@@ -426,19 +403,22 @@ if __name__ == '__main__':
     # tally_parameters(seq2seq_model)
     # check_save_model_path()
 
+    # Build optimizer.
+    optimizer = build_optim(seq2seq_model, opt)
+
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     criterion = nn.NLLLoss()
 
-    # Build optimizer.
-    optimizer = build_optim(seq2seq_model, opt, None)
+
+    '''if load checkpoint'''
+    if checkpoint:
+        seq2seq_model.load_state_dict(checkpoint['state_dict'])
+        seq2seq_model.eval()
+        optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
 
     train_epochs(seq2seq_model=seq2seq_model,
                  seq2seq_dataset=seq2seq_dataset,
-                 batch_size=opt.batch_size,
-                 epochs=opt.epochs,
-                 batch_per_load=opt.batch_per_load,
-                 log_interval=opt.log_interval,
                  optimizer=optimizer,
                  criterion=criterion,
                  vocab=vocab,

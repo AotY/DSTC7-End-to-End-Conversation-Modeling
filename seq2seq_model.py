@@ -55,7 +55,6 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_rnn_type = dialog_encoder_rnn_type
         self.dialog_encoder_dropout_rate = dialog_encoder_dropout_rate
         self.dialog_encoder_max_length = dialog_encoder_max_length
-        # self.dialog_encoder_rnn_units = dialog_encoder_rnn_units
         self.dialog_encoder_clip_grads = dialog_encoder_clip_grads
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
         self.dialog_encoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
@@ -68,7 +67,6 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_rnn_type = dialog_decoder_rnn_type
         self.dialog_decoder_dropout_rate = dialog_decoder_dropout_rate
         self.dialog_decoder_max_length = dialog_decoder_max_length
-        # self.dialog_decoder_rnn_units = dialog_decoder_rnn_units
         self.dialog_decoder_clip_grads = dialog_decoder_clip_grads
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pretrained_embedding_weight = dialog_decoder_pretrained_embedding_weight
