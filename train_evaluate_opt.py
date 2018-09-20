@@ -139,6 +139,11 @@ def train_seq2seq_opt(parser):
     group.add_argument('--epochs', type=int, default=5,
                        help='upper epoch limit')
 
+    group.add_argument('--start_epoch',
+                       type=int,
+                       default=0,
+                       help='start from a previous epoch.')
+
     group.add_argument('--batch_size', type=int, default=128, metavar='N',
                        help='batch size')
 
@@ -185,6 +190,10 @@ def train_seq2seq_opt(parser):
                        type=int,
                        default=1,
                        help='each batch load: batch_size * batch_per_load')
+
+    group.add_argument('--train_from',
+                       type=str,
+                       help='loading checkpoint if we resume from a previous training.')
 
 
 def evaluate_seq2seq_model_opt(parser):

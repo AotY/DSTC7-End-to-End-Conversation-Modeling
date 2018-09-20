@@ -194,9 +194,10 @@ def generate_num(datas, vocab, save_path):
 
 
 def save_distribution(distribution, name):
+    distribution_list = sorted(distribution.items(), key=lambda item: item[0])
     with open(name + '.len.distribution.txt', 'w', encoding="utf-8") as f:
         f.write('length\tcount\n')
-        for length, count in distribution.items():
+        for length, count in distribution_list:
             f.write('%d\t%d\n' % (length, count))
 
 
