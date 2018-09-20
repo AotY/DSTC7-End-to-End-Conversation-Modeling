@@ -267,12 +267,12 @@ if __name__ == '__main__':
     es = es_helper.get_connection()
 
     # save to elasticsearch
-    save_to_es(zip(hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns), type=es_helper.conversation_type)
+    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns), type=es_helper.conversation_type)
 
     facts, hash_values, subreddit_names, conversation_ids, domain_names = read_facts(opt.facts_file_path, logger)
 
     # save to elasticsearch
-    save_to_es(zip(hash_values, subreddit_names, conversation_ids, domain_names, facts), type=es_helper.fact_type)
+    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids, domain_names, facts), type=es_helper.fact_type)
 
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
