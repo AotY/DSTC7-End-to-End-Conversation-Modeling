@@ -12,7 +12,6 @@ import codecs
 import numpy as np
 from gensim.test.utils import datapath, get_tmpfile
 from gensim.models import KeyedVectors
-from gensim.models import FastText
 '''
 buid vocab embedding from word2vec
 '''
