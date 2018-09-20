@@ -118,7 +118,7 @@ def train_epochs(seq2seq_model=None,
                                  seq2seq_dataset=seq2seq_dataset,
                                  batch_size=128,
                                  batch_per_load=batch_per_load,
-                                 criterion=None,
+                                 criterion=criterion,
                                  opt=opt
                                  )
 
