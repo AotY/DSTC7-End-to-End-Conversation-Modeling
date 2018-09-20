@@ -25,7 +25,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/google_vec_for_vocab.80004.300d.npy \
     --dialog_decoder_attention_type dot \
     --lr 0.001 \
-    --epochs 1 \
+    --epochs 2 \
     --batch_size 128 \
     --use_teacher_forcing \
     --teacher_forcing_ratio 0.5 \
