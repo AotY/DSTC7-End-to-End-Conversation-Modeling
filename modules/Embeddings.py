@@ -76,7 +76,7 @@ class Embeddings(nn.Module):
 
         # This is the attribute you should access if you need to know
         # how big your embeddings are going to be.
-        self.embedding_size = self.emb_dim
+        self.embedding_size = embeddign_dim
 
         self.pad_indice = padding_idx
 
