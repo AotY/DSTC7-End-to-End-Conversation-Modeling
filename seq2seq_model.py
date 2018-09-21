@@ -18,6 +18,7 @@ class Seq2SeqModel(nn.Module):
 
     def __init__(self,
                  dialog_encoder_vocab_size=None,
+                 dialog_encoder_embedding_size=300,
                  dialog_encoder_hidden_size=300,
                  dialog_encoder_num_layers=2,
                  dialog_encoder_rnn_type='LSTM',
@@ -30,6 +31,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_pad_id=1,
 
                  dialog_decoder_vocab_size=None,
+                 dialog_decoder_embedding_size=300,
                  dialog_decoder_hidden_size=300,
                  dialog_decoder_num_layers=2,
                  dialog_decoder_rnn_type='LSTM',
@@ -50,6 +52,7 @@ class Seq2SeqModel(nn.Module):
 
         '''Dialog encoder parameters'''
         self.dialog_encoder_vocab_size = dialog_encoder_vocab_size
+        self.dialog_encoder_embedding_size = dialog_encoder_embedding_size
         self.dialog_encoder_hidden_size = dialog_encoder_hidden_size
         self.dialog_encoder_num_layers = dialog_encoder_num_layers
         self.dialog_encoder_rnn_type = dialog_encoder_rnn_type
@@ -62,6 +65,7 @@ class Seq2SeqModel(nn.Module):
 
         '''Dialog decoder parameters'''
         self.dialog_decoder_vocab_size = dialog_decoder_vocab_size
+        self.dialog_decoder_embedding_size = dialog_decoder_embedding_size
         self.dialog_decoder_hidden_size = dialog_decoder_hidden_size
         self.dialog_decoder_num_layers = dialog_decoder_num_layers
         self.dialog_decoder_rnn_type = dialog_decoder_rnn_type
@@ -80,12 +84,12 @@ class Seq2SeqModel(nn.Module):
             word embeddings.
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
-        self.dialog_encoder_embedding = Embeddings(self.dialog_encoder_hidden_size,
+        self.dialog_encoder_embedding = Embeddings(self.dialog_encoder_embedding_size,
                                                    self.dialog_encoder_vocab_size,
                                                    self.dialog_encoder_pad_id,
                                                    self.dialog_encoder_dropout_rate)
 
-        self.dialog_decoder_embedding = Embeddings(self.dialog_decoder_hidden_size,
+        self.dialog_decoder_embedding = Embeddings(self.dialog_decoder_embedding_size,
                                                    self.dialog_decoder_vocab_size,
                                                    self.dialog_decoder_pad_id,
                                                    self.dialog_decoder_dropout_rate)
@@ -102,7 +106,15 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_embedding = nn.Embedding(self.dialog_decoder_vocab_size, self.dialog_decoder_hidden_size)
         self.dialog_decoder_embedding.weight.data.copy_(
             torch.from_numpy(self.dialog_decoder_pretrained_embedding_weight))
-        
+
+        '''
+
+        '''
+        if self.dialog_encoder_embedding_size != self.dialog_encoder_hidden_size:
+            self.dialog_encoder_embedding_linear = nn.Linear(self.dialog_encoder_embedding_size, self.dialog_encoder_hidden_size)
+
+        if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
+            self.dialog_decoder_embedding_linear = nn.Linear(self.dialog_decoder_embedding_size, self.dialog_decoder_hidden_size)
         '''
 
         # Dialog Enocder
@@ -200,7 +212,7 @@ class Seq2SeqModel(nn.Module):
         # 1. first strategy: use top1. 2, use beam search strategy
         dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size))
 
-        
+
         for batch_index in range(batch_size):
             dialog_decoder_output = dialog_decoder_memory_bank[:, batch_index, :]
             print("dialog_decoder_output shape: {}".format(dialog_decoder_output.shape))
