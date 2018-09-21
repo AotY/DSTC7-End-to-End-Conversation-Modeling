@@ -113,7 +113,7 @@ class Embeddings(nn.Module):
           fixed (bool) : if true, embeddings are not updated
         """
         if pre_trained_weight:
-            if !isinstance(pre_trained_weight, torch.Tensor):
+            if not isinstance(pre_trained_weight, torch.Tensor):
                 pre_trained_weight = torch.from_numpy(pre_trained_weight)
             self.embeddings.weight.data.copy_(pre_trained_weight)
             if fixed:
