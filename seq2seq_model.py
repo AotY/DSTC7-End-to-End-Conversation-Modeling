@@ -84,10 +84,7 @@ class Seq2SeqModel(nn.Module):
             word embeddings.
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
-        word_vec_size,
-        word_vocab_size,
-        word_padding_idx,
-        dropout_ratio=0.0,
+        
         self.dialog_encoder_embedding = Embeddings(embeddign_dim=self.dialog_encoder_embedding_size,
                                                    vocab_size=self.dialog_encoder_vocab_size,
                                                    padding_idx=self.dialog_encoder_pad_id,
