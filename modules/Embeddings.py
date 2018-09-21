@@ -106,13 +106,13 @@ class Embeddings(nn.Module):
     def get_lookup_table(self):
         return self.embeddings
 
-    def set_pretrained_embeddings(self, pre_trained_weight, fixed):
+    def set_pretrained_embeddings(self, pre_trained_weight=None, fixed=False):
         """Set pretrained embeddings.
         Args:
           pre_trained_weight (str) : path to torch serialized embeddings
           fixed (bool) : if true, embeddings are not updated
         """
-        if pre_trained_weight:
+        if pre_trained_weight is not None:
             if not isinstance(pre_trained_weight, torch.Tensor):
                 pre_trained_weight = torch.from_numpy(pre_trained_weight)
             self.embeddings.weight.data.copy_(pre_trained_weight)
