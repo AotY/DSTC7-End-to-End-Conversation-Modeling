@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export CUDA_VISIBLE_DEVICES=5,6,7
-
+    
 python train_seq2seq_model.py \
     --conversations_num_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.conversations.num.txt \
     --responses_num_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.responses.num.txt \
