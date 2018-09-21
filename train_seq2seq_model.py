@@ -79,7 +79,7 @@ def train_epochs(seq2seq_model=None,
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger.info('\n************ Epoch %i/%i - load %.2f perc ************' % (epoch + 1, opt.epochs, 100 * load / max_load))
+            logger.info('\n***************** Epoch %i/%i - load %.2f perc *****************' % (epoch + 1, opt.epochs, 100 * load / max_load))
 
             # load data
             num_samples, \
@@ -105,7 +105,7 @@ def train_epochs(seq2seq_model=None,
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
                 logger.info('log_loss_avg type : {}'.format(type(log_loss_avg)))
-                logger.info('train ----> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
+                logger.info('train ----------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
                                                                load, load / max_load * 100, log_loss_avg))
 
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
@@ -131,15 +131,15 @@ def train(seq2seq_model,
           decoder_target_data,
           optimizer,
           criterion,
-          batch_size,
+          num_samples,
           vocab,
           opt):
 
     # Turn on training mode which enables dropout.
-    seq2seq_model.train()
+    # seq2seq_model.train()
 
-    encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
-    decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
+    encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
+    decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
     if use_gpu:
         encoder_input_lengths.cuda()
@@ -162,7 +162,7 @@ def train(seq2seq_model,
         dialog_decoder_tgt_lengths=decoder_input_lengths,
         use_teacher_forcing=opt.use_teacher_forcing,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
-        batch_size=batch_size)
+        batch_size=num_samples)
 
     optimizer.zero_grad()
 
@@ -203,7 +203,8 @@ def evaluate(seq2seq_model=None,
 
 
     # Turn on evaluation mode which disables dropout.
-    seq2seq_model.eval()
+    # seq2seq_model.eval()
+
     loss_total = 0
     while not seq2seq_dataset.all_loaded('test'):
 
@@ -298,6 +299,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
     logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
     dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
     dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
+    logger.info("dialog_encoder_pretrained_embedding_weight shape: {} .".format(dialog_encoder_pretrained_embedding_weight.shape))
 
     seq2seq_model = Seq2SeqModel(
         dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
@@ -390,6 +392,7 @@ if __name__ == '__main__':
     vocab = Vocab()
     vocab.load(opt.vocab_save_path)
     vocab_size = vocab.get_vocab_size()
+    logger.info("vocab_size -----> %d" % vocab_size)
 
     seq2seq_dataset = Seq2seqDataSet(
         path_conversations=opt.conversations_num_path,
