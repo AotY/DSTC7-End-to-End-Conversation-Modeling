@@ -58,7 +58,6 @@ if device == 'cuda':
 if opt.use_teacher_forcing:
     teacher_forcing_ratio = opt.teacher_forcing_ratio
     logging.info("teacher_forcing_ratio: %f" % teacher_forcing_ratio)
-
 torch.manual_seed(opt.seed)
 
 ''''''
@@ -135,6 +134,10 @@ def train(seq2seq_model,
           batch_size,
           vocab,
           opt):
+
+    # Turn on training mode which enables dropout.
+    seq2seq_model.train()
+
     encoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_encoder_max_length
     decoder_input_lengths = torch.ones((batch_size,)) * opt.dialog_decoder_max_length
 
@@ -198,8 +201,10 @@ def evaluate(seq2seq_model=None,
              criterion=None,
              opt=None):
 
-    loss_total = 0
 
+    # Turn on evaluation mode which disables dropout.
+    seq2seq_model.eval()
+    loss_total = 0
     while not seq2seq_dataset.all_loaded('test'):
 
         # load data
@@ -296,6 +301,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
 
     seq2seq_model = Seq2SeqModel(
         dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
+        dialog_encoder_embedding_size=dialog_encoder_pretrained_embedding_weight.shape[1],
         dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
         dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
         dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
@@ -307,6 +313,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_encoder_pad_id=dialog_encoder_vocab.padid,
 
         dialog_decoder_vocab_size=dialog_decoder_vocab.get_vocab_size(),
+        dialog_decoder_embedding_size=dialog_decoder_pretrained_embedding_weight.shape[1],
         dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
         dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
         dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
@@ -438,5 +445,5 @@ if __name__ == '__main__':
             s2s.evaluate()
         elif mode == 'interact':
             s2s.interact()
-            
+
     '''

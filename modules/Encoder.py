@@ -151,7 +151,7 @@ class RNNEncoder(EncoderBase):
         s_len, batch, emb_dim = emb.size()  # len, batch, emb_dim
 
         print("emb shape: {} ".format(emb.shape))
-        
+
         packed_emb = emb
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
