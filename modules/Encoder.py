@@ -95,6 +95,7 @@ class RNNEncoder(EncoderBase):
                  hidden_size, dropout=0, embeddings=None):
 
         super(RNNEncoder, self).__init__()
+
         assert embeddings is not None
 
         self.num_directions = 2 if bidirectional else 1
@@ -136,7 +137,7 @@ class RNNEncoder(EncoderBase):
         # rank the sequences according to their lengths
         input_length = Variable(lengths)
 
-        if src.is_cuda:
+        if src.is_cuda and !input_length.is_cuda:
             input_length = input_length.cuda()
 
         new_input_length, length_indexs = torch.sort(input_length, descending=True)
@@ -145,23 +146,23 @@ class RNNEncoder(EncoderBase):
 
         src, lengths = (new_src, new_input_length.data)
 
-        print("src shape: {} ".format(src.shape))
+        print("new_src shape: {} ".format(src.shape))
 
-        emb = self.embeddings(src)
-        s_len, batch, emb_dim = emb.size()  # len, batch, emb_dim
+        embedded = self.embeddings(src)
+        s_len, batch, emb_dim = embedded.size()  # len, batch, emb_dim
 
-        print("emb shape: {} ".format(emb.shape))
+        print("embedded shape: {} ".format(embedded.shape))
 
-        packed_emb = emb
+        packed_embedded = embedded
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
             lengths = lengths.view(-1).tolist()
-            packed_emb = nn.utils.rnn.pack_padded_sequence(packed_emb, lengths)
+            packed_embedded = nn.utils.rnn.pack_padded_sequence(packed_embedded, lengths)
 
         print("encoder_state shape: {} ".format(encoder_state.shape))
         print("type of self.rnn: {} ".format(type(self.rnn)))
 
-        memory_bank, encoder_final = self.rnn.forward(packed_emb, encoder_state)
+        memory_bank, encoder_final = self.rnn.forward(packed_embedded, encoder_state)
 
         if lengths is not None:
             memory_bank = nn.utils.rnn.pad_packed_sequence(memory_bank)[0]
