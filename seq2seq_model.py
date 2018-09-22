@@ -24,7 +24,6 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_rnn_type='LSTM',
                  dialog_encoder_dropout_rate=0.5,
                  dialog_encoder_max_length=32,
-                 # dialog_encoder_rnn_units=512,
                  dialog_encoder_clip_grads=1.0,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_pretrained_embedding_weight=None,
@@ -37,7 +36,6 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_rnn_type='LSTM',
                  dialog_decoder_dropout_rate=0.5,
                  dialog_decoder_max_length=32,
-                 # dialog_decoder_rnn_units=512,
                  dialog_decoder_clip_grads=1.0,
                  dialog_decoder_bidirectional=True,
                  dialog_decoder_pretrained_embedding_weight=None,
@@ -48,7 +46,6 @@ class Seq2SeqModel(nn.Module):
         super(Seq2SeqModel, self).__init__()
 
         # init
-
 
         '''Dialog encoder parameters'''
         self.dialog_encoder_vocab_size = dialog_encoder_vocab_size
@@ -84,7 +81,7 @@ class Seq2SeqModel(nn.Module):
             word embeddings.
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
-        
+
         self.dialog_encoder_embedding = Embeddings(embeddign_dim=self.dialog_encoder_embedding_size,
                                                    vocab_size=self.dialog_encoder_vocab_size,
                                                    padding_idx=self.dialog_encoder_pad_id,
@@ -161,6 +158,7 @@ class Seq2SeqModel(nn.Module):
                 ):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
+        print("dialog_encoder_src shape : {}".format(dialog_encoder_src.shape))
         dialog_encoder_initial_state = self.dialog_encoder.init_hidden(batch_size)
         print("dialog_encoder_initial_state shape: {} ".format(dialog_encoder_initial_state.shape))
 
