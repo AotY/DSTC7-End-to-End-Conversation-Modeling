@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from modules.Encoder import RNNEncoder
 from modules.Decoder import StdRNNDecoder
-from modules.Embeddings import Embeddings
+from modules.Embeddings import Embedding
 
 
 class Seq2SeqModel(nn.Module):
