@@ -19,6 +19,7 @@ class Optim(object):
       method (:obj:`str`): one of [sgd, adagrad, adadelta, adam]
       lr (float): learning rate
       lr_decay (float, optional): learning rate decay multiplier
+      max_grad_norm: All parameter gradients will be clipped to a maximum norm of max_grad_norm
       start_decay_at (int, optional): epoch to start learning rate decay
       beta1, beta2 (float, optional): parameters for adam
       adagrad_accum (float, optional): initialization parameter for adagrad
