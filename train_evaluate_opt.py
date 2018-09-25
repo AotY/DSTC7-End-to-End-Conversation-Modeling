@@ -136,7 +136,7 @@ def train_seq2seq_opt(parser):
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
     
-    group.add_argument('--dialog_decocer_clipvalue',
+    group.add_argument('--dialog_decoder_clipvalue',
                        type=float,
                        default=0.5,
                        help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
