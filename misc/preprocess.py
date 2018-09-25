@@ -290,7 +290,6 @@ if __name__ == '__main__':
 
     raw_conversations, raw_responses, \
         conversations, responses, \
-        conversations, responses, \
         conversations_length_distribution, conversation_max_length, \
         responses_length_distribution, response_max_length, \
         hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns = read_convos(
