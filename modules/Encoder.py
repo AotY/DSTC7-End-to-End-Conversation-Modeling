@@ -137,7 +137,7 @@ class RNNEncoder(EncoderBase):
         # rank the sequences according to their lengths
         input_length = Variable(lengths)
 
-        if src.is_cuda and !input_length.is_cuda:
+        if src.is_cuda and not input_length.is_cuda:
             input_length = input_length.cuda()
 
         new_input_length, length_indexs = torch.sort(input_length, descending=True)
