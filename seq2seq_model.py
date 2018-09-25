@@ -99,7 +99,7 @@ class Seq2SeqModel(nn.Module):
 
         if self.dialog_encoder_pretrained_embedding_weight is not None:
             # pretrained_weight is a numpy matrix of shape (num_embeddings, embedding_dim)
-            self.dialog_encoder_embedding.set_pretrained_embeddings(self.dialog_encoder_pretrained_embedding_weight, fixed=False)
+            self.dialog_encoder_embedding.set_pretrained_embedding(self.dialog_encoder_pretrained_embedding_weight, fixed=False)
 
         self.dialog_decoder_embedding = self.dialog_encoder_embedding
 
