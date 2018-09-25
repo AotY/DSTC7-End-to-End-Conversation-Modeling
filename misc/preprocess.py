@@ -363,3 +363,4 @@ if __name__ == '__main__':
     logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     logger.info('Preprocess finished.')
+    
