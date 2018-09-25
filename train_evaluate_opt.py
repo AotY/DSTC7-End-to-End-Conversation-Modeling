@@ -50,6 +50,11 @@ def train_seq2seq_opt(parser):
     #                    type=float,
     #                    help="Dialog encoder vocab size. Because encoder and decoder can have different vocab")
 
+    group.add_argument('--dialog_encoder_embedding_size',
+                        type=int,
+                        default=300,
+                        help='embedding size for dialog encoder.')
+
     group.add_argument('--dialog_encoder_hidden_size',
                        type=int,
                        default=300,
@@ -75,10 +80,16 @@ def train_seq2seq_opt(parser):
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_encoder_clip_grads',
+    group.add_argument('--dialog_encoder_clipnorm',
                        type=float,
-                       default=1,
-                       help='gradient clipping')
+                       default=1.0,
+                       help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
+    
+    group.add_argument('--dialog_encoder_clipvalue',
+                       type=float,
+                       default=0.5,
+                       help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
+
 
     group.add_argument('--dialog_encoder_bidirectional', action='store_true',
                        help='is bidirection.')
@@ -90,6 +101,12 @@ def train_seq2seq_opt(parser):
 
 
     '''dialog decoder parameters'''
+    
+    group.add_argument('--dialog_decoder_embedding_size',
+                        type=int,
+                        default=300,
+                        help='embedding size for dialog decoder.')
+
     group.add_argument('--dialog_decoder_vocab_size',
                        default=8e5 + 4,
                        type=float,
@@ -113,9 +130,16 @@ def train_seq2seq_opt(parser):
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
-
-    group.add_argument('--dialog_decoder_clip_grads', type=float, default=1,
-                       help='gradient clipping')
+    
+    group.add_argument('--dialog_decoder_clipnorm',
+                       type=float,
+                       default=1.0,
+                       help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
+    
+    group.add_argument('--dialog_decocer_clipvalue',
+                       type=float,
+                       default=0.5,
+                       help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
 
     group.add_argument('--dialog_decoder_bidirectional', action='store_true',
                        help='is bidirection.')
@@ -128,7 +152,6 @@ def train_seq2seq_opt(parser):
                        type=str,
                        default='dot',
                        help='dialog decoder attention type. "dot", "general", or "mlp" ')
-
 
 
 
