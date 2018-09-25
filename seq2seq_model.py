@@ -86,12 +86,12 @@ class Seq2SeqModel(nn.Module):
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
 
-        self.dialog_encoder_embedding = Embeddings(embeddign_dim=self.dialog_encoder_embedding_size,
+        self.dialog_encoder_embedding = Embedding(embeddign_size=self.dialog_encoder_embedding_size,
                                                    vocab_size=self.dialog_encoder_vocab_size,
                                                    padding_idx=self.dialog_encoder_pad_id,
                                                    dropout_ratio=self.dialog_encoder_dropout_rate)
         '''
-        self.dialog_decoder_embedding = Embeddings(self.dialog_decoder_embedding_size,
+        self.dialog_decoder_embedding = Embedding(self.dialog_decoder_embedding_size,
                                                    self.dialog_decoder_vocab_size,
                                                    self.dialog_decoder_pad_id,
                                                    self.dialog_decoder_dropout_rate)
