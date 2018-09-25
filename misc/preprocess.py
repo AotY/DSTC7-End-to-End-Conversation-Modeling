@@ -42,6 +42,9 @@ def read_convos(convos_file_path, logger=None):
     conversations = []
     responses = []
 
+    raw_conversations = []
+    raw_responses = []
+
     subreddit_names = []
     conversation_ids = []
     response_scores = []
@@ -59,18 +62,27 @@ def read_convos(convos_file_path, logger=None):
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' %
+                        (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
         conversation = sub[-2]
         response = sub[-1]
-        if conversation == 'START' or len(conversation.rstrip()) == 0:  # skip if source has nothing
+
+        # skip if source has nothing
+        if conversation == 'START' or len(conversation.rstrip()) == 0:
             continue
 
-        # url --> TAG
+        # raw data
+        raw_conversations.append(conversation)
+        raw_responses.append(response)
+
+        # token
+        # maybe url --> TAG
         conversation_tokens = tokenizer.preprocess(conversation)
-        conversation_max_length = max(conversation_max_length, len(conversation_tokens))
+        conversation_max_length = max(
+            conversation_max_length, len(conversation_tokens))
 
         conversations_length_distribution[len(conversation_tokens)] = conversations_length_distribution.get(
             len(conversation_tokens), 0) + 1
@@ -93,10 +105,11 @@ def read_convos(convos_file_path, logger=None):
         # if n == 1e3:
         #     break
 
-    return conversations, responses, \
-           conversations_length_distribution, conversation_max_length, \
-           responses_length_distribution, response_max_length, \
-           hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns
+    return raw_conversations, raw_responses, \
+        conversations, responses, \
+        conversations_length_distribution, conversation_max_length, \
+        responses_length_distribution, response_max_length, \
+        hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns
 
 
 '''
@@ -121,12 +134,14 @@ def read_facts(facts_file_path, logger):
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' %
+                        (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
         fact = sub[-1]
-        if fact == 'START' or len(fact.rstrip()) == 0:  # skip if source has nothing
+        # skip if source has nothing
+        if fact == 'START' or len(fact.rstrip()) == 0:
             continue
 
         facts.append(tokenizer.preprocess(fact))
@@ -157,7 +172,8 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
-        sorted_freq_list = [item for item in sorted_freq_list if item[1] > min_count]
+        sorted_freq_list = [
+            item for item in sorted_freq_list if item[1] > min_count]
 
     if max_vocab_size > 0 and len(sorted_freq_list) > max_vocab_size:
         logger.info('Clip tokens by max_vocab_size')
@@ -201,14 +217,15 @@ def save_distribution(distribution, name):
             f.write('%d\t%d\n' % (length, count))
 
 
-
 def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     '''Save data in pair format.'''
-    save_file = open(os.path.join(opt.save_path, filename), 'w', encoding='utf-8')
+    save_file = open(os.path.join(opt.save_path, filename),
+                     'w', encoding='utf-8')
     for conversation, response, hash_value in zip(conversations, responses, hash_values):
         save_file.write('%s\t%s\t%s\n' % (conversation, response, hash_value))
 
     save_file.close()
+
 
 def save_to_es(es, datas_zip, type='conversation'):
     if type == es_helper.conversation_type:
@@ -220,7 +237,8 @@ def save_to_es(es, datas_zip, type='conversation'):
                 'response_score': response_score,
                 'dialogue_turn': dialogue_turn,
             }
-            es_helper.insert_to_es(es, body, es_helper.index, es_helper.conversation_type)
+            es_helper.insert_to_es(
+                es, body, es_helper.index, es_helper.conversation_type)
     elif type == es_helper.fact_type:
         for hash_value, subreddit_name, conversation_id, domain_name, fact in datas_zip:
             body = {
@@ -230,22 +248,27 @@ def save_to_es(es, datas_zip, type='conversation'):
                 'domain_name': domain_name,
                 'fact': fact,
             }
-            es_helper.insert_to_es(es, body, es_helper.index, es_helper.conversation_type)
+            es_helper.insert_to_es(
+                es, body, es_helper.index, es_helper.conversation_type)
+
 
 '''save count'''
+
+
 def save_conversations_responses_count(conversations, responses):
     with open('conversations_responses_count.txt', 'w', encoding='utf-8') as f:
         f.write("%s\t%d\n" % ('conversations', len(conversations)))
         f.write("%s\t%d\n" % ('responses', len(responses)))
-        
 
 
 '''save raw pair'''
-def save_raw_pair(conversations, responses):
+
+
+def save_raw_pair(raw_conversations, raw_responses, hash_values):
     with open(os.path.join(opt.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8') as f:
-        for conversation, response in zip(conversations, responses):
-            f.write("%s\t%s\n" % (''.join(conversation), ''.join(response)))
-            
+        for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
+            f.write("%s\t%s\t\%s\n" % (conversation, response, hash_value))
+
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
@@ -265,34 +288,42 @@ if __name__ == '__main__':
 
     logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
 
-    conversations, responses, \
-    conversations_length_distribution, conversation_max_length, \
-    responses_length_distribution, response_max_length, \
-    hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns = read_convos(opt.convos_file_path, logger)
+    raw_conversations, raw_responses, \
+        conversations, responses, \
+        conversations, responses, \
+        conversations_length_distribution, conversation_max_length, \
+        responses_length_distribution, response_max_length, \
+        hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns = read_convos(
+            opt.convos_file_path, logger)
 
-    logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
+    logger.info('conversation_max_length: %d ' %
+                conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
     # save conversations and responses count
     save_conversations_responses_count(conversations, responses)
 
     # save raw pair
-    save_raw_pair(conversations, responses)
-    
+    save_raw_pair(raw_conversations, raw_responses, hash_values)
+
     # re-save conversations, responses, and facts
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-    save_data_to_pair(opt, conversations, responses, hash_values, filename='conversation_response.pair.txt')
+    save_data_to_pair(opt, conversations, responses, hash_values,
+                      filename='conversation_response.pair.txt')
 
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
     # save to elasticsearch
-    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns), type=es_helper.conversation_type)
+    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
+                       response_scores, dialogue_turns), type=es_helper.conversation_type)
 
-    facts, hash_values, subreddit_names, conversation_ids, domain_names = read_facts(opt.facts_file_path, logger)
+    facts, hash_values, subreddit_names, conversation_ids, domain_names = read_facts(
+        opt.facts_file_path, logger)
 
     # save to elasticsearch
-    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids, domain_names, facts), type=es_helper.fact_type)
+    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
+                       domain_names, facts), type=es_helper.fact_type)
 
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
@@ -303,7 +334,8 @@ if __name__ == '__main__':
 
     datas = conversations + responses
     datas_name = ['conversations', 'responses']
-    sorted_freq_list = stat_frequency(datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
+    sorted_freq_list = stat_frequency(
+        datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
     vocab = build_vocab(sorted_freq_list)
     vocab_size = int(vocab.get_vocab_size())
@@ -322,12 +354,14 @@ if __name__ == '__main__':
         opt.google_vec_file,
         opt.google_vec_dim,
         opt.binary,
-        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)),
+        os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.txt' %
+                     (vocab_size, opt.google_vec_dim)),
         logger)
 
     np.save(os.path.join(opt.save_path, 'google_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
             vocab_embedding)
-    logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+    logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' %
+                out_of_vocab_count)  #
 
     # fastText
     vocab_embedding, out_of_vocab_count = build_vocab_fastText(
@@ -341,11 +375,13 @@ if __name__ == '__main__':
 
     np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
             vocab_embedding)
-    logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+    logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' %
+                out_of_vocab_count)  #
 
     # training own word embedding.
     max_sentence_length = (int)(conversation_max_length * 2.0 / 4)
-    word2vec_model = train_embedding.start_train(datas, opt, max_sentence_length, opt.word_embedding_model_name)
+    word2vec_model = train_embedding.start_train(
+        datas, opt, max_sentence_length, opt.word_embedding_model_name)
     logger.info('train word embedding has finished. ')
 
     vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
@@ -355,13 +391,14 @@ if __name__ == '__main__':
         None,
         opt.size,
         None,
-        os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.txt' % vocab_size),
+        os.path.join(opt.save_path, opt.word_embedding_model_name +
+                     '.%d.300d.txt' % vocab_size),
         logger)
 
     np.save(os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.npy' % vocab_size),
             vocab_embedding)
 
-    logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
+    logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' %
+                out_of_vocab_count)  #
 
     logger.info('Preprocess finished.')
-    
