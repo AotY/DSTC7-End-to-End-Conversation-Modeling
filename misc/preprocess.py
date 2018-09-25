@@ -232,7 +232,19 @@ def save_to_es(es, datas_zip, type='conversation'):
             }
             es_helper.insert_to_es(es, body, es_helper.index, es_helper.conversation_type)
 
+'''save count'''
+def save_conversations_responses_count(conversations, responses):
+    with open('conversations_responses_count.txt', 'w', encoding='utf-8') as f:
+        f.write("%s\t%d\n" % ('conversations', len(conversations)))
+        f.write("%s\t%d\n" % ('responses', len(responses)))
+        
 
+
+'''save raw pair'''
+def save_raw_pair(conversations, responses):
+    with open(os.path.join(opt.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8'):
+        for conversation, response in zip(conversations, responses):
+            f.write("%s\t%s\n" % (''.join(conversation), ''.join(response))))
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
@@ -260,6 +272,12 @@ if __name__ == '__main__':
     logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
+    # save conversations and responses count
+    save_conversations_responses_count(conversations, responses)
+
+    # save raw pair
+    save_raw_pair(conversations, responses)
+    
     # re-save conversations, responses, and facts
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
     save_data_to_pair(opt, conversations, responses, hash_values, filename='conversation_response.pair.txt')

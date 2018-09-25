@@ -17,7 +17,7 @@ class PositionalEncoding(nn.Module):
     :cite:`DBLP:journals/corr/VaswaniSPUJGKP17`
     Args:
        dropout (float): dropout parameter
-       dim (int): embedding size
+       dim (int): embeddededding size
     """
 
     def __init__(self, dropout, dim, max_len=5000):
@@ -33,19 +33,19 @@ class PositionalEncoding(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.dim = dim
 
-    def forward(self, emb):
+    def forward(self, embedded):
         # We must wrap the self.pe in Variable to compute, not the other
-        # way - unwrap emb(i.e. emb.data). Otherwise the computation
+        # way - unwrap embedded(i.e. embedded.data). Otherwise the computation
         # wouldn't be watched to build the compute graph.
-        emb = emb * math.sqrt(self.dim)
-        emb = emb + Variable(self.pe[:emb.size(0)], requires_grad=False)
-        emb = self.dropout(emb)
-        return emb
+        embedded = embedded * math.sqrt(self.dim)
+        embedded = embedded + Variable(self.pe[:embedded.size(0)], requires_grad=False)
+        embedded = self.dropout(embedded)
+        return embedded
 
 
-class Embeddings(nn.Module):
+class Embedding(nn.Module):
     """
-    Words embeddings for encoder/decoder.
+    Words embedding for encoder/decoder.
     Additionally includes ability to add sparse input features
     based on "Linguistic Input Features Improve Neural Machine Translation"
     :cite:`sennrich2016linguistic`.
@@ -55,89 +55,92 @@ class Embeddings(nn.Module):
           A-->B[Word Lookup]
           A-->C[Output]
     Args:
-        embeddign_dim (int): size of the dictionary of embeddings.
-        padding_idx (int): padding index for words in the embeddings.
-        vocab_size (int): size of dictionary of embeddings for words.
+        embeddededdign_dim (int): size of the dictionary of embedding.
+        padding_idx (int): padding index for words in the embedding.
+        vocab_size (int): size of dictionary of embedding for words.
         dropout (float): dropout probability.
     """
 
     def __init__(self,
-                 embeddign_dim,
+                 embedding_size,
                  vocab_size,
                  padding_idx,
                  dropout_ratio=0.0,
                  sparse=False):
 
-        super(Embeddings, self).__init__()
+        super(Embedding, self).__init__()
+
         self.padding_idx = padding_idx
 
-        # Dimensions and padding for constructing the word embedding matrix
+        # Dimensions and padding for constructing the word embeddededding matrix
         self.vocab_size = vocab_size
 
         # This is the attribute you should access if you need to know
-        # how big your embeddings are going to be.
-        self.embedding_size = embeddign_dim
+        # how big your embedding are going to be.
+        self.embedding_size = embedding_size
 
         self.pad_indice = padding_idx
 
         # The embedding matrix look-up tables. The first look-up table
         # is for words. Subsequent ones are for features, if any exist.
-        self.embeddings = nn.Embedding(self.vocab_size, self.embedding_size,
+        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size,
                                        padding_idx=self.pad_indice, sparse=sparse)
 
 
         # The sequence of operations that converts the input sequence
-        # into a sequence of embeddings. At minimum this consists of
-        # looking up the embeddings for each word and feature in the
+        # into a sequence of embedding. At minimum this consists of
+        # looking up the embedding for each word and feature in the
         # input. Model parameters may require the sequence to contain
         # additional operations as well.
+        self.dropout = None
         if dropout_ratio != 0.0:
             self.dropout = nn.Dropout(p=dropout_ratio)
 
     '''
     @property
     def word_lut(self):
-        return self.embeddings
+        return self.embedding
 
     @property
-    def emb_luts(self):
-        return self.embeddings
+    def embedded_luts(self):
+        return self.embeddins
     '''
     def get_lookup_table(self):
-        return self.embeddings
+        return self.embedding
 
-    def set_pretrained_embeddings(self, pre_trained_weight=None, fixed=False):
-        """Set pretrained embeddings.
+    def set_pretrained_embedding(self, pre_trained_weight=None, fixed=False):
+        """Set pretrained embedding.
         Args:
-          pre_trained_weight (str) : path to torch serialized embeddings
-          fixed (bool) : if true, embeddings are not updated
+          pre_trained_weight (str) : path to torch serialized embedding
+          fixed (bool) : if true, embedding are not updated
         """
         if pre_trained_weight is not None:
             if not isinstance(pre_trained_weight, torch.Tensor):
                 pre_trained_weight = torch.from_numpy(pre_trained_weight)
-            self.embeddings.weight.data.copy_(pre_trained_weight)
+            self.embedding.weight.data.copy_(pre_trained_weight)
             if fixed:
-                self.embeddings.weight.requires_grad = False
+                self.embedding.weight.requires_grad = False
 
     def forward(self, inputs):
         """
-        Computes the embeddings for words and features.
+        Computes the embedding for words and features.
         Args:
             inputs (`LongTensor`): index tensor `[len x batch]`
         Return:
-            `FloatTensor`: word embeddings `[len x batch x embedding_size]`
+            `FloatTensor`: word embedding `[len x batch x embeddededding_size]`
         """
         in_length, in_batch = inputs.size()
-        print("Embedding inputs shape: {}", inputs.shape)
+        print("inputs shape: {}", inputs.shape)
 
-        # aeq(nfeat, len(self.emb_luts))
+        # aeq(nfeat, len(self.embedded_luts))
 
-        emb = self.embeddings(inputs)
-        emb = self.dropout(emb)
+        embedded = self.embedding(inputs)
+        if self.dropout is not None:
+            embedded = self.dropout(embedded)
 
-        out_length, out_batch, emb_size = emb.size()
+        out_length, out_batch, embedded_size = embedded.size()
         aeq(in_length, out_length)
         aeq(in_batch, out_batch)
-        aeq(emb_size, self.embedding_size)
+        aeq(embedded_size, self.embedding_size)
 
-        return emb
+        return embedded

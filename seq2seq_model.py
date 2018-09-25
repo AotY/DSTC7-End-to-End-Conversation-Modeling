@@ -17,28 +17,28 @@ class Seq2SeqModel(nn.Module):
     '''
 
     def __init__(self,
-                 dialog_encoder_vocab_size=None,
                  dialog_encoder_embedding_size=300,
+                 dialog_encoder_vocab_size=None,
                  dialog_encoder_hidden_size=300,
                  dialog_encoder_num_layers=2,
                  dialog_encoder_rnn_type='LSTM',
                  dialog_encoder_dropout_rate=0.5,
                  dialog_encoder_max_length=32,
-                 # dialog_encoder_rnn_units=512,
-                 dialog_encoder_clip_grads=1.0,
+                 dialog_encoder_clipnorm=1.0,
+                 dialog_encoder_clipvalue=0.5,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_pretrained_embedding_weight=None,
                  dialog_encoder_pad_id=1,
 
-                 dialog_decoder_vocab_size=None,
                  dialog_decoder_embedding_size=300,
+                 dialog_decoder_vocab_size=None,
                  dialog_decoder_hidden_size=300,
                  dialog_decoder_num_layers=2,
                  dialog_decoder_rnn_type='LSTM',
                  dialog_decoder_dropout_rate=0.5,
+                 dialog_decoder_clipnorm=1.0,
+                 dialog_decoder_clipvalue=0.5,
                  dialog_decoder_max_length=32,
-                 # dialog_decoder_rnn_units=512,
-                 dialog_decoder_clip_grads=1.0,
                  dialog_decoder_bidirectional=True,
                  dialog_decoder_pretrained_embedding_weight=None,
                  dialog_decoder_pad_id=1,
@@ -49,7 +49,6 @@ class Seq2SeqModel(nn.Module):
 
         # init
 
-
         '''Dialog encoder parameters'''
         self.dialog_encoder_vocab_size = dialog_encoder_vocab_size
         self.dialog_encoder_embedding_size = dialog_encoder_embedding_size
@@ -58,7 +57,8 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_rnn_type = dialog_encoder_rnn_type
         self.dialog_encoder_dropout_rate = dialog_encoder_dropout_rate
         self.dialog_encoder_max_length = dialog_encoder_max_length
-        self.dialog_encoder_clip_grads = dialog_encoder_clip_grads
+        self.dialog_encoder_clipnorm = dialog_encoder_clipnorm
+        self.dialog_encoder_clipvalue = dialog_encoder_clipvalue
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
         self.dialog_encoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
         self.dialog_encoder_pad_id = dialog_encoder_pad_id
@@ -71,7 +71,8 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_rnn_type = dialog_decoder_rnn_type
         self.dialog_decoder_dropout_rate = dialog_decoder_dropout_rate
         self.dialog_decoder_max_length = dialog_decoder_max_length
-        self.dialog_decoder_clip_grads = dialog_decoder_clip_grads
+        self.dialog_decoder_clipnorm = dialog_decoder_clipnorm
+        self.dialog_decoder_clipvalue = dialog_decoder_clipvalue
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pretrained_embedding_weight = dialog_decoder_pretrained_embedding_weight
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
@@ -84,7 +85,7 @@ class Seq2SeqModel(nn.Module):
             word embeddings.
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
-        
+
         self.dialog_encoder_embedding = Embeddings(embeddign_dim=self.dialog_encoder_embedding_size,
                                                    vocab_size=self.dialog_encoder_vocab_size,
                                                    padding_idx=self.dialog_encoder_pad_id,
@@ -161,6 +162,7 @@ class Seq2SeqModel(nn.Module):
                 ):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
+        print("dialog_encoder_src shape : {}".format(dialog_encoder_src.shape))
         dialog_encoder_initial_state = self.dialog_encoder.init_hidden(batch_size)
         print("dialog_encoder_initial_state shape: {} ".format(dialog_encoder_initial_state.shape))
 
