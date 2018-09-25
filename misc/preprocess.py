@@ -244,7 +244,8 @@ def save_conversations_responses_count(conversations, responses):
 def save_raw_pair(conversations, responses):
     with open(os.path.join(opt.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8'):
         for conversation, response in zip(conversations, responses):
-            f.write("%s\t%s\n" % (''.join(conversation), ''.join(response))))
+            f.write("%s\t%s\n" % (''.join(conversation), ''.join(response)))
+            
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
