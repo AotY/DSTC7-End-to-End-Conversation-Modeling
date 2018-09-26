@@ -319,7 +319,6 @@ if __name__ == '__main__':
                       filename='conversations_responses.pair.txt')
 
 
-    '''
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
     
@@ -339,8 +338,6 @@ if __name__ == '__main__':
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
                        domain_names, facts), type=es_helper.fact_type)
 
-    '''
-    
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
     save_distribution(responses_length_distribution, 'responses')
