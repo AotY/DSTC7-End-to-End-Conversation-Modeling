@@ -97,7 +97,7 @@ class Seq2SeqModel(nn.Module):
 
         self.dialog_decoder_embedding = Embedding(embedding_size=self.dialog_decoder_embedding_size,
                                                    vocab_size=self.dialog_decoder_vocab_size,
-                                                   padding_dix=self.dialog_decoder_pad_id,
+                                                   padding_idx=self.dialog_decoder_pad_id,
                                                    dropout_ratio=self.dialog_decoder_dropout_rate)
 
         if self.dialog_encoder_pretrained_embedding_weight is not None:
