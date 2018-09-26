@@ -361,7 +361,6 @@ if __name__ == '__main__':
 
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
-    '''
     # google word2vec
     vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
         None,
@@ -417,5 +416,4 @@ if __name__ == '__main__':
     logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' %
                 out_of_vocab_count)  #
 
-    '''
     logger.info('Preprocess finished.')
