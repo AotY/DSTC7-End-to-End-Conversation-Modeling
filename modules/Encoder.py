@@ -138,7 +138,6 @@ class RNNEncoder(EncoderBase):
         # rank the sequences according to their lengths
         lengths = Variable(lengths)
 
-
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
 
         new_src = torch.index_select(src, 1, sorted_indices)
