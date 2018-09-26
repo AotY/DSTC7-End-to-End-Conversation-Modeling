@@ -266,6 +266,7 @@ class StdRNNDecoder(DecoderBase):
                             type of attention Tensor array of every time
                             step from the decoder.
         """
+
         # Initialize local and return variables.
         attns = {}
         emb = self.embedding(tgt)
@@ -274,6 +275,7 @@ class StdRNNDecoder(DecoderBase):
         if isinstance(self.rnn, nn.GRU) or isinstance(self.rnn, nn.RNN):
             rnn_output, decoder_final = self.rnn(emb, state.hidden[0])
         else:
+            # LSTM
             rnn_output, decoder_final = self.rnn(emb, state.hidden)
 
         # Check
@@ -284,6 +286,9 @@ class StdRNNDecoder(DecoderBase):
         aeq(tgt_batch, output_batch)
 
         # END
+
+        print('rnn_output shape: {}'.format(rnn_output.shape))
+        print('decoder_final shape: {}'.format(decoder_final.shape))
 
         # Calculate the attention.
         if self.attn_type is not None:
