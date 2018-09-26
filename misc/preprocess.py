@@ -223,7 +223,7 @@ def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     save_file = open(os.path.join(opt.save_path, filename),
                      'w', encoding='utf-8')
     for conversation, response, hash_value in zip(conversations, responses, hash_values):
-        save_file.write('%s\t%s\t%s\n' % (' '.joint(conversation), ' '.joint(response), hash_value))
+        save_file.write('%s\t%s\t%s\n' % (' '.join(conversation), ' '.join(response), hash_value))
 
     save_file.close()
 
