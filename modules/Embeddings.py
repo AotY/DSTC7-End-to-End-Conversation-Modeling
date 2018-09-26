@@ -130,18 +130,24 @@ class Embedding(nn.Module):
         Return:
             `FloatTensor`: word embedding `[len x batch x embeddededding_size]`
         """
+
         in_length, in_batch = inputs.size()
         print("inputs shape: {}", inputs.shape)
 
         # aeq(nfeat, len(self.embedded_luts))
 
         embedded = self.embedding(inputs)
-#          if self.dropout is not None:
-        #  embedded = self.dropout(embedded)
+
+        if self.dropout is not None:
+            embedded = self.dropout(embedded)
 
         out_length, out_batch, embedded_size = embedded.size()
+
         aeq(in_length, out_length)
         aeq(in_batch, out_batch)
         aeq(embedded_size, self.embedding_size)
 
         return embedded
+
+
+    
