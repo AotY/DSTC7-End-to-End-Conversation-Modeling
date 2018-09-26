@@ -95,15 +95,12 @@ def read_convos(convos_file_path, logger=None):
                                                                                                 0) + 1
         responses.append(response_tokens)
 
-        hash_values.append(sub[0])
+        hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
         subreddit_names.append(sub[1])
         conversation_ids.append(sub[2])
         response_scores.append(sub[3])
         dialogue_turns.append(sub[4])
 
-        # for test
-        # if n == 1e3:
-        #     break
 
     return raw_conversations, raw_responses, \
         conversations, responses, \
@@ -145,7 +142,7 @@ def read_facts(facts_file_path, logger):
             continue
 
         facts.append(tokenizer.preprocess(fact))
-        hash_values.append(sub[0])
+        hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
         subreddit_names.append(sub[1])
         conversation_ids.append(sub[2])
         domain_names.append(sub[3])
@@ -220,13 +217,13 @@ def save_distribution(distribution, name):
         for length, count in distribution_list:
             f.write('%d\t%d\n' % (length, count))
 
-
+''' save data to pair, conversation - response '''
 def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     '''Save data in pair format.'''
     save_file = open(os.path.join(opt.save_path, filename),
                      'w', encoding='utf-8')
     for conversation, response, hash_value in zip(conversations, responses, hash_values):
-        save_file.write('%s\t%s\t%s\n' % (conversation, response, hash_value))
+        save_file.write('%s\t%s\t%s\n' % (' '.joint(conversation), ' '.joint(response), hash_value))
 
     save_file.close()
 
@@ -273,6 +270,7 @@ def save_raw_pair(raw_conversations, raw_responses, hash_values):
         for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
             f.write("%s\t%s\t\%s\n" % (conversation, response, hash_value))
 
+
 '''save token, type nums '''
 def save_token_type_nums(total_token_nums, total_type_nums):
     with open('token_type_nums.txt', 'w', encoding='utf-8') as f:
@@ -318,25 +316,31 @@ if __name__ == '__main__':
     # re-save conversations, responses, and facts
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
     save_data_to_pair(opt, conversations, responses, hash_values,
-                      filename='conversation_response.pair.txt')
+                      filename='conversations_responses.pair.txt')
 
+
+    '''
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
+    
+    # delete index
+    es_helper.delete_index(es, es_helper.index)
 
     # save to elasticsearch
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
                        response_scores, dialogue_turns), type=es_helper.conversation_type)
 
+    # read facts
     facts, hash_values, subreddit_names, conversation_ids, domain_names = read_facts(
         opt.facts_file_path, logger)
 
-    # delete index
-    es_helper.delete_index(es, es_helper.index)
     
     # save to elasticsearch
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
                        domain_names, facts), type=es_helper.fact_type)
 
+    '''
+    
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
     save_distribution(responses_length_distribution, 'responses')
@@ -360,6 +364,7 @@ if __name__ == '__main__':
 
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
+    '''
     # google word2vec
     vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
         None,
@@ -415,4 +420,5 @@ if __name__ == '__main__':
     logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' %
                 out_of_vocab_count)  #
 
+    '''
     logger.info('Preprocess finished.')

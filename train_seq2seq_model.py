@@ -392,15 +392,12 @@ if __name__ == '__main__':
     vocab = Vocab()
     vocab.load(opt.vocab_save_path)
     vocab_size = vocab.get_vocab_size()
-    logger.info("vocab_size -----> %d" % vocab_size)
+    logger.info("vocab_size -----------------> %d" % vocab_size)
 
     seq2seq_dataset = Seq2seqDataSet(
-        path_conversations=opt.conversations_num_path,
-        path_responses=opt.responses_num_path,
-        dialog_encoder_vocab_size=vocab_size,
+        path_conversations_responses_pair=opt.path_conversations_responses_pair,
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_vocab=vocab,
-        dialog_decoder_vocab_size=vocab_size,
         dialog_decoder_max_length=opt.dialog_encoder_max_length,
         dialog_decoder_vocab=vocab,
 

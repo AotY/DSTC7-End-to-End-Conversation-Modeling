@@ -141,7 +141,9 @@ class Embedding(nn.Module):
         print("self.droput_ratio: %f" % self.dropout.p)
 
         print("embedded shape: {}".format(embedded.shape))
+        print("embedded device: {}".format(embedded.device))
         print("embedded: {}".format(embedded))
+
         if self.dropout is not None:
             embedded = self.dropout(embedded)
 
