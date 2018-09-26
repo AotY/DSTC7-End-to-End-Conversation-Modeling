@@ -319,7 +319,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_pretrained_embedding_weight=dialog_encoder_pretrained_embedding_weight,
         dialog_encoder_pad_id=dialog_encoder_vocab.padid,
-        dialog_encoder_tied=dialog_encoder_tied,
+        dialog_encoder_tied=opt.dialog_encoder_tied,
 
         dialog_decoder_embedding_size=opt.dialog_decoder_embedding_size,
         dialog_decoder_vocab_size=dialog_decoder_vocab.get_vocab_size(),
@@ -334,7 +334,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_pretrained_embedding_weight=dialog_decoder_pretrained_embedding_weight,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
-        dialog_decoder_tied=dialog_decoder_tied)
+        dialog_decoder_tied=opt.dialog_decoder_tied)
 
     if use_gpu:
         seq2seq_model.set_cuda()
