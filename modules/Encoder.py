@@ -140,6 +140,9 @@ class RNNEncoder(EncoderBase):
 
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
 
+        if src.is_cuda:
+            sorted_indices = sorted_indices.cuda()
+
         new_src = torch.index_select(src, 1, sorted_indices)
 
         src, lengths = (new_src, sorted_lengths.data)
