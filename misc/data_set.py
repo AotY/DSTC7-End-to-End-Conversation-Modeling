@@ -63,6 +63,8 @@ class Seq2seqDataSet:
                 elif k == 'response':
                     seqs[k].append(seq[-min(self.dialog_decoder_max_length - 2, len(seq)):])
         '''
+        seqs['conversation'] = []
+        seqs['response'] = []
         with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
