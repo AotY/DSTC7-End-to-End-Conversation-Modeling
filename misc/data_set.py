@@ -69,10 +69,11 @@ class Seq2seqDataSet:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
 
-                seqs['conversation'].append(self.dialog_encoder_vocab.words_to_id(
-                    conversation.split())[-min(self.dialog_encoder_max_length - 2, len(seq)):])
-                seqs['response'].append(self.dialog_decoder_vocab.words_to_id(
-                    response.split())[-min(self.dialog_encoder_max_length - 2, len(seq)):])
+                ids = self.dialog_encoder_vocab.words_to_id(conversation.split())
+                seqs['conversation'].append(ids[-min(self.dialog_encoder_max_length - 2, len(ids)):])
+
+                ids = self.dialog_decoder_vocab.words_to_id(response.split())
+                seqs['response'].append(ids[-min(self.dialog_encoder_max_length - 2, len(ids)):])
 
         self.pairs = list(zip(seqs['conversation'], seqs['response']))
 
