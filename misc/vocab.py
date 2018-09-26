@@ -26,7 +26,7 @@ class Vocab(object):
         self.word2idx = {}
         self.idx2word = {}
 
-        self.word2idx[PAD] = 0 
+        self.word2idx[PAD] = 0
         self.word2idx[UNK] = 1
         self.word2idx[SOS] = 2
         self.word2idx[EOS] = 3
@@ -35,6 +35,7 @@ class Vocab(object):
         return len(self.word2idx)
 
     '''word to id '''
+
     def word_to_id(self, word):
         return self.word2idx.get(word, self.unkid)
 
@@ -43,6 +44,7 @@ class Vocab(object):
         return word_ids
 
     '''id to  word'''
+
     def id_to_word(self, id):
         return self.idx2word.get(id, UNK)
 
@@ -59,8 +61,8 @@ class Vocab(object):
         # init idx2word
         self.idx2word = {v: k for k, v in self.word2idx.items()}
 
-
     '''save and restore'''
+
     def save(self, path='vocab_idx2word.dict'):
         if len(self.idx2word) == 0:
             raise RuntimeError("Save vocab after call build_for_frequency()")
@@ -75,20 +77,20 @@ class Vocab(object):
         except:
             raise RuntimeError("Make sure vocab_word2idx.dict exists.")
 
-
     ''' wordid '''
-
-    @property
-    def unkid(self):
-        """return the id of unknown word
-        """
-        return self.word2idx.get(UNK, 1)
 
     @property
     def padid(self):
         """return the id of padding
         """
         return self.word2idx.get(PAD, 0)
+
+
+    @property
+    def unkid(self):
+        """return the id of unknown word
+        """
+        return self.word2idx.get(UNK, 1)
 
     @property
     def sosid(self):
