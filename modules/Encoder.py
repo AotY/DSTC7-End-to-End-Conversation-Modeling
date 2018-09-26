@@ -46,14 +46,14 @@ class MeanEncoder(EncoderBase):
     """A trivial non-recurrent encoder. Simply applies mean pooling.
     Args:
        num_layers (int): number of replicated layers
-       embeddings (:obj:`onmt.modules.Embeddings`): embedding module to use
+       embedding (:obj:`onmt.modules.embedding`): embedding module to use
     """
 
-    def __init__(self, num_layers, embeddings):
+    def __init__(self, num_layers, embedding):
         super(MeanEncoder, self).__init__()
         self.num_layers = num_layers
-        self.embeddings = embeddings
-        self.hidden_size = embeddings.embedding_size
+        self.embedding = embedding
+        self.hidden_size = embedding.embedding_size
 
         self.encoder_type = 'mean'
 
@@ -65,7 +65,7 @@ class MeanEncoder(EncoderBase):
         """
         self._check_args(src, lengths, encoder_state)
 
-        emb = self.embeddings(src)
+        emb = self.embedding(src)
         s_len, batch, emb_dim = emb.size()
         # calculating the embedding mean according to lengths
         if lengths is not None:
@@ -88,15 +88,15 @@ class RNNEncoder(EncoderBase):
        num_layers (int) : number of stacked layers
        hidden_size (int) : hidden size of each layer
        dropout (float) : dropout value for :obj:`nn.Dropout`
-       embeddings (:obj:`onmt.modules.Embeddings`): embedding module to use
+       embedding (:obj:`onmt.modules.embedding`): embedding module to use
     """
 
     def __init__(self, rnn_type, bidirectional, num_layers,
-                 hidden_size, dropout=0, embeddings=None):
+                 hidden_size, dropout=0, embedding=None):
 
         super(RNNEncoder, self).__init__()
 
-        assert embeddings is not None
+        assert embedding is not None
 
         self.num_directions = 2 if bidirectional else 1
 
@@ -106,10 +106,10 @@ class RNNEncoder(EncoderBase):
 
         self.hidden_size = hidden_size // self.num_directions
 
-        self.embeddings = embeddings
+        self.embedding = embedding
 
         self.rnn = rnn_factory(rnn_type,
-                               input_size=embeddings.embedding_size,
+                               input_size=embedding.embedding_size,
                                hidden_size=self.hidden_size,
                                num_layers=num_layers,
                                dropout=dropout,
@@ -149,13 +149,14 @@ class RNNEncoder(EncoderBase):
 
         print("new_src shape: {} ".format(src.shape))
 
-        embedded = self.embeddings(src)
+        embedded = self.embedding(src)
 
         s_len, batch, emb_dim = embedded.size()  # len, batch, emb_dim
 
         print("embedded shape: {} ".format(embedded.shape))
 
         packed_embedded = embedded
+
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
             lengths = lengths.view(-1).tolist()
@@ -204,7 +205,7 @@ class CNNEncoder(EncoderBase):
 
     def __init__(self, hidden_size, num_layers=1,
                  filter_num=64, filter_sizes=[1, 2, 3, 4],
-                 dropout=0, embeddings=None):
+                 dropout=0, embedding=None):
         """
             embed_size,
             hidden_size,
@@ -214,13 +215,13 @@ class CNNEncoder(EncoderBase):
             dropout,
         """
         super(CNNEncoder, self).__init__()
-        assert embeddings is not None
-        self.input_size = embeddings.embedding_size
+        assert embedding is not None
+        self.input_size = embedding.embedding_size
         self.hidden_size = hidden_size
         self.filter_num = filter_num
         self.filter_sizes = filter_sizes
         self.dropout_p = dropout
-        self.embeddings = embeddings
+        self.embedding = embedding
 
         self.encoder_type = 'simple_cnn'
         # input shape of Conv2d, (batch_size, 1, max_seqlen, embedding_size)
@@ -242,7 +243,7 @@ class CNNEncoder(EncoderBase):
             output, batch_size * (len(filter_sizes) X filter_num)
         '''
         # s_len, batch, emb_dim = emb.size()
-        embeded = self.embeddings(src.transpose(0, 1))  # batch_size * seq_len * hidden
+        embeded = self.embedding(src.transpose(0, 1))  # batch_size * seq_len * hidden
         embeded = embeded.unsqueeze(1)  # batch_size * 1 * seq_len * hidden
         s_len, _, batch, emb_dim = embeded.size()
         conv_feats = [F.relu(conv(embeded)).squeeze(3) for conv in self.convs]
