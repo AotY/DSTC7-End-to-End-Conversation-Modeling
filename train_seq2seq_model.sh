@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
     
 python train_seq2seq_model.py \
-    --conversations_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.conversations.txt \
-    --responses_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.responses.txt \
+    --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
     --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx.dict \
     --dialog_encoder_embedding_size 300 \
