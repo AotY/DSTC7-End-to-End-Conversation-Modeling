@@ -174,8 +174,6 @@ class Seq2SeqModel(nn.Module):
         print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
         print("dialog_encoder_src_lengths size : {}".format(dialog_encoder_src_lengths.shape))
 
-        if self.use_gpu:
-            dialog_encoder_initial_state = dialog_encoder_initial_state.cuda()
 
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
@@ -189,8 +187,8 @@ class Seq2SeqModel(nn.Module):
         # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
         decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_final_state)
 
-        if self.use_gpu:
-            dialog_encoder_memory_bank = dialog_encoder_memory_bank.cuda()
+#          if self.use_gpu:
+#              dialog_encoder_memory_bank = dialog_encoder_memory_bank.cuda()
 
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
         dialog_decoder_attns = self.dialog_decoder.forward(

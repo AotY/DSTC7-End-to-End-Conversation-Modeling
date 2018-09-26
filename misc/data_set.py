@@ -103,12 +103,12 @@ class Seq2seqDataSet:
 
         self.logger.info('building %s data from %i to %i' % (task, i_sample, i_sample_next))
 
-        encoder_input_data = torch.ones((self.dialog_encoder_max_length, num_samples)) * self.dialog_decoder_vocab.padid
+        encoder_input_data = torch.zeros((self.dialog_encoder_max_length, num_samples))
         # encoder_input_data = np.ones((self.dialog_encoder_max_length, num_samples),
         #                              dtype=np.int32) * self.dialog_encoder_vocab.padid
         # encoder_input_lengths = np.ones((num_samples,))  # * self.dialog_encoder_max_length
 
-        decoder_input_data = torch.ones((self.dialog_decoder_max_length, num_samples)) * self.dialog_decoder_vocab.padid
+        decoder_input_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
         # decoder_input_data = np.ones((self.dialog_decoder_max_length, num_samples),
         #                              dtype=np.int32) * self.dialog_decoder_vocab.padid
         # decoder_input_lengths = np.ones((num_samples,))  #* self.dialog_decoder_max_length
@@ -116,7 +116,7 @@ class Seq2seqDataSet:
         # decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.vocab_size + 1))  # +1 as mask_zero
         # decoder_target_data = np.zeros((num_samples, self.dialog_decoder_max_length, self.dialog_decoder_vocab_size))
         # decoder_target_data = np.zeros((self.dialog_decoder_max_length, num_samples, self.dialog_decoder_vocab_size))
-        decoder_target_data = torch.ones((self.dialog_decoder_max_length, num_samples))
+        decoder_target_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
 
         conversation_texts = []
         response_texts = []
@@ -148,11 +148,11 @@ class Seq2seqDataSet:
                 decoder_target_data[t, i] = token_id
 
         # To long tensor
-        encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long)
+        encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long, device=self.device)
         # encoder_input_lengths = torch.tensor(encoder_input_lengths, dtype=torch.long, device=self.device)
-        decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long)
+        decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long, device=self.device)
         # decoder_input_lengths = torch.tensor(decoder_input_lengths, dtype=torch.long, device=self.device)
-        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long) # , device=self.device
+        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long, device=self.device) # , device=self.device
 
         return num_samples, \
                encoder_input_data, \

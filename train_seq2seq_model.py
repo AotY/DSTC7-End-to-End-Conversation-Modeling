@@ -141,21 +141,10 @@ def train(seq2seq_model,
     encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
     decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
-    #  if use_gpu:
-        #  encoder_input_lengths = encoder_input_lengths.cuda()
-    #      decoder_input_lenghts = decoder_input_lengths.cuda()
-    
-    if use_gpu:
-        encoder_input_data = encoder_input_data.cuda()
-        decoder_target_data = decoder_target_data.cuda()
+#      if use_gpu:
+        #  encoder_input_data = encoder_input_data.cuda()
+        #  decoder_target_data = decoder_target_data.cuda()
 
-    #lengths encoder_input_lengths = encoder_input_lengths.view(1, -1)
-    # decoder_input_lengths = decoder_input_lengths.view(1, -1)
-    # decoder_input_lengths = decoder_input_data[0]
-    # output, encoder_input_lengths = pack_padded_sequence(sequence=encoder_input_data,
-    #                                                      batch_first=False,
-    #                                                      padding_value=vocab.padid,
-    #                                                      total_length=None)
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
     (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
@@ -336,8 +325,9 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
         dialog_decoder_tied=opt.dialog_decoder_tied)
 
-    if use_gpu:
-        seq2seq_model.set_cuda()
+    seq2seq_model = seq2seq_model.to(device)
+#      if use_gpu:
+        #  seq2seq_model.set_cuda()
 
     return seq2seq_model
 
