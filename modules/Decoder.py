@@ -122,17 +122,17 @@ class DecoderBase(nn.Module):
        hidden_size (int) : hidden size of each layer
        attn_type (str) : if attn_type is not None, see GlobalAttention()
        dropout (float) : dropout value for :obj:`nn.Dropout`
-       embeddings (:obj:`Embeddings`): embedding module to use
+       embedding (:obj:`embedding`): embedding module to use
     """
 
     def __init__(self, rnn_type,
                  bidirectional_encoder, num_layers,
                  hidden_size, attn_type=None,
-                 dropout=0.0, embeddings=None):
+                 dropout=0.0, embedding=None):
 
         super(DecoderBase, self).__init__()
 
-        assert embeddings is not None
+        assert embedding is not None
 
         # Basic attributes.
         self.decoder_type = 'rnn'
@@ -141,7 +141,7 @@ class DecoderBase(nn.Module):
         self.num_layers = num_layers
         # self.hidden_size = hidden_size // self.num_directions
         self.hidden_size = hidden_size
-        self.embeddings = embeddings
+        self.embedding = embedding
         self.dropout = nn.Dropout(dropout)
         self.attn_type = attn_type
 
@@ -176,7 +176,7 @@ class DecoderBase(nn.Module):
         """
         Private helper returning the number of expected features.
         """
-        return self.embeddings.embedding_size
+        return self.embedding.embedding_size
 
     def _check_args(self, tgt, memory_bank, state):
         assert isinstance(state, RNNDecoderState)
@@ -244,7 +244,7 @@ class StdRNNDecoder(DecoderBase):
         """
         Private helper returning the number of expected features.
         """
-        return self.embeddings.embedding_size
+        return self.embedding.embedding_size
 
     def _run_forward_pass(self, tgt, memory_bank, state, memory_lengths=None):
         """
@@ -268,7 +268,7 @@ class StdRNNDecoder(DecoderBase):
         """
         # Initialize local and return variables.
         attns = {}
-        emb = self.embeddings(tgt)
+        emb = self.embedding(tgt)
 
         # Run the forward pass of the RNN.
         if isinstance(self.rnn, nn.GRU) or isinstance(self.rnn, nn.RNN):
@@ -328,7 +328,7 @@ class InputFeedRNNDecoder(DecoderBase):
         """
         Private helper returning the number of expected features.
         """
-        return self.embeddings.embedding_size + self.hidden_size
+        return self.embedding.embedding_size + self.hidden_size
 
     def _run_forward_pass(self, tgt, memory_bank, state, memory_lengths=None):
         """
@@ -340,13 +340,14 @@ class InputFeedRNNDecoder(DecoderBase):
         decoder_outputs = []
         attns = {"std": []}
 
-        emb = self.embeddings(tgt)
+        emb = self.embedding(tgt)
         assert emb.dim() == 3  # tgt_len x batch x embedding_dim
 
         hidden = state.hidden
         # Input feed concatenates hidden state with
         # input at every time step.
         memory_bank_t = memory_bank.transpose(0, 1)
+
         for i, emb_t in enumerate(emb.split(1)):
             emb_t = emb_t.squeeze(0)
             decoder_input = torch.cat([emb_t, input_feed], 1)
