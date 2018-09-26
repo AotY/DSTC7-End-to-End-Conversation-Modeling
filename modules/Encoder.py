@@ -132,6 +132,7 @@ class RNNEncoder(EncoderBase):
                 * final encoder state, used to initialize decoder
                 * memory bank for attention, `[src_len x batch x hidden]`
         """
+
         self._check_args(src, lengths, encoder_state)
 
         # rank the sequences according to their lengths
@@ -149,6 +150,7 @@ class RNNEncoder(EncoderBase):
         print("new_src shape: {} ".format(src.shape))
 
         embedded = self.embeddings(src)
+
         s_len, batch, emb_dim = embedded.size()  # len, batch, emb_dim
 
         print("embedded shape: {} ".format(embedded.shape))
