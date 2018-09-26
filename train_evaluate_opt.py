@@ -99,7 +99,7 @@ def train_seq2seq_opt(parser):
 
 
     group.add_argument('--dialog_encoder_tied',
-            action='store_ture',
+            action='store_true',
             help='tie the word embedding and softmax weights'
             )
 
@@ -157,7 +157,7 @@ def train_seq2seq_opt(parser):
             help='dialog decoder attention type. "dot", "general", or "mlp" ')
 
     group.add_argument('--dialog_decoder_tied',
-            action='store_ture',
+            action='store_true',
             help='tie the word embedding and softmax weights'
             )
 
