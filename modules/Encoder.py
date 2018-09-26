@@ -136,25 +136,18 @@ class RNNEncoder(EncoderBase):
         self._check_args(src, lengths, encoder_state)
 
         # rank the sequences according to their lengths
-        input_length = Variable(lengths)
+        lengths = Variable(lengths)
 
-        # if src.is_cuda and not input_length.is_cuda:
-        #    input_length = input_length.cuda()
 
-        new_input_length, length_indexs = torch.sort(input_length, descending=True)
+        sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
 
-        if src.is_cuda:
-            length_indexs = length_indexs.cuda()
+        new_src = torch.index_select(src, 1, sorted_indices)
 
-        new_src = torch.index_select(src, 1, length_indexs)
-
-        src, lengths = (new_src, new_input_length.data)
+        src, lengths = (new_src, sorted_lengths.data)
 
         print("new_src shape: {} ".format(src.shape))
 
         embedded = self.embedding(src)
-
-        s_len, batch, emb_dim = embedded.size()  # len, batch, emb_dim
 
         print("embedded shape: {} ".format(embedded.shape))
 
@@ -165,18 +158,14 @@ class RNNEncoder(EncoderBase):
             lengths = lengths.view(-1).tolist()
             packed_embedded = nn.utils.rnn.pack_padded_sequence(packed_embedded, lengths)
 
-        print("encoder_state shape: {} ".format(encoder_state.shape))
-        print("type of self.rnn: {} ".format(type(self.rnn)))
-
-        print("packed_embedded is cuda: {}".format(packed_embedded.is_cuda))
-        print("encoder_state is cuda: {}".format(encoder_state.is_cuda))
         memory_bank, encoder_final = self.rnn.forward(packed_embedded, encoder_state)
 
+        # undo the packing operation
         if lengths is not None:
             memory_bank = nn.utils.rnn.pad_packed_sequence(memory_bank)[0]
 
         # map to input order
-        _, out_order = torch.sort(length_indexs)
+        _, out_order = torch.sort(sorted_indices)
 
         if isinstance(encoder_final, tuple):
             out_memory_bank, out_encode_final = (torch.index_select(memory_bank, 1, out_order),

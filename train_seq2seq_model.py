@@ -86,6 +86,7 @@ def train_epochs(seq2seq_model=None,
             encoder_input_data, \
             decoder_input_data, \
             decoder_target_data, \
+            encoder_input_lengths, decoder_input_lengths, \
             conversation_texts, response_texts = seq2seq_dataset.load_data('train', opt.batch_size * opt.batch_per_load)
 
             # train and get cur loss
@@ -93,6 +94,8 @@ def train_epochs(seq2seq_model=None,
                          encoder_input_data,
                          decoder_input_data,
                          decoder_target_data,
+                         encoder_input_lengths,
+                         decoder_input_lengths,
                          optimizer,
                          criterion,
                          num_samples,
@@ -129,6 +132,8 @@ def train(seq2seq_model,
           encoder_input_data,
           decoder_input_data,
           decoder_target_data,
+          encoder_input_lengths,
+          decoder_input_lengths,
           optimizer,
           criterion,
           num_samples,
@@ -137,9 +142,6 @@ def train(seq2seq_model,
 
     # Turn on training mode which enables dropout.
     # seq2seq_model.train()
-
-    encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
-    decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
 #      if use_gpu:
         #  encoder_input_data = encoder_input_data.cuda()
@@ -207,11 +209,10 @@ def evaluate(seq2seq_model=None,
         encoder_input_data, \
         decoder_input_data, \
         decoder_target_data, \
+        encoder_input_lengths, decoder_input_lengths, \
         conversation_texts, response_texts = seq2seq_dataset.load_data('test', opt.batch_size * opt.batch_per_load)
 
         # train and get cur loss
-        encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
-        decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
         #  if use_gpu:
             #  encoder_input_lengths.cuda()
