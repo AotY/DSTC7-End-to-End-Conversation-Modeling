@@ -80,12 +80,12 @@ class Embedding(nn.Module):
         # how big your embedding are going to be.
         self.embedding_size = embedding_size
 
-        self.pad_indice = padding_idx
+        self.padding_idx = padding_idx
 
         # The embedding matrix look-up tables. The first look-up table
         # is for words. Subsequent ones are for features, if any exist.
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size,
-                                      padding_idx=self.pad_indice, sparse=sparse)
+                                      padding_idx=self.padding_idx, sparse=sparse)
 
         # The sequence of operations that converts the input sequence
         # into a sequence of embedding. At minimum this consists of
