@@ -162,10 +162,14 @@ datas, may be conversations + responses or conversations individually.
 def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=None):
     freq_dict = {}
     max_vocab_size = int(max_vocab_size)
+    total_token_nums = 0
     for data in datas:
+        total_token_nums += len(data)
         for token in data:
             freq_dict.setdefault(token, 0)
             freq_dict[token] += 1
+
+    total_type_nums = len(freq_dict)
 
     sorted_freq_list = sorted(
         freq_dict.items(), key=lambda d: d[1], reverse=True)
@@ -186,7 +190,7 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
             f.write('%s\t%d\n' % (item[0], item[1]))
 
     print('token size: %d' % len(sorted_freq_list))
-    return sorted_freq_list
+    return sorted_freq_list, total_token_nums, total_type_nums
 
 
 '''
@@ -269,6 +273,12 @@ def save_raw_pair(raw_conversations, raw_responses, hash_values):
         for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
             f.write("%s\t%s\t\%s\n" % (conversation, response, hash_value))
 
+'''save token, type nums '''
+def save_token_type_nums(total_token_nums, total_type_nums):
+    with open('token_type_nums.txt', 'w', encoding='utf-8') as f:
+        f.write("%s\t%d\n" % ('token', total_token_nums))
+        f.write("%s\t%d\n" % ('type', total_type_nums))
+        f.write("%s\t%.4f\n" % ('token/type', total_token_nums/total_type_nums))
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
@@ -320,6 +330,9 @@ if __name__ == '__main__':
     facts, hash_values, subreddit_names, conversation_ids, domain_names = read_facts(
         opt.facts_file_path, logger)
 
+    # delete index
+    es_helper.delete_index(es, es_helper.index)
+    
     # save to elasticsearch
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
                        domain_names, facts), type=es_helper.fact_type)
@@ -333,10 +346,12 @@ if __name__ == '__main__':
 
     datas = conversations + responses
     datas_name = ['conversations', 'responses']
-    sorted_freq_list = stat_frequency(
+    sorted_freq_list , total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
-    vocab = build_vocab(sorted_freq_list)
+    # save token_nums, total_type_nums
+    save_token_type_nums(total_token_nums, total_type_nums)
+    vocab  = build_vocab(sorted_freq_list)
     vocab_size = int(vocab.get_vocab_size())
     logger.info('vocab_size: %s' % vocab_size)  # 93423
 
