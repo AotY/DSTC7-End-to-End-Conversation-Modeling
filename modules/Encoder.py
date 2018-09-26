@@ -198,7 +198,7 @@ class RNNEncoder(EncoderBase):
             initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
             return (initial_state1, initial_state2)
 
-        else 
+        else: 
             initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
             initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
             return initial_state
