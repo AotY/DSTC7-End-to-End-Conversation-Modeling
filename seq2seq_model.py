@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from modules.Encoder import RNNEncoder
 from modules.Decoder import StdRNNDecoder
-from modules.Embeddings import Embedding
+from modules.embedding import Embedding
 
 
 class Seq2SeqModel(nn.Module):
@@ -80,9 +80,9 @@ class Seq2SeqModel(nn.Module):
 
 
         self.use_gpu = use_gpu
-        # num_embeddings, embedding_dim
+        # num_embedding, embedding_dim
         ''''Ps: dialog_encoder, facts_encoder, and dialog_decoder may have different
-            word embeddings.
+            word embedding.
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
 
@@ -98,7 +98,7 @@ class Seq2SeqModel(nn.Module):
         '''
 
         if self.dialog_encoder_pretrained_embedding_weight is not None:
-            # pretrained_weight is a numpy matrix of shape (num_embeddings, embedding_dim)
+            # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
             self.dialog_encoder_embedding.set_pretrained_embedding(self.dialog_encoder_pretrained_embedding_weight, fixed=False)
 
         self.dialog_decoder_embedding = self.dialog_encoder_embedding
@@ -125,21 +125,21 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialog_encoder_num_layers,
             hidden_size=self.dialog_encoder_hidden_size,
             dropout=self.dialog_encoder_dropout_rate,
-            embeddings=self.dialog_encoder_embedding
+            embedding=self.dialog_encoder_embedding
         )
 
         # Dialog Decoder with Attention
         # rnn_type,
         # bidirectional_encoder, num_layers,
         # hidden_size, attn_type = None,
-        # dropout = 0.0, embeddings = None
+        # dropout = 0.0, embedding = None
         self.dialog_decoder = StdRNNDecoder(
             rnn_type=self.dialog_decoder_rnn_type,
             bidirectional_encoder=self.dialog_decoder_bidirectional,
             num_layers=self.dialog_decoder_num_layers,
             hidden_size=self.dialog_decoder_hidden_size,
             dropout=self.dialog_decoder_dropout_rate,
-            embeddings=self.dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
+            embedding=self.dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
             attn_type=self.dialog_decoder_attention_type
         )
 
