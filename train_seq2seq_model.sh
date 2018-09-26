@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-
-export CUDA_VISIBLE_DEVICES=5,6,7
     
 python train_seq2seq_model.py \
-    --conversations_num_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.conversations.num.txt \
-    --responses_num_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.responses.num.txt \
+    --conversations_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.conversations.txt \
+    --responses_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/train.responses.txt \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
     --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx.dict \
     --dialog_encoder_embedding_size 300 \

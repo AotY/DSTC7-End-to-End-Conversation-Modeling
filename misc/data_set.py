@@ -14,12 +14,9 @@ class Seq2seqDataSet:
         """
 
     def __init__(self,
-                 path_conversations,
-                 path_responses,
-                 dialog_encoder_vocab_size=8e4 + 4,
+                 path_conversations_responses_pair,
                  dialog_encoder_max_length=50,
                  dialog_encoder_vocab=None,
-                 dialog_decoder_vocab_size=8e4 + 4,
                  dialog_decoder_max_length=50,
                  dialog_decoder_vocab=None,
                  test_split=0.2,  # how many hold out as vali data
@@ -27,39 +24,53 @@ class Seq2seqDataSet:
                  logger=None
                  ):
 
-        self.dialog_encoder_vocab_size = dialog_encoder_vocab_size
+        self.dialog_encoder_vocab_size = dialog_encoder_vocab.get_vocab_size()
         self.dialog_encoder_max_length = dialog_encoder_max_length
         self.dialog_encoder_vocab = dialog_encoder_vocab
 
-        self.dialog_decoder_vocab_size = dialog_decoder_vocab_size
+        self.dialog_decoder_vocab_size = dialog_decoder_vocab.get_vocab_size()
         self.dialog_decoder_max_length = dialog_decoder_max_length
         self.dialog_decoder_vocab = dialog_decoder_vocab
 
         self.device = device
         self.logger = logger
-        self.read_txt(path_conversations, path_responses, test_split)
+        self.read_txt(path_conversations_responses_pair, test_split)
 
-    def read_txt(self, path_conversations, path_responses, test_split):
-        self.logger.info('loading data from txt files...')
+    def read_txt(self, path_conversations_responses_pair, test_split):
+        self.logger.info('loading data from txt files: {}'.format(
+            path_conversations_responses_pair))
         # load source-target pairs, tokenized
 
         seqs = dict()
+        '''
         for k, path in [('conversation', path_conversations), ('response', path_responses)]:
             seqs[k] = []
 
-            with open(path, encoding="utf-8") as f:
+            with open(path, 'r', encoding="utf-8") as f:
                 lines = f.readlines()
 
             for line in lines:
                 seq = []
                 for c in line.strip('\n').strip().split(' '):
-                    i = int(c)
+                    if k == 'conversation':
+                        i = self.dialog_encoder_vocab.word_to_id(c)
+                    elif k == 'response':
+                        i = self.dialog_decoder_vocab.word_to_id(c)
                     seq.append(i)
 
                 if k == 'conversation':
                     seqs[k].append(seq[-min(self.dialog_encoder_max_length - 2, len(seq)):])
                 elif k == 'response':
                     seqs[k].append(seq[-min(self.dialog_decoder_max_length - 2, len(seq)):])
+        '''
+        with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
+            for line in f:
+                conversation, response, hash_value = line.rstrip().split('\t')
+
+                seqs['conversation'].append(self.dialog_encoder_vocab.words_to_id(
+                    conversation.split())[-min(self.dialog_encoder_max_length - 2, len(seq)):])
+                seqs['response'].append(self.dialog_decoder_vocab.words_to_id(
+                    response.split())[-min(self.dialog_encoder_max_length - 2, len(seq)):])
 
         self.pairs = list(zip(seqs['conversation'], seqs['response']))
 
@@ -95,19 +106,24 @@ class Seq2seqDataSet:
         if max_num_sample_loaded is None:
             max_num_sample_loaded = self.i_sample_range[task][1] - i_sample
 
-        i_sample_next = min(i_sample + max_num_sample_loaded, self.i_sample_range[task][1])
+        i_sample_next = min(i_sample + max_num_sample_loaded,
+                            self.i_sample_range[task][1])
 
         num_samples = i_sample_next - i_sample
 
         self.i_sample[task] = i_sample_next
 
-        self.logger.info('building %s data from %i to %i' % (task, i_sample, i_sample_next))
+        self.logger.info('building %s data from %i to %i' %
+                         (task, i_sample, i_sample_next))
 
-        encoder_input_data = torch.zeros((self.dialog_encoder_max_length, num_samples))
+        encoder_input_data = torch.zeros(
+            (self.dialog_encoder_max_length, num_samples))
         encoder_input_lengths = []
 
-        decoder_input_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
-        decoder_target_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
+        decoder_input_data = torch.zeros(
+            (self.dialog_decoder_max_length, num_samples))
+        decoder_target_data = torch.zeros(
+            (self.dialog_decoder_max_length, num_samples))
         decoder_input_lengths = []
 
         conversation_texts = []
@@ -125,7 +141,8 @@ class Seq2seqDataSet:
 
             conversation_texts.append(
                 ' '.join([str(self.dialog_encoder_vocab.id_to_word(j)) for j in seq_conversation]))
-            response_texts.append(' '.join([str(self.dialog_decoder_vocab.id_to_word(j)) for j in seq_response]))
+            response_texts.append(
+                ' '.join([str(self.dialog_decoder_vocab.id_to_word(j)) for j in seq_response]))
 
             for t, token_id in enumerate(seq_conversation):
                 encoder_input_data[t, i] = token_id
@@ -140,21 +157,24 @@ class Seq2seqDataSet:
             decoder_input_lengths.append(len(seq_response))
 
         # To long tensor
-        encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long, device=self.device)
-        decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long, device=self.device)
-        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long, device=self.device)
+        encoder_input_data = torch.tensor(
+            encoder_input_data, dtype=torch.long, device=self.device)
+        decoder_input_data = torch.tensor(
+            decoder_input_data, dtype=torch.long, device=self.device)
+        decoder_target_data = torch.tensor(
+            decoder_target_data, dtype=torch.long, device=self.device)
 
-        encoder_input_lengths = torch.tensor(encoder_input_lengths, dtype=torch.long)
-        decoder_input_lengths = torch.tensor(decoder_input_lengths, dtype=torch.long)
-        
-
+        encoder_input_lengths = torch.tensor(
+            encoder_input_lengths, dtype=torch.long)
+        decoder_input_lengths = torch.tensor(
+            decoder_input_lengths, dtype=torch.long)
 
         return num_samples, \
-               encoder_input_data, \
-               decoder_input_data, \
-               decoder_target_data, \
-               encoder_input_lengths, decoder_input_lengths, \
-               conversation_texts, response_texts
+            encoder_input_data, \
+            decoder_input_data, \
+            decoder_target_data, \
+            encoder_input_lengths, decoder_input_lengths, \
+            conversation_texts, response_texts
 
 
 class KDataSet:

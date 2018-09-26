@@ -9,17 +9,13 @@ def data_set_opt(parser):
     # Data options
     group = parser.add_argument_group('Data Set Opt.')
 
-    group.add_argument('--conversations_num_path',
+    group.add_argument('--path_conversations_responses_pair',
             type=str,
-            help='location of the conversations num. ')
+            help='location of the conversations and responses pair. ')
 
-    group.add_argument('--responses_num_path',
+    group.add_argument('--facts_path',
             type=str,
-            help='location of the responses num. ')
-
-    group.add_argument('--facts_num_path',
-            type=str,
-            help='location of the facts num. ')
+            help='location of the facts.  ')
 
     group.add_argument('--save_path',
             type=str,
