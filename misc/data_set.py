@@ -104,19 +104,10 @@ class Seq2seqDataSet:
         self.logger.info('building %s data from %i to %i' % (task, i_sample, i_sample_next))
 
         encoder_input_data = torch.zeros((self.dialog_encoder_max_length, num_samples))
-        # encoder_input_data = np.ones((self.dialog_encoder_max_length, num_samples),
-        #                              dtype=np.int32) * self.dialog_encoder_vocab.padid
-        # encoder_input_lengths = np.ones((num_samples,))  # * self.dialog_encoder_max_length
+        encoder_input_lengths = []
 
         decoder_input_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
-        # decoder_input_data = np.ones((self.dialog_decoder_max_length, num_samples),
-        #                              dtype=np.int32) * self.dialog_decoder_vocab.padid
-        # decoder_input_lengths = np.ones((num_samples,))  #* self.dialog_decoder_max_length
-
-        # decoder_target_data = np.zeros((num_samples, self.max_seq_len, self.vocab_size + 1))  # +1 as mask_zero
-        # decoder_target_data = np.zeros((num_samples, self.dialog_decoder_max_length, self.dialog_decoder_vocab_size))
-        # decoder_target_data = np.zeros((self.dialog_decoder_max_length, num_samples, self.dialog_decoder_vocab_size))
-        decoder_target_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
+        decoder_input_lengths = []
 
         conversation_texts = []
         response_texts = []
@@ -136,28 +127,32 @@ class Seq2seqDataSet:
             response_texts.append(' '.join([str(self.dialog_decoder_vocab.id_to_word(j)) for j in seq_response]))
 
             for t, token_id in enumerate(seq_conversation):
-                # encoder_input_data[i, t] = token_id
                 encoder_input_data[t, i] = token_id
 
+            encoder_input_lengths.append(len(seq_conversation))
+
             decoder_input_data[0, i] = self.dialog_decoder_vocab.sosid
-            # decoder_input_data[i, 0] = self.dialog_decoder_vocab_vocab.sosid
             for t, token_id in enumerate(seq_response):
-                # decoder_input_data[i, t + 1] = token_id
-                # decoder_target_data[i, t, token_id] = 1.
                 decoder_input_data[t + 1, i] = token_id
                 decoder_target_data[t, i] = token_id
 
+            decoder_input_lengths.append(len(seq_response))
+
         # To long tensor
         encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long, device=self.device)
-        # encoder_input_lengths = torch.tensor(encoder_input_lengths, dtype=torch.long, device=self.device)
         decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long, device=self.device)
-        # decoder_input_lengths = torch.tensor(decoder_input_lengths, dtype=torch.long, device=self.device)
-        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long, device=self.device) # , device=self.device
+        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long, device=self.device)
+
+        encoder_input_lengths = torch.tensor(encoder_input_lengths, dtype=torch.long)
+        decoder_input_lengths = torch.tensor(decoder_input_lengths, dtype=torch.long)
+        
+
 
         return num_samples, \
                encoder_input_data, \
                decoder_input_data, \
                decoder_target_data, \
+               encoder_input_lengths, decoder_input_lengths, \
                conversation_texts, response_texts
 
 
