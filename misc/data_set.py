@@ -107,6 +107,7 @@ class Seq2seqDataSet:
         encoder_input_lengths = []
 
         decoder_input_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
+        decoder_target_data = torch.zeros((self.dialog_decoder_max_length, num_samples))
         decoder_input_lengths = []
 
         conversation_texts = []
