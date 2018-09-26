@@ -168,6 +168,8 @@ class RNNEncoder(EncoderBase):
         print("encoder_state shape: {} ".format(encoder_state.shape))
         print("type of self.rnn: {} ".format(type(self.rnn)))
 
+        print("packed_embedded is cuda: {}".format(packed_embedded.is_cuda))
+        print("encoder_state is cuda: {}".format(encoder_state.is_cuda))
         memory_bank, encoder_final = self.rnn.forward(packed_embedded, encoder_state)
 
         if lengths is not None:
@@ -189,15 +191,17 @@ class RNNEncoder(EncoderBase):
     def init_hidden(self, batch_size):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
-        if self.rnn_type == 'RNN':
-            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
-        elif self.rnn_type == 'LSTM':
-            initial_state = torch.rand((2, self.num_directions * self.num_layers, batch_size, self.hidden_size))
-        elif self.rnn_type == 'GRU':
-            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+        if self.rnn_type == 'LSTM':
+            initial_state1 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+            initial_state2 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+            initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
+            initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
+            return (initial_state1, initial_state2)
 
-        initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
-        return initial_state
+        else 
+            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+            initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
+            return initial_state
 
 
 #
