@@ -38,7 +38,8 @@ class PositionalEncoding(nn.Module):
         # way - unwrap embedded(i.e. embedded.data). Otherwise the computation
         # wouldn't be watched to build the compute graph.
         embedded = embedded * math.sqrt(self.dim)
-        embedded = embedded + Variable(self.pe[:embedded.size(0)], requires_grad=False)
+        embedded = embedded + \
+            Variable(self.pe[:embedded.size(0)], requires_grad=False)
         embedded = self.dropout(embedded)
         return embedded
 
@@ -84,8 +85,7 @@ class Embedding(nn.Module):
         # The embedding matrix look-up tables. The first look-up table
         # is for words. Subsequent ones are for features, if any exist.
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size,
-                                       padding_idx=self.pad_indice, sparse=sparse)
-
+                                      padding_idx=self.pad_indice, sparse=sparse)
 
         # The sequence of operations that converts the input sequence
         # into a sequence of embedding. At minimum this consists of
@@ -105,6 +105,7 @@ class Embedding(nn.Module):
     def embedded_luts(self):
         return self.embeddins
     '''
+
     def get_lookup_table(self):
         return self.embedding
 
@@ -135,8 +136,8 @@ class Embedding(nn.Module):
         # aeq(nfeat, len(self.embedded_luts))
 
         embedded = self.embedding(inputs)
-        if self.dropout is not None:
-            embedded = self.dropout(embedded)
+#          if self.dropout is not None:
+        #  embedded = self.dropout(embedded)
 
         out_length, out_batch, embedded_size = embedded.size()
         aeq(in_length, out_length)
