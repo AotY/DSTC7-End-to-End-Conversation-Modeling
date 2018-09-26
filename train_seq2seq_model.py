@@ -142,12 +142,12 @@ def train(seq2seq_model,
     decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
     if use_gpu:
-        encoder_input_lengths.cuda()
-        decoder_input_lengths.cuda()
+        encoder_input_lengths = encoder_input_lengths.cuda()
+        decoder_input_lenghts = decoder_input_lengths.cuda()
     
     if use_gpu:
-        encoder_input_data.cuda()
-        decoder_target_data.cuda()
+        encoder_input_data = encoder_input_data.cuda()
+        decoder_target_data = decoder_target_data.cuda()
 
     #lengths encoder_input_lengths = encoder_input_lengths.view(1, -1)
     # decoder_input_lengths = decoder_input_lengths.view(1, -1)
@@ -179,6 +179,7 @@ def train(seq2seq_model,
 
     dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
                                                          dialog_decoder_outputs.shape[1])
+
     decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape[1])
 
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
