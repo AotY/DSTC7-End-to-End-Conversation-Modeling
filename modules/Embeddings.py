@@ -138,8 +138,8 @@ class Embedding(nn.Module):
 
         embedded = self.embedding(inputs)
 
-        #  if self.dropout is not None:
-            #  embedded = self.dropout(embedded)
+        if self.dropout is not None:
+            embedded = self.dropout(embedded)
 
         out_length, out_batch, embedded_size = embedded.size()
 
