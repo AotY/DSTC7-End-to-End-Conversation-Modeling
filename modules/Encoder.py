@@ -179,7 +179,7 @@ class RNNEncoder(EncoderBase):
 
         return (out_encode_final, out_memory_bank)
 
-    def init_hidden(self, batch_size):
+    def init_hidden(self, batch_size, use_gpu):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         if self.rnn_type == 'LSTM':
@@ -187,11 +187,16 @@ class RNNEncoder(EncoderBase):
             initial_state2 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
             initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
             initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
+            if use_gpu:
+                initial_state1 = initial_state1.cuda()
+                initial_state2 = initial_state2.cuda()
             return (initial_state1, initial_state2)
 
         else: 
             initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
             initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
+            if use_gpu:
+                initial_state = initial_state.cuda()
             return initial_state
 
 
