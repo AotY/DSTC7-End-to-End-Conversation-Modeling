@@ -141,9 +141,9 @@ def train(seq2seq_model,
     encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
     decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
-    if use_gpu:
-        encoder_input_lengths = encoder_input_lengths.cuda()
-        decoder_input_lenghts = decoder_input_lengths.cuda()
+    #  if use_gpu:
+        #  encoder_input_lengths = encoder_input_lengths.cuda()
+    #      decoder_input_lenghts = decoder_input_lengths.cuda()
     
     if use_gpu:
         encoder_input_data = encoder_input_data.cuda()
@@ -224,9 +224,9 @@ def evaluate(seq2seq_model=None,
         encoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_encoder_max_length
         decoder_input_lengths = torch.ones((num_samples,)) * opt.dialog_decoder_max_length
 
-        if use_gpu:
-            encoder_input_lengths.cuda()
-            decoder_input_lengths.cuda()
+        #  if use_gpu:
+            #  encoder_input_lengths.cuda()
+            #  decoder_input_lengths.cuda()
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
         (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
