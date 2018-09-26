@@ -262,7 +262,7 @@ def build_optim(model, opt):
     optim = Optim(
         opt.optim_method,
         opt.lr,
-        opt.dialog_encoder_clinorm,
+        opt.dialog_encoder_clipnorm,
         # lr_decay=opt.learning_rate_decay,
         # start_decay_at=opt.start_decay_at,
         # beta1=opt.adam_beta1,
