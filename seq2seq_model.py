@@ -80,7 +80,7 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_pretrained_embedding_weight = dialog_decoder_pretrained_embedding_weight
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
-        self.dialog_decoder_tied=dialog_deocder_tied
+        self.dialog_decoder_tied= dialog_decoder_tied
 
 
         self.use_gpu = use_gpu
