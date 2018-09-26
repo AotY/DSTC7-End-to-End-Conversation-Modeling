@@ -137,7 +137,8 @@ class Embedding(nn.Module):
         # aeq(nfeat, len(self.embedded_luts))
 
         embedded = self.embedding(inputs)
-
+        
+        print("self.droput_ratio: %f" % self.dropout.p)
         if self.dropout is not None:
             embedded = self.dropout(embedded)
 

@@ -94,33 +94,18 @@ class Seq2SeqModel(nn.Module):
                                                    vocab_size=self.dialog_encoder_vocab_size,
                                                    padding_idx=self.dialog_encoder_pad_id,
                                                    dropout_ratio=self.dialog_encoder_dropout_rate)
-        '''
-        self.dialog_decoder_embedding = Embedding(self.dialog_decoder_embedding_size,
-                                                   self.dialog_decoder_vocab_size,
-                                                   self.dialog_decoder_pad_id,
-                                                   self.dialog_decoder_dropout_rate)
-        '''
+
+        self.dialog_decoder_embedding = Embedding(embedding_size=self.dialog_decoder_embedding_size,
+                                                   vocab_size=self.dialog_decoder_vocab_size,
+                                                   padding_dix=self.dialog_decoder_pad_id,
+                                                   dropout_ratio=self.dialog_decoder_dropout_rate)
 
         if self.dialog_encoder_pretrained_embedding_weight is not None:
             # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
             self.dialog_encoder_embedding.set_pretrained_embedding(self.dialog_encoder_pretrained_embedding_weight, fixed=False)
 
-        self.dialog_decoder_embedding = self.dialog_encoder_embedding
-
-        '''
-        self.dialog_decoder_embedding = nn.Embedding(self.dialog_decoder_vocab_size, self.dialog_decoder_hidden_size)
-        self.dialog_decoder_embedding.weight.data.copy_(
-            torch.from_numpy(self.dialog_decoder_pretrained_embedding_weight))
-
-        '''
-
-        '''
-        if self.dialog_encoder_embedding_size != self.dialog_encoder_hidden_size:
-            self.dialog_encoder_embedding_linear = nn.Linear(self.dialog_encoder_embedding_size, self.dialog_encoder_hidden_size)
-
-        if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
-            self.dialog_decoder_embedding_linear = nn.Linear(self.dialog_decoder_embedding_size, self.dialog_decoder_hidden_size)
-        '''
+            #  self.dialog_decoder_embedding = self.dialog_encoder_embedding
+            self.dialog_decoder_embedding.set_pretrained_embedding(self.dialog_decoder_pretrained_embedding_weight, fixed=False)
 
         # Dialog Enocder
         self.dialog_encoder = RNNEncoder(
