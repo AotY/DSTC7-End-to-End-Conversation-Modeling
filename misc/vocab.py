@@ -13,9 +13,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 PAD = '<pad>'
+UNK = '<unk>'
 SOS = '<sos>'
 EOS = '<eos>'
-UNK = '<unk>'
 
 
 class Vocab(object):
@@ -26,8 +26,8 @@ class Vocab(object):
         self.word2idx = {}
         self.idx2word = {}
 
-        self.word2idx[UNK] = 0
-        self.word2idx[PAD] = 1
+        self.word2idx[PAD] = 0 
+        self.word2idx[UNK] = 1
         self.word2idx[SOS] = 2
         self.word2idx[EOS] = 3
 
@@ -82,13 +82,13 @@ class Vocab(object):
     def unkid(self):
         """return the id of unknown word
         """
-        return self.word2idx.get(UNK, 0)
+        return self.word2idx.get(UNK, 1)
 
     @property
     def padid(self):
         """return the id of padding
         """
-        return self.word2idx.get(PAD, 1)
+        return self.word2idx.get(PAD, 0)
 
     @property
     def sosid(self):
