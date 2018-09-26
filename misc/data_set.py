@@ -148,11 +148,11 @@ class Seq2seqDataSet:
                 decoder_target_data[t, i] = token_id
 
         # To long tensor
-        encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long, device=self.device)
+        encoder_input_data = torch.tensor(encoder_input_data, dtype=torch.long)
         # encoder_input_lengths = torch.tensor(encoder_input_lengths, dtype=torch.long, device=self.device)
-        decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long, device=self.device)
+        decoder_input_data = torch.tensor(decoder_input_data, dtype=torch.long)
         # decoder_input_lengths = torch.tensor(decoder_input_lengths, dtype=torch.long, device=self.device)
-        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long, device=self.device) # , device=self.device
+        decoder_target_data = torch.tensor(decoder_target_data, dtype=torch.long) # , device=self.device
 
         return num_samples, \
                encoder_input_data, \
