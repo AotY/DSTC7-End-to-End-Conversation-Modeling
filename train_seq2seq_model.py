@@ -144,8 +144,12 @@ def train(seq2seq_model,
     if use_gpu:
         encoder_input_lengths.cuda()
         decoder_input_lengths.cuda()
+    
+    if use_gpu:
+        encoder_input_data.cuda()
+        decoder_target_data.cuda()
 
-    # encoder_input_lengths = encoder_input_lengths.view(1, -1)
+    #lengths encoder_input_lengths = encoder_input_lengths.view(1, -1)
     # decoder_input_lengths = decoder_input_lengths.view(1, -1)
     # decoder_input_lengths = decoder_input_data[0]
     # output, encoder_input_lengths = pack_padded_sequence(sequence=encoder_input_data,
