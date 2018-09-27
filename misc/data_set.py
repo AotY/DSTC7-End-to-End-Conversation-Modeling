@@ -128,8 +128,14 @@ class Seq2seqDataSet:
 
         decoder_input_data = torch.zeros(
             (self.dialog_decoder_max_length, num_samples))
+
         decoder_target_data = torch.zeros(
             (self.dialog_decoder_max_length, num_samples))
+
+        # +1 as mask_zero
+        #  decoder_target_data = torch.zeros(
+            #  (self.dialog_decoder_max_length + 1, num_samples))
+
         decoder_input_lengths = []
 
         conversation_texts = []
@@ -139,28 +145,36 @@ class Seq2seqDataSet:
 
             seq_conversation, seq_response = self.pairs[i_sample + i]
 
+            # append length
+            encoder_input_lengths.append(len(seq_conversation))
+
+            #
+            decoder_input_lengths.append(len(seq_response))
+
             if not bool(seq_response) or not bool(seq_conversation):
                 continue
 
-            if seq_response[-1] != self.dialog_encoder_vocab.eosid:
-                seq_response.append(self.dialog_encoder_vocab.eosid)
+            if seq_response[-1] != self.dialog_decoder_vocab.eosid:
+                seq_response.append(self.dialog_decoder_vocab.eosid)
 
+            # ids to word
             conversation_texts.append(
                 ' '.join([str(self.dialog_encoder_vocab.id_to_word(j)) for j in seq_conversation]))
+
             response_texts.append(
                 ' '.join([str(self.dialog_decoder_vocab.id_to_word(j)) for j in seq_response]))
 
+            # encoder_input_data
             for t, token_id in enumerate(seq_conversation):
                 encoder_input_data[t, i] = token_id
 
-            encoder_input_lengths.append(len(seq_conversation))
 
+            # decoder_input_data
             decoder_input_data[0, i] = self.dialog_decoder_vocab.sosid
             for t, token_id in enumerate(seq_response):
                 decoder_input_data[t + 1, i] = token_id
                 decoder_target_data[t, i] = token_id
 
-            decoder_input_lengths.append(len(seq_response))
 
         # To long tensor
         encoder_input_data = torch.tensor(
