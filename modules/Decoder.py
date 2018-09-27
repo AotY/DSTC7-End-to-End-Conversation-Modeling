@@ -273,6 +273,7 @@ class StdRNNDecoder(DecoderBase):
 
         # Initialize local and return variables.
         attns = {}
+
         embedded = self.embedding(tgt)
 
         # Run the forward pass of the RNN.

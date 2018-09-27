@@ -92,6 +92,9 @@ def read_convos(convos_file_path, logger=None):
         conversation_tokens = tokenizer.preprocess(conversation)
         # replace url
         conversation_tokens = tokenizer.replace_url(conversation_tokens)
+        conversation_tokens = tokenizer.replace_number(conversation_tokens)
+        conversation_tokens = tokenizer.split_by_hyphen(conversation_tokens)
+        conversation_tokens = tokenizer.remove_by_len(conversation_tokens, 13)
 
         # abnormal lengths: 203, 204, 205, 206, 207
         conversation_length = len(conversation_tokens)
@@ -108,6 +111,9 @@ def read_convos(convos_file_path, logger=None):
 
         response_tokens = tokenizer.preprocess(response)
         response_tokens = tokenizer.replace_url(response_tokens)
+        response_tokens = tokenizer.replace_number(response_tokens)
+        response_tokens = tokenizer.split_by_hyphen(response_tokens)
+        response_tokens = tokenizer.remove_by_len(response_tokens, 13)
 
         # abnormal lengths: < 7
         response_length = len(response_tokens)
@@ -195,6 +201,11 @@ def read_facts(facts_file_path, logger):
         fact_tokens = tokenizer.preprocess(fact)
         # url -> tag
         fact_tokens = tokenizer.replace_url(fact_tokens)
+        fact_tokens = tokenizer.replace_url(fact_tokens)
+        fact_tokens = tokenizer.replace_number(fact_tokens)
+        fact_tokens = tokenizer.split_by_hyphen(fact_tokens)
+        fact_tokens = tokenizer.remove_by_len(fact_tokens, 13)
+
         fact_len = len(fact_tokens)
         max_len = max(max_len, fact_len)
         len_distribution[fact_len] = len_distribution.get(fact_len, 0) + 1

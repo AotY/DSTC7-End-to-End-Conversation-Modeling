@@ -143,9 +143,11 @@ class RNNEncoder(EncoderBase):
         if src.is_cuda:
             sorted_indices = sorted_indices.cuda()
 
+        print('src: {}'.format(src))
         new_src = torch.index_select(src, 1, sorted_indices)
 
         src, lengths = (new_src, sorted_lengths.data)
+        print('new src: {}'.format(src))
 
         print("new_src shape: {} ".format(src.shape))
 
@@ -168,12 +170,15 @@ class RNNEncoder(EncoderBase):
 
         # map to input order
         _, out_order = torch.sort(sorted_indices)
+        print('out_order: {}'.format(out_order))
 
         if isinstance(encoder_final, tuple):
+            # LSTM
             out_memory_bank, out_encode_final = (torch.index_select(memory_bank, 1, out_order),
                                                  (torch.index_select(encoder_final[0], 1, out_order),
                                                   torch.index_select(encoder_final[1], 1, out_order)))
         else:
+            # RNN, GRU
             out_memory_bank, out_encode_final = (torch.index_select(memory_bank, 1, out_order),
                                                  torch.index_select(encoder_final, 1, out_order))
 
