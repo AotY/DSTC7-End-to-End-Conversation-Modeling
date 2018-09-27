@@ -294,7 +294,7 @@ class StdRNNDecoder(DecoderBase):
 
         print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(rnn_output.transpose(0, 1).contiguous().shape)) # [128, 50, 512]
 
-        print('memory_bank.transpose(0, 1) shape: {}'.format(memory_bank.transpose(0, 1).shape)) #[128, 50, 512]
+        print('memory_bank.transpose(0, 1) shape: {}'.format(memory_bank.transpose(0, 1).shape)) #[128, 48, 512]
 
         # Calculate the attention.
         if self.attn_type is not None:
@@ -304,7 +304,7 @@ class StdRNNDecoder(DecoderBase):
                 memory_bank.transpose(0, 1),
                 memory_lengths=memory_lengths)
 
-            # 
+            #
             attns["std"] = p_attn
         else:
             decoder_outputs = rnn_output

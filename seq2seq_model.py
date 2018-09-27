@@ -173,6 +173,10 @@ class Seq2SeqModel(nn.Module):
         decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_final_state)
 
 
+        print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
+        print("tgt: {}".format(tgt))
+        print("decoder state shape: {}".format(decoder_state.shape))
+
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
         dialog_decoder_attns = self.dialog_decoder.forward(
             tgt=dialog_decoder_tgt,
