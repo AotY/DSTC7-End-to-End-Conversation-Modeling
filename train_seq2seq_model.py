@@ -107,7 +107,7 @@ def train_epochs(seq2seq_model=None,
                          vocab,
                          opt)
 
-            log_loss_total += loss
+            log_loss_total += float(loss)
 
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
@@ -180,6 +180,7 @@ def train(seq2seq_model,
         -1, decoder_target_data.shape[1])
 
     print('decoder_target_data: {}'.format(decoder_target_data))
+
     # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
@@ -189,7 +190,7 @@ def train(seq2seq_model,
 
     print('loss : {}'.format(loss))
 
-    batch_loss = torch.sum(loss)
+    batch_loss = float(torch.sum(loss))
 
     return batch_loss / num_samples
 
@@ -250,7 +251,7 @@ def evaluate(seq2seq_model=None,
 
         print('evaluate loss: {}'.format(loss))
 
-        loss_total += torch.sum(loss) / num_samples
+        loss_total += float(torch.sum(loss)) / num_samples
 
     return loss_total
 
