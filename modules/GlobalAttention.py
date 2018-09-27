@@ -36,6 +36,7 @@ class GlobalAttention(nn.Module):
     Global attention takes a matrix and a query vector. It
     then computes a parameterized convex combination of the matrix
     based on the inputs query.
+
     Constructs a unit mapping a query `q` of size `dim`
     and a source matrix `H` of size `n x dim`, to an output
     of size `dim`.
