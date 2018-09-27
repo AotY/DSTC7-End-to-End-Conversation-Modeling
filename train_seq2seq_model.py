@@ -244,6 +244,8 @@ def evaluate(seq2seq_model=None,
 
         loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
+        print('evaluate loss: {}'.format(loss))
+
         loss_total += loss.item() / decoder_input_lengths
 
     return loss_total
