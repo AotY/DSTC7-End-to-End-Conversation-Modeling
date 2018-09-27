@@ -108,6 +108,7 @@ def train_epochs(seq2seq_model=None,
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
                 logger.info('log_loss_avg type : {}'.format(type(log_loss_avg)))
+                print('log_loss_avg: {}'.format(log_loss_avg))
                 logger.info('train ----------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
                                                                load, load / max_load * 100, log_loss_avg))
 

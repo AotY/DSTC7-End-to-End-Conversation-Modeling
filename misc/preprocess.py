@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+
 import os
 import sys
 import logging
@@ -57,6 +59,13 @@ def read_convos(convos_file_path, logger=None):
     conversations_length_distribution = {}
     responses_length_distribution = {}
 
+    # each conversation contains the number of response
+    conversation_response_nums = {}
+
+    # abnormal_conversations
+    abnormal_conversations = []
+    abnormal_responses = []
+
     n = 0
     for line in lines:
         n += 1
@@ -81,18 +90,37 @@ def read_convos(convos_file_path, logger=None):
         # token
         # maybe url --> TAG
         conversation_tokens = tokenizer.preprocess(conversation)
-        conversation_max_length = max(
-            conversation_max_length, len(conversation_tokens))
+        # replace url
+        conversation_tokens = tokenizer.replace_url(conversation_tokens)
 
-        conversations_length_distribution[len(conversation_tokens)] = conversations_length_distribution.get(
-            len(conversation_tokens), 0) + 1
+        # abnormal lengths: 203, 204, 205, 206, 207
+        conversation_length = len(conversation_tokens)
+
+        if conversation_length in [203, 204, 205, 206, 207]:
+            # save abnormal conversation
+            # save_abnormal_conversation(conversation_tokens)
+            abnormal_conversations.append(conversation_tokens)
+
+        conversation_max_length = max(
+            conversation_max_length, conversation_length)
+
+        conversations_length_distribution[conversation_length] = conversations_length_distribution.get(
+            conversation_length, 0) + 1
 
         conversations.append(conversation_tokens)
 
         response_tokens = tokenizer.preprocess(response)
-        response_max_length = max(response_max_length, len(response_tokens))
-        responses_length_distribution[len(response_tokens)] = responses_length_distribution.get(len(response_tokens),
-                                                                                                0) + 1
+        response_tokens = tokenizer.replace_url(response_tokens)
+
+        # abnormal lengths: < 7
+        response_length = len(response_tokens)
+        if response_length <= 7:
+            # save_abnormal_response(response_tokens)
+            abnormal_responses.append(response_tokens)
+
+        response_max_length = max(response_max_length, response_length)
+        responses_length_distribution[response_length] = responses_length_distribution.get(
+            response_length, 0) + 1
         responses.append(response_tokens)
 
         hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
@@ -101,13 +129,26 @@ def read_convos(convos_file_path, logger=None):
         response_scores.append(sub[3])
         dialogue_turns.append(sub[4])
 
+        # TodayILearned-f2ruz nums
+        key_value = sub[1] + '-' + sub[2]
+        conversation_response_nums[key_value] = conversation_response_nums.get(key_value, 0) + 1
 
     return raw_conversations, raw_responses, \
         conversations, responses, \
         conversations_length_distribution, conversation_max_length, \
         responses_length_distribution, response_max_length, \
-        hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns
+        hash_values, subreddit_names, conversation_ids, \
+        response_scores, dialogue_turns, conversation_response_nums, \
+        abnormal_conversations, abnormal_responses
 
+
+
+
+''' save abnormal datas'''
+def save_abnormal_datas(datas, filename):
+    with open(filename, 'w', encoding='utf-8') as f:
+        for data in datas:
+            f.write("%s\n" % (' '.join(data)))
 
 '''
 Read facts file.
@@ -126,6 +167,13 @@ def read_facts(facts_file_path, logger):
     conversation_ids = []
     domain_names = []
 
+    conversation_fact_nums = {}
+
+    max_len = 0
+    len_distribution = {}
+
+    abnormal_facts = []
+
     n = 0
     for line in lines:
         n += 1
@@ -141,13 +189,31 @@ def read_facts(facts_file_path, logger):
         if fact == 'START' or len(fact.rstrip()) == 0:
             continue
 
-        facts.append(tokenizer.preprocess(fact))
+        fact_tokens = tokenizer.preprocess(fact)
+        # url -> tag
+        fact_tokens = tokenizer.replace_url(fact_tokens)
+        fact_len = len(fact_tokens)
+        max_len = max(max_len, fact_len)
+        len_distribution[fact_len] = len_distribution.get(fact_len, 0) + 1
+
+        if fact_len <= 7:
+            abnormal_facts.append(fact_tokens)
+
+        facts.append(fact_tokens)
+
         hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
         subreddit_names.append(sub[1])
         conversation_ids.append(sub[2])
         domain_names.append(sub[3])
 
-    return facts, hash_values, subreddit_names, conversation_ids, domain_names
+        # TodayILearned-f2ruz nums
+        key_value = sub[1] + '-' + sub[2]
+        conversation_fact_nums[key_value] = conversation_fact_nums.get(key_value, 0) + 1
+
+    return facts, hash_values, subreddit_names, \
+           conversation_ids, domain_names, \
+           conversation_fact_nums, max_len, \
+           len_distribution, abnormal_facts
 
 
 '''
@@ -217,13 +283,17 @@ def save_distribution(distribution, name):
         for length, count in distribution_list:
             f.write('%d\t%d\n' % (length, count))
 
+
 ''' save data to pair, conversation - response '''
+
+
 def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     '''Save data in pair format.'''
     save_file = open(os.path.join(opt.save_path, filename),
                      'w', encoding='utf-8')
     for conversation, response, hash_value in zip(conversations, responses, hash_values):
-        save_file.write('%s\t%s\t%s\n' % (' '.join(conversation), ' '.join(response), hash_value))
+        save_file.write('%s\t%s\t%s\n' % (
+            ' '.join(conversation), ' '.join(response), hash_value))
 
     save_file.close()
 
@@ -256,10 +326,11 @@ def save_to_es(es, datas_zip, type='conversation'):
 '''save count'''
 
 
-def save_conversations_responses_count(conversations, responses):
+def save_conversations_responses_facts_count(conversations, responses, facts):
     with open('conversations_responses_count.txt', 'w', encoding='utf-8') as f:
         f.write("%s\t%d\n" % ('conversations', len(conversations)))
         f.write("%s\t%d\n" % ('responses', len(responses)))
+        f.write("%s\t%d\n" % ('facts', len(facts)))
 
 
 '''save raw pair'''
@@ -272,11 +343,37 @@ def save_raw_pair(raw_conversations, raw_responses, hash_values):
 
 
 '''save token, type nums '''
+
+
 def save_token_type_nums(total_token_nums, total_type_nums):
     with open('token_type_nums.txt', 'w', encoding='utf-8') as f:
         f.write("%s\t%d\n" % ('token', total_token_nums))
         f.write("%s\t%d\n" % ('type', total_type_nums))
-        f.write("%s\t%.4f\n" % ('token/type', total_token_nums/total_type_nums))
+        f.write("%s\t%.4f\n" %
+                ('token/type', total_token_nums/total_type_nums))
+
+''' save_conversation_response_nums '''
+
+def save_conversation_response_nums(conversation_response_nums):
+    avg_num = sum(list(conversation_response_nums.values())) / len(conversation_response_nums)
+    with open('conversation_response_nums.txt', 'w', encoding='utf-8') as f:
+        for name, count in conversation_response_nums.items():
+            f.write("%s\t%d\n" % (name, count))
+
+def save_conversation_fact_nums(conversation_fact_nums):
+    avg_num = sum(list(conversation_fact_nums.values())) / len(conversation_fact_nums)
+    with open('conversation_fact_nums.txt', 'w', encoding='utf-8') as f:
+        for name, count in conversation_fact_nums.items():
+            f.write("%s\t%d\n" % (name, count))
+
+
+''' save_out_of_vocab_words '''
+
+def save_out_of_vocab_words(out_of_vocab_words, filename):
+    with open(filename) as f:
+        for word in out_of_vocab_words:
+            f.write('%s\n' % word)
+
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
@@ -300,59 +397,82 @@ if __name__ == '__main__':
         conversations, responses, \
         conversations_length_distribution, conversation_max_length, \
         responses_length_distribution, response_max_length, \
-        hash_values, subreddit_names, conversation_ids, response_scores, dialogue_turns = read_convos(
+        hash_values, subreddit_names, conversation_ids, \
+        response_scores, dialogue_turns, conversation_response_nums, \
+        abnormal_conversations, abnormal_responses = read_convos(
             opt.convos_file_path, logger)
 
     logger.info('conversation_max_length: %d ' %
                 conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
-    # save conversations and responses count
-    save_conversations_responses_count(conversations, responses)
+    # save conversation response nums
+    save_conversation_response_nums(conversation_response_nums)
 
     # save raw pair
     save_raw_pair(raw_conversations, raw_responses, hash_values)
+
+    # save abnormal_conversations, abnormal_responses
+    save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
+    save_abnormal_datas(abnormal_responses, 'abnormal_responses.txt')
 
     # re-save conversations, responses, and facts
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
     save_data_to_pair(opt, conversations, responses, hash_values,
                       filename='conversations_responses.pair.txt')
 
+    # read facts
+    facts, hash_values, \
+        subreddit_names, conversation_ids, \
+        domain_names, conversation_fact_nums, \
+        fact_max_length, facts_length_distribution, \
+        abnormal_facts = read_facts(opt.facts_file_path, logger)
 
+    logger.info('fact_max_length: %d ' % fact_max_length)  # 186
+
+    # save conversations, responses and facts count
+    save_conversations_responses_facts_count(conversations, responses, facts)
+
+    # save conversation fact nums
+    save_conversation_fact_nums(conversation_fact_nums)
+
+    # save abnormal_facts
+    save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
+
+
+    '''
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
-    
+
     # delete index
     es_helper.delete_index(es, es_helper.index)
 
-    # save to elasticsearch
+    # save to elasticsearch, conversaton - response
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
                        response_scores, dialogue_turns), type=es_helper.conversation_type)
 
-    # read facts
-    facts, hash_values, subreddit_names, conversation_ids, domain_names = read_facts(
-        opt.facts_file_path, logger)
-
-    
-    # save to elasticsearch
+    # save to elasticsearch, facts
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
                        domain_names, facts), type=es_helper.fact_type)
+
+    '''
 
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
     save_distribution(responses_length_distribution, 'responses')
+    save_distribution(facts_length_distribution, 'facts')
 
     stat_frequency(conversations, ['conversations'], 0, 0, logger)
     stat_frequency(responses, ['responses'], 0, 0, logger)
 
     datas = conversations + responses
     datas_name = ['conversations', 'responses']
-    sorted_freq_list , total_token_nums, total_type_nums = stat_frequency(
+    sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
     # save token_nums, total_type_nums
     save_token_type_nums(total_token_nums, total_type_nums)
-    vocab  = build_vocab(sorted_freq_list)
+    vocab = build_vocab(sorted_freq_list)
     vocab_size = int(vocab.get_vocab_size())
     logger.info('vocab_size: %s' % vocab_size)  # 93423
 
@@ -362,10 +482,9 @@ if __name__ == '__main__':
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
     # google word2vec
-    vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
+    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_word2vec(
         None,
         vocab,
-        vocab.get_vocab_size(),
         opt.google_vec_file,
         opt.google_vec_dim,
         opt.binary,
@@ -378,11 +497,13 @@ if __name__ == '__main__':
     logger.info('build_vocab_word2vec(google_vec_file) finished. out_of_vocab_count: %d' %
                 out_of_vocab_count)  #
 
+    # save out of vocab words
+    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
+
     # fastText
-    vocab_embedding, out_of_vocab_count = build_vocab_fastText(
+    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(
         None,
         vocab,
-        vocab.get_vocab_size(),
         opt.fasttext_vec_file,
         opt.fasttext_vec_dim,
         None,
@@ -393,22 +514,27 @@ if __name__ == '__main__':
     logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' %
                 out_of_vocab_count)  #
 
+    # save out of vocab words
+    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText.txt')
+
     # training own word embedding.
     max_sentence_length = (int)(conversation_max_length * 2.0 / 4)
     word2vec_model = train_embedding.start_train(
         datas, opt, max_sentence_length, opt.word_embedding_model_name)
     logger.info('train word embedding has finished. ')
 
-    vocab_embedding, out_of_vocab_count = build_vocab_word2vec(
+    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_word2vec(
         word2vec_model,
         vocab,
-        vocab.get_vocab_size(),
         None,
         opt.size,
         None,
         os.path.join(opt.save_path, opt.word_embedding_model_name +
                      '.%d.300d.txt' % vocab_size),
         logger)
+
+    # save out of vocab words
+    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_vocabVec.txt')
 
     np.save(os.path.join(opt.save_path, opt.word_embedding_model_name + '.%d.300d.npy' % vocab_size),
             vocab_embedding)
@@ -417,3 +543,4 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
 
     logger.info('Preprocess finished.')
+
