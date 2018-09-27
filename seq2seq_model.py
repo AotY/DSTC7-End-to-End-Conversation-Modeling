@@ -167,6 +167,9 @@ class Seq2SeqModel(nn.Module):
             encoder_state=dialog_encoder_initial_state,  # the source memory_bank lengths.
         )
 
+        print('dialog_encoder_final_state[0] shape: {}'.format(dialog_encoder_final_state[0].shape))
+        print('dialog_encoder_memory_bank shape: {}'.format(dialog_encoder_memory_bank.shape))
+
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
         # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
