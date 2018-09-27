@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import torch.optim as optim
 from torch.nn.utils import clip_grad_norm
+from torch.nn.utils import clip_grad_norm_
 
 
 class Optim(object):
@@ -101,7 +102,9 @@ class Optim(object):
                      self._step * self.warmup_steps**(-1.5))))
 
         if self.max_grad_norm:
-            clip_grad_norm(self.params, self.max_grad_norm)
+            #clip_grad_norm(self.params, self.max_grad_norm)
+            clip_grad_norm_(self.params, self.max_grad_norm)
+            
 
         self.optimizer.step()
 
