@@ -61,6 +61,8 @@ if opt.use_teacher_forcing:
 torch.manual_seed(opt.seed)
 
 ''''''
+
+
 def train_epochs(seq2seq_model=None,
                  seq2seq_dataset=None,
                  optimizer=None,
@@ -72,22 +74,25 @@ def train_epochs(seq2seq_model=None,
 
     log_loss_total = 0  # Reset every logger.info_every
 
-    max_load = np.ceil(seq2seq_dataset.n_train / opt.batch_size / opt.batch_per_load)
+    max_load = np.ceil(seq2seq_dataset.n_train /
+                       opt.batch_size / opt.batch_per_load)
 
     for epoch in range(opt.start_epoch, opt.epochs):
         load = 0
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger.info('\n***************** Epoch %i/%i - load %.2f perc *****************' % (epoch + 1, opt.epochs, 100 * load / max_load))
+            logger.info('\n***************** Epoch %i/%i - load %.2f perc *****************' %
+                        (epoch + 1, opt.epochs, 100 * load / max_load))
 
             # load data
             num_samples, \
-            encoder_input_data, \
-            decoder_input_data, \
-            decoder_target_data, \
-            encoder_input_lengths, decoder_input_lengths, \
-            conversation_texts, response_texts = seq2seq_dataset.load_data('train', opt.batch_size * opt.batch_per_load)
+                encoder_input_data, \
+                decoder_input_data, \
+                decoder_target_data, \
+                encoder_input_lengths, decoder_input_lengths, \
+                conversation_texts, response_texts = seq2seq_dataset.load_data(
+                    'train', opt.batch_size * opt.batch_per_load)
 
             # train and get cur loss
             loss = train(seq2seq_model,
@@ -107,11 +112,8 @@ def train_epochs(seq2seq_model=None,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
-                logger.info('log_loss_avg type : {}'.format(type(log_loss_avg)))
-                print('log_loss_avg: {}'.format(log_loss_avg))
-                log_loss_avg = torch.sum(log_loss_avg)
                 logger.info('train ----------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
-                                                               load, load / max_load * 100, log_loss_avg))
+                                                                                 load, load / max_load * 100, log_loss_avg))
 
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
                                  seq2seq_dataset=seq2seq_dataset,
@@ -145,13 +147,12 @@ def train(seq2seq_model,
     # Turn on training mode which enables dropout.
     # seq2seq_model.train()
 
-#      if use_gpu:
+    #      if use_gpu:
         #  encoder_input_data = encoder_input_data.cuda()
         #  decoder_target_data = decoder_target_data.cuda()
 
-
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-    (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
+        (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
         = seq2seq_model.forward(
         dialog_encoder_src=encoder_input_data,  # LongTensor
         dialog_encoder_src_lengths=encoder_input_lengths,
@@ -175,8 +176,8 @@ def train(seq2seq_model,
 
     print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
 
-
-    decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape[1])
+    decoder_target_data = decoder_target_data.view(
+        -1, decoder_target_data.shape[1])
 
     print('decoder_target_data: {}'.format(decoder_target_data))
     # compute loss
@@ -188,7 +189,8 @@ def train(seq2seq_model,
 
     print('loss : {}'.format(loss))
 
-    return loss.item() / decoder_input_lengths
+    batch_loss = torch.sum(loss)
+    return batch_loss / decoder_input_lengths
 
 
 '''
@@ -201,7 +203,6 @@ def evaluate(seq2seq_model=None,
              criterion=None,
              opt=None):
 
-
     # Turn on evaluation mode which disables dropout.
     # seq2seq_model.eval()
 
@@ -210,20 +211,21 @@ def evaluate(seq2seq_model=None,
 
         # load data
         num_samples, \
-        encoder_input_data, \
-        decoder_input_data, \
-        decoder_target_data, \
-        encoder_input_lengths, decoder_input_lengths, \
-        conversation_texts, response_texts = seq2seq_dataset.load_data('test', opt.batch_size * opt.batch_per_load)
+            encoder_input_data, \
+            decoder_input_data, \
+            decoder_target_data, \
+            encoder_input_lengths, decoder_input_lengths, \
+            conversation_texts, response_texts = seq2seq_dataset.load_data(
+                'test', opt.batch_size * opt.batch_per_load)
 
         # train and get cur loss
 
         #  if use_gpu:
-            #  encoder_input_lengths.cuda()
-            #  decoder_input_lengths.cuda()
+        #  encoder_input_lengths.cuda()
+        #  decoder_input_lengths.cuda()
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
+            (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
             = seq2seq_model.forward(
             dialog_encoder_src=encoder_input_data,  # LongTensor
             dialog_encoder_src_lengths=encoder_input_lengths,
@@ -240,13 +242,14 @@ def evaluate(seq2seq_model=None,
 
         dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
                                                              dialog_decoder_outputs.shape[1])
-        decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape[1])
+        decoder_target_data = decoder_target_data.view(
+            -1, decoder_target_data.shape[1])
 
         loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
         print('evaluate loss: {}'.format(loss))
 
-        loss_total += loss.item() / decoder_input_lengths
+        loss_total += torch.sum(loss) / decoder_input_lengths
 
     return loss_total
 
@@ -254,7 +257,8 @@ def evaluate(seq2seq_model=None,
 def dialog(self, input_text):
     source_seq_int = []
     for token in input_text.strip().strip('\n').split(' '):
-        source_seq_int.append(self.dataset.token2index.get(token, self.dataset.UNK))
+        source_seq_int.append(
+            self.dataset.token2index.get(token, self.dataset.UNK))
     return self._infer(np.atleast_2d(source_seq_int))
 
 
@@ -297,13 +301,16 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
     logger.info('Building model...')
 
     # load pre-trained embedding
-    logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
-    dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
+    logger.info("Load pre-trained word embeddig: %s ." %
+                opt.dialog_decoder_pretrained_embedding_path)
+    dialog_encoder_pretrained_embedding_weight = np.load(
+        opt.dialog_decoder_pretrained_embedding_path)
     dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
-    logger.info("dialog_encoder_pretrained_embedding_weight shape: {} .".format(dialog_encoder_pretrained_embedding_weight.shape))
+    logger.info("dialog_encoder_pretrained_embedding_weight shape: {} .".format(
+        dialog_encoder_pretrained_embedding_weight.shape))
 
     seq2seq_model = Seq2SeqModel(
-        dialog_encoder_embedding_size = opt.dialog_encoder_embedding_size,
+        dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
         dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
         dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
         dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
@@ -334,7 +341,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
 
     seq2seq_model = seq2seq_model.to(device)
 #      if use_gpu:
-        #  seq2seq_model.set_cuda()
+    #  seq2seq_model.set_cuda()
 
     return seq2seq_model
 
@@ -422,7 +429,6 @@ if __name__ == '__main__':
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     criterion = nn.NLLLoss()
-
 
     '''if load checkpoint'''
     if checkpoint:
