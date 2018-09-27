@@ -97,9 +97,7 @@ def read_convos(convos_file_path, logger=None):
         conversation_length = len(conversation_tokens)
 
         if conversation_length in [203, 204, 205, 206, 207]:
-            # save abnormal conversation
-            # save_abnormal_conversation(conversation_tokens)
-            abnormal_conversations.append(conversation_tokens)
+            abnormal_conversations.append(conversation_tokens + [sub[1], sub[2]])
 
         conversation_max_length = max(
             conversation_max_length, conversation_length)
@@ -107,7 +105,6 @@ def read_convos(convos_file_path, logger=None):
         conversations_length_distribution[conversation_length] = conversations_length_distribution.get(
             conversation_length, 0) + 1
 
-        conversations.append(conversation_tokens)
 
         response_tokens = tokenizer.preprocess(response)
         response_tokens = tokenizer.replace_url(response_tokens)
@@ -121,6 +118,12 @@ def read_convos(convos_file_path, logger=None):
         response_max_length = max(response_max_length, response_length)
         responses_length_distribution[response_length] = responses_length_distribution.get(
             response_length, 0) + 1
+
+        # append to data set
+        if response_length <= 3:
+            continue
+
+        conversations.append(conversation_tokens)
         responses.append(response_tokens)
 
         hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
@@ -370,7 +373,7 @@ def save_conversation_fact_nums(conversation_fact_nums):
 ''' save_out_of_vocab_words '''
 
 def save_out_of_vocab_words(out_of_vocab_words, filename):
-    with open(filename) as f:
+    with open(filename, 'w', encoding='utf-8') as f:
         for word in out_of_vocab_words:
             f.write('%s\n' % word)
 
@@ -428,7 +431,7 @@ if __name__ == '__main__':
         fact_max_length, facts_length_distribution, \
         abnormal_facts = read_facts(opt.facts_file_path, logger)
 
-    logger.info('fact_max_length: %d ' % fact_max_length)  # 186
+    logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
     # save conversations, responses and facts count
     save_conversations_responses_facts_count(conversations, responses, facts)
