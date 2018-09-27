@@ -190,7 +190,8 @@ def train(seq2seq_model,
     print('loss : {}'.format(loss))
 
     batch_loss = torch.sum(loss)
-    return batch_loss / decoder_input_lengths
+
+    return batch_loss / num_samples
 
 
 '''
@@ -249,7 +250,7 @@ def evaluate(seq2seq_model=None,
 
         print('evaluate loss: {}'.format(loss))
 
-        loss_total += torch.sum(loss) / decoder_input_lengths
+        loss_total += torch.sum(loss) / num_samples
 
     return loss_total
 
