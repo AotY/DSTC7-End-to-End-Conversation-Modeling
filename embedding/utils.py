@@ -17,15 +17,16 @@ buid vocab embedding from word2vec
 '''
 
 
-def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger):
+def build_vocab_word2vec(word2vec_model, vocab, vec_file, embedding_dim, binary, save_vec_file, logger):
 
+    vocab_size = vocab.get_vocab_size()
     # init
     vocab_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
     pad_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     sos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     eos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
-    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
 
     # load any vectors from the word2vec
     logger.info("Load file: {} to gensim model. \n".format(vec_file))
@@ -39,6 +40,7 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
     save_f = open(save_vec_file, 'w', encoding='utf-8')
 
     out_of_vocab_count = 0
+    out_of_vocab_words = []
 
     header = "%d %d\n" % (vocab_size, embedding_dim)
 
@@ -58,6 +60,7 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
             try:
                 word_embedding = word2vec_model.wv[word]
             except KeyError:
+                out_of_vocab_words.append(word)
                 out_of_vocab_count += 1
                 word_embedding = unk_embedding
 
@@ -69,10 +72,12 @@ def build_vocab_word2vec(word2vec_model, vocab, vocab_size, vec_file, embedding_
     save_f.close()
     del word2vec_model
 
-    return vocab_embedding, out_of_vocab_count
+    return vocab_embedding, out_of_vocab_count, out_of_vocab_words
 
+'''
+def load_word_embedding_for_lookup(vocab, vec_file, embedding_dim, binary):
 
-def load_word_embedding_for_lookup(vocab, vocab_size, vec_file, embedding_dim, binary):
+    vocab_size = vocab.get_vocab_size()
     # init
     pre_trained_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
@@ -109,25 +114,31 @@ def load_word_embedding_for_lookup(vocab, vocab_size, vec_file, embedding_dim, b
                 f.read(binary_len)
 
     return pre_trained_embedding
-
+'''
 
 '''
 buid vocab embedding from glove
 '''
 
 
-def build_vocab_glove(vocab, vocab_size, glove_file, embedding_dim, binary,
+def build_vocab_glove(vocab, glove_file, embedding_dim, binary,
                       pre_trained_vocab_embedding_file):
+
+    vocab_size = vocab.get_vocab_size()
+    
+    # init
+    vocab_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
+
     # load any vectors from the word2vec
     print("Load glove file {}\n".format(glove_file))
 
     pad_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     sos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     eos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
-    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
 
     # load any vectors from the word2vec
-    print("Load word2vec file: {} to gensim model. \n".format(glove_file))
+    print("Load glove file: {} to gensim model. \n".format(glove_file))
 
     # fname, fvocab=None, binary=False, encoding='utf8'
 
@@ -140,6 +151,7 @@ def build_vocab_glove(vocab, vocab_size, glove_file, embedding_dim, binary,
     glove_model = KeyedVectors.load_word2vec_format(fname=tmp_file)
 
     out_of_vocab_count = 0
+    out_of_vocab_words = []
 
     if binary:
         save_f = codecs.open(pre_trained_vocab_embedding_file, 'w', encoding='utf-8')
@@ -150,30 +162,32 @@ def build_vocab_glove(vocab, vocab_size, glove_file, embedding_dim, binary,
     # write header
     save_f.write(header)
 
-    for word in vocab.word2idx.keys():
-
-        if word == vocab.pad:
+    for id, word in vocab.idx2word.items():
+        if id == vocab.padid:
             word_embedding = pad_embedding
-        elif word == vocab.sos:
+        elif id == vocab.sosid:
             word_embedding = sos_embedding
-        elif word == vocab.eos:
+        elif id == vocab.eosid:
             word_embedding = eos_embedding
-        elif word == vocab.unk:
+        elif id == vocab.unkid:
             word_embedding = unk_embedding
         else:
             try:
                 word_embedding = glove_model.wv[word]
             except KeyError:
+                out_of_vocab_words.append(word)
                 out_of_vocab_count += 1
                 word_embedding = unk_embedding
 
         vector_str = ' '.join([str(s) for s in word_embedding])
         save_f.write('%s %s\n' % (word, vector_str))
 
+        vocab_embedding[id] = word_embedding
+
     save_f.close()
     del glove_model
 
-    return out_of_vocab_count
+    return vocab_embedding, out_of_vocab_count, out_of_vocab_words 
 
 
 '''
@@ -181,14 +195,17 @@ buid vocab embedding from fastText
 '''
 
 
-def build_vocab_fastText(fasttest_model, vocab, vocab_size, vec_file, embedding_dim, binary, save_vec_file, logger):
+def build_vocab_fastText(fasttest_model, vocab, vec_file, embedding_dim, binary, save_vec_file, logger):
+
+    vocab_size = vocab.get_vocab_size()
+
     # init
     vocab_embedding = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
     pad_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
+    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     sos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
     eos_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
-    unk_embedding = np.random.uniform(-0.25, 0.25, (embedding_dim,))
 
     # load any vectors from the word2vec
     logger.info("Load fasttest file: {} to gensim model. \n".format(vec_file))
@@ -200,6 +217,7 @@ def build_vocab_fastText(fasttest_model, vocab, vocab_size, vec_file, embedding_
     save_f = open(save_vec_file, 'w', encoding='utf-8')
 
     out_of_vocab_count = 0
+    out_of_vocab_words = []
 
     header = "%d %d\n" % (vocab_size, embedding_dim)
 
@@ -219,6 +237,7 @@ def build_vocab_fastText(fasttest_model, vocab, vocab_size, vec_file, embedding_
             try:
                 word_embedding = fasttest_model[word]
             except KeyError:
+                out_of_vocab_words.append(word)
                 out_of_vocab_count += 1
                 word_embedding = unk_embedding
 
@@ -230,7 +249,7 @@ def build_vocab_fastText(fasttest_model, vocab, vocab_size, vec_file, embedding_
     save_f.close()
     del fasttest_model
 
-    return vocab_embedding, out_of_vocab_count
+    return vocab_embedding, out_of_vocab_count, out_of_vocab_words
 
 if __name__ == '__main__':
     # Load vocab and confirm opt.vocab_size
