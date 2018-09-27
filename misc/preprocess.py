@@ -355,19 +355,18 @@ def save_token_type_nums(total_token_nums, total_type_nums):
         f.write("%s\t%.4f\n" %
                 ('token/type', total_token_nums/total_type_nums))
 
-''' save_conversation_response_nums '''
+''' save_conversation_response_facts_nums '''
 
-def save_conversation_response_nums(conversation_response_nums):
-    avg_num = sum(list(conversation_response_nums.values())) / len(conversation_response_nums)
-    with open('conversation_response_nums.txt', 'w', encoding='utf-8') as f:
-        for name, count in conversation_response_nums.items():
+def save_conversation_response_facts_nums(name_num_dict, filename):
+    avg_num = sum(list(name_num_dict.values())) / len(name_num_dict)
+    # sort
+    sorted_list = sorted(name_num_dict.items(), key=lambda item: item[1], reverse=True)
+
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write('%s\t%.4f\n' % ('avg', avg_num))
+        for name, count in sorted_list: 
             f.write("%s\t%d\n" % (name, count))
 
-def save_conversation_fact_nums(conversation_fact_nums):
-    avg_num = sum(list(conversation_fact_nums.values())) / len(conversation_fact_nums)
-    with open('conversation_fact_nums.txt', 'w', encoding='utf-8') as f:
-        for name, count in conversation_fact_nums.items():
-            f.write("%s\t%d\n" % (name, count))
 
 
 ''' save_out_of_vocab_words '''
@@ -410,7 +409,7 @@ if __name__ == '__main__':
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
     # save conversation response nums
-    save_conversation_response_nums(conversation_response_nums)
+    save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
     # save raw pair
     save_raw_pair(raw_conversations, raw_responses, hash_values)
@@ -437,7 +436,7 @@ if __name__ == '__main__':
     save_conversations_responses_facts_count(conversations, responses, facts)
 
     # save conversation fact nums
-    save_conversation_fact_nums(conversation_fact_nums)
+    save_conversation_response_facts_nums(conversation_fact_nums, 'conversation_fact_nums.txt')
 
     # save abnormal_facts
     save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
