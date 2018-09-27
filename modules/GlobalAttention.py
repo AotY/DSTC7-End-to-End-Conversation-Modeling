@@ -9,20 +9,20 @@ from modules.utils import aeq, sequence_mask
 
 
 class Bottle(nn.Module):
-    def forward(self, input):
-        if len(input.size()) <= 2:
-            return super(Bottle, self).forward(input)
-        size = input.size()[:2]
-        out = super(Bottle, self).forward(input.view(size[0] * size[1], -1))
+    def forward(self, inputs):
+        if len(inputs.size()) <= 2:
+            return super(Bottle, self).forward(inputs)
+        size = inputs.size()[:2]
+        out = super(Bottle, self).forward(inputs.view(size[0] * size[1], -1))
         return out.contiguous().view(size[0], size[1], -1)
 
 
 class Bottle2(nn.Module):
-    def forward(self, input):
-        if len(input.size()) <= 3:
-            return super(Bottle2, self).forward(input)
-        size = input.size()
-        out = super(Bottle2, self).forward(input.view(size[0] * size[1],
+    def forward(self, inputs):
+        if len(inputs.size()) <= 3:
+            return super(Bottle2, self).forward(inputs)
+        size = inputs.size()
+        out = super(Bottle2, self).forward(inputs.view(size[0] * size[1],
                                                       size[2], size[3]))
         return out.contiguous().view(size[0], size[1], size[2], size[3])
 
@@ -35,7 +35,7 @@ class GlobalAttention(nn.Module):
     """
     Global attention takes a matrix and a query vector. It
     then computes a parameterized convex combination of the matrix
-    based on the input query.
+    based on the inputs query.
     Constructs a unit mapping a query `q` of size `dim`
     and a source matrix `H` of size `n x dim`, to an output
     of size `dim`.
@@ -106,7 +106,7 @@ class GlobalAttention(nn.Module):
           `[batch x tgt_len x src_len]`
         """
 
-        # Check input sizes
+        # Check inputs sizes
         src_batch, src_len, src_dim = h_s.size()
         tgt_batch, tgt_len, tgt_dim = h_t.size()
         aeq(src_batch, tgt_batch)
@@ -136,10 +136,10 @@ class GlobalAttention(nn.Module):
 
             return self.v(wquh.view(-1, dim)).view(tgt_batch, tgt_len, src_len)
 
-    def forward(self, input, memory_bank, memory_lengths=None):
+    def forward(self, inputs, memory_bank, memory_lengths=None):
         """
         Args:
-          input (`FloatTensor`): query vectors `[batch x tgt_len x dim]`
+          inputs (`FloatTensor`): query vectors `[batch x tgt_len x dim]`
           memory_bank (`FloatTensor`): source vectors `[batch x src_len x dim]`
           memory_lengths (`LongTensor`): the source context lengths `[batch]`
         Returns:
@@ -149,27 +149,30 @@ class GlobalAttention(nn.Module):
              `[tgt_len x batch x src_len]`
         """
 
-        # one step input
-        if input.dim() == 2:
+        # one step inputs
+        if inputs.dim() == 2:
             one_step = True
-            input = input.unsqueeze(1)
+            inputs = inputs.unsqueeze(1)
         else:
             one_step = False
 
         batch, sourceL, dim = memory_bank.size()
-        batch_, targetL, dim_ = input.size()
+        batch_, targetL, dim_ = inputs.size()
+        
         aeq(batch, batch_)
         aeq(dim, dim_)
         aeq(self.dim, dim)
+
         # if targetL == 1:
         #    one_step = True
         # else:
         #    one_step = False
 
         # compute attention scores, as in Luong et al.
-        align = self.score(input, memory_bank)
+        align = self.score(inputs, memory_bank)
         
         print('align shape shape : {}'.format(align.shape))
+
         if memory_lengths is not None:
             mask = sequence_mask(memory_lengths)
             if memory_bank.is_cuda:
@@ -178,10 +181,12 @@ class GlobalAttention(nn.Module):
             mask = mask.unsqueeze(1)  # Make it broadcastable.
             print('mask shape: {}'.format(mask.shape))
 
+            # Fills elements of self tensor with value where mask is one. masked_fill_(mask, value)
             align.data.masked_fill_(1 - mask, -float('inf'))
 
         # Softmax to normalize attention weights
         align_vectors = self.sm(align.view(batch * targetL, sourceL))
+        
         align_vectors = align_vectors.view(batch, targetL, sourceL)
 
         # each context vector c_t is the weighted average
@@ -189,7 +194,7 @@ class GlobalAttention(nn.Module):
         c = torch.bmm(align_vectors, memory_bank)
 
         # concatenate
-        concat_c = torch.cat([c, input], 2).view(batch * targetL, dim * 2)
+        concat_c = torch.cat([c, inputs], 2).view(batch * targetL, dim * 2)
         attn_h = self.linear_out(concat_c).view(batch, targetL, dim)
         if self.attn_type in ["general", "dot"]:
             attn_h = self.tanh(attn_h)
@@ -219,4 +224,6 @@ class GlobalAttention(nn.Module):
             aeq(batch, batch_)
             aeq(sourceL, sourceL_)
 
+        print ('attn_h shape : {}'.format(attn_h.shape))
+        print ('align_vectors shape : {}'.format(align_vectors.shape))
         return attn_h, align_vectors
