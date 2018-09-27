@@ -10,6 +10,7 @@ from torch.autograd import Variable
 from modules.utils import aeq, rnn_factory
 from modules.GlobalAttention import GlobalAttention
 
+
 class DecoderState(object):
     """Interface for grouping together the current state of a recurrent
     decoder. In the simplest case just represents the hidden state of
@@ -57,11 +58,14 @@ class RNNDecoderState(DecoderState):
             self.hidden = (rnn_state,)
         else:
             self.hidden = rnn_state
+
         self.coverage = None
 
         # Init the input feed.
         batch_size = self.hidden[0].size(1)
+
         h_size = (batch_size, hidden_size)
+
         self.input_feed = Variable(self.hidden[0].data.new(*h_size).zero_(),
                                    requires_grad=False).unsqueeze(0)
 
@@ -76,6 +80,7 @@ class RNNDecoderState(DecoderState):
             self.hidden = rnn_state
 
         self.input_feed = input_feed
+
         self.coverage = coverage
 
     def repeat_beam_size_times(self, beam_size):
@@ -154,10 +159,11 @@ class DecoderBase(nn.Module):
 
         # Set up the standard attention.
         if self.attn_type is not None:
-            self.attn = GlobalAttention(self.hidden_size, attn_type=self.attn_type)
+            self.attn = GlobalAttention(
+                self.hidden_size, attn_type=self.attn_type)
 
     def init_decoder_state(self, encoder_final):
-    # def init_decoder_state(self, src, memory_bank, encoder_final):
+        # def init_decoder_state(self, src, memory_bank, encoder_final):
         def _fix_enc_hidden(h):
             # The encoder hidden is  (layers*directions) x batch x dim.
             # We need to convert it to layers x batch x (directions*dim).
@@ -212,7 +218,7 @@ class DecoderBase(nn.Module):
             tgt, memory_bank, state, memory_lengths=memory_lengths)
 
         # Update the state with the result.
-        final_output = decoder_outputs[-1]
+        final_output = decoder_outputs[-1] #
         state.update_state(decoder_final, final_output.unsqueeze(0))
 
         # print('decoder_final shape: {}'.format(decoder_final.shape))
@@ -287,15 +293,21 @@ class StdRNNDecoder(DecoderBase):
 
         # END
 
-        print('rnn_output shape: {}'.format(rnn_output.shape)) # [50, 128, 512]
+        print('rnn_output shape: {}'.format(
+            rnn_output.shape))  # [50, 128, 512]
 
         print('decoder_final[0] shape: {}'.format(decoder_final[0].shape))
         print('decoder_final[1] shape: {}'.format(decoder_final[1].shape))
 
-        print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(rnn_output.transpose(0, 1).contiguous().shape)) # [128, 50, 512]
+        print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(
+            rnn_output.transpose(0, 1).contiguous().shape))  # [128, 50, 512]
 
-        print('memory_bank.transpose(0, 1) shape: {}'.format(memory_bank.transpose(0, 1).shape)) #[128, 48, 512]
+        print('memory_bank shape: {}'.format(memory_bank.shape))
 
+        print('memory_bank.transpose(0, 1) shape: {}'.format(
+            memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
+
+        print('memory_lengths: {}'.format(memory_lengths))
         # Calculate the attention.
         if self.attn_type is not None:
             # attention forward
