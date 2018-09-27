@@ -283,6 +283,7 @@ class StdRNNDecoder(DecoderBase):
             # LSTM
             rnn_output, decoder_final = self.rnn(embedded, state.hidden)
 
+        
         # Check
         tgt_len, tgt_batch = tgt.size()
         output_len, output_batch, _ = rnn_output.size()
@@ -299,8 +300,6 @@ class StdRNNDecoder(DecoderBase):
 
         print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(
             rnn_output.transpose(0, 1).contiguous().shape))  # [128, 50, 512]
-
-        print('memory_bank shape: {}'.format(memory_bank.shape)) #[48, 128, 512]
 
         print('memory_bank.transpose(0, 1) shape: {}'.format(
             memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
@@ -322,6 +321,7 @@ class StdRNNDecoder(DecoderBase):
 
         # dropout
         decoder_outputs = self.dropout(decoder_outputs)
+
         return decoder_final, decoder_outputs, attns
 
 

@@ -138,12 +138,15 @@ class RNNEncoder(EncoderBase):
         # rank the sequences according to their lengths
         lengths = Variable(lengths)
 
+        # sort by length, descending
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
 
         if src.is_cuda:
             sorted_indices = sorted_indices.cuda()
-
+        
         print('src: {}'.format(src))
+
+        print('sorted_indices: {}'.format(sorted_indices))
         new_src = torch.index_select(src, 1, sorted_indices)
 
         src, lengths = (new_src, sorted_lengths.data)
