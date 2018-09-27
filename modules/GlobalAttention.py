@@ -163,30 +163,28 @@ class GlobalAttention(nn.Module):
         aeq(dim, dim_)
         aeq(self.dim, dim)
 
-        # if targetL == 1:
-        #    one_step = True
-        # else:
-        #    one_step = False
-
         # compute attention scores, as in Luong et al.
         align = self.score(inputs, memory_bank)
-        
-        print('align shape shape : {}'.format(align.shape))
+       
+        print('align: {}'.format(align))
+
+        print('align shape : {}'.format(align.shape))
 
         if memory_lengths is not None:
             mask = sequence_mask(memory_lengths)
+            print('mask shape: {}'.format(mask.shape))
+            print('mask: {}'.format(mask))
+
             if memory_bank.is_cuda:
                 mask = mask.cuda()
 
             mask = mask.unsqueeze(1)  # Make it broadcastable.
-            print('mask shape: {}'.format(mask.shape))
 
             # Fills elements of self tensor with value where mask is one. masked_fill_(mask, value)
             align.data.masked_fill_(1 - mask, -float('inf'))
 
         # Softmax to normalize attention weights
         align_vectors = self.sm(align.view(batch * targetL, sourceL))
-        
         align_vectors = align_vectors.view(batch, targetL, sourceL)
 
         # each context vector c_t is the weighted average
@@ -196,6 +194,7 @@ class GlobalAttention(nn.Module):
         # concatenate
         concat_c = torch.cat([c, inputs], 2).view(batch * targetL, dim * 2)
         attn_h = self.linear_out(concat_c).view(batch, targetL, dim)
+
         if self.attn_type in ["general", "dot"]:
             attn_h = self.tanh(attn_h)
 
@@ -227,3 +226,4 @@ class GlobalAttention(nn.Module):
         print ('attn_h shape : {}'.format(attn_h.shape))
         print ('align_vectors shape : {}'.format(align_vectors.shape))
         return attn_h, align_vectors
+    
