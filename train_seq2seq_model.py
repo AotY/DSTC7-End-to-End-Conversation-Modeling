@@ -109,6 +109,7 @@ def train_epochs(seq2seq_model=None,
                 log_loss_total = 0
                 logger.info('log_loss_avg type : {}'.format(type(log_loss_avg)))
                 print('log_loss_avg: {}'.format(log_loss_avg))
+                log_loss_avg = torch.sum(log_loss_avg)
                 logger.info('train ----------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
                                                                load, load / max_load * 100, log_loss_avg))
 
@@ -172,20 +173,22 @@ def train(seq2seq_model,
     dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
                                                          dialog_decoder_outputs.shape[1])
 
+    print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
+
+
     decoder_target_data = decoder_target_data.view(-1, decoder_target_data.shape[1])
 
+    print('decoder_target_data: {}'.format(decoder_target_data))
+    # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
     loss.backward()
 
     optimizer.step()
 
-    return loss.item() / decoder_input_lengths
+    print('loss : {}'.format(loss))
 
-    # if opt.use_teacher_forcing:
-    #     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-    # else:
-    #     use_teacher_forcing = False
+    return loss.item() / decoder_input_lengths
 
 
 '''
