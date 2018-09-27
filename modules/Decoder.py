@@ -299,7 +299,7 @@ class StdRNNDecoder(DecoderBase):
         print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(
             rnn_output.transpose(0, 1).contiguous().shape))  # [128, 50, 512]
 
-        print('memory_bank shape: {}'.format(memory_bank.shape))
+        print('memory_bank shape: {}'.format(memory_bank.shape)) #[48, 128, 512]
 
         print('memory_bank.transpose(0, 1) shape: {}'.format(
             memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
