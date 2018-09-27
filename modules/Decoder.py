@@ -141,10 +141,8 @@ class DecoderBase(nn.Module):
 
         # Basic attributes.
         self.decoder_type = 'rnn'
-        # self.num_directions = 2 if bidirectional_encoder else 1
         self.bidirectional_encoder = bidirectional_encoder
         self.num_layers = num_layers
-        # self.hidden_size = hidden_size // self.num_directions
         self.hidden_size = hidden_size
         self.embedding = embedding
         self.dropout = nn.Dropout(dropout)
@@ -275,24 +273,23 @@ class StdRNNDecoder(DecoderBase):
 
         # Initialize local and return variables.
         attns = {}
-        emb = self.embedding(tgt)
+        embedded = self.embedding(tgt)
 
         # Run the forward pass of the RNN.
         if isinstance(self.rnn, nn.GRU) or isinstance(self.rnn, nn.RNN):
-            rnn_output, decoder_final = self.rnn(emb, state.hidden[0])
+            rnn_output, decoder_final = self.rnn(embedded, state.hidden[0])
         else:
             # LSTM
-            rnn_output, decoder_final = self.rnn(emb, state.hidden)
+            rnn_output, decoder_final = self.rnn(embedded, state.hidden)
 
         # Check
-
         tgt_len, tgt_batch = tgt.size()
         output_len, output_batch, _ = rnn_output.size()
+
         aeq(tgt_len, output_len)
         aeq(tgt_batch, output_batch)
 
         # END
-
         print('rnn_output shape: {}'.format(
             rnn_output.shape))  # [50, 128, 512]
 
@@ -308,6 +305,7 @@ class StdRNNDecoder(DecoderBase):
             memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
 
         print('memory_lengths: {}'.format(memory_lengths))
+
         # Calculate the attention.
         if self.attn_type is not None:
             # attention forward
