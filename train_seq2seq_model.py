@@ -184,16 +184,13 @@ def train(seq2seq_model,
         dialog_decoder_outputs = dialog_decoder_outputs.cpu()
         decoder_target_data = decoder_target_data.cpu()
 
-    dialog_decoder_outputs = dialog_decoder_outputs.view(
-        -1, dialog_decoder_outputs.shape[-1])
-    #  dialog_decoder_outputs.shape[1])
+    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
 
-    #print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
+    print('train: dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
 
     # , decoder_target_data.shape[1])
     decoder_target_data = decoder_target_data.view(-1)
-
-    #print('decoder_target_data: {}'.format(decoder_target_data))
+    print('train: decoder_target_data: {}'.format(decoder_target_data))
 
     # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
@@ -334,7 +331,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
                                          dropout_ratio=opt.dialog_encoder_dropout_rate)
 
     dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
-                                              vocab_size=dialog_decoder_vocadialog_decoder_vocab_size,
+                                              vocab_size=dialog_decoder_vocab.get_vocab_size(),
                                               padding_idx=opt.dialog_decoder_vocab.padid,
                                               dropout_ratio=opt.dialog_decoder_dropout_rate)
     
