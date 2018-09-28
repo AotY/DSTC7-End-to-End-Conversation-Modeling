@@ -147,10 +147,11 @@ def train(seq2seq_model,
     # Turn on training mode which enables dropout.
     # seq2seq_model.train()
 
-    #      if use_gpu:
-        #  encoder_input_data = encoder_input_data.cuda()
-        #  decoder_target_data = decoder_target_data.cuda()
 
+    print('encoder_input_data: {}'.format(encoder_input_data))
+    print('decoder_input_date: {}'.format(decoder_input_data))
+    print('decoder_target_date: {}'.format(decoder_target_data))
+    
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
         (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
         = seq2seq_model.forward(

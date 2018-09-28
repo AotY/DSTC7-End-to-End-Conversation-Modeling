@@ -13,7 +13,7 @@ python train_seq2seq_model.py \
     --dialog_encoder_clipnorm 1.0 \
     --dialog_encoder_clipvalue 0.5 \
     --dialog_encoder_bidirectional \
-    --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/google_vec_for_vocab.50004.300d.npy \
+    --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
     --dialog_encoder_tied \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 512 \
@@ -24,7 +24,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_clipnorm 1.0 \
     --dialog_decoder_clipvalue 0.5 \
     --dialog_decoder_bidirectional \
-    --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/google_vec_for_vocab.50004.300d.npy \
+    --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
     --dialog_decoder_attention_type dot \
     --dialog_decoder_tied \
     --lr 0.001 \
