@@ -18,6 +18,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 from modules.Optim import Optim
+from modules.Embeddings import Embedding
 
 '''
 import matplotlib.pyplot as plt
