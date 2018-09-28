@@ -304,7 +304,7 @@ class StdRNNDecoder(DecoderBase):
         print('memory_bank.transpose(0, 1) shape: {}'.format(
             memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
 
-        print('memory_lengths: {}'.format(memory_lengths))
+        #  print('memory_lengths: {}'.format(memory_lengths))
 
         # Calculate the attention.
         if self.attn_type is not None:

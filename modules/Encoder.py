@@ -144,19 +144,19 @@ class RNNEncoder(EncoderBase):
         if src.is_cuda:
             sorted_indices = sorted_indices.cuda()
         
-        print('src: {}'.format(src))
+        #  print('src: {}'.format(src))
 
-        print('sorted_indices: {}'.format(sorted_indices))
+        #  print('sorted_indices: {}'.format(sorted_indices))
         new_src = torch.index_select(src, 1, sorted_indices)
 
         src, lengths = (new_src, sorted_lengths.data)
-        print('new src: {}'.format(src))
+        #  print('new src: {}'.format(src))
 
         print("new_src shape: {} ".format(src.shape))
 
         embedded = self.embedding(src)
 
-        print("embedded shape: {} ".format(embedded.shape))
+        #  print("embedded shape: {} ".format(embedded.shape))
 
         packed_embedded = embedded
 
@@ -173,7 +173,7 @@ class RNNEncoder(EncoderBase):
 
         # map to input order
         _, out_order = torch.sort(sorted_indices)
-        print('out_order: {}'.format(out_order))
+        #  print('out_order: {}'.format(out_order))
 
         if isinstance(encoder_final, tuple):
             # LSTM
