@@ -79,6 +79,7 @@ def train_epochs(seq2seq_model=None,
                        opt.batch_size / opt.batch_per_load)
 
     for epoch in range(opt.start_epoch, opt.epochs):
+
         load = 0
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
@@ -195,8 +196,10 @@ def train(seq2seq_model,
     # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
+    # backward
     loss.div(num_samples).backward()
-
+    
+    # optimizer
     optimizer.step()
 
     print('batch loss : {}'.format(loss))
@@ -332,7 +335,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
 
     dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
                                               vocab_size=dialog_decoder_vocab.get_vocab_size(),
-                                              padding_idx=opt.dialog_decoder_vocab.padid,
+                                              padding_idx=dialog_decoder_vocab.padid,
                                               dropout_ratio=opt.dialog_decoder_dropout_rate)
     
     ''' load pretrained_weight'''
