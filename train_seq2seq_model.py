@@ -183,18 +183,20 @@ def train(seq2seq_model,
         dialog_decoder_outputs = dialog_decoder_outputs.cpu()
         decoder_target_data = decoder_target_data.cpu()
 
-    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
-                                                         #  dialog_decoder_outputs.shape[1])
+    dialog_decoder_outputs = dialog_decoder_outputs.view(
+        -1, dialog_decoder_outputs.shape[-1])
+    #  dialog_decoder_outputs.shape[1])
 
     #print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
 
-    decoder_target_data = decoder_target_data.view(-1)#, decoder_target_data.shape[1])
+    # , decoder_target_data.shape[1])
+    decoder_target_data = decoder_target_data.view(-1)
 
     #print('decoder_target_data: {}'.format(decoder_target_data))
 
     # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
-    
+
     loss.div(num_samples).backward()
 
     optimizer.step()
@@ -325,13 +327,30 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
     logger.info('Building model...')
 
     # load pre-trained embedding
-    logger.info("Load pre-trained word embeddig: %s ." %
-                opt.dialog_decoder_pretrained_embedding_path)
-    dialog_encoder_pretrained_embedding_weight = np.load(
-        opt.dialog_decoder_pretrained_embedding_path)
-    dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
+    logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
+    
+
     logger.info("dialog_encoder_pretrained_embedding_weight shape: {} .".format(
         dialog_encoder_pretrained_embedding_weight.shape))
+
+    dialog_encoder_embedding = Embedding(embedding_size=opt.dialog_encoder_embedding_size,
+                                         vocab_size=dialog_encoder_vocab.get_vocab_size(),
+                                         padding_idx=dialog_encoder_vocab.padid,
+                                         dropout_ratio=opt.dialog_encoder_dropout_rate)
+
+    dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
+                                              vocab_size=dialog_decoder_vocadialog_decoder_vocab_size,
+                                              padding_idx=opt.dialog_decoder_vocab.padid,
+                                              dropout_ratio=opt.dialog_decoder_dropout_rate)
+
+    if opt.dialog_encoder_pretrained_embedding_path:
+        dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
+        dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
+
+        # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim) 
+        dialog_encoder_embedding.set_pretrained_embedding(dialog_encoder_pretrained_embedding_weight, fixed=False)
+
+        dialog_decoder_embedding.set_pretrained_embedding(dialog_decoder_pretrained_embedding_weight, fixed=False)
 
     seq2seq_model = Seq2SeqModel(
         dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
@@ -344,7 +363,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_encoder_clipnorm=opt.dialog_encoder_clipnorm,
         dialog_encoder_clipvalue=opt.dialog_encoder_clipvalue,
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
-        dialog_encoder_pretrained_embedding_weight=dialog_encoder_pretrained_embedding_weight,
+        dialog_encoder_embedding=dialog_encoder_embedding,
         dialog_encoder_pad_id=dialog_encoder_vocab.padid,
         dialog_encoder_tied=opt.dialog_encoder_tied,
 
@@ -358,7 +377,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_clipnorm=opt.dialog_decoder_clipnorm,
         dialog_decoder_clipvalue=opt.dialog_decoder_clipvalue,
         dialog_decoder_bidirectional=opt.dialog_decoder_bidirectional,
-        dialog_decoder_pretrained_embedding_weight=dialog_decoder_pretrained_embedding_weight,
+        dialog_decoder_embedding=dialog_decoder_embedding,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
         dialog_decoder_tied=opt.dialog_decoder_tied)
@@ -367,7 +386,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
 #      if use_gpu:
     #  seq2seq_model.set_cuda()
 
-    print(seq2seq_model) 
+    print(seq2seq_model)
     return seq2seq_model
 
 
