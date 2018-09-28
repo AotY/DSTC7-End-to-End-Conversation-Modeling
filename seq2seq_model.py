@@ -133,6 +133,16 @@ class Seq2SeqModel(nn.Module):
         )
 
         self.dialog_decoder_linear = nn.Linear(self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
+        # Optionally tie weights as in:
+        # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
+        # https://arxiv.org/abs/1608.05859
+        # and
+        # "Tying Word Vectors and Word Classifiers: A Loss Framework for Language Modeling" (Inan et al. 2016)
+        # https://arxiv.org/abs/1611.01462
+        if self.dialog_decoder_tied:
+            if self.dialog_decoder_embedding_size != slef.dialog_decoder_hidden_size:
+                raise ValueError('When using the tied flag, hidden_size must be equal to embedding_size.')
+            self.dialog_decoder_linear.weight = self.dialog_decoder_embedding.get_embedding_weight()        
         # self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
         self.dialog_decoder_softmax = nn.Softmax(dim=1)
 
@@ -159,7 +169,6 @@ class Seq2SeqModel(nn.Module):
         print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
         print("dialog_encoder_src_lengths size : {}".format(dialog_encoder_src_lengths.shape))
 
-
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
             src=dialog_encoder_src,
@@ -174,7 +183,6 @@ class Seq2SeqModel(nn.Module):
         # tgt, memory_bank, state, memory_lengths=None
         # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
         decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_final_state)
-
 
         print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
         print("tgt: {}".format(dialog_decoder_tgt))

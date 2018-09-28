@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-    
+
 python train_seq2seq_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
     --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx.dict \
     --dialog_encoder_embedding_size 300 \
-    --dialog_encoder_hidden_size 512 \
+    --dialog_encoder_hidden_size 300 \
     --dialog_encoder_num_layers 2 \
     --dialog_encoder_rnn_type LSTM \
     --dialog_encoder_dropout_rate 0.8 \
@@ -16,7 +16,7 @@ python train_seq2seq_model.py \
     --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
     --dialog_encoder_tied \
     --dialog_decoder_embedding_size 300 \
-    --dialog_decoder_hidden_size 512 \
+    --dialog_decoder_hidden_size 300 \
     --dialog_decoder_num_layers 2 \
     --dialog_decoder_rnn_type LSTM \
     --dialog_decoder_dropout_rate 0.8 \
@@ -28,7 +28,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_attention_type dot \
     --dialog_decoder_tied \
     --lr 0.001 \
-    --epochs 1 \
+    --epochs 5 \
     --batch_size 128 \
     --use_teacher_forcing \
     --teacher_forcing_ratio 0.5 \
@@ -42,4 +42,4 @@ python train_seq2seq_model.py \
     --start_epoch 0 \
 
 
-/
+    /
