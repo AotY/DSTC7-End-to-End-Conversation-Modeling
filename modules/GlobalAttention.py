@@ -153,6 +153,7 @@ class GlobalAttention(nn.Module):
         # one step inputs
         if inputs.dim() == 2:
             one_step = True
+            # insert one dimension
             inputs = inputs.unsqueeze(1)
         else:
             one_step = False
@@ -165,13 +166,14 @@ class GlobalAttention(nn.Module):
         aeq(self.dim, dim)
 
         # compute attention scores, as in Luong et al.
-        align = self.score(inputs, memory_bank)
+        align = self.score(inputs, memory_bank) # [128, 50, 48]
        
         print('align: {}'.format(align))
 
         print('align shape : {}'.format(align.shape))
 
         if memory_lengths is not None:
+            # obtain mask for memory_lenghts 
             mask = sequence_mask(memory_lengths)
             print('mask shape: {}'.format(mask.shape))
             print('mask: {}'.format(mask))
@@ -180,6 +182,7 @@ class GlobalAttention(nn.Module):
                 mask = mask.cuda()
 
             mask = mask.unsqueeze(1)  # Make it broadcastable.
+            print('unsqueeze mask shape: {}'.format(mask.shape))
 
             # Fills elements of self tensor with value where mask is one. masked_fill_(mask, value)
             align.data.masked_fill_(1 - mask, -float('inf'))
@@ -226,5 +229,7 @@ class GlobalAttention(nn.Module):
 
         print ('attn_h shape : {}'.format(attn_h.shape))
         print ('align_vectors shape : {}'.format(align_vectors.shape))
+
         return attn_h, align_vectors
+    
     
