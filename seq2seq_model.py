@@ -140,7 +140,7 @@ class Seq2SeqModel(nn.Module):
         # "Tying Word Vectors and Word Classifiers: A Loss Framework for Language Modeling" (Inan et al. 2016)
         # https://arxiv.org/abs/1611.01462
         if self.dialog_decoder_tied:
-            if self.dialog_decoder_embedding_size != slef.dialog_decoder_hidden_size:
+            if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
                 raise ValueError('When using the tied flag, hidden_size must be equal to embedding_size.')
             self.dialog_decoder_linear.weight = self.dialog_decoder_embedding.get_embedding_weight()        
         # self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
