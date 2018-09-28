@@ -82,8 +82,8 @@ def train_epochs(seq2seq_model=None,
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger_str = '\n****************************************** Epoch %i/%i - load %.2f perc *****************************************************************************' %
-                        (epoch + 1, opt.epochs, 100 * load / max_load)
+            logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
+                epoch + 1, opt.epochs, 100 * load / max_load)
             logger.info(logger_str)
             save_logger(logger_str, opt.log_file)
 
@@ -113,7 +113,7 @@ def train_epochs(seq2seq_model=None,
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
                 logger_str = 'train -------------------------------> %s (%d %d%%) %.4f\n' % (timeSince(start, load / max_load),
-                                                                                          load, load / max_load * 100, log_loss_avg)
+                                                                                             load, load / max_load * 100, log_loss_avg)
                 logger.info(logger_str)
                 save_logger(logger_str, opt.log_file)
 
@@ -140,7 +140,10 @@ def train_epochs(seq2seq_model=None,
                         is_best=False,
                         filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d.pth' % epoch))
 
+
 ''' start traing '''
+
+
 def train(seq2seq_model,
           encoder_input_data,
           decoder_input_data,
@@ -161,7 +164,7 @@ def train(seq2seq_model,
     print('decoder_target_date: {}'.format(decoder_target_data))
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_memory_bank, dialog_decoder_final_stae, \
+        (dialog_decoder_memory_bank, dialog_decoder_final_stae,
          dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
         dialog_encoder_src=encoder_input_data,  # LongTensor
         dialog_encoder_src_lengths=encoder_input_lengths,
@@ -203,7 +206,10 @@ def train(seq2seq_model,
 
     return batch_loss / num_samples
 
+
 ''' save log to fiel '''
+
+
 def save_logger(logger_str, log_file):
     with open(log_file, 'a', encoding='utf-8') as f:
         f.write(logger_str)
