@@ -162,13 +162,13 @@ class Seq2SeqModel(nn.Module):
                 ):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
-        print("dialog_encoder_src shape : {}".format(dialog_encoder_src.shape))
+        #print("dialog_encoder_src shape : {}".format(dialog_encoder_src.shape))
 
         dialog_encoder_initial_state = self.dialog_encoder.init_hidden(batch_size, self.use_gpu)
-        print("dialog_encoder_initial_state[0] shape: {} ".format(dialog_encoder_initial_state[0].shape))
+        #print("dialog_encoder_initial_state[0] shape: {} ".format(dialog_encoder_initial_state[0].shape))
 
-        print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
-        print("dialog_encoder_src_lengths size : {}".format(dialog_encoder_src_lengths.shape))
+        #print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
+        #print("dialog_encoder_src_lengths size : {}".format(dialog_encoder_src_lengths.shape))
 
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
@@ -177,19 +177,19 @@ class Seq2SeqModel(nn.Module):
             encoder_state=dialog_encoder_initial_state,  # the source memory_bank lengths.
         )
 
-        print('dialog_encoder_final_state[0] shape: {}'.format(dialog_encoder_final_state[0].shape))
-        print('dialog_encoder_memory_bank shape: {}'.format(dialog_encoder_memory_bank.shape))
+        #print('dialog_encoder_final_state[0] shape: {}'.format(dialog_encoder_final_state[0].shape))
+        #print('dialog_encoder_memory_bank shape: {}'.format(dialog_encoder_memory_bank.shape))
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
         # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
         decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_final_state)
 
-        print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
-        print("tgt: {}".format(dialog_decoder_tgt))
+        #print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
+        #print("tgt: {}".format(dialog_decoder_tgt))
 
-        print('dialog_encoder_src_lengths: {}'.format(dialog_encoder_src_lengths))
-        print('dialog_decoder_tgt_lengths: {}'.format(dialog_decoder_tgt_lengths))
+        #print('dialog_encoder_src_lengths: {}'.format(dialog_encoder_src_lengths))
+        #print('dialog_decoder_tgt_lengths: {}'.format(dialog_decoder_tgt_lengths))
 
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
         dialog_decoder_attns = self.dialog_decoder.forward(

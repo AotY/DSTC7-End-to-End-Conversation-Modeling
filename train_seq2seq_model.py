@@ -157,11 +157,11 @@ def train(seq2seq_model,
           opt):
 
     # Turn on training mode which enables dropout.
-    # seq2seq_model.train()
+    seq2seq_model.train()
 
-    print('encoder_input_data: {}'.format(encoder_input_data))
-    print('decoder_input_date: {}'.format(decoder_input_data))
-    print('decoder_target_date: {}'.format(decoder_target_data))
+    #print('encoder_input_data: {}'.format(encoder_input_data))
+    #print('decoder_input_date: {}'.format(decoder_input_data))
+    #print('decoder_target_date: {}'.format(decoder_target_data))
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
         (dialog_decoder_memory_bank, dialog_decoder_final_stae,
@@ -186,24 +186,24 @@ def train(seq2seq_model,
     dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
                                                          #  dialog_decoder_outputs.shape[1])
 
-    print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
+    #print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
 
     decoder_target_data = decoder_target_data.view(-1)#, decoder_target_data.shape[1])
 
-    print('decoder_target_data: {}'.format(decoder_target_data))
+    #print('decoder_target_data: {}'.format(decoder_target_data))
 
     # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
-
-    loss.backward()
+    
+    loss.div(num_samples).backward()
 
     optimizer.step()
 
-    print('loss : {}'.format(loss))
+    print('batch loss : {}'.format(loss))
 
     batch_loss = float(loss)
 
-    return batch_loss / num_samples
+    return batch_loss / torch.sum(decoder_input_lengths)
 
 
 ''' save log to fiel '''
@@ -225,7 +225,7 @@ def evaluate(seq2seq_model=None,
              opt=None):
 
     # Turn on evaluation mode which disables dropout.
-    # seq2seq_model.eval()
+    seq2seq_model.eval()
 
     loss_total = 0
     iter_ = 0
@@ -367,6 +367,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
 #      if use_gpu:
     #  seq2seq_model.set_cuda()
 
+    print(seq2seq_model) 
     return seq2seq_model
 
 
@@ -452,7 +453,7 @@ if __name__ == '__main__':
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     #  criterion = nn.NLLLoss()
-    criterion = nn.NLLLoss(
+    criterion = nn.CrossEntropyLoss(
         size_average=False,
         ignore_index=vocab.padid,
         reduce=True
