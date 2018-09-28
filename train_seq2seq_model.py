@@ -74,15 +74,14 @@ def train_epochs(seq2seq_model=None,
 
     log_loss_total = 0  # Reset every logger.info_every
 
-    max_load = np.ceil(seq2seq_dataset.n_train /
-                       opt.batch_size / opt.batch_per_load)
+    max_load = np.ceil(seq2seq_dataset.n_train / opt.batch_size / opt.batch_per_load)
 
     for epoch in range(opt.start_epoch, opt.epochs):
         load = 0
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger.info('\n***************** Epoch %i/%i - load %.2f perc *****************' %
+            logger.info('\n******************************* Epoch %i/%i - load %.2f perc ********************************' %
                         (epoch + 1, opt.epochs, 100 * load / max_load))
 
             # load data
@@ -128,6 +127,7 @@ def train_epochs(seq2seq_model=None,
             'state_dict': seq2seq_model.state_dict(),
             'optimizer': optimizer.optimizer.state_dict()
         }
+
         save_checkpoint(save_state, False,
                         filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d.pth' % epoch))
 
@@ -191,7 +191,7 @@ def train(seq2seq_model,
 
     print('loss : {}'.format(loss))
 
-    batch_loss = float(torch.sum(loss))
+    batch_loss = float(loss)
 
     return batch_loss / num_samples
 
@@ -252,7 +252,7 @@ def evaluate(seq2seq_model=None,
 
         print('evaluate loss: {}'.format(loss))
 
-        loss_total += float(torch.sum(loss)) / num_samples
+        loss_total += float(loss) / num_samples
 
     return loss_total
 
@@ -431,7 +431,12 @@ if __name__ == '__main__':
 
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss()
+    #  criterion = nn.NLLLoss()
+    criterion = nn.NLLLoss(
+        size_average=False,
+        ignore_index=vocab.padid,
+        reduce=True
+    )
 
     '''if load checkpoint'''
     if checkpoint:
