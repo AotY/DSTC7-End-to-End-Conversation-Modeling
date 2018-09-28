@@ -292,19 +292,19 @@ class StdRNNDecoder(DecoderBase):
         aeq(tgt_batch, output_batch)
 
         # END
-        print('rnn_output shape: {}'.format(
-            rnn_output.shape))  # [50, 128, 512]
+        #print('rnn_output shape: {}'.format(
+        #    rnn_output.shape))  # [50, 128, 512]
 
-        print('decoder_final[0] shape: {}'.format(decoder_final[0].shape))
-        print('decoder_final[1] shape: {}'.format(decoder_final[1].shape))
+        #print('decoder_final[0] shape: {}'.format(decoder_final[0].shape))
+        #print('decoder_final[1] shape: {}'.format(decoder_final[1].shape))
 
-        print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(
-            rnn_output.transpose(0, 1).contiguous().shape))  # [128, 50, 512]
+        #print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(
+        #    rnn_output.transpose(0, 1).contiguous().shape))  # [128, 50, 512]
 
-        print('memory_bank.transpose(0, 1) shape: {}'.format(
-            memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
+        #print('memory_bank.transpose(0, 1) shape: {}'.format(
+        #    memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
 
-        print('memory_lengths: {}'.format(memory_lengths))
+        #print('memory_lengths: {}'.format(memory_lengths))
 
         # Calculate the attention.
         if self.attn_type is not None:

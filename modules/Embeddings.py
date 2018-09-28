@@ -136,17 +136,17 @@ class Embedding(nn.Module):
         """
 
         in_length, in_batch = inputs.size()
-        print("inputs shape: {}", inputs.shape)
+        #print("inputs shape: {}", inputs.shape)
 
         # aeq(nfeat, len(self.embedded_luts))
 
         embedded = self.embedding(inputs)
         
-        print("self.droput_ratio: %f" % self.dropout.p)
+        #print("self.droput_ratio: %f" % self.dropout.p)
 
-        print("embedded shape: {}".format(embedded.shape))
-        print("embedded device: {}".format(embedded.device))
-        print("embedded: {}".format(embedded))
+        #print("embedded shape: {}".format(embedded.shape))
+        #print("embedded device: {}".format(embedded.device))
+        #print("embedded: {}".format(embedded))
 
         if self.dropout is not None:
             embedded = self.dropout(embedded)

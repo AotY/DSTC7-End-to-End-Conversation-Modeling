@@ -1,2 +1,3 @@
-conversations	494882
-responses	494882
+conversations	467650
+responses	467650
+facts	4671468

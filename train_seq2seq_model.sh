@@ -34,7 +34,7 @@ python train_seq2seq_model.py \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
-    --log_interval 100 \
+    --log_interval 50 \
     --log_file ./logs/train_seq2seq_model.log \
     --model_save_path ./models \
     --test_split 0.2 \
