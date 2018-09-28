@@ -82,8 +82,10 @@ def train_epochs(seq2seq_model=None,
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger.info('\n****************************************** Epoch %i/%i - load %.2f perc *****************************************************************************' %
-                        (epoch + 1, opt.epochs, 100 * load / max_load))
+            logger_str = '\n****************************************** Epoch %i/%i - load %.2f perc *****************************************************************************' %
+                        (epoch + 1, opt.epochs, 100 * load / max_load)
+            logger.info(logger_str)
+            save_logger(logger_str, opt.log_file)
 
             # load data
             num_samples, encoder_input_data, \
@@ -110,15 +112,20 @@ def train_epochs(seq2seq_model=None,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
-                logger.info('train -------------------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
-                                                                                          load, load / max_load * 100, log_loss_avg))
+                logger_str = 'train -------------------------------> %s (%d %d%%) %.4f\n' % (timeSince(start, load / max_load),
+                                                                                          load, load / max_load * 100, log_loss_avg)
+                logger.info(logger_str)
+                save_logger(logger_str, opt.log_file)
+
         # evaluate
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
                                  seq2seq_dataset=seq2seq_dataset,
                                  criterion=criterion,
                                  opt=opt)
 
-        logger.info('evaluate ----> %.4f' % evaluate_loss)
+        logger_str = 'evaluate ---------------------------------> %.4f\n' % evaluate_loss
+        logger.info(logger_str)
+        save_logger(logger_str, opt.log_file)
 
         # save model of each epoch
         save_state = {
@@ -196,6 +203,11 @@ def train(seq2seq_model,
 
     return batch_loss / num_samples
 
+''' save log to fiel '''
+def save_logger(logger_str, log_file):
+    with open(log_file, 'a', encoding='utf-8') as f:
+        f.write(logger_str)
+
 
 '''
 evaluate model.
@@ -211,7 +223,10 @@ def evaluate(seq2seq_model=None,
     # seq2seq_model.eval()
 
     loss_total = 0
+    iter_ = 0
     while not seq2seq_dataset.all_loaded('test'):
+
+        iter_ += 1
 
         # load data
         num_samples, \
@@ -255,7 +270,7 @@ def evaluate(seq2seq_model=None,
 
         loss_total += float(loss) / num_samples
 
-    return loss_total
+    return loss_total / iter_
 
 
 def dialog(self, input_text):
