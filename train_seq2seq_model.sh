@@ -35,7 +35,7 @@ python train_seq2seq_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 100 \
-    --log_file ./logs/train_seq2seq_model.log
+    --log_file ./logs/train_seq2seq_model.log \
     --model_save_path ./models \
     --test_split 0.2 \
     --optim_method adam \
