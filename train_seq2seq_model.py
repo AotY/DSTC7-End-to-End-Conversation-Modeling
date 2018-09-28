@@ -113,11 +113,11 @@ def train_epochs(seq2seq_model=None,
 
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
-                log_loss_total = 0
-                logger_str = 'train -------------------------------> %s (%d %d%%) %.4f\n' % (timeSince(start, load / max_load),
+                logger_str = '\ntrain -------------------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
                                                                                              load, load / max_load * 100, log_loss_avg)
                 logger.info(logger_str)
                 save_logger(logger_str, opt.log_file)
+                log_loss_total = 0
 
         # evaluate
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
@@ -125,7 +125,7 @@ def train_epochs(seq2seq_model=None,
                                  criterion=criterion,
                                  opt=opt)
 
-        logger_str = 'evaluate ---------------------------------> %.4f\n' % evaluate_loss
+        logger_str = '\nevaluate ---------------------------------> %.4f' % evaluate_loss
         logger.info(logger_str)
         save_logger(logger_str, opt.log_file)
 
@@ -181,9 +181,9 @@ def train(seq2seq_model,
     loss = 0
 
     #  Compute loss
-    if dialog_decoder_outputs.is_cuda:
-        dialog_decoder_outputs = dialog_decoder_outputs.cpu()
-        decoder_target_data = decoder_target_data.cpu()
+    #  if dialog_decoder_outputs.is_cuda:
+        #  dialog_decoder_outputs = dialog_decoder_outputs.cpu()
+    #      decoder_target_data = decoder_target_data.cpu()
 
     dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
 
@@ -198,7 +198,7 @@ def train(seq2seq_model,
 
     # backward
     loss.div(num_samples).backward()
-    
+
     # optimizer
     optimizer.step()
 
@@ -337,17 +337,17 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
                                               vocab_size=dialog_decoder_vocab.get_vocab_size(),
                                               padding_idx=dialog_decoder_vocab.padid,
                                               dropout_ratio=opt.dialog_decoder_dropout_rate)
-    
+
     ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
-        
+
         # load pre-trained embedding
         logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
 
         dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
         dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
-        # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim) 
+        # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
         dialog_encoder_embedding.set_pretrained_embedding(dialog_encoder_pretrained_embedding_weight, fixed=False)
 
         dialog_decoder_embedding.set_pretrained_embedding(dialog_decoder_pretrained_embedding_weight, fixed=False)
