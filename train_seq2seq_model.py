@@ -74,21 +74,20 @@ def train_epochs(seq2seq_model=None,
 
     log_loss_total = 0  # Reset every logger.info_every
 
-    max_load = np.ceil(seq2seq_dataset.n_train / opt.batch_size / opt.batch_per_load)
+    max_load = np.ceil(seq2seq_dataset.n_train /
+                       opt.batch_size / opt.batch_per_load)
 
     for epoch in range(opt.start_epoch, opt.epochs):
         load = 0
         seq2seq_dataset.reset()
         while not seq2seq_dataset.all_loaded('train'):
             load += 1
-            logger.info('\n******************************* Epoch %i/%i - load %.2f perc ********************************' %
+            logger.info('\n****************************************** Epoch %i/%i - load %.2f perc *****************************************************************************' %
                         (epoch + 1, opt.epochs, 100 * load / max_load))
 
             # load data
-            num_samples, \
-                encoder_input_data, \
-                decoder_input_data, \
-                decoder_target_data, \
+            num_samples, encoder_input_data, \
+                decoder_input_data, decoder_target_data, \
                 encoder_input_lengths, decoder_input_lengths, \
                 conversation_texts, response_texts = seq2seq_dataset.load_data(
                     'train', opt.batch_size * opt.batch_per_load)
@@ -111,9 +110,9 @@ def train_epochs(seq2seq_model=None,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_loss_total = 0
-                logger.info('train ----------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
-                                                                                 load, load / max_load * 100, log_loss_avg))
-
+                logger.info('train -------------------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
+                                                                                          load, load / max_load * 100, log_loss_avg))
+        # evaluate
         evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
                                  seq2seq_dataset=seq2seq_dataset,
                                  criterion=criterion,
@@ -128,10 +127,13 @@ def train_epochs(seq2seq_model=None,
             'optimizer': optimizer.optimizer.state_dict()
         }
 
-        save_checkpoint(save_state, False,
+        # save checkpoint, including epoch, seq2seq_mode.state_dict() and
+        # optimizer.state_dict()
+        save_checkpoint(state=save_state,
+                        is_best=False,
                         filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d.pth' % epoch))
 
-
+''' start traing '''
 def train(seq2seq_model,
           encoder_input_data,
           decoder_input_data,
@@ -147,14 +149,13 @@ def train(seq2seq_model,
     # Turn on training mode which enables dropout.
     # seq2seq_model.train()
 
-
     print('encoder_input_data: {}'.format(encoder_input_data))
     print('decoder_input_date: {}'.format(decoder_input_data))
     print('decoder_target_date: {}'.format(decoder_target_data))
-    
+
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
-        = seq2seq_model.forward(
+        (dialog_decoder_memory_bank, dialog_decoder_final_stae, \
+         dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
         dialog_encoder_src=encoder_input_data,  # LongTensor
         dialog_encoder_src_lengths=encoder_input_lengths,
         dialog_decoder_tgt=decoder_input_data,
@@ -400,7 +401,6 @@ if __name__ == '__main__':
         checkpoint = load_checkpoint(filename='checkpoint.pth')
         opt.start_epoch = checkpoint['epoch'] + 1
         # checkpoint = torch.load(opt.train_from, map_location=lambda storage, loc: storage)
-
         # I don't like reassigning attributes of opt: it's not clear.
     else:
         checkpoint = None
