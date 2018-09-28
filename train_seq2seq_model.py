@@ -159,9 +159,9 @@ def train(seq2seq_model,
     # Turn on training mode which enables dropout.
     # seq2seq_model.train()
 
-    print('encoder_input_data: {}'.format(encoder_input_data))
-    print('decoder_input_date: {}'.format(decoder_input_data))
-    print('decoder_target_date: {}'.format(decoder_target_data))
+#      print('encoder_input_data: {}'.format(encoder_input_data))
+    #  print('decoder_input_date: {}'.format(decoder_input_data))
+#      print('decoder_target_date: {}'.format(decoder_target_data))
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
         (dialog_decoder_memory_bank, dialog_decoder_final_stae,
