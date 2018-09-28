@@ -183,13 +183,12 @@ def train(seq2seq_model,
         dialog_decoder_outputs = dialog_decoder_outputs.cpu()
         decoder_target_data = decoder_target_data.cpu()
 
-    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
-                                                         dialog_decoder_outputs.shape[1])
+    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
+                                                         #  dialog_decoder_outputs.shape[1])
 
     print('dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
 
-    decoder_target_data = decoder_target_data.view(
-        -1, decoder_target_data.shape[1])
+    decoder_target_data = decoder_target_data.view(-1)#, decoder_target_data.shape[1])
 
     print('decoder_target_data: {}'.format(decoder_target_data))
 
