@@ -109,6 +109,10 @@ class Embedding(nn.Module):
     def get_lookup_table(self):
         return self.embedding
 
+    '''obtain weight of embedding, see opt.tied'''
+    def get_embedding_weight(self):
+        return self.embedding.weight
+
     def set_pretrained_embedding(self, pre_trained_weight=None, fixed=False):
         """Set pretrained embedding.
         Args:
