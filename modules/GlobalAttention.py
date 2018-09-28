@@ -160,20 +160,20 @@ class GlobalAttention(nn.Module):
 
         batch, sourceL, dim = memory_bank.size()
         batch_, targetL, dim_ = inputs.size()
-        
+
         aeq(batch, batch_)
         aeq(dim, dim_)
         aeq(self.dim, dim)
 
         # compute attention scores, as in Luong et al.
         align = self.score(inputs, memory_bank) # [128, 50, 48]
-       
-        #print('align: {}'.format(align))
+
+        #  print('align: {}'.format(align))
 
         #print('align shape : {}'.format(align.shape))
 
         if memory_lengths is not None:
-            # obtain mask for memory_lenghts 
+            # obtain mask for memory_lenghts
             mask = sequence_mask(memory_lengths)
             #print('mask shape: {}'.format(mask.shape))
             #print('mask: {}'.format(mask))
@@ -231,5 +231,5 @@ class GlobalAttention(nn.Module):
         #print ('align_vectors shape : {}'.format(align_vectors.shape))
 
         return attn_h, align_vectors
-    
-    
+
+
