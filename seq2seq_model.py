@@ -142,6 +142,7 @@ class Seq2SeqModel(nn.Module):
         if self.dialog_decoder_tied:
             if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
                 raise ValueError('When using the tied flag, hidden_size must be equal to embedding_size.')
+            print ('using tied..................')
             self.dialog_decoder_linear.weight = self.dialog_decoder_embedding.get_embedding_weight()        
         # self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
         self.dialog_decoder_softmax = nn.Softmax(dim=1)
