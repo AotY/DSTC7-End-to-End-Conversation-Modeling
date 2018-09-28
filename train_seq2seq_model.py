@@ -326,13 +326,7 @@ def tally_parameters(model):
 def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None):
     logger.info('Building model...')
 
-    # load pre-trained embedding
-    logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
-    
-
-    logger.info("dialog_encoder_pretrained_embedding_weight shape: {} .".format(
-        dialog_encoder_pretrained_embedding_weight.shape))
-
+    ''' embedding for encoder and decoder '''
     dialog_encoder_embedding = Embedding(embedding_size=opt.dialog_encoder_embedding_size,
                                          vocab_size=dialog_encoder_vocab.get_vocab_size(),
                                          padding_idx=dialog_encoder_vocab.padid,
@@ -342,8 +336,13 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
                                               vocab_size=dialog_decoder_vocadialog_decoder_vocab_size,
                                               padding_idx=opt.dialog_decoder_vocab.padid,
                                               dropout_ratio=opt.dialog_decoder_dropout_rate)
-
+    
+    ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
+        
+        # load pre-trained embedding
+        logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
+
         dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
         dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
