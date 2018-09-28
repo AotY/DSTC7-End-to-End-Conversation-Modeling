@@ -27,7 +27,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_clipnorm=1.0,
                  dialog_encoder_clipvalue=0.5,
                  dialog_encoder_bidirectional=True,
-                 dialog_encoder_pretrained_embedding_weight=None,
+                 dialog_encoder_embedding=None,
                  dialog_encoder_pad_id=1,
                  dialog_encoder_tied=True,
 
@@ -41,7 +41,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_clipvalue=0.5,
                  dialog_decoder_max_length=32,
                  dialog_decoder_bidirectional=True,
-                 dialog_decoder_pretrained_embedding_weight=None,
+                 dialog_decoder_embedding=None,
                  dialog_decoder_pad_id=1,
                  dialog_decoder_attention_type='dot',
                  dialog_decoder_tied=True,
@@ -62,7 +62,6 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_clipnorm = dialog_encoder_clipnorm
         self.dialog_encoder_clipvalue = dialog_encoder_clipvalue
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
-        self.dialog_encoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
         self.dialog_encoder_pad_id = dialog_encoder_pad_id
         self.dialog_encoder_tied = dialog_encoder_tied
 
@@ -77,7 +76,6 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_clipnorm = dialog_decoder_clipnorm
         self.dialog_decoder_clipvalue = dialog_decoder_clipvalue
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
-        self.dialog_decoder_pretrained_embedding_weight = dialog_decoder_pretrained_embedding_weight
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
         self.dialog_decoder_tied= dialog_decoder_tied
@@ -90,23 +88,7 @@ class Seq2SeqModel(nn.Module):
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
 
-        self.dialog_encoder_embedding = Embedding(embedding_size=self.dialog_encoder_embedding_size,
-                                                   vocab_size=self.dialog_encoder_vocab_size,
-                                                   padding_idx=self.dialog_encoder_pad_id,
-                                                   dropout_ratio=self.dialog_encoder_dropout_rate)
-
-        self.dialog_decoder_embedding = Embedding(embedding_size=self.dialog_decoder_embedding_size,
-                                                   vocab_size=self.dialog_decoder_vocab_size,
-                                                   padding_idx=self.dialog_decoder_pad_id,
-                                                   dropout_ratio=self.dialog_decoder_dropout_rate)
-
-        if self.dialog_encoder_pretrained_embedding_weight is not None:
-            # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
-            self.dialog_encoder_embedding.set_pretrained_embedding(self.dialog_encoder_pretrained_embedding_weight, fixed=False)
-
-            #  self.dialog_decoder_embedding = self.dialog_encoder_embedding
-            self.dialog_decoder_embedding.set_pretrained_embedding(self.dialog_decoder_pretrained_embedding_weight, fixed=False)
-
+        
         # Dialog Enocder
         self.dialog_encoder = RNNEncoder(
             rnn_type=self.dialog_encoder_rnn_type,
@@ -114,7 +96,7 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialog_encoder_num_layers,
             hidden_size=self.dialog_encoder_hidden_size,
             dropout=self.dialog_encoder_dropout_rate,
-            embedding=self.dialog_encoder_embedding
+            embedding=dialog_encoder_embedding
         )
 
         # Dialog Decoder with Attention
@@ -128,7 +110,7 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialog_decoder_num_layers,
             hidden_size=self.dialog_decoder_hidden_size,
             dropout=self.dialog_decoder_dropout_rate,
-            embedding=self.dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
+            embedding=dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
             attn_type=self.dialog_decoder_attention_type
         )
 
@@ -143,7 +125,7 @@ class Seq2SeqModel(nn.Module):
             if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
                 raise ValueError('When using the tied flag, hidden_size must be equal to embedding_size.')
             print ('using tied..................')
-            self.dialog_decoder_linear.weight = self.dialog_decoder_embedding.get_embedding_weight()        
+            self.dialog_decoder_linear.weight = dialog_decoder_embedding.get_embedding_weight()        
         # self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
         self.dialog_decoder_softmax = nn.Softmax(dim=1)
 
@@ -185,19 +167,11 @@ class Seq2SeqModel(nn.Module):
         # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
         decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_final_state)
 
-<<<<<<< HEAD
         #print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
         #print("tgt: {}".format(dialog_decoder_tgt))
 
         #print('dialog_encoder_src_lengths: {}'.format(dialog_encoder_src_lengths))
         #print('dialog_decoder_tgt_lengths: {}'.format(dialog_decoder_tgt_lengths))
-=======
-        print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
-        #  print("tgt: {}".format(dialog_decoder_tgt))
-
-        #  print('dialog_encoder_src_lengths: {}'.format(dialog_encoder_src_lengths))
-        #  print('dialog_decoder_tgt_lengths: {}'.format(dialog_decoder_tgt_lengths))
->>>>>>> 18293b41831562435346d33e4263a6a70105c1d3
 
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
         dialog_decoder_attns = self.dialog_decoder.forward(
