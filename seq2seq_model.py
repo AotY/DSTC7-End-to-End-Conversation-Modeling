@@ -4,9 +4,9 @@ import math
 import torch
 import torch.nn as nn
 
-from modules.Encoder import RNNEncoder
-from modules.Decoder import StdRNNDecoder
-from modules.Embeddings import Embedding
+from modules.encoder import RNNEncoder
+from modules.decoder import StdRNNDecoder
+from modules.embeddings import Embedding
 
 
 class Seq2SeqModel(nn.Module):
@@ -45,11 +45,10 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_pad_id=1,
                  dialog_decoder_attention_type='dot',
                  dialog_decoder_tied=True,
-                 use_gpu=True
+                 device='cuda'
                  ):
+        # super init
         super(Seq2SeqModel, self).__init__()
-
-        # init
 
         '''Dialog encoder parameters'''
         self.dialog_encoder_vocab_size = dialog_encoder_vocab_size
@@ -78,18 +77,16 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
-        self.dialog_decoder_tied= dialog_decoder_tied
+        self.dialog_decoder_tied = dialog_decoder_tied
 
-
-        self.use_gpu = use_gpu
+        self.device = device
         # num_embedding, embedding_dim
         ''''Ps: dialog_encoder, facts_encoder, and dialog_decoder may have different
             word embedding.
         '''
         # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
 
-        
-        # Dialog Enocder
+        # Dialog Encoder
         self.dialog_encoder = RNNEncoder(
             rnn_type=self.dialog_encoder_rnn_type,
             bidirectional=self.dialog_encoder_bidirectional,
@@ -114,7 +111,8 @@ class Seq2SeqModel(nn.Module):
             attn_type=self.dialog_decoder_attention_type
         )
 
-        self.dialog_decoder_linear = nn.Linear(self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
+        self.dialog_decoder_linear = nn.Linear(
+            self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
         # Optionally tie weights as in:
         # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
         # https://arxiv.org/abs/1608.05859
@@ -123,11 +121,13 @@ class Seq2SeqModel(nn.Module):
         # https://arxiv.org/abs/1611.01462
         if self.dialog_decoder_tied:
             if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
-                raise ValueError('When using the tied flag, hidden_size must be equal to embedding_size.')
+                raise ValueError(
+                    'When using the tied flag, hidden_size must be equal to embedding_size.')
             print ('using tied..................')
-            self.dialog_decoder_linear.weight = dialog_decoder_embedding.get_embedding_weight()        
-        # self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
-        self.dialog_decoder_softmax = nn.Softmax(dim=1)
+            self.dialog_decoder_linear.weight = dialog_decoder_embedding.get_embedding_weight()
+
+        self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
+        #  self.dialog_decoder_softmax = nn.Softmax(dim=1)
 
     '''
     Seq2SeqModel forward
@@ -146,7 +146,8 @@ class Seq2SeqModel(nn.Module):
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
         #print("dialog_encoder_src shape : {}".format(dialog_encoder_src.shape))
 
-        dialog_encoder_initial_state = self.dialog_encoder.init_hidden(batch_size, self.use_gpu)
+        dialog_encoder_initial_state = self.dialog_encoder.init_hidden(
+            batch_size, self.device)
         #print("dialog_encoder_initial_state[0] shape: {} ".format(dialog_encoder_initial_state[0].shape))
 
         #print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
@@ -156,7 +157,8 @@ class Seq2SeqModel(nn.Module):
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
             src=dialog_encoder_src,
             lengths=dialog_encoder_src_lengths,
-            encoder_state=dialog_encoder_initial_state,  # the source memory_bank lengths.
+            # the source memory_bank lengths.
+            encoder_state=dialog_encoder_initial_state,
         )
 
         #print('dialog_encoder_final_state[0] shape: {}'.format(dialog_encoder_final_state[0].shape))
@@ -165,7 +167,8 @@ class Seq2SeqModel(nn.Module):
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
         # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
-        decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_final_state)
+        decoder_state = self.dialog_decoder.init_decoder_state(
+            encoder_final=dialog_encoder_final_state)
 
         #print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
         #print("tgt: {}".format(dialog_decoder_tgt))
@@ -174,25 +177,31 @@ class Seq2SeqModel(nn.Module):
         #print('dialog_decoder_tgt_lengths: {}'.format(dialog_decoder_tgt_lengths))
 
         dialog_decoder_memory_bank, dialog_decoder_final_state, \
-        dialog_decoder_attns = self.dialog_decoder.forward(
-            tgt=dialog_decoder_tgt,
-            memory_bank=dialog_encoder_memory_bank,
-            state=decoder_state,
-            memory_lengths=dialog_encoder_src_lengths # dialog_decoder_tgt_lengths
-        )
-
+            dialog_decoder_attns = self.dialog_decoder.forward(
+                tgt=dialog_decoder_tgt,
+                memory_bank=dialog_encoder_memory_bank,
+                state=decoder_state,
+                memory_lengths=dialog_encoder_src_lengths  # dialog_decoder_tgt_lengths
+            )
 
         # beam search  dialog_decoder_memory_bank -> [tgt_len x batch x hidden]
         # batch_size = dialog_decoder_memory_bank.shape[1]
         # dialog_decoder_outputs [tgt_len x batch x beam_size]?
         # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, self.dialog_decoder_hidden_size))
         # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, self.dialog_decoder_vocab_size))
-        print("dialog_decoder_memory_bank shape: {}".format(dialog_decoder_memory_bank.shape))
+        print("dialog_decoder_memory_bank shape: {}".format(
+            dialog_decoder_memory_bank.shape))
         dialog_decoder_memory_bank = dialog_decoder_memory_bank[0]
-        print("dialog_decoder_memory_bank shape: {}".format(dialog_decoder_memory_bank.shape))
+        print("dialog_decoder_memory_bank shape: {}".format(
+            dialog_decoder_memory_bank.shape))
 
-        dialog_decoder_outputs = self.dialog_decoder_softmax(self.dialog_decoder_linear(dialog_decoder_memory_bank))
-        print("dialog_decoder_outputs shape: {}".format(dialog_decoder_outputs.shape))
+        dialog_decoder_outputs = self.dialog_decoder_linear(
+            dialog_decoder_memory_bank)
+        # log softmax
+        dialog_decoder_outputs = self.dialog_decoder_softmax(
+            dialog_decoder_outputs)
+        print("dialog_decoder_outputs shape: {}".format(
+            dialog_decoder_outputs.shape))
 
         '''
         beam_size = 100
@@ -224,13 +233,8 @@ class Seq2SeqModel(nn.Module):
         '''
 
         return ((dialog_encoder_final_state, dialog_encoder_memory_bank),
-                (dialog_decoder_memory_bank, dialog_decoder_final_state, dialog_decoder_attns, dialog_decoder_outputs))
-
-    def set_cuda(self):
-        self.dialog_encoder.cuda()
-        self.dialog_decoder.cuda()
-        self.dialog_decoder_linear.cuda()
-        self.dialog_decoder_softmax.cuda()
+                (dialog_decoder_memory_bank, dialog_decoder_final_state,
+                 dialog_decoder_attns, dialog_decoder_outputs))
 
     # beam search  tensor.numpy()
     def beam_search_decoder(self, memory_bank, beam_size):
@@ -253,7 +257,8 @@ class Seq2SeqModel(nn.Module):
                     candidate = [seq + [j], score * (- math.log(row[j]))]
                     all_candidates.append(candidate)
             # order all candidates by score
-            ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=False)
+            ordered = sorted(
+                all_candidates, key=lambda tup: tup[1], reverse=False)
             # ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=True)
             # select k best
             sequences = ordered[:beam_size]

@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 from torch.autograd import Variable
 from modules.utils import aeq, rnn_factory
-from modules.GlobalAttention import GlobalAttention
+from modules.global_attention import GlobalAttention
 
 
 class DecoderState(object):
@@ -175,7 +175,8 @@ class DecoderBase(nn.Module):
             return RNNDecoderState(self.hidden_size,
                                    _fix_enc_hidden(encoder_final))
 
-    @property
+    @propertalculate attention from current RNN state and all encoder outputs;
+            # apply to encoder outputs to get weighted average
     def _input_size(self):
         """
         Private helper returning the number of expected features.
@@ -295,15 +296,6 @@ class StdRNNDecoder(DecoderBase):
         #print('rnn_output shape: {}'.format(
         #    rnn_output.shape))  # [50, 128, 512]
 
-        #print('decoder_final[0] shape: {}'.format(decoder_final[0].shape))
-        #print('decoder_final[1] shape: {}'.format(decoder_final[1].shape))
-
-        #print('rnn_output.transpose(0, 1).contiguous shape: {}'.format(
-        #    rnn_output.transpose(0, 1).contiguous().shape))  # [128, 50, 512]
-
-        #print('memory_bank.transpose(0, 1) shape: {}'.format(
-        #    memory_bank.transpose(0, 1).shape))  # [128, 48, 512]
-
         #  print('memory_lengths: {}'.format(memory_lengths))
 
         # Calculate the attention.
@@ -312,9 +304,6 @@ class StdRNNDecoder(DecoderBase):
             decoder_outputs, p_attn = self.attn.forward(
                 rnn_output.transpose(0, 1).contiguous(),
                 memory_bank.transpose(0, 1),
-                memory_lengths=memory_lengths)
-
-            #
             attns["std"] = p_attn
         else:
             decoder_outputs = rnn_output
