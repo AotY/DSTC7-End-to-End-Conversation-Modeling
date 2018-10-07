@@ -143,7 +143,7 @@ class RNNEncoder(EncoderBase):
 
         if src.is_cuda:
             sorted_indices = sorted_indices.cuda()
-        
+
         #print('src: {}'.format(src))
 
         #print('sorted_indices: {}'.format(sorted_indices))
@@ -187,25 +187,27 @@ class RNNEncoder(EncoderBase):
 
         return (out_encode_final, out_memory_bank)
 
-    def init_hidden(self, batch_size, use_gpu):
+    def init_hidden(self, batch_size, device):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         if self.rnn_type == 'LSTM':
             initial_state1 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
             initial_state2 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
-            initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
-            initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
-            if use_gpu:
-                initial_state1 = initial_state1.cuda()
-                initial_state2 = initial_state2.cuda()
+            #  initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
+            #  initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
+            #  initial_state1 = initial_state1.to(device)
+            #  initial_state2 = initial_state2.to(device)
+            initial_state1.data.uniform_(-initial_state_scale, initial_state_scale)
+            initial_state2.data.uniform_(-initial_state_scale, initial_state_scale)
             return (initial_state1, initial_state2)
 
-        else: 
+        else:
             initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
-            initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
-            if use_gpu:
-                initial_state = initial_state.cuda()
+            #  initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
+            #  initial_state = initial_state.to(device)
+            initial_state.data.uniform_(-initial_state_scale, initial_state_scale)
             return initial_state
+
 
 
 #

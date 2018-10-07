@@ -115,7 +115,8 @@ An utterance representation can be obtained by averaging the embeddings of all t
 '''
 
 
-def get_avg_embedding_score(vocab, gensim_model, input_str, candidate_replies, stop_word_obj, lower=None, normal=False):
+def get_avg_embedding_score(vocab, gensim_model, input_str, candidate_replies, 
+                            stop_word_obj, lower=None, normal=False):
     query_words = stop_word_obj.remove_words(input_str.strip().replace('\t', ' '))
 
     # to lower

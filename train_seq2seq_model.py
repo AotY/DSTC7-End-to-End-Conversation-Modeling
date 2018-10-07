@@ -17,8 +17,8 @@ import shutil
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
-from modules.Optim import Optim
-from modules.Embeddings import Embedding
+from modules.optim import Optim
+from modules.embeddings import Embedding
 
 '''
 import matplotlib.pyplot as plt
@@ -51,10 +51,6 @@ opt = parser.parse_args()
 
 device = opt.device
 logging.info("device: %s" % device)
-
-use_gpu = False
-if device == 'cuda':
-    use_gpu = True
 
 if opt.use_teacher_forcing:
     teacher_forcing_ratio = opt.teacher_forcing_ratio
@@ -182,10 +178,11 @@ def train(seq2seq_model,
 
     #  Compute loss
     #  if dialog_decoder_outputs.is_cuda:
-        #  dialog_decoder_outputs = dialog_decoder_outputs.cpu()
+    #  dialog_decoder_outputs = dialog_decoder_outputs.cpu()
     #      decoder_target_data = decoder_target_data.cpu()
 
-    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
+    dialog_decoder_outputs = dialog_decoder_outputs.view(
+        -1, dialog_decoder_outputs.shape[-1])
 
     print('train: dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
 
@@ -202,14 +199,13 @@ def train(seq2seq_model,
     # optimizer
     optimizer.step()
 
-    print('batch loss : {}'.format(loss))
-
     batch_loss = float(loss)
+    print('batch loss : {}'.format(batch_loss))
 
     return batch_loss / torch.sum(decoder_input_lengths)
 
 
-''' save log to fiel '''
+''' save log to file '''
 
 
 def save_logger(logger_str, log_file):
@@ -247,9 +243,6 @@ def evaluate(seq2seq_model=None,
 
         # train and get cur loss
 
-        #  if use_gpu:
-        #  encoder_input_lengths.cuda()
-        #  decoder_input_lengths.cuda()
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
             (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
@@ -334,23 +327,27 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
                                          dropout_ratio=opt.dialog_encoder_dropout_rate)
 
     dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
-                                              vocab_size=dialog_decoder_vocab.get_vocab_size(),
-                                              padding_idx=dialog_decoder_vocab.padid,
-                                              dropout_ratio=opt.dialog_decoder_dropout_rate)
+                                         vocab_size=dialog_decoder_vocab.get_vocab_size(),
+                                         padding_idx=dialog_decoder_vocab.padid,
+                                         dropout_ratio=opt.dialog_decoder_dropout_rate)
 
     ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
 
         # load pre-trained embedding
-        logger.info("Load pre-trained word embeddig: %s ." % opt.dialog_decoder_pretrained_embedding_path)
+        logger.info("Load pre-trained word embeddig: %s ." %
+                    opt.dialog_decoder_pretrained_embedding_path)
 
-        dialog_encoder_pretrained_embedding_weight = np.load(opt.dialog_decoder_pretrained_embedding_path)
+        dialog_encoder_pretrained_embedding_weight = np.load(
+            opt.dialog_decoder_pretrained_embedding_path)
         dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
 
         # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
-        dialog_encoder_embedding.set_pretrained_embedding(dialog_encoder_pretrained_embedding_weight, fixed=False)
+        dialog_encoder_embedding.set_pretrained_embedding(
+            dialog_encoder_pretrained_embedding_weight, fixed=False)
 
-        dialog_decoder_embedding.set_pretrained_embedding(dialog_decoder_pretrained_embedding_weight, fixed=False)
+        dialog_decoder_embedding.set_pretrained_embedding(
+            dialog_decoder_pretrained_embedding_weight, fixed=False)
 
     seq2seq_model = Seq2SeqModel(
         dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
@@ -383,8 +380,6 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_tied=opt.dialog_decoder_tied)
 
     seq2seq_model = seq2seq_model.to(device)
-#      if use_gpu:
-    #  seq2seq_model.set_cuda()
 
     print(seq2seq_model)
     return seq2seq_model
@@ -472,10 +467,9 @@ if __name__ == '__main__':
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     #  criterion = nn.NLLLoss()
-    criterion = nn.CrossEntropyLoss(
-        size_average=False,
+    criterion = nn.NLLLoss(
         ignore_index=vocab.padid,
-        reduce=True
+        reduction='elementwise_mean'
     )
 
     '''if load checkpoint'''
