@@ -7,8 +7,6 @@ import torch.nn as nn
 
 from modules.encoder import RNNEncoder
 from modules.decoder import StdRNNDecoder
-from modules.embeddings import Embedding
-
 
 class Seq2SeqModel(nn.Module):
     '''
@@ -168,6 +166,10 @@ class Seq2SeqModel(nn.Module):
         dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length, \
             batch_size, self.dialog_decoder_hidden_size), device=self.device) * \
                 self.dialog_decoder_pad_id
+
+        dialog_decoder_attns = torch.zeros((self.dialog_decoder_max_length, \
+            batch_size, self.dialog_decoder_max_length-2))
+
         if use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
             for di in range(self.dialog_decoder_max_length):
@@ -179,6 +181,7 @@ class Seq2SeqModel(nn.Module):
                     memory_lengths=dialog_encoder_inputs_length
                 )
                 dialog_decoder_outputs[di] = dialog_decoder_output
+                dialog_decoder_attns[di] = dialog_decoder_attn
         else:
             # Without teacher forcing: use its own predictions as the next
             # input
@@ -192,6 +195,7 @@ class Seq2SeqModel(nn.Module):
                     memory_lengths=dialog_encoder_inputs_length
                 )
                 dialog_decoder_outputs[di] = dialog_decoder_output
+                dialog_decoder_attns[di] = dialog_decoder_attn
                 dialog_decoder_input = torch.argmax(dialog_decoder_output).detach().view(1, -1)
 
                 if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
@@ -206,7 +210,6 @@ class Seq2SeqModel(nn.Module):
                 memory_lengths=dialog_encoder_inputs_length)
 
         print('dialog_decoder_attns std: ', dialog_decoder_attns['std'].shape)
-
         print('dialog_decoder_outputs: ', dialog_decoder_outputs.shape)
 
         # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
@@ -222,7 +225,6 @@ class Seq2SeqModel(nn.Module):
         # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, beam_size))
         # 1. first strategy: use top1. 2, use beam search strategy
         dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size))
-
 
         for batch_index in range(batch_size):
             dialog_decoder_output = dialog_decoder_outputs[:, batch_index, :]
