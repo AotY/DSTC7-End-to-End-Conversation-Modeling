@@ -190,21 +190,21 @@ class RNNEncoder(EncoderBase):
                 (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
             #  initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
             #  initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
-            #  initial_state1 = initial_state1.to(device)
-            #  initial_state2 = initial_state2.to(device)
             initial_state1.data.uniform_(-initial_state_scale,
                                          initial_state_scale)
             initial_state2.data.uniform_(-initial_state_scale,
                                          initial_state_scale)
+            initial_state1 = initial_state1.to(device)
+            initial_state2 = initial_state2.to(device)
             return (initial_state1, initial_state2)
 
         else:
             initial_state = torch.rand(
                 (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
             #  initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
-            #  initial_state = initial_state.to(device)
             initial_state.data.uniform_(-initial_state_scale,
                                         initial_state_scale)
+            initial_state = initial_state.to(device)
             return initial_state
 
 
