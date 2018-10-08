@@ -175,8 +175,7 @@ class DecoderBase(nn.Module):
             return RNNDecoderState(self.hidden_size,
                                    _fix_enc_hidden(encoder_final))
 
-    @propertalculate attention from current RNN state and all encoder outputs;
-            # apply to encoder outputs to get weighted average
+    # apply to encoder outputs to get weighted average
     def _input_size(self):
         """
         Private helper returning the number of expected features.
