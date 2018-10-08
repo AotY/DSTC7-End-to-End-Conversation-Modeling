@@ -42,9 +42,7 @@ opt = parser.parse_args()
 device = torch.device(opt.device)
 logging.info("device: %s" % device)
 
-if opt.use_teacher_forcing:
-    teacher_forcing_ratio = opt.teacher_forcing_ratio
-    logging.info("teacher_forcing_ratio: %f" % teacher_forcing_ratio)
+logging.info("teacher_forcing_ratio: %f" % teacher_forcing_ratio)
 
 torch.manual_seed(opt.seed)
 
@@ -77,19 +75,19 @@ def train_epochs(seq2seq_model=None,
             save_logger(logger_str, opt.log_file)
 
             # load data
-            num_samples, encoder_input_data, \
-                decoder_input_data, decoder_target_data, \
-                encoder_input_lengths, decoder_input_lengths, \
+            num_samples, dialog_encoder_inputs, \
+                dialog_decoder_inputs, dialog_decoder_targets, \
+                dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
                 conversation_texts, response_texts = seq2seq_dataset.load_data(
                     'train', opt.batch_size * opt.batch_per_load)
 
             # train and get cur loss
             loss = train(seq2seq_model,
-                         encoder_input_data,
-                         decoder_input_data,
-                         decoder_target_data,
-                         encoder_input_lengths,
-                         decoder_input_lengths,
+                         dialog_encoder_inputs,
+                         dialog_decoder_inputs,
+                         dialog_decoder_targets,
+                         dialog_encoder_inputs_length,
+                         dialog_decoder_inputs_length,
                          optimizer,
                          criterion,
                          num_samples,
@@ -135,11 +133,11 @@ def train_epochs(seq2seq_model=None,
 
 
 def train(seq2seq_model,
-          encoder_input_data,
-          decoder_input_data,
-          decoder_target_data,
-          encoder_input_lengths,
-          decoder_input_lengths,
+          dialog_encoder_inputs,
+          dialog_decoder_inputs,
+          dialog_decoder_targets,
+          dialog_encoder_inputs_length,
+          dialog_decoder_inputs_length,
           optimizer,
           criterion,
           num_samples,
@@ -150,13 +148,13 @@ def train(seq2seq_model,
     seq2seq_model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_final_stae, dialog_decoder_outputs,
-         dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
-        dialog_encoder_src=encoder_input_data,
-        dialog_encoder_src_lengths=encoder_input_lengths,
-        dialog_decoder_tgt=decoder_input_data,
-        dialog_decoder_tgt_lengths=decoder_input_lengths,
-        use_teacher_forcing=opt.use_teacher_forcing,
+    (dialog_decoder_final_state, dialog_decoder_outputs, dialog_decoder_attns) \ 
+    = seq2seq_model(
+        dialog_encoder_inputs=dialog_encoder_inputs,
+        dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+        dialog_decoder_inputs=dialog_decoder_inputs,
+        dialog_decoder_inputs_length=dialog_decoder_inputs_length,
+        dialog_decoder_targets=dialog_decoder_targets,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
         batch_size=num_samples)
 
@@ -164,14 +162,14 @@ def train(seq2seq_model,
 
     loss = 0
 
-    dialog_decoder_outputs = dialog_decoder_outputs.view(
-        -1, dialog_decoder_outputs.shape[-1])
+    # reshape to [max_seq * batch_size, decoder_vocab_size]
+    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
 
-    # , decoder_target_data.shape[1])
-    decoder_target_data = decoder_target_data.view(-1)
+    # , dialog_decoder_targets.shape[1])
+    dialog_decoder_targets = dialog_decoder_targets.view(-1)
 
     # compute loss
-    loss = criterion(dialog_decoder_outputs, decoder_target_data)
+    loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
 
     # backward
     #  loss.div(num_samples).backward()
@@ -180,7 +178,7 @@ def train(seq2seq_model,
     # optimizer
     optimizer.step()
 
-    #  return batch_loss / torch.sum(decoder_input_lengths)
+    #  return batch_loss / torch.sum(dialog_decoder_inputs_length)
     return loss.item()
 
 
@@ -222,36 +220,32 @@ def evaluate(seq2seq_model=None,
         iter_ += 1
 
         # load data
-        num_samples, \
-            encoder_input_data, \
-            decoder_input_data, \
-            decoder_target_data, \
-            encoder_input_lengths, decoder_input_lengths, \
-            conversation_texts, response_texts = seq2seq_dataset.load_data(
+        num_samples, dialog_encoder_inputs, \
+        dialog_decoder_inputs, dialog_decoder_targets, \
+        dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
+        conversation_texts, response_texts = seq2seq_dataset.load_data(
                 'test', opt.batch_size * opt.batch_per_load)
 
         # train and get cur loss
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-            (dialog_decoder_final_stae, dialog_decoder_outputs, \
-             dialog_decoder_attns, dialog_decoder_outputs)
+            (dialog_decoder_final_state, dialog_decoder_outputs, \
+             dialog_decoder_attns, dialog_decoder_outputs) \
             = seq2seq_model.forward(
-            dialog_encoder_src=encoder_input_data,  # LongTensor
-            dialog_encoder_src_lengths=encoder_input_lengths,
-            dialog_decoder_tgt=decoder_input_data,
-            dialog_decoder_tgt_lengths=decoder_input_lengths,
-            use_teacher_forcing=opt.use_teacher_forcing,
+            dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
+            dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+            dialog_decoder_inputs=dialog_decoder_inputs,
+            dialog_decoder_inputs_length=dialog_decoder_inputs_length,
+            dialog_decoder_targets=dialog_decoder_targets,
             teacher_forcing_ratio=opt.teacher_forcing_ratio,
             batch_size=num_samples)
 
         #  Compute loss
 
-        dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
-                                                             dialog_decoder_outputs.shape[1])
-        decoder_target_data = decoder_target_data.view(
-            -1, decoder_target_data.shape[1])
+        dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
+        dialog_decoder_targets = dialog_decoder_targets.view(-1)
 
-        loss = criterion(dialog_decoder_outputs, decoder_target_data)
+        loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
 
         loss_total += loss.item()
 
@@ -360,6 +354,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_bidirectional=opt.dialog_decoder_bidirectional,
         dialog_decoder_embedding=dialog_decoder_embedding,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
+        dialog_decoder_eos_id=dialog_decoder_vocab.eosid,
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
         dialog_decoder_tied=opt.dialog_decoder_tied,
         device=device)

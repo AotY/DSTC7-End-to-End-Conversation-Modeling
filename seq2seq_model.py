@@ -28,7 +28,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_clipvalue=0.5,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_embedding=None,
-                 dialog_encoder_pad_id=1,
+                 dialog_encoder_pad_id=0,
                  dialog_encoder_tied=True,
 
                  dialog_decoder_embedding_size=300,
@@ -42,7 +42,8 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_max_length=32,
                  dialog_decoder_bidirectional=True,
                  dialog_decoder_embedding=None,
-                 dialog_decoder_pad_id=1,
+                 dialog_decoder_pad_id=0,
+                 dialog_decoder_eos_id=3,
                  dialog_decoder_attention_type='dot',
                  dialog_decoder_tied=True,
                  device=None
@@ -76,6 +77,7 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_clipvalue = dialog_decoder_clipvalue
         self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
+        self.dialog_decoder_eos_id = dialog_decoder_eos_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
         self.dialog_decoder_tied = dialog_decoder_tied
 
@@ -122,7 +124,7 @@ class Seq2SeqModel(nn.Module):
             if self.dialog_decoder_embedding_size != self.dialog_decoder_hidden_size:
                 raise ValueError(
                     'When using the tied flag, hidden_size must be equal to embedding_size.')
-            print ('using tied..................')
+            print('using tied..................')
             self.dialog_decoder_linear.weight = dialog_decoder_embedding.get_embedding_weight()
 
         self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
@@ -132,40 +134,77 @@ class Seq2SeqModel(nn.Module):
     '''
 
     def forward(self,
-                dialog_encoder_src,  # LongTensor
-                dialog_encoder_src_lengths,
-                dialog_decoder_tgt,
-                dialog_decoder_tgt_lengths,
-                use_teacher_forcing=True,
+                dialog_encoder_inputs,  # LongTensor
+                dialog_encoder_inputs_length,
+                dialog_decoder_inputs,
+                dialog_decoder_inputs_length,
+                dialog_decoder_targets,
                 teacher_forcing_ratio=0.5,
                 batch_size=128
                 ):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
 
-        dialog_encoder_initial_state = self.dialog_encoder.init_hidden(
+        dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
 
         '''dialog_encoder forward'''
-        dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
-            src=dialog_encoder_src,
-            lengths=dialog_encoder_src_lengths,
-            encoder_state=dialog_encoder_initial_state,
+        dialog_encoder_state, dialog_encoder_memory_bank = self.dialog_encoder(
+            src=dialog_encoder_inputs,
+            lengths=dialog_encoder_inputs_length,
+            encoder_state=dialog_encoder_state,
         )
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
-        # decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_final_state)
-        decoder_state = self.dialog_decoder.init_decoder_state(
-            encoder_final=dialog_encoder_final_state)
+        # dialog_decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_state)
+        dialog_decoder_state = self.dialog_decoder.init_decoder_state(
+            encoder_final=dialog_encoder_state)
 
-        dialog_decoder_final_state, dialog_decoder_outputs, \
-        dialog_decoder_attns = self.dialog_decoder.forward(
-            tgt=dialog_decoder_tgt,
-            memory_bank=dialog_encoder_memory_bank,
-            state=decoder_state,
-            memory_lengths=dialog_encoder_src_lengths)
+        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
+        """
+        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length, \
+            batch_size, self.dialog_decoder_hidden_size), device=self.device) * \
+                self.dialog_decoder_pad_id
+        if use_teacher_forcing:
+            # Teacher forcing: Feed the target as the next input
+            for di in range(self.dialog_decoder_max_length):
+                dialog_decoder_state, dialog_decoder_output, \
+                dialog_decoder_attn = self.dialog_decoder(
+                    tgt=dialog_decoder_inputs[di].view(1, -1),
+                    memory_bank=dialog_encoder_memory_bank,
+                    state=dialog_decoder_state,
+                    memory_lengths=dialog_encoder_inputs_length
+                )
+                dialog_decoder_outputs[di] = dialog_decoder_output
+        else:
+            # Without teacher forcing: use its own predictions as the next
+            # input
+            dialog_decoder_input = dialog_decoder_inputs[0]
+            for di in range(self.dialog_decoder_max_length):
+                dialog_decoder_state, dialog_decoder_output, \
+                dialog_decoder_attn = self.dialog_decoder(
+                    tgt=dialog_decoder_input.view(1, -1),
+                    memory_bank=dialog_encoder_memory_bank,
+                    state=dialog_decoder_state,
+                    memory_lengths=dialog_encoder_inputs_length
+                )
+                dialog_decoder_outputs[di] = dialog_decoder_output
+                dialog_decoder_input = torch.argmax(dialog_decoder_output).detach().view(1, -1)
+
+                if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
+                    break
+
+        """
+        dialog_decoder_state, dialog_decoder_outputs, \
+            dialog_decoder_attns = self.dialog_decoder(
+                tgt=dialog_decoder_inputs,
+                memory_bank=dialog_encoder_memory_bank,
+                state=dialog_decoder_state,
+                memory_lengths=dialog_encoder_inputs_length)
+
+        print('dialog_decoder_attns: ', dialog_decoder_attns.shape)
         # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
 
         dialog_decoder_outputs = self.dialog_decoder_linear(
@@ -204,8 +243,8 @@ class Seq2SeqModel(nn.Module):
             dialog_decoder_outputs[:, batch_index] = topi.squeeze().detach()
         '''
 
-        return ((dialog_encoder_final_state, dialog_encoder_memory_bank),
-                (dialog_decoder_final_state, dialog_decoder_outputs dialog_decoder_attns))
+        return ((dialog_encoder_state, dialog_encoder_memory_bank),
+                (dialog_decoder_state, dialog_decoder_outputs, dialog_decoder_attns))
 
     # beam search  tensor.numpy()
     def beam_search_decoder(self, memory_bank, beam_size):
