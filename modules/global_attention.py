@@ -168,21 +168,14 @@ class GlobalAttention(nn.Module):
         # compute attention scores, as in Luong et al.
         align = self.score(inputs, memory_bank) # [128, 50, 48]
 
-        #  print('align: {}'.format(align))
-
-        #print('align shape : {}'.format(align.shape))
-
         if memory_lengths is not None:
             # obtain mask for memory_lenghts
             mask = sequence_mask(memory_lengths)
-            #print('mask shape: {}'.format(mask.shape))
-            #print('mask: {}'.format(mask))
 
             if memory_bank.is_cuda:
                 mask = mask.cuda()
 
             mask = mask.unsqueeze(1)  # Make it broadcastable.
-            #print('unsqueeze mask shape: {}'.format(mask.shape))
 
             # Fills elements of self tensor with value where mask is one. masked_fill_(mask, value)
             align.data.masked_fill_(1 - mask, -float('inf'))
@@ -226,9 +219,6 @@ class GlobalAttention(nn.Module):
             aeq(targetL, targetL_)
             aeq(batch, batch_)
             aeq(sourceL, sourceL_)
-
-        #print ('attn_h shape : {}'.format(attn_h.shape))
-        #print ('align_vectors shape : {}'.format(align_vectors.shape))
 
         return attn_h, align_vectors
 

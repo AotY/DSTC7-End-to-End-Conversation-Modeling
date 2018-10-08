@@ -159,18 +159,17 @@ class Seq2SeqModel(nn.Module):
         decoder_state = self.dialog_decoder.init_decoder_state(
             encoder_final=dialog_encoder_final_state)
 
-        dialog_decoder_memory_bank, dialog_decoder_final_state, dialog_decoder_attns = self.dialog_decoder.forward(
+        dialog_decoder_final_state, dialog_decoder_outputs, \
+        dialog_decoder_attns = self.dialog_decoder.forward(
             tgt=dialog_decoder_tgt,
             memory_bank=dialog_encoder_memory_bank,
             state=decoder_state,
             memory_lengths=dialog_encoder_src_lengths)
 
-        # beam search  dialog_decoder_memory_bank -> [tgt_len x batch x hidden]
-        # batch_size = dialog_decoder_memory_bank.shape[1]
-        dialog_decoder_memory_bank = dialog_decoder_memory_bank[0]
+        # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
 
         dialog_decoder_outputs = self.dialog_decoder_linear(
-            dialog_decoder_memory_bank)
+            dialog_decoder_outputs)
 
         # log softmax
         dialog_decoder_outputs = self.dialog_decoder_softmax(
@@ -184,9 +183,9 @@ class Seq2SeqModel(nn.Module):
 
 
         for batch_index in range(batch_size):
-            dialog_decoder_output = dialog_decoder_memory_bank[:, batch_index, :]
+            dialog_decoder_output = dialog_decoder_outputs[:, batch_index, :]
             print("dialog_decoder_output shape: {}".format(dialog_decoder_output.shape))
-            decoder_linear_output = self.dialog_decoder_linear(dialog_decoder_memory_bank[:, batch_index, :])
+            decoder_linear_output = self.dialog_decoder_linear(dialog_decoder_outputs[:, batch_index, :])
             print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
             decoder_linear_output = self.dialog_decoder_softmax(decoder_linear_output)
             print("decoder_linear_output shape: {}".format(decoder_linear_output.shape))
@@ -206,8 +205,7 @@ class Seq2SeqModel(nn.Module):
         '''
 
         return ((dialog_encoder_final_state, dialog_encoder_memory_bank),
-                (dialog_decoder_final_state, dialog_decoder_memory_bank,
-                 dialog_decoder_attns, dialog_decoder_outputs))
+                (dialog_decoder_final_state, dialog_decoder_outputs dialog_decoder_attns))
 
     # beam search  tensor.numpy()
     def beam_search_decoder(self, memory_bank, beam_size):
