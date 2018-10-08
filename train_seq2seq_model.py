@@ -39,7 +39,7 @@ opt = parser.parse_args()
 
 # logger file
 opt.log_file = opt.log_file.format(time.strftime('%Y-%m-%d_%H:%M'))
-logger.info('log_file: ', opt.log_file)
+logger.info('log_file: {}'.format(opt.log_file))
 
 device = torch.device(opt.device)
 logging.info("device: %s" % device)
@@ -74,7 +74,7 @@ def train_epochs(seq2seq_model=None,
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 epoch + 1, opt.epochs, 100 * load / max_load)
             logger.info(logger_str)
-            #  save_logger(logger_str, opt.log_file)
+            #  save_logger(logger_str)
 
             # load data
             num_samples, dialog_encoder_inputs, \
@@ -104,7 +104,7 @@ def train_epochs(seq2seq_model=None,
                                                                                              load, load / max_load * 100,
                                                                                              log_loss_avg)
                 logger.info(logger_str)
-                save_logger(logger_str, opt.log_file)
+                save_logger(logger_str)
                 log_loss_total = 0
 
         # evaluate
@@ -115,7 +115,7 @@ def train_epochs(seq2seq_model=None,
 
         logger_str = '\nevaluate ---------------------------------> %.4f' % evaluate_loss
         logger.info(logger_str)
-        save_logger(logger_str, opt.log_file)
+        save_logger(logger_str)
 
         # save model of each epoch
         save_state = {
@@ -206,8 +206,8 @@ def maskNLLLoss(inputs, targets, mask):
 ''' save log to file '''
 
 
-def save_logger(logger_str, log_file):
-    with open(log_file, 'a', encoding='utf-8') as f:
+def save_logger(logger_str):
+    with open(opt.log_file, 'a', encoding='utf-8') as f:
         f.write(logger_str)
 
 

@@ -217,13 +217,14 @@ class DecoderBase(nn.Module):
 
         # Update the state with the result.
         final_output = decoder_outputs[-1]
+
         state.update_state(decoder_final, final_output.unsqueeze(0))
 
         # Concatenates sequence of tensors along a new dimension.
-        decoder_outputs = torch.stack((decoder_outputs, ))
+        #  decoder_outputs = torch.stack((decoder_outputs, ))
 
-        for k in attns:
-            attns[k] = torch.stack((attns[k], ))
+        #  for k in attns:
+            #  attns[k] = torch.stack((attns[k], ))
 
         return state, decoder_outputs, attns
 
