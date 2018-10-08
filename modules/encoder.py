@@ -154,6 +154,9 @@ class RNNEncoder(EncoderBase):
             packed_embedded = nn.utils.rnn.pack_padded_sequence(
                 packed_embedded, lengths)
 
+        print(packed_embedded.device)
+        print(encoder_state[0].device)
+        print(encoder_state[1].device)
         memory_bank, encoder_final = self.rnn.forward(
             packed_embedded, encoder_state)
 

@@ -84,7 +84,6 @@ class Seq2SeqModel(nn.Module):
         ''''Ps: dialog_encoder, facts_encoder, and dialog_decoder may have different
             word embedding.
         '''
-        # self.dialog_encoder_embedding = nn.Embedding(self.dialog_encoder_vocab_size + 1, self.dialog_encoder_hidden_size,)
 
         # Dialog Encoder
         self.dialog_encoder = RNNEncoder(
@@ -143,7 +142,6 @@ class Seq2SeqModel(nn.Module):
                 ):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
-        #print("dialog_encoder_src shape : {}".format(dialog_encoder_src.shape))
 
         dialog_encoder_initial_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
