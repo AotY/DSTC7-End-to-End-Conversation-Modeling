@@ -166,11 +166,8 @@ def train(seq2seq_model,
     dialog_decoder_outputs = dialog_decoder_outputs.view(
         -1, dialog_decoder_outputs.shape[-1])
 
-    print('train: dialog_decoder_outputs: {}'.format(dialog_decoder_outputs))
-
     # , decoder_target_data.shape[1])
     decoder_target_data = decoder_target_data.view(-1)
-    print('train: decoder_target_data: {}'.format(decoder_target_data))
 
     # compute loss
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
@@ -183,7 +180,7 @@ def train(seq2seq_model,
     optimizer.step()
 
     #  return batch_loss / torch.sum(decoder_input_lengths)
-    return loss.ite()
+    return loss.item()
 
 
 ''' save log to file '''
@@ -225,7 +222,8 @@ def evaluate(seq2seq_model=None,
         # train and get cur loss
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-            (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
+            (dialog_decoder_final_stae, dialog_decoder_memory_bank, \ 
+             dialog_decoder_attns, dialog_decoder_outputs) \
             = seq2seq_model.forward(
             dialog_encoder_src=encoder_input_data,  # LongTensor
             dialog_encoder_src_lengths=encoder_input_lengths,
@@ -236,9 +234,6 @@ def evaluate(seq2seq_model=None,
             batch_size=num_samples)
 
         #  Compute loss
-        if dialog_decoder_outputs.is_cuda:
-            dialog_decoder_outputs = dialog_decoder_outputs.cpu()
-            decoder_target_data = decoder_target_data.cpu()
 
         dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1],
                                                              dialog_decoder_outputs.shape[1])
@@ -247,9 +242,7 @@ def evaluate(seq2seq_model=None,
 
         loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
-        print('evaluate loss: {}'.format(loss))
-
-        loss_total += float(loss) / num_samples
+        loss_total += loss.item()
 
     return loss_total / iter_
 
