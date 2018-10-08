@@ -65,16 +65,16 @@ class MeanEncoder(EncoderBase):
         """
         self._check_args(src, lengths, encoder_state)
 
-        emb = self.embedding(src)
-        s_len, batch, emb_dim = emb.size()
+        embedded = self.embedding(src)
+        s_len, batch, emb_dim = embedded.siz()
         # calculating the embedding mean according to lengths
         if lengths is not None:
             lengths_exp = lengths.expand(emb_dim, batch).transpose(0, 1)
-            mean_temp = emb.sum(0) / lengths_exp
+            mean_temp = embedded.sum(0) / lengths_exp
             mean = mean_temp.expand(self.num_layers, batch, emb_dim)
         else:
-            mean = emb.mean(0).expand(self.num_layers, batch, emb_dim)
-        memory_bank = emb
+            mean = embedded.mean(0).expand(self.num_layers, batch, emb_dim)
+        memory_bank = embedded
         encoder_final = (mean, mean)
         return encoder_final, memory_bank
 
@@ -144,28 +144,18 @@ class RNNEncoder(EncoderBase):
         if src.is_cuda:
             sorted_indices = sorted_indices.cuda()
 
-        #print('src: {}'.format(src))
-
-        #print('sorted_indices: {}'.format(sorted_indices))
         new_src = torch.index_select(src, 1, sorted_indices)
-
         src, lengths = (new_src, sorted_lengths.data)
-        #print('new src: {}'.format(src))
-
-        #print("new_src shape: {} ".format(src.shape))
-
         embedded = self.embedding(src)
-
-        #  print("embedded shape: {} ".format(embedded.shape))
-
         packed_embedded = embedded
-
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
             lengths = lengths.view(-1).tolist()
-            packed_embedded = nn.utils.rnn.pack_padded_sequence(packed_embedded, lengths)
+            packed_embedded = nn.utils.rnn.pack_padded_sequence(
+                packed_embedded, lengths)
 
-        memory_bank, encoder_final = self.rnn.forward(packed_embedded, encoder_state)
+        memory_bank, encoder_final = self.rnn.forward(
+            packed_embedded, encoder_state)
 
         # undo the packing operation
         if lengths is not None:
@@ -191,23 +181,28 @@ class RNNEncoder(EncoderBase):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         if self.rnn_type == 'LSTM':
-            initial_state1 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
-            initial_state2 = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+            initial_state1 = torch.rand(
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
+            initial_state2 = torch.rand(
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
             #  initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
             #  initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
             #  initial_state1 = initial_state1.to(device)
             #  initial_state2 = initial_state2.to(device)
-            initial_state1.data.uniform_(-initial_state_scale, initial_state_scale)
-            initial_state2.data.uniform_(-initial_state_scale, initial_state_scale)
+            initial_state1.data.uniform_(-initial_state_scale,
+                                         initial_state_scale)
+            initial_state2.data.uniform_(-initial_state_scale,
+                                         initial_state_scale)
             return (initial_state1, initial_state2)
 
         else:
-            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size))
+            initial_state = torch.rand(
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
             #  initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
             #  initial_state = initial_state.to(device)
-            initial_state.data.uniform_(-initial_state_scale, initial_state_scale)
+            initial_state.data.uniform_(-initial_state_scale,
+                                        initial_state_scale)
             return initial_state
-
 
 
 #
@@ -255,13 +250,15 @@ class CNNEncoder(EncoderBase):
                  ,
             output, batch_size * (len(filter_sizes) X filter_num)
         '''
-        # s_len, batch, emb_dim = emb.size()
-        embeded = self.embedding(src.transpose(0, 1))  # batch_size * seq_len * hidden
-        embeded = embeded.unsqueeze(1)  # batch_size * 1 * seq_len * hidden
-        s_len, _, batch, emb_dim = embeded.size()
-        conv_feats = [F.relu(conv(embeded)).squeeze(3) for conv in self.convs]
+        # s_len, batch, emb_dim = embedded.size()
+        # batch_size * seq_len * hidden
+        embedded = self.embedding(src.transpose(0, 1))
+        embedded = embedded.unsqueeze(1)  # batch_size * 1 * seq_len * hidden
+        s_len, _, batch, emb_dim = embedded.size()
+        conv_feats = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
         # [batch_size * filter_num * seq_len] * len(filter_sizes)
-        pooled_feats = [F.max_pool1d(feat, feat.size(2)).squeeze(2) for feat in conv_feats]  # [(N,Co), ...]*len(Ks)
+        pooled_feats = [F.max_pool1d(feat, feat.size(2)).squeeze(
+            2) for feat in conv_feats]  # [(N,Co), ...]*len(Ks)
         cnn_feat = torch.cat(pooled_feats, 1)  # (batch_size, feat_num)
 
         if self.dropout_p:
@@ -269,7 +266,7 @@ class CNNEncoder(EncoderBase):
         # return cnn_feat, None, cnn_feat
         outputs = self.tanh(self.output_layer(cnn_feat))
 
-        return (outputs, embeded.squeeze(1))
+        return (outputs, embedded.squeeze(1))
 
 
 if __name__ == '__main__':

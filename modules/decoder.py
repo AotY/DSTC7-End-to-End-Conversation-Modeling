@@ -107,9 +107,9 @@ class DecoderBase(nn.Module):
           H[Decoder State]
           I[Outputs]
           F[Memory_Bank]
-          A--emb-->C
-          A--emb-->D
-          A--emb-->E
+          A--embedded-->C
+          A--embedded-->D
+          A--embedded-->E
           H-->C
           C-- attn --- F
           D-- attn --- F
@@ -140,7 +140,7 @@ class DecoderBase(nn.Module):
         assert embedding is not None
 
         # Basic attributes.
-        self.decoder_type = 'rnn'
+        self.decodes_type = 'rnn'
         self.bidirectional_encoder = bidirectional_encoder
         self.num_layers = num_layers
         self.hidden_size = hidden_size
@@ -216,12 +216,8 @@ class DecoderBase(nn.Module):
             tgt, memory_bank, state, memory_lengths=memory_lengths)
 
         # Update the state with the result.
-        final_output = decoder_outputs[-1] #
+        final_output = decoder_outputs[-1]
         state.update_state(decoder_final, final_output.unsqueeze(0))
-
-        # print('decoder_final shape: {}'.format(decoder_final.shape))
-        # print('decoder_outputs shape: {}'.format(decoder_outputs.shape))
-        # print('attns shape: {}'.format(attns.shape))
 
         # Concatenates sequence of tensors along a new dimension.
         decoder_outputs = torch.stack((decoder_outputs, ))
@@ -283,7 +279,6 @@ class StdRNNDecoder(DecoderBase):
             # LSTM
             rnn_output, decoder_final = self.rnn(embedded, state.hidden)
 
-        
         # Check
         tgt_len, tgt_batch = tgt.size()
         output_len, output_batch, _ = rnn_output.size()
@@ -291,22 +286,15 @@ class StdRNNDecoder(DecoderBase):
         aeq(tgt_len, output_len)
         aeq(tgt_batch, output_batch)
 
-        # END
-        #print('rnn_output shape: {}'.format(
-        #    rnn_output.shape))  # [50, 128, 512]
-
-        #  print('memory_lengths: {}'.format(memory_lengths))
-
         # Calculate the attention.
         if self.attn_type is not None:
             # attention forward
             decoder_outputs, p_attn = self.attn.forward(
                 rnn_output.transpose(0, 1).contiguous(),
-                memory_bank.transpose(0, 1),
+                memory_bank.transpose(0, 1))
             attns["std"] = p_attn
         else:
             decoder_outputs = rnn_output
-
         # dropout
         decoder_outputs = self.dropout(decoder_outputs)
 
@@ -353,17 +341,17 @@ class InputFeedRNNDecoder(DecoderBase):
         decoder_outputs = []
         attns = {"std": []}
 
-        emb = self.embedding(tgt)
-        assert emb.dim() == 3  # tgt_len x batch x embedding_dim
+        embedded = self.embedding(tgt)
+        assert embedded.dim() == 3  # tgt_len x batch x embedding_dim
 
         hidden = state.hidden
         # Input feed concatenates hidden state with
         # input at every time step.
         memory_bank_t = memory_bank.transpose(0, 1)
 
-        for i, emb_t in enumerate(emb.split(1)):
-            emb_t = emb_t.squeeze(0)
-            decoder_input = torch.cat([emb_t, input_feed], 1)
+        for i, embedded_t in enumerate(embedded.split(1)):
+            embedded_t = embedded_t.squeeze(0)
+            decoder_input = torch.cat([embedded_t, input_feed], 1)
             decoder_output, hidden, p_attn, input_feed = self._run_forward_one(
                 decoder_input, memory_bank_t, hidden, memory_lengths=memory_lengths)
             # input_feed = decoder_output
