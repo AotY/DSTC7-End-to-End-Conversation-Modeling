@@ -148,8 +148,8 @@ def train(seq2seq_model,
     seq2seq_model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-    (dialog_decoder_final_state, dialog_decoder_outputs, dialog_decoder_attns) \ 
-    = seq2seq_model(
+        (dialog_decoder_final_state, dialog_decoder_outputs, dialog_decoder_attns) \
+        = seq2seq_model(
         dialog_encoder_inputs=dialog_encoder_inputs,
         dialog_encoder_inputs_length=dialog_encoder_inputs_length,
         dialog_decoder_inputs=dialog_decoder_inputs,
@@ -163,7 +163,8 @@ def train(seq2seq_model,
     loss = 0
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
-    dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
+    dialog_decoder_outputs = dialog_decoder_outputs.view(
+        -1, dialog_decoder_outputs.shape[-1])
 
     # , dialog_decoder_targets.shape[1])
     dialog_decoder_targets = dialog_decoder_targets.view(-1)
@@ -185,6 +186,8 @@ def train(seq2seq_model,
 """
 masked loss
 """
+
+
 def maskNLLLoss(inputs, targets, mask):
     num_total = mask.sum()
     crossEntorpy = -torch.log(torch.gather(inputs, 1, targets.view(-1, 1)))
@@ -221,17 +224,16 @@ def evaluate(seq2seq_model=None,
 
         # load data
         num_samples, dialog_encoder_inputs, \
-        dialog_decoder_inputs, dialog_decoder_targets, \
-        dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
-        conversation_texts, response_texts = seq2seq_dataset.load_data(
+            dialog_decoder_inputs, dialog_decoder_targets, \
+            dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
+            conversation_texts, response_texts = seq2seq_dataset.load_data(
                 'test', opt.batch_size * opt.batch_per_load)
 
         # train and get cur loss
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
             (dialog_decoder_final_state, dialog_decoder_outputs, \
-             dialog_decoder_attns, dialog_decoder_outputs) \
-            = seq2seq_model.forward(
+             dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
             dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
             dialog_encoder_inputs_length=dialog_encoder_inputs_length,
             dialog_decoder_inputs=dialog_decoder_inputs,
@@ -242,7 +244,8 @@ def evaluate(seq2seq_model=None,
 
         #  Compute loss
 
-        dialog_decoder_outputs = dialog_decoder_outputs.view(-1, dialog_decoder_outputs.shape[-1])
+        dialog_decoder_outputs = dialog_decoder_outputs.view(
+            -1, dialog_decoder_outputs.shape[-1])
         dialog_decoder_targets = dialog_decoder_targets.view(-1)
 
         loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
