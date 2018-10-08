@@ -206,8 +206,9 @@ class Seq2SeqModel(nn.Module):
                 memory_lengths=dialog_encoder_inputs_length)
 
         print('dialog_decoder_attns: ', dialog_decoder_attns.shape)
-        # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
 
+        print('dialog_decoder_outputs: ', dialog_decoder_outputs.shape)
+        # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
         dialog_decoder_outputs = self.dialog_decoder_linear(
             dialog_decoder_outputs)
 
