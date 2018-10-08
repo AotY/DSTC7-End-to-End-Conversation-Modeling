@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export CUDA_VISIBLE_DEVICES=5,6,7
 
 python train_seq2seq_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
@@ -33,7 +34,7 @@ python train_seq2seq_model.py \
     --use_teacher_forcing \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
-    --device cuda \
+    --device cuda:0 \
     --log_interval 50 \
     --log_file ./logs/train_seq2seq_model.log \
     --model_save_path ./models \

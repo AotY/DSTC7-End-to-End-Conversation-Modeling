@@ -182,9 +182,9 @@ class RNNEncoder(EncoderBase):
 
         if self.rnn_type == 'LSTM':
             initial_state1 = torch.rand(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
             initial_state2 = torch.rand(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
             #  initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
             #  initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
             #  initial_state1 = initial_state1.to(device)
@@ -197,7 +197,7 @@ class RNNEncoder(EncoderBase):
 
         else:
             initial_state = torch.rand(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
             #  initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
             #  initial_state = initial_state.to(device)
             initial_state.data.uniform_(-initial_state_scale,
