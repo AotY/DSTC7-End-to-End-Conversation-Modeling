@@ -175,14 +175,14 @@ def train_seq2seq_opt(parser):
                        type=float,
                        default=0.5,
                        help='''
-                           “Teacher forcing” is the concept of using the real target outputs as each next input, instead of using the decoder’s guess as the next input. 
+                           “Teacher forcing” is the concept of using the real target outputs as each next input, instead of using the decoder’s guess as the next input.
                            Using teacher forcing causes it to converge faster but when the trained network is exploited, it may exhibit instability.
                            Because of the freedom PyTorch’s autograd gives us, we can randomly choose to use teacher forcing or not with a simple if statement.
-                           see https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html#training . 
+                           see https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html#training .
                            ''')
 
-    group.add_argument('--use_teacher_forcing', action='store_true',
-                       help='is use teacher forcing.')
+    #  group.add_argument('--use_teacher_forcing', action='store_true',
+                       #  help='is use teacher forcing.')
 
     group.add_argument('--seed',
                        type=int,

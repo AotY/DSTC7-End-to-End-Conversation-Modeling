@@ -42,7 +42,7 @@ opt = parser.parse_args()
 device = torch.device(opt.device)
 logging.info("device: %s" % device)
 
-logging.info("teacher_forcing_ratio: %f" % teacher_forcing_ratio)
+logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 
 torch.manual_seed(opt.seed)
 

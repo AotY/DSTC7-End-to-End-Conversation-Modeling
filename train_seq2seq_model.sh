@@ -31,7 +31,6 @@ python train_seq2seq_model.py \
     --lr 0.001 \
     --epochs 5 \
     --batch_size 128 \
-    --use_teacher_forcing \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
