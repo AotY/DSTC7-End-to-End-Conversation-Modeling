@@ -225,7 +225,7 @@ class DecoderBase(nn.Module):
         for k in attns:
             attns[k] = torch.stack((attns[k], ))
 
-        return decoder_outputs, state, attns
+        return state, decoder_outputs, attns
 
 
 class StdRNNDecoder(DecoderBase):
