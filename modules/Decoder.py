@@ -166,7 +166,7 @@ class DecoderBase(nn.Module):
             # The encoder hidden is  (layers*directions) x batch x dim.
             # We need to convert it to layers x batch x (directions*dim).
             if self.bidirectional_encoder:
-                h = torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], 2)
+                h = torch.cat([h[0: h.size(0): 2], h[1: h.size(0): 2]], 2)
             return h
 
         if isinstance(encoder_final, tuple):  # LSTM
@@ -175,8 +175,8 @@ class DecoderBase(nn.Module):
             return RNNDecoderState(self.hidden_size,
                                    _fix_enc_hidden(encoder_final))
 
-    @propertalculate attention from current RNN state and all encoder outputs;
-            # apply to encoder outputs to get weighted average
+    #  @propertalculate attention from current RNN state and all encoder outputs;
+    # apply to encoder outputs to get weighted average
     def _input_size(self):
         """
         Private helper returning the number of expected features.
@@ -284,7 +284,7 @@ class StdRNNDecoder(DecoderBase):
             # LSTM
             rnn_output, decoder_final = self.rnn(embedded, state.hidden)
 
-        
+
         # Check
         tgt_len, tgt_batch = tgt.size()
         output_len, output_batch, _ = rnn_output.size()
