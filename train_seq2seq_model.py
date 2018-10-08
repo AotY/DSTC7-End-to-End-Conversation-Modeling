@@ -39,12 +39,13 @@ data_set_opt(parser)
 train_seq2seq_opt(parser)
 opt = parser.parse_args()
 
-device = opt.device
+device = torch.device(opt.device)
 logging.info("device: %s" % device)
 
 if opt.use_teacher_forcing:
     teacher_forcing_ratio = opt.teacher_forcing_ratio
     logging.info("teacher_forcing_ratio: %f" % teacher_forcing_ratio)
+
 torch.manual_seed(opt.seed)
 
 ''''''

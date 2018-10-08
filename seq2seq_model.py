@@ -45,7 +45,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_pad_id=1,
                  dialog_decoder_attention_type='dot',
                  dialog_decoder_tied=True,
-                 device='cuda'
+                 device=None
                  ):
         # super init
         super(Seq2SeqModel, self).__init__()
