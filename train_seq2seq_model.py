@@ -7,7 +7,6 @@ import os
 import sys
 import time
 import math
-import random
 import logging
 import argparse
 
@@ -16,7 +15,6 @@ import shutil
 
 import torch
 import torch.nn as nn
-from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 from modules.optim import Optim
 from modules.embeddings import Embedding
 
@@ -38,6 +36,10 @@ parser = argparse.ArgumentParser(description=program,
 data_set_opt(parser)
 train_seq2seq_opt(parser)
 opt = parser.parse_args()
+
+# logger file
+opt.log_file = opt.log_file.format(time.strftime('%Y-%m-%d_%H:%M'))
+logger.info('log_file: ', opt.log_file)
 
 device = torch.device(opt.device)
 logging.info("device: %s" % device)
@@ -72,7 +74,7 @@ def train_epochs(seq2seq_model=None,
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 epoch + 1, opt.epochs, 100 * load / max_load)
             logger.info(logger_str)
-            save_logger(logger_str, opt.log_file)
+            #  save_logger(logger_str, opt.log_file)
 
             # load data
             num_samples, dialog_encoder_inputs, \
@@ -117,6 +119,7 @@ def train_epochs(seq2seq_model=None,
 
         # save model of each epoch
         save_state = {
+            'loss': evaluate_loss,
             'epoch': epoch,
             'state_dict': seq2seq_model.state_dict(),
             'optimizer': optimizer.optimizer.state_dict()
@@ -176,6 +179,10 @@ def train(seq2seq_model,
     #  loss.div(num_samples).backward()
     loss.backward()
 
+    # Clip gradients: gradients are modified in place
+    #  _ = torch.nn.utils.clip_grad_norm_(seq2seq_model.parameters(),
+    #  opt.dialog_decoder_clipnorm)
+
     # optimizer
     optimizer.step()
 
@@ -191,6 +198,7 @@ masked loss
 def maskNLLLoss(inputs, targets, mask):
     num_total = mask.sum()
     crossEntorpy = -torch.log(torch.gather(inputs, 1, targets.view(-1, 1)))
+    loss = crossEntorpy.masked_select(mask).mean()
     loss = loss.to(device)
     return loss, num_total.item()
 
@@ -233,7 +241,7 @@ def evaluate(seq2seq_model=None,
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
             (dialog_decoder_final_state, dialog_decoder_outputs, \
-             dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
+             dialog_decoder_attns) = seq2seq_model.forward(
             dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
             dialog_encoder_inputs_length=dialog_encoder_inputs_length,
             dialog_decoder_inputs=dialog_decoder_inputs,
