@@ -101,7 +101,8 @@ def train_epochs(seq2seq_model=None,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 logger_str = '\ntrain -------------------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
-                                                                                             load, load / max_load * 100, log_loss_avg)
+                                                                                             load, load / max_load * 100,
+                                                                                             log_loss_avg)
                 logger.info(logger_str)
                 save_logger(logger_str, opt.log_file)
                 log_loss_total = 0
@@ -149,7 +150,7 @@ def train(seq2seq_model,
     seq2seq_model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_final_stae, dialog_decoder_memory_bank,
+        (dialog_decoder_final_stae, dialog_decoder_outputs,
          dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
         dialog_encoder_src=encoder_input_data,
         dialog_encoder_src_lengths=encoder_input_lengths,
@@ -181,6 +182,16 @@ def train(seq2seq_model,
 
     #  return batch_loss / torch.sum(decoder_input_lengths)
     return loss.item()
+
+
+"""
+masked loss
+"""
+def maskNLLLoss(inputs, targets, mask):
+    num_total = mask.sum()
+    crossEntorpy = -torch.log(torch.gather(inputs, 1, targets.view(-1, 1)))
+    loss = loss.to(device)
+    return loss, num_total.item()
 
 
 ''' save log to file '''
@@ -222,8 +233,8 @@ def evaluate(seq2seq_model=None,
         # train and get cur loss
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-            (dialog_decoder_final_stae, dialog_decoder_memory_bank, \ 
-             dialog_decoder_attns, dialog_decoder_outputs) \
+            (dialog_decoder_final_stae, dialog_decoder_outputs, \
+             dialog_decoder_attns, dialog_decoder_outputs)
             = seq2seq_model.forward(
             dialog_encoder_src=encoder_input_data,  # LongTensor
             dialog_encoder_src_lengths=encoder_input_lengths,
