@@ -167,11 +167,7 @@ class Seq2SeqModel(nn.Module):
 
         # beam search  dialog_decoder_memory_bank -> [tgt_len x batch x hidden]
         # batch_size = dialog_decoder_memory_bank.shape[1]
-        print("dialog_decoder_memory_bank shape: {}".format(
-            dialog_decoder_memory_bank.shape))
         dialog_decoder_memory_bank = dialog_decoder_memory_bank[0]
-        print("dialog_decoder_memory_bank shape: {}".format(
-            dialog_decoder_memory_bank.shape))
 
         dialog_decoder_outputs = self.dialog_decoder_linear(
             dialog_decoder_memory_bank)
@@ -179,8 +175,6 @@ class Seq2SeqModel(nn.Module):
         # log softmax
         dialog_decoder_outputs = self.dialog_decoder_softmax(
             dialog_decoder_outputs)
-        print("dialog_decoder_outputs shape: {}".format(
-            dialog_decoder_outputs.shape))
 
         '''
         beam_size = 100

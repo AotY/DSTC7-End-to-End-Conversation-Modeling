@@ -26,7 +26,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_clipvalue 0.5 \
     --dialog_decoder_bidirectional \
     --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
-    --dialog_decoder_attention_type dot \
+    --dialog_decoder_attention_type general \
     --dialog_decoder_tied \
     --lr 0.001 \
     --epochs 5 \
