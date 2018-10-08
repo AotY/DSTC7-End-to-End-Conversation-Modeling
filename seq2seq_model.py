@@ -127,7 +127,6 @@ class Seq2SeqModel(nn.Module):
             self.dialog_decoder_linear.weight = dialog_decoder_embedding.get_embedding_weight()
 
         self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
-        #  self.dialog_decoder_softmax = nn.Softmax(dim=1)
 
     '''
     Seq2SeqModel forward
@@ -148,21 +147,13 @@ class Seq2SeqModel(nn.Module):
 
         dialog_encoder_initial_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
-        #print("dialog_encoder_initial_state[0] shape: {} ".format(dialog_encoder_initial_state[0].shape))
-
-        #print("dialog_encoder_src size : {}".format(dialog_encoder_src.shape))
-        #print("dialog_encoder_src_lengths size : {}".format(dialog_encoder_src_lengths.shape))
 
         '''dialog_encoder forward'''
         dialog_encoder_final_state, dialog_encoder_memory_bank = self.dialog_encoder.forward(
             src=dialog_encoder_src,
             lengths=dialog_encoder_src_lengths,
-            # the source memory_bank lengths.
             encoder_state=dialog_encoder_initial_state,
         )
-
-        #print('dialog_encoder_final_state[0] shape: {}'.format(dialog_encoder_final_state[0].shape))
-        #print('dialog_encoder_memory_bank shape: {}'.format(dialog_encoder_memory_bank.shape))
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
@@ -170,25 +161,14 @@ class Seq2SeqModel(nn.Module):
         decoder_state = self.dialog_decoder.init_decoder_state(
             encoder_final=dialog_encoder_final_state)
 
-        #print ("tgt shape : {}".format(dialog_decoder_tgt.shape))
-        #print("tgt: {}".format(dialog_decoder_tgt))
-
-        #print('dialog_encoder_src_lengths: {}'.format(dialog_encoder_src_lengths))
-        #print('dialog_decoder_tgt_lengths: {}'.format(dialog_decoder_tgt_lengths))
-
-        dialog_decoder_memory_bank, dialog_decoder_final_state, \
-            dialog_decoder_attns = self.dialog_decoder.forward(
-                tgt=dialog_decoder_tgt,
-                memory_bank=dialog_encoder_memory_bank,
-                state=decoder_state,
-                memory_lengths=dialog_encoder_src_lengths  # dialog_decoder_tgt_lengths
-            )
+        dialog_decoder_memory_bank, dialog_decoder_final_state, dialog_decoder_attns = self.dialog_decoder.forward(
+            tgt=dialog_decoder_tgt,
+            memory_bank=dialog_encoder_memory_bank,
+            state=decoder_state,
+            memory_lengths=dialog_encoder_src_lengths)
 
         # beam search  dialog_decoder_memory_bank -> [tgt_len x batch x hidden]
         # batch_size = dialog_decoder_memory_bank.shape[1]
-        # dialog_decoder_outputs [tgt_len x batch x beam_size]?
-        # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, self.dialog_decoder_hidden_size))
-        # dialog_decoder_outputs = torch.zeros((self.dialog_decoder_max_length, batch_size, self.dialog_decoder_vocab_size))
         print("dialog_decoder_memory_bank shape: {}".format(
             dialog_decoder_memory_bank.shape))
         dialog_decoder_memory_bank = dialog_decoder_memory_bank[0]
@@ -197,6 +177,7 @@ class Seq2SeqModel(nn.Module):
 
         dialog_decoder_outputs = self.dialog_decoder_linear(
             dialog_decoder_memory_bank)
+
         # log softmax
         dialog_decoder_outputs = self.dialog_decoder_softmax(
             dialog_decoder_outputs)
@@ -233,7 +214,7 @@ class Seq2SeqModel(nn.Module):
         '''
 
         return ((dialog_encoder_final_state, dialog_encoder_memory_bank),
-                (dialog_decoder_memory_bank, dialog_decoder_final_state,
+                (dialog_decoder_final_state, dialog_decoder_memory_bank,
                  dialog_decoder_attns, dialog_decoder_outputs))
 
     # beam search  tensor.numpy()

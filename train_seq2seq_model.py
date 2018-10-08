@@ -20,16 +20,6 @@ from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 from modules.optim import Optim
 from modules.embeddings import Embedding
 
-'''
-import matplotlib.pyplot as plt
-
-plt.switch_backend('agg')
-import matplotlib.ticker as ticker
-import seaborn
-
-seaborn.set()
-'''
-
 from misc.vocab import Vocab
 from train_evaluate_opt import data_set_opt, train_seq2seq_opt
 from seq2seq_model import Seq2SeqModel
@@ -157,14 +147,10 @@ def train(seq2seq_model,
     # Turn on training mode which enables dropout.
     seq2seq_model.train()
 
-    #print('encoder_input_data: {}'.format(encoder_input_data))
-    #print('decoder_input_date: {}'.format(decoder_input_data))
-    #print('decoder_target_date: {}'.format(decoder_target_data))
-
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_memory_bank, dialog_decoder_final_stae,
+        (dialog_decoder_final_stae, dialog_decoder_memory_bank,
          dialog_decoder_attns, dialog_decoder_outputs) = seq2seq_model.forward(
-        dialog_encoder_src=encoder_input_data,  # LongTensor
+        dialog_encoder_src=encoder_input_data,
         dialog_encoder_src_lengths=encoder_input_lengths,
         dialog_decoder_tgt=decoder_input_data,
         dialog_decoder_tgt_lengths=decoder_input_lengths,
@@ -175,11 +161,6 @@ def train(seq2seq_model,
     optimizer.zero_grad()
 
     loss = 0
-
-    #  Compute loss
-    #  if dialog_decoder_outputs.is_cuda:
-    #  dialog_decoder_outputs = dialog_decoder_outputs.cpu()
-    #      decoder_target_data = decoder_target_data.cpu()
 
     dialog_decoder_outputs = dialog_decoder_outputs.view(
         -1, dialog_decoder_outputs.shape[-1])
@@ -194,15 +175,14 @@ def train(seq2seq_model,
     loss = criterion(dialog_decoder_outputs, decoder_target_data)
 
     # backward
-    loss.div(num_samples).backward()
+    #  loss.div(num_samples).backward()
+    loss.backward()
 
     # optimizer
     optimizer.step()
 
-    batch_loss = float(loss)
-    print('batch loss : {}'.format(batch_loss))
-
-    return batch_loss / torch.sum(decoder_input_lengths)
+    #  return batch_loss / torch.sum(decoder_input_lengths)
+    return loss.ite()
 
 
 ''' save log to file '''
@@ -242,7 +222,6 @@ def evaluate(seq2seq_model=None,
                 'test', opt.batch_size * opt.batch_per_load)
 
         # train and get cur loss
-
 
         (dialog_encoder_final_state, dialog_encoder_memory_bank), \
             (dialog_decoder_memory_bank, dialog_decoder_final_stae, dialog_decoder_attns, dialog_decoder_outputs) \
@@ -466,7 +445,6 @@ if __name__ == '__main__':
 
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    #  criterion = nn.NLLLoss()
     criterion = nn.NLLLoss(
         ignore_index=vocab.padid,
         reduction='elementwise_mean'

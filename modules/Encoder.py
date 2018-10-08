@@ -65,16 +65,16 @@ class MeanEncoder(EncoderBase):
         """
         self._check_args(src, lengths, encoder_state)
 
-        emb = self.embedding(src)
-        s_len, batch, emb_dim = emb.size()
+        embedded = self.embedding(src)
+        s_len, batch, emb_dim = embedded.size()
         # calculating the embedding mean according to lengths
         if lengths is not None:
             lengths_exp = lengths.expand(emb_dim, batch).transpose(0, 1)
-            mean_temp = emb.sum(0) / lengths_exp
+            mean_temp = embedded.sum(0) / lengths_exp
             mean = mean_temp.expand(self.num_layers, batch, emb_dim)
         else:
-            mean = emb.mean(0).expand(self.num_layers, batch, emb_dim)
-        memory_bank = emb
+            mean = embedded.mean(0).expand(self.num_layers, batch, emb_dim)
+        memory_bank = embedded
         encoder_final = (mean, mean)
         return encoder_final, memory_bank
 
@@ -255,11 +255,11 @@ class CNNEncoder(EncoderBase):
                  ,
             output, batch_size * (len(filter_sizes) X filter_num)
         '''
-        # s_len, batch, emb_dim = emb.size()
-        embeded = self.embedding(src.transpose(0, 1))  # batch_size * seq_len * hidden
-        embeded = embeded.unsqueeze(1)  # batch_size * 1 * seq_len * hidden
-        s_len, _, batch, emb_dim = embeded.size()
-        conv_feats = [F.relu(conv(embeded)).squeeze(3) for conv in self.convs]
+        # s_len, batch, emb_dim = embedded.size()
+        embedded = self.embedding(src.transpose(0, 1))  # batch_size * seq_len * hidden
+        embedded = embedded.unsqueeze(1)  # batch_size * 1 * seq_len * hidden
+        s_len, _, batch, emb_dim = embedded.size()
+        conv_feats = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
         # [batch_size * filter_num * seq_len] * len(filter_sizes)
         pooled_feats = [F.max_pool1d(feat, feat.size(2)).squeeze(2) for feat in conv_feats]  # [(N,Co), ...]*len(Ks)
         cnn_feat = torch.cat(pooled_feats, 1)  # (batch_size, feat_num)
@@ -269,7 +269,7 @@ class CNNEncoder(EncoderBase):
         # return cnn_feat, None, cnn_feat
         outputs = self.tanh(self.output_layer(cnn_feat))
 
-        return (outputs, embeded.squeeze(1))
+        return (outputs, embedded.squeeze(1))
 
 
 if __name__ == '__main__':
