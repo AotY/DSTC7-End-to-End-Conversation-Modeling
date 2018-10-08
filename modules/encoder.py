@@ -154,9 +154,6 @@ class RNNEncoder(EncoderBase):
             packed_embedded = nn.utils.rnn.pack_padded_sequence(
                 packed_embedded, lengths)
 
-        print(src.device)
-        print(encoder_state[0].device)
-        print(encoder_state[1].device)
         memory_bank, encoder_final = self.rnn.forward(
             packed_embedded, encoder_state)
 
@@ -181,7 +178,6 @@ class RNNEncoder(EncoderBase):
         return (out_encode_final, out_memory_bank)
 
     def init_hidden(self, batch_size, device):
-        print('init_hidden device: ', device)
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         if self.rnn_type == 'LSTM':

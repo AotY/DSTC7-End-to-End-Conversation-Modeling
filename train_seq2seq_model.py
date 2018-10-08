@@ -357,7 +357,8 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_embedding=dialog_decoder_embedding,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
-        dialog_decoder_tied=opt.dialog_decoder_tied)
+        dialog_decoder_tied=opt.dialog_decoder_tied,
+        device=device)
 
     seq2seq_model = seq2seq_model.to(device)
 
