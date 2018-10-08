@@ -175,7 +175,6 @@ class DecoderBase(nn.Module):
             return RNNDecoderState(self.hidden_size,
                                    _fix_enc_hidden(encoder_final))
 
-    #  @propertalculate attention from current RNN state and all encoder outputs;
     # apply to encoder outputs to get weighted average
     def _input_size(self):
         """
@@ -219,10 +218,6 @@ class DecoderBase(nn.Module):
         # Update the state with the result.
         final_output = decoder_outputs[-1] #
         state.update_state(decoder_final, final_output.unsqueeze(0))
-
-        # print('decoder_final shape: {}'.format(decoder_final.shape))
-        # print('decoder_outputs shape: {}'.format(decoder_outputs.shape))
-        # print('attns shape: {}'.format(attns.shape))
 
         # Concatenates sequence of tensors along a new dimension.
         decoder_outputs = torch.stack((decoder_outputs, ))
