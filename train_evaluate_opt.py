@@ -182,7 +182,7 @@ def train_seq2seq_opt(parser):
                            ''')
 
     #  group.add_argument('--use_teacher_forcing', action='store_true',
-                       #  help='is use teacher forcing.')
+    #  help='is use teacher forcing.')
 
     group.add_argument('--seed',
                        type=int,
@@ -221,8 +221,8 @@ def train_seq2seq_opt(parser):
                        help='loading checkpoint if we resume from a previous training.')
 
     group.add_argument('--checkpoint',
-                    type=str,
-                    help='for loading checkpoint.')
+                       type=str,
+                       help='for loading checkpoint.')
 
     group.add_argument('--train_or_eval',
                        type=str,
