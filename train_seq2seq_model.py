@@ -60,12 +60,12 @@ def train_epochs(seq2seq_model=None,
     start = time.time()
 
     log_loss_total = 0  # Reset every logger.info_every
-    max_load = np.ceil(seq2seq_dataset.n_train / opt.batch_size) + 1
+    max_load = int(np.ceil(seq2seq_dataset.n_train / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
         seq2seq_dataset.reset_data('train')
         for load in range(1, max_load + 1):
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
-                epoch + 1, opt.epochs, 100 * load / max_load)
+                epoch, opt.epochs, 100 * load / max_load)
             logger.info(logger_str)
 
             # load data
@@ -199,7 +199,7 @@ def evaluate(seq2seq_model=None,
     # Turn on evaluation mode which disables dropout.
     seq2seq_model.eval()
     loss_total = 0
-    max_load = np.ceil(seq2seq_dataset.n_eval / opt.batch_size) + 1
+    max_load = int(np.ceil(seq2seq_dataset.n_eval / opt.batch_size))
     seq2seq_dataset.reset_data('eval')
     with torch.no_grad():
         for load in range(1, max_load + 1):

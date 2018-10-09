@@ -62,7 +62,7 @@ class Seq2seqDataSet:
 
         self._data_dict = {
             'train': datas[0: self.n_train],
-            'eval': data[self.n_train:]
+            'eval': datas[self.n_train: ]
         }
         self._indicator_dict = {
             'train': 0,
@@ -88,26 +88,26 @@ class Seq2seqDataSet:
             self.reset_data(task)
 
         self.logger.info('building %s data from %i to %i' %
-                         (task, self._train_indicator, cur_indicator))
+                         (task, self._indicator_dict[task], cur_indicator))
 
-        encoder_inputs = torch.zeros((self.dialog_encoder_max_length, num_samples),
+        encoder_inputs = torch.zeros((self.dialog_encoder_max_length, batch_size),
                                          dtype=torch.long,
-                                         device=device)
+                                         device=self.device)
         encoder_inputs_length = []
 
-        decoder_inputs = torch.zeros((self.dialog_decoder_max_length, num_samples),
+        decoder_inputs = torch.zeros((self.dialog_decoder_max_length, batch_size),
                                          dtype=torch.long,
-                                         device=device)
-        decoder_targets = torch.zeros((self.dialog_decoder_max_length, num_samples),
+                                         device=self.device)
+        decoder_targets = torch.zeros((self.dialog_decoder_max_length, batch_size),
                                           dtype=torch.long,
-                                          device=device)
+                                          device=self.device)
         decoder_inputs_length = []
 
         conversation_texts = []
         response_texts = []
 
-        batch_datas = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
-        for conversation_ids, response_ids in batch_datas:
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
 
