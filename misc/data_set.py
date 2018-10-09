@@ -82,6 +82,7 @@ class Seq2seqDataSet:
         task_len = len(self._data_dict[task])
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
+
         cur_indicator = self._indicator_dict[task] + batch_size
         if cur_indicator > task_len:
             self.reset_data(task)
@@ -97,11 +98,11 @@ class Seq2seqDataSet:
         decoder_inputs = torch.zeros((self.dialog_decoder_max_length, num_samples),
                                          dtype=torch.long,
                                          device=device)
-
         decoder_targets = torch.zeros((self.dialog_decoder_max_length, num_samples),
                                           dtype=torch.long,
                                           device=device)
         decoder_inputs_length = []
+
         conversation_texts = []
         response_texts = []
 
