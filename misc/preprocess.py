@@ -451,7 +451,8 @@ if __name__ == '__main__':
     logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
     # save raw facts to txt
-    save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names)
+    save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names, \
+                   os.path.join(opt.save_path, 'facts.txt'))
 
     # save conversations, responses and facts count
     save_conversations_responses_facts_count(conversations, responses, facts)
