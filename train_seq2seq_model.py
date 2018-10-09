@@ -60,27 +60,20 @@ def train_epochs(seq2seq_model=None,
     start = time.time()
 
     log_loss_total = 0  # Reset every logger.info_every
-
-    max_load = np.ceil(seq2seq_dataset.n_train /
-                       opt.batch_size / opt.batch_per_load)
-
+    max_load = np.ceil(seq2seq_dataset.n_train / opt.batch_size) + 1
     for epoch in range(opt.start_epoch, opt.epochs + 1):
-
-        load = 0
-        seq2seq_dataset.reset()
-        while not seq2seq_dataset.all_loaded('train'):
-            load += 1
+        seq2seq_dataset.reset_data('train')
+        for load in range(1, max_load + 1):
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 epoch + 1, opt.epochs, 100 * load / max_load)
             logger.info(logger_str)
-            #  save_logger(logger_str)
 
             # load data
-            num_samples, dialog_encoder_inputs, \
+            dialog_encoder_inputs, \
                 dialog_decoder_inputs, dialog_decoder_targets, \
                 dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
                 conversation_texts, response_texts = seq2seq_dataset.load_data(
-                    'train', opt.batch_size * opt.batch_per_load)
+                    'train', opt.batch_size)
 
             # train and get cur loss
             loss = train(seq2seq_model,
@@ -91,12 +84,10 @@ def train_epochs(seq2seq_model=None,
                          dialog_decoder_inputs_length,
                          optimizer,
                          criterion,
-                         num_samples,
                          vocab,
                          opt)
 
             log_loss_total += float(loss)
-
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 logger_str = '\ntrain -------------------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
@@ -142,7 +133,6 @@ def train(seq2seq_model,
           dialog_decoder_inputs_length,
           optimizer,
           criterion,
-          num_samples,
           vocab,
           opt):
 
@@ -158,7 +148,7 @@ def train(seq2seq_model,
         dialog_decoder_inputs_length=dialog_decoder_inputs_length,
         dialog_decoder_targets=dialog_decoder_targets,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
-        batch_size=num_samples)
+        batch_size=opt.batch_size)
 
     optimizer.zero_grad()
 
@@ -175,11 +165,11 @@ def train(seq2seq_model,
     loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
 
     # backward
-    #  loss.div(num_samples).backward()
     loss.backward()
 
     # Clip gradients: gradients are modified in place
-    _ = torch.nn.utils.clip_grad_norm_(seq2seq_model.parameters(), opt.dialog_decoder_clipnorm)
+    _ = torch.nn.utils.clip_grad_norm_(
+        seq2seq_model.parameters(), opt.dialog_decoder_clipnorm)
 
     # optimizer
     optimizer.step()
@@ -208,23 +198,19 @@ def evaluate(seq2seq_model=None,
 
     # Turn on evaluation mode which disables dropout.
     seq2seq_model.eval()
-
     loss_total = 0
-    iter_ = 0
+    max_load = np.ceil(seq2seq_dataset.n_eval / opt.batch_size) + 1
+    seq2seq_dataset.reset_data('eval')
     with torch.no_grad():
-        while not seq2seq_dataset.all_loaded('test'):
-
-            iter_ += 1
-
+        for load in range(1, max_load + 1):
             # load data
-            num_samples, dialog_encoder_inputs, \
+            dialog_encoder_inputs, \
                 dialog_decoder_inputs, dialog_decoder_targets, \
                 dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
                 conversation_texts, response_texts = seq2seq_dataset.load_data(
-                    'test', opt.batch_size * opt.batch_per_load)
+                    'eval', opt.batch_size)
 
             # train and get cur loss
-
             (dialog_encoder_final_state, dialog_encoder_memory_bank), \
                 (dialog_decoder_final_state, dialog_decoder_outputs,
                  dialog_decoder_attns) = seq2seq_model.evaluate(
@@ -232,7 +218,7 @@ def evaluate(seq2seq_model=None,
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 dialog_decoder_inputs_length=dialog_decoder_inputs_length,
-                batch_size=num_samples)
+                batch_size=opt.batch_size)
 
             #  Compute loss
             dialog_decoder_outputs = dialog_decoder_outputs.view(
@@ -254,7 +240,7 @@ def evaluate(seq2seq_model=None,
             seq2seq_dataset.save_generated_texts(conversation_texts, response_texts, generated_texts,
                                                  os.path.join(opt.save_path, 'generated_texts_{}.txt'.format(time_str)))
 
-    return loss_total / iter_
+    return loss_total / max_load
 
 
 def dialog(self, input_text):
@@ -471,4 +457,5 @@ if __name__ == '__main__':
             criterion=criterion,
             opt=opt)
     else:
-        raise ValueError("train_or_eval must be train or eval, no %s " % opt.train_or_eval)
+        raise ValueError(
+            "train_or_eval must be train or eval, no %s " % opt.train_or_eval)

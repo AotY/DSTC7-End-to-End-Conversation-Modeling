@@ -30,7 +30,7 @@ def data_set_opt(parser):
                        default=3,
                        help="Ignores all words with total frequency lower than this.")
 
-    group.add_argument('--test_split',
+    group.add_argument('--eval_split',
                        default=0.2,
                        type=float,
                        help="Ratio for splitting data set.")
@@ -214,11 +214,6 @@ def train_seq2seq_opt(parser):
                        type=str,
                        default='adam',
                        help='''method (:obj:`str`): one of [sgd, adagrad, adadelta, adam] ''')
-
-    group.add_argument('--batch_per_load',
-                       type=int,
-                       default=1,
-                       help='each batch load: batch_size * batch_per_load')
 
     group.add_argument('--checkpoint',
                        type=str,
