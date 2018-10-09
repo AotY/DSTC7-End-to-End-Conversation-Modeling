@@ -181,27 +181,13 @@ def train(seq2seq_model,
     loss.backward()
 
     # Clip gradients: gradients are modified in place
-    #  _ = torch.nn.utils.clip_grad_norm_(seq2seq_model.parameters(),
-    #  opt.dialog_decoder_clipnorm)
+    _ = torch.nn.utils.clip_grad_norm_(seq2seq_model.parameters(), opt.dialog_decoder_clipnorm)
 
     # optimizer
     optimizer.step()
 
     #  return batch_loss / torch.sum(dialog_decoder_inputs_length)
     return loss.item()
-
-
-"""
-masked loss
-"""
-
-
-def maskNLLLoss(inputs, targets, mask):
-    num_total = mask.sum()
-    crossEntorpy = -torch.log(torch.gather(inputs, 1, targets.view(-1, 1)))
-    loss = crossEntorpy.masked_select(mask).mean()
-    loss = loss.to(device)
-    return loss, num_total.item()
 
 
 ''' save log to file '''
@@ -435,7 +421,6 @@ if __name__ == '__main__':
     if opt.checkpoint:
         logger.info('Loading checkpoint from %s' % opt.checkpoint)
         checkpoint = load_checkpoint(filename=opt.checkpoint)
-        opt.start_epoch = checkpoint['epoch'] + 1
     else:
         checkpoint = None
 
@@ -472,6 +457,7 @@ if __name__ == '__main__':
     if checkpoint:
         seq2seq_model.load_state_dict(checkpoint['state_dict'])
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
+        opt.start_epoch = checkpoint['epoch'] + 1
 
     if opt.train_or_eval == 'train':
         train_epochs(seq2seq_model=seq2seq_model,

@@ -66,27 +66,32 @@ class RNNDecoderState(DecoderState):
 
         h_size = (batch_size, hidden_size)
 
-        self.input_feed = Variable(self.hidden[0].data.new(*h_size).zero_(),
-                                   requires_grad=False).unsqueeze(0)
+        #  self.input_feed = Variable(self.hidden[0].data.new(*h_size).zero_(),
+                                   #  requires_grad=False).unsqueeze(0)
+        self.input_feed = self.hidden[0].data.new(*h_size).zero_().unsqueeze(0)
+        self.input_feed.requires_grad = False
 
     @property
     def _all(self):
         return self.hidden + (self.input_feed,)
 
-    def update_state(self, rnn_state, input_feed, coverage=None):
+    def update_state(self, rnn_state, input_feed=None, coverage=None):
         if not isinstance(rnn_state, tuple):
             self.hidden = (rnn_state,)
         else:
             self.hidden = rnn_state
 
-        self.input_feed = input_feed
+        if input_feed is not None:
+            self.input_feed = input_feed
 
-        self.coverage = coverage
+        if coverage is not None:
+            self.coverage = coverage
 
     def repeat_beam_size_times(self, beam_size):
         """ Repeat beam_size times along batch dimension. """
-        vars = [Variable(e.data.repeat(1, beam_size, 1), volatile=True)
-                for e in self._all]
+        #  vars = [Variable(e.data.repeat(1, beam_size, 1), volatile=True)
+                #  for e in self._all]
+        vars = [e.data.repeat(1, beam_size, 1) for e in self._all]
         self.hidden = tuple(vars[:-1])
         self.input_feed = vars[-1]
 
