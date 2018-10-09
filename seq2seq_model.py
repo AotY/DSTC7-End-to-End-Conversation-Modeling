@@ -174,8 +174,7 @@ class Seq2SeqModel(nn.Module):
                         tgt=dialog_decoder_inputs[di].view(1, -1),
                         memory_bank=dialog_encoder_memory_bank,
                         state=dialog_decoder_state,
-                        memory_lengths=dialog_encoder_inputs_length
-                    )
+                        memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
                 dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
         else:
@@ -188,12 +187,12 @@ class Seq2SeqModel(nn.Module):
                         tgt=dialog_decoder_input.view(1, -1),
                         memory_bank=dialog_encoder_memory_bank,
                         state=dialog_decoder_state,
-                        memory_lengths=dialog_encoder_inputs_length
-                    )
+                        memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
                 dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
                 dialog_decoder_input = torch.argmax(
                     dialog_decoder_output).detach().view(1, -1)
+                print('dialog_decoder_input:   {}'.format(dialog_decoder_input))
 
                 if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
                     break
