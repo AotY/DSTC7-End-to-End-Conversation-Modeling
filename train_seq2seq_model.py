@@ -420,7 +420,7 @@ if __name__ == '__main__':
         dialog_decoder_max_length=opt.dialog_encoder_max_length,
         dialog_decoder_vocab=vocab,
 
-        test_split=opt.test_split,  # how many hold out as vali data
+        eval_split=opt.eval_split,  # how many hold out as eval data
         device=device,
         logger=logger
     )
