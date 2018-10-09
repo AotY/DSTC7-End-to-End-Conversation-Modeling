@@ -215,6 +215,8 @@ class DecoderBase(nn.Module):
                         distribution over src at each tgt
                         `[tgt_len x batch x src_len]`.
         """
+        print('tgt: {}'.format(tgt))
+
         # Check
         self._check_args(tgt, memory_bank, state)
 
