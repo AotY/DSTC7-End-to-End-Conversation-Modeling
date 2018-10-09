@@ -136,8 +136,7 @@ class Seq2SeqModel(nn.Module):
                 dialog_decoder_inputs_length,
                 dialog_decoder_targets,
                 teacher_forcing_ratio=0.5,
-                batch_size=128
-                ):
+                batch_size=128):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
 
@@ -153,18 +152,19 @@ class Seq2SeqModel(nn.Module):
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
-        # dialog_decoder_state = RNNDecoderState(self.dialog_decoder_hidden_size, dialog_encoder_state)
         dialog_decoder_state = self.dialog_decoder.init_decoder_state(
             encoder_final=dialog_encoder_state)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
-        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length, \
-                                             batch_size, self.dialog_decoder_hidden_size), \
+        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length,
+                                             batch_size, self.dialog_decoder_hidden_size),
                                             device=self.device) * self.dialog_decoder_pad_id
 
         dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
-                                            batch_size, self.dialog_decoder_max_length-2))
+                                                batch_size, self.dialog_decoder_max_length-2),
+                                               device=self.device,
+                                               dtype=torch.float)
 
         if use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
@@ -176,7 +176,8 @@ class Seq2SeqModel(nn.Module):
                         state=dialog_decoder_state,
                         memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
-                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
+                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
+                    0)
         else:
             # Without teacher forcing: use its own predictions as the next
             # input
@@ -190,9 +191,8 @@ class Seq2SeqModel(nn.Module):
                         memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
                 dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
-                dialog_decoder_input = torch.argmax(
-                    dialog_decoder_output).detach().view(1, -1)
-                print('dialog_decoder_input:   {}'.format(dialog_decoder_input))
+                print('dialog_decoder_output shape: {}'.dialog_decoder_output.shape)
+                dialog_decoder_input = torch.argmax(dialog_decoder_output, dim=2).detach()
 
                 if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
                     break
@@ -219,11 +219,11 @@ class Seq2SeqModel(nn.Module):
                 (dialog_decoder_state, dialog_decoder_outputs, dialog_decoder_attns_std))
 
     def evaluate(self,
-                dialog_encoder_inputs,  # LongTensor
-                dialog_encoder_inputs_length,
-                dialog_decoder_inputs,
-                batch_size=128
-                ):
+                 dialog_encoder_inputs,  # LongTensor
+                 dialog_encoder_inputs_length,
+                 dialog_decoder_inputs,
+                 batch_size=128
+                 ):
 
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
@@ -239,12 +239,12 @@ class Seq2SeqModel(nn.Module):
         dialog_decoder_state = self.dialog_decoder.init_decoder_state(
             encoder_final=dialog_encoder_state)
 
-        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length, \
-                                             batch_size, self.dialog_decoder_hidden_size), \
+        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length,
+                                             batch_size, self.dialog_decoder_hidden_size),
                                             device=self.device) * self.dialog_decoder_pad_id
 
         dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
-                                            batch_size, self.dialog_decoder_max_length-2))
+                                                batch_size, self.dialog_decoder_max_length-2))
 
         dialog_decoder_input = dialog_decoder_inputs[0]
         for di in range(self.dialog_decoder_max_length):
@@ -256,7 +256,8 @@ class Seq2SeqModel(nn.Module):
                     memory_lengths=dialog_encoder_inputs_length
                 )
             dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
-            dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
+            dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
+                0)
             # greedy search
             dialog_decoder_input = torch.argmax(
                 dialog_decoder_output).detach().view(1, -1)
