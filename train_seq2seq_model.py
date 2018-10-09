@@ -49,8 +49,6 @@ logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 
 torch.manual_seed(opt.seed)
 
-''''''
-
 
 def train_epochs(seq2seq_model=None,
                  seq2seq_dataset=None,
