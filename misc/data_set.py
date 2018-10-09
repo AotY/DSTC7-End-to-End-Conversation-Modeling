@@ -57,7 +57,7 @@ class Seq2seqDataSet:
         np.random.shuffle(datas)
 
         # train-eval split
-        self.n_train = int(len(self.pairs) * (1. - eval_split))
+        self.n_train = int(len(datas) * (1. - eval_split))
         self.n_eval = len(datas) - self.n_train
 
         self._data_dict = {
