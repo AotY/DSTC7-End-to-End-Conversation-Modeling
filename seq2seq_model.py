@@ -254,14 +254,12 @@ class Seq2SeqModel(nn.Module):
                     tgt=dialog_decoder_input.view(1, -1),
                     memory_bank=dialog_encoder_memory_bank,
                     state=dialog_decoder_state,
-                    memory_lengths=dialog_encoder_inputs_length
-                )
-            dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
-            dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                0)
+                    memory_lengths=dialog_encoder_inputs_length)
+            dialog_decoder_output = dialog_decoder_output.detach().squeeze(0)
+            dialog_decoder_outputs[di] = dialog_decoder_output
+            dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
+            dialog_decoder_input = torch.argmax(dialog_decoder_output, dim=1)
             # greedy search
-            dialog_decoder_input = torch.argmax(
-                dialog_decoder_output).detach().view(1, -1)
 
             if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
                 break
@@ -289,7 +287,6 @@ class Seq2SeqModel(nn.Module):
         sequences = [[list(), 1.0]]
         # walk over each step in sequence
         for row in memory_bank:
-            print("row shape: {}".format(row.shape))
             all_candidates = list()
             # expand each current candidate
             for i in range(len(sequences)):
