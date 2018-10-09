@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
-from __future__ import print_function
 
 import math
 import torch
@@ -163,7 +162,6 @@ class RNNEncoder(EncoderBase):
 
         # map to input order
         _, out_order = torch.sort(sorted_indices)
-        #  print('out_order: {}'.format(out_order))
 
         if isinstance(encoder_final, tuple):
             # LSTM

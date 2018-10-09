@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
-from __future__ import print_function
 
 import torch
 import torch.nn as nn
@@ -189,8 +188,6 @@ class DecoderBase(nn.Module):
 
     def _check_args(self, tgt, memory_bank, state):
         assert isinstance(state, RNNDecoderState)
-        print('tgt shape : {}'.format(tgt.shape))
-        print('memory_bank shape : {}'.format(memory_bank.shape))
         tgt_len, tgt_batch = tgt.size()
         _, memory_batch, _ = memory_bank.size()
         aeq(tgt_batch, memory_batch)
@@ -215,7 +212,6 @@ class DecoderBase(nn.Module):
                         distribution over src at each tgt
                         `[tgt_len x batch x src_len]`.
         """
-        print('tgt: {}'.format(tgt))
 
         # Check
         self._check_args(tgt, memory_bank, state)
