@@ -189,6 +189,8 @@ class DecoderBase(nn.Module):
 
     def _check_args(self, tgt, memory_bank, state):
         assert isinstance(state, RNNDecoderState)
+        print('tgt shape : {}'.format(tgt.shape))
+        print('memory_bank shape : {}'.format(memory_bank.shape))
         tgt_len, tgt_batch = tgt.size()
         _, memory_batch, _ = memory_bank.size()
         aeq(tgt_batch, memory_batch)
