@@ -38,7 +38,8 @@ train_seq2seq_opt(parser)
 opt = parser.parse_args()
 
 # logger file
-opt.log_file = opt.log_file.format(time.strftime('%Y-%m-%d_%H:%M'))
+time_str = time.strftime('%Y-%m-%d_%H:%M')
+opt.log_file = opt.log_file.format(time_str)
 logger.info('log_file: {}'.format(opt.log_file))
 
 device = torch.device(opt.device)
@@ -65,7 +66,7 @@ def train_epochs(seq2seq_model=None,
     max_load = np.ceil(seq2seq_dataset.n_train /
                        opt.batch_size / opt.batch_per_load)
 
-    for epoch in range(opt.start_epoch, opt.epochs):
+    for epoch in range(opt.start_epoch, opt.epochs + 1):
 
         load = 0
         seq2seq_dataset.reset()
@@ -226,39 +227,48 @@ def evaluate(seq2seq_model=None,
 
     loss_total = 0
     iter_ = 0
-    while not seq2seq_dataset.all_loaded('test'):
+    with torch.no_grad():
+        while not seq2seq_dataset.all_loaded('test'):
 
-        iter_ += 1
+            iter_ += 1
 
-        # load data
-        num_samples, dialog_encoder_inputs, \
-            dialog_decoder_inputs, dialog_decoder_targets, \
-            dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
-            conversation_texts, response_texts = seq2seq_dataset.load_data(
-                'test', opt.batch_size * opt.batch_per_load)
+            # load data
+            num_samples, dialog_encoder_inputs, \
+                dialog_decoder_inputs, dialog_decoder_targets, \
+                dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
+                conversation_texts, response_texts = seq2seq_dataset.load_data(
+                    'test', opt.batch_size * opt.batch_per_load)
 
-        # train and get cur loss
+            # train and get cur loss
 
-        (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-            (dialog_decoder_final_state, dialog_decoder_outputs, \
-             dialog_decoder_attns) = seq2seq_model.forward(
-            dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
-            dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-            dialog_decoder_inputs=dialog_decoder_inputs,
-            dialog_decoder_inputs_length=dialog_decoder_inputs_length,
-            dialog_decoder_targets=dialog_decoder_targets,
-            teacher_forcing_ratio=opt.teacher_forcing_ratio,
-            batch_size=num_samples)
+            (dialog_encoder_final_state, dialog_encoder_memory_bank), \
+                (dialog_decoder_final_state, dialog_decoder_outputs,
+                 dialog_decoder_attns) = seq2seq_model.evaluate(
+                dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
+                dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+                dialog_decoder_inputs=dialog_decoder_inputs,
+                dialog_decoder_inputs_length=dialog_decoder_inputs_length,
+                batch_size=num_samples)
 
-        #  Compute loss
+            #  Compute loss
+            dialog_decoder_outputs = dialog_decoder_outputs.view(
+                -1, dialog_decoder_outputs.shape[-1])
+            dialog_decoder_targets = dialog_decoder_targets.view(-1)
 
-        dialog_decoder_outputs = dialog_decoder_outputs.view(
-            -1, dialog_decoder_outputs.shape[-1])
-        dialog_decoder_targets = dialog_decoder_targets.view(-1)
+            loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
 
-        loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
+            loss_total += loss.item()
 
-        loss_total += loss.item()
+            # generate sentence, and save to file
+            # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
+            dialog_decoder_outputs = torch.argmax(dim=2)
+            # [max_length, batch_size]
+            generated_texts = seq2seq_dataset.generating_texts(
+                dialog_decoder_outputs.detach().cpu())
+
+            # save sentences
+            seq2seq_dataset.save_generated_texts(conversation_texts, response_texts, generated_texts,
+                                                 os.path.join(opt.save_path, 'generated_texts_{}.txt'.format(time_str)))
 
     return loss_total / iter_
 
@@ -422,12 +432,10 @@ def timeSince(since, percent):
 if __name__ == '__main__':
     # Load checkpoint if we resume from a previous training.
 
-    if opt.train_from:
-        logger.info('Loading checkpoint from %s' % opt.train_from)
-        checkpoint = load_checkpoint(filename='checkpoint.pth')
+    if opt.checkpoint:
+        logger.info('Loading checkpoint from %s' % opt.checkpoint)
+        checkpoint = load_checkpoint(filename=opt.checkpoint)
         opt.start_epoch = checkpoint['epoch'] + 1
-        # checkpoint = torch.load(opt.train_from, map_location=lambda storage, loc: storage)
-        # I don't like reassigning attributes of opt: it's not clear.
     else:
         checkpoint = None
 
@@ -449,8 +457,6 @@ if __name__ == '__main__':
     )
 
     seq2seq_model = build_model(opt, vocab, vocab, None)
-    # tally_parameters(seq2seq_model)
-    # check_save_model_path()
 
     # Build optimizer.
     optimizer = build_optim(seq2seq_model, opt)
@@ -465,29 +471,20 @@ if __name__ == '__main__':
     '''if load checkpoint'''
     if checkpoint:
         seq2seq_model.load_state_dict(checkpoint['state_dict'])
-        seq2seq_model.eval()
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
 
-    train_epochs(seq2seq_model=seq2seq_model,
-                 seq2seq_dataset=seq2seq_dataset,
-                 optimizer=optimizer,
-                 criterion=criterion,
-                 vocab=vocab,
-                 opt=opt)
-
-    '''
-    if opt.mode == 'train':
-        train()
+    if opt.train_or_eval == 'train':
+        train_epochs(seq2seq_model=seq2seq_model,
+                     seq2seq_dataset=seq2seq_dataset,
+                     optimizer=optimizer,
+                     criterion=criterion,
+                     vocab=vocab,
+                     opt=opt)
+    elif opt.train_or_eval == 'eval':
+        evaluate(
+            seq2seq_model=seq2seq_model,
+            seq2seq_dataset=seq2seq_dataset,
+            criterion=criterion,
+            opt=opt)
     else:
-        load_models()
-
-    if opt.mode in ['train', 'continue']:
-        s2s.train(batch_size, epochs, lr=learning_rate)
-    else:
-        if mode == 'eval':
-            s2s.build_model_test()
-            s2s.evaluate()
-        elif mode == 'interact':
-            s2s.interact()
-
-    '''
+        raise ValueError("train_or_eval must be train or eval, no %s " % opt.train_or_eval)

@@ -9,7 +9,6 @@ import argparse
 sys.path.append('..')
 
 import numpy as np
-from elasticsearch import Elasticsearch
 
 from misc.vocab import Vocab
 from misc.tokenizer import Tokenizer
@@ -170,6 +169,7 @@ def read_facts(facts_file_path, logger):
 
     # 读取  facts，保存到
     facts = []
+    raw_facts = []
 
     hash_values = []
     subreddit_names = []
@@ -197,10 +197,10 @@ def read_facts(facts_file_path, logger):
         # skip if source has nothing
         if fact == 'START' or len(fact.rstrip()) == 0:
             continue
+        raw_facts.append(fact)
 
         fact_tokens = tokenizer.preprocess(fact)
         # url -> tag
-        fact_tokens = tokenizer.replace_url(fact_tokens)
         fact_tokens = tokenizer.replace_url(fact_tokens)
         fact_tokens = tokenizer.replace_number(fact_tokens)
         fact_tokens = tokenizer.split_by_hyphen(fact_tokens)
@@ -224,7 +224,7 @@ def read_facts(facts_file_path, logger):
         key_value = sub[1] + '-' + sub[2]
         conversation_fact_nums[key_value] = conversation_fact_nums.get(key_value, 0) + 1
 
-    return facts, hash_values, subreddit_names, \
+    return raw_facts, facts, hash_values, subreddit_names, \
            conversation_ids, domain_names, \
            conversation_fact_nums, max_len, \
            len_distribution, abnormal_facts
@@ -375,7 +375,7 @@ def save_conversation_response_facts_nums(name_num_dict, filename):
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write('%s\t%.4f\n' % ('avg', avg_num))
-        for name, count in sorted_list: 
+        for name, count in sorted_list:
             f.write("%s\t%d\n" % (name, count))
 
 
@@ -386,6 +386,13 @@ def save_out_of_vocab_words(out_of_vocab_words, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         for word in out_of_vocab_words:
             f.write('%s\n' % word)
+
+
+def save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names, filename):
+    with open(filename, 'w', encoding='utf-8') as f:
+        for fact, subreddit, conversation_id, domain in zip(raw_facts, subreddit_names, conversation_ids, domain_names):
+            f.write('%s\t%s\t%s\t%s\n' % (subreddit, conversation_id, domain, fact))
+
 
 
 if __name__ == '__main__':
@@ -435,13 +442,16 @@ if __name__ == '__main__':
                       filename='conversations_responses.pair.txt')
 
     # read facts
-    facts, hash_values, \
+    raw_facts, facts, hash_values, \
         subreddit_names, conversation_ids, \
         domain_names, conversation_fact_nums, \
         fact_max_length, facts_length_distribution, \
         abnormal_facts = read_facts(opt.facts_file_path, logger)
 
     logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
+
+    # save raw facts to txt
+    save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names)
 
     # save conversations, responses and facts count
     save_conversations_responses_facts_count(conversations, responses, facts)
@@ -453,23 +463,6 @@ if __name__ == '__main__':
     save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
 
 
-    '''
-    logger.info('Save to ElasticSearch ...')
-    es = es_helper.get_connection()
-
-    # delete index
-    es_helper.delete_index(es, es_helper.index)
-
-    # save to elasticsearch, conversaton - response
-    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
-                       response_scores, dialogue_turns), type=es_helper.conversation_type)
-
-    # save to elasticsearch, facts
-    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
-                       domain_names, facts), type=es_helper.fact_type)
-
-    '''
-
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
     save_distribution(responses_length_distribution, 'responses')
@@ -477,9 +470,11 @@ if __name__ == '__main__':
 
     stat_frequency(conversations, ['conversations'], 0, 0, logger)
     stat_frequency(responses, ['responses'], 0, 0, logger)
+    stat_frequency(facts, ['facts'], 0, 0, logger)
 
-    datas = conversations + responses
-    datas_name = ['conversations', 'responses']
+    # share a vocab
+    datas = conversations + responses + facts
+    datas_name = ['conversations', 'responses', 'facts']
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
@@ -487,13 +482,17 @@ if __name__ == '__main__':
     save_token_type_nums(total_token_nums, total_type_nums)
     vocab = build_vocab(sorted_freq_list)
     vocab_size = int(vocab.get_vocab_size())
-    logger.info('vocab_size: %s' % vocab_size)  # 93423
+    logger.info('vocab_size: %s' % vocab_size)
 
+    """
     generate_num(conversations, vocab, opt.conversations_num_save_path)
     generate_num(responses, vocab, opt.responses_num_save_path)
+    """
 
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
+
+    """
     # google word2vec
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_word2vec(
         None,
@@ -512,6 +511,7 @@ if __name__ == '__main__':
 
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
+    """
 
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(
@@ -530,6 +530,7 @@ if __name__ == '__main__':
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText.txt')
 
+    """
     # training own word embedding.
     max_sentence_length = (int)(conversation_max_length * 2.0 / 4)
     word2vec_model = train_embedding.start_train(
@@ -554,6 +555,29 @@ if __name__ == '__main__':
 
     logger.info('build_vocab_word2vec() finished. out_of_vocab_count: %d' %
                 out_of_vocab_count)  #
+    """
+
+    logger.info('Save to ElasticSearch ...')
+    es = es_helper.get_connection()
+
+    # delete index
+    es_helper.delete_index(es, es_helper.index)
+
+    # create index
+    es_helper.create_index(es, es_helper.index)
+
+    # save to elasticsearch, conversaton - response
+    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
+                       response_scores, dialogue_turns), type=es_helper.conversation_type)
+
+    # save to elasticsearch, facts
+    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
+                       domain_names, facts), type=es_helper.fact_type)
+
 
     logger.info('Preprocess finished.')
+
+
+
+
 

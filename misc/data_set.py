@@ -196,6 +196,31 @@ class Seq2seqDataSet:
             encoder_input_lengths, decoder_input_lengths, \
             conversation_texts, response_texts
 
+    def generating_texts(self, decoder_outputs, batch_size):
+        """
+        decoder_outputs: [max_length, batch_size]
+
+        return: [text * batch_size]
+        """
+        texts = []
+        decoder_outputs.transpose_(0, 1)
+        for bi in batch_size:
+            text_ids = decoder_outputs[bi]
+            words = self.dialog_encoder_vocab.ids_to_word(text_ids)
+            text = ' '.join(words)
+            texts.append(text)
+
+        return texts
+
+    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            for conversation, response, generated_text in zip(conversation_texts, response_texts, generated_texts):
+                # conversation, true response, generated_text
+                f.write('Conversation: %s\n' % conversation)
+                f.write('Response: %s\n' % response)
+                f.write('Generated: %s\n' % generated_text)
+                f.write('---------------------------------\n')
+
 
 class KDataSet:
     def __init__(self):
