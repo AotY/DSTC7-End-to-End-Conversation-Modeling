@@ -181,8 +181,8 @@ class Seq2SeqModel(nn.Module):
                         memory_lengths=dialog_encoder_inputs_length
                     )
                 print('dialog_decoder_output shape: {}'.format(dialog_decoder_output.shape))
-                dialog_decoder_outputs[di] = dialog_decoder_output
-                dialog_decoder_attns_std[di] = dialog_decoder_attn
+                dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
+                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
         else:
             # Without teacher forcing: use its own predictions as the next
             # input
@@ -196,8 +196,8 @@ class Seq2SeqModel(nn.Module):
                         memory_lengths=dialog_encoder_inputs_length
                     )
                 print('dialog_decoder_output shape: {}'.format(dialog_decoder_output.shape))
-                dialog_decoder_outputs[di] = dialog_decoder_output
-                dialog_decoder_attns_std[di] = dialog_decoder_attn
+                dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
+                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
                 dialog_decoder_input = torch.argmax(
                     dialog_decoder_output).detach().view(1, -1)
 
