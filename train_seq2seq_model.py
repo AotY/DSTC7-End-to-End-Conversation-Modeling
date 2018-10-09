@@ -371,7 +371,6 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
 
 
 def load_checkpoint(filename='checkpoint.pth'):
-    logger.info("Loding checkpoint '{}'".format(filename))
     checkpoint = torch.load(filename)
     return checkpoint
 
@@ -403,7 +402,7 @@ if __name__ == '__main__':
     # Load checkpoint if we resume from a previous training.
 
     if opt.checkpoint:
-        logger.info('Loading checkpoint from %s' % opt.checkpoint)
+        logger.info('Loading checkpoint from: %s' % opt.checkpoint)
         checkpoint = load_checkpoint(filename=opt.checkpoint)
     else:
         checkpoint = None
