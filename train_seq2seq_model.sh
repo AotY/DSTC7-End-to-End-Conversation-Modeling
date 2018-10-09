@@ -41,7 +41,7 @@ python train_seq2seq_model.py \
     --optim_method adam \
     --batch_per_load 1 \
     --start_epoch 1 \
-    --train_or_eval eval \
+    --train_or_eval train \
     --checkpoint ./models/checkpoint.epoch-4.pth \ 
 
 
