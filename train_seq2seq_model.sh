@@ -42,7 +42,6 @@ python train_seq2seq_model.py \
     --batch_per_load 1 \
     --start_epoch 1 \
     --train_or_eval train \
-    --checkpoint ./models/checkpoint.epoch-4.pth \ 
-
+    --checkpoint ./models/checkpoint.epoch-4.pth  
 
     /

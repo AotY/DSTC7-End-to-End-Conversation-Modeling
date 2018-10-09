@@ -86,8 +86,9 @@ def train_seq2seq_opt(parser):
                        default=0.5,
                        help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
 
-    group.add_argument('--dialog_encoder_bidirectional', action='store_true',
-                       help='is bidirection.')
+    group.add_argument('--dialog_encoder_bidirectional',
+                       action='store_true',
+                       help='is bidirectional.')
 
     group.add_argument('--dialog_encoder_pretrained_embedding_path',
                        type=str,
@@ -95,8 +96,7 @@ def train_seq2seq_opt(parser):
 
     group.add_argument('--dialog_encoder_tied',
                        action='store_true',
-                       help='tie the word embedding and softmax weights'
-                       )
+                       help='tie the word embedding and softmax weights')
 
     '''dialog decoder parameters'''
 
@@ -140,7 +140,7 @@ def train_seq2seq_opt(parser):
                        help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
 
     group.add_argument('--dialog_decoder_bidirectional', action='store_true',
-                       help='is bidirection.')
+                       help='is bidirectional.')
 
     group.add_argument('--dialog_decoder_pretrained_embedding_path',
                        type=str,
@@ -168,7 +168,9 @@ def train_seq2seq_opt(parser):
                        default=0,
                        help='start from a previous epoch.')
 
-    group.add_argument('--batch_size', type=int, default=128, metavar='N',
+    group.add_argument('--batch_size',
+                       type=int,
+                       default=128,
                        help='batch size')
 
     group.add_argument('--teacher_forcing_ratio',
@@ -194,7 +196,9 @@ def train_seq2seq_opt(parser):
                        default='cuda',
                        help='use cuda or cpu.')
 
-    group.add_argument('--log_interval', type=int, default=200, metavar='N',
+    group.add_argument('--log_interval',
+                       type=int,
+                       default=200,
                        help='report interval')
 
     group.add_argument('--model_save_path',
@@ -215,10 +219,6 @@ def train_seq2seq_opt(parser):
                        type=int,
                        default=1,
                        help='each batch load: batch_size * batch_per_load')
-
-    group.add_argument('--train_from',
-                       type=str,
-                       help='loading checkpoint if we resume from a previous training.')
 
     group.add_argument('--checkpoint',
                        type=str,
