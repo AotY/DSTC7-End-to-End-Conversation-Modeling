@@ -220,6 +220,14 @@ def train_seq2seq_opt(parser):
                        type=str,
                        help='loading checkpoint if we resume from a previous training.')
 
+    group.add_argument('--checkpoint',
+                    type=str,
+                    help='for loading checkpoint.')
+
+    group.add_argument('--train_or_eval',
+                       type=str,
+                       help='select train model or eval model')
+
 
 def evaluate_seq2seq_model_opt(parser):
     pass

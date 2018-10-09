@@ -40,7 +40,9 @@ python train_seq2seq_model.py \
     --test_split 0.2 \
     --optim_method adam \
     --batch_per_load 1 \
-    --start_epoch 0 \
+    --start_epoch 1 \
+    --train_or_eval eval \
+    --checkpoint ./models/checkpoint.epoch-4.pth \ 
 
 
     /

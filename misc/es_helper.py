@@ -17,9 +17,8 @@ def get_connection():
     return es
 
 
-def create_index(es, index, doc_type):
+def create_index(es, index, doc_type=None):
     # ignore 400 cause by IndexAlreadyExistsException when creating an index
-    # es.indices.create(index=index, doc_type=doc_type, ignore=400)
     es.indices.create(index=index, ignore=400)
 
 
