@@ -192,7 +192,6 @@ class Seq2SeqModel(nn.Module):
                 dialog_decoder_output = dialog_decoder_output.detach().squeeze(0)
                 dialog_decoder_outputs[di] = dialog_decoder_output
                 dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
-                print('dialog_decoder_output shape: {}'.format(dialog_decoder_output.shape))
                 dialog_decoder_input = torch.argmax(dialog_decoder_output, dim=1)
 
                 if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
