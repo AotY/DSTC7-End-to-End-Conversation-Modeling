@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 export CUDA_VISIBLE_DEVICES=5,6,7
 
-python train_seq2seq_model.py \
+python train_knowledge_grounded_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
     --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx.dict \
@@ -14,7 +14,9 @@ python train_seq2seq_model.py \
     --dialog_encoder_clipnorm 50.0 \
     --dialog_encoder_bidirectional \
     --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
-    --dialog_encoder_tied \
+    --facts_embedding_size 300 \
+    --facts_max_length 50 \
+    --facts_dropout_probability 0.8 \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 300 \
     --dialog_decoder_num_layers 2 \
@@ -32,12 +34,12 @@ python train_seq2seq_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 50 \
-    --log_file ./logs/train_seq2seq_model_{}.log \
+    --log_file ./logs/train_knowledge_grounded_model{}.log \
     --model_save_path ./models \
     --eval_split 0.2 \
     --optim_method adam \
     --start_epoch 1 \
-    --train_or_eval train \
+    --train_or_eval train 
     # --checkpoint ./models/checkpoint.epoch-4.pth  
 
     /
