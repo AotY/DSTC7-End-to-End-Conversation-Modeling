@@ -64,9 +64,12 @@ def search_facts_by_subbreddit_and_id(es):
     print(res)
 
 if __name__ == "__main__":
+    print('get Conversation ....')
     es = es_helper.get_connection()
 
     search_conversation_by_hash(es)
+
+    search_facts_by_hash(es)
 
     search_conversation_by_subreddit_and_id(es)
 
