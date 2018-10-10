@@ -312,8 +312,8 @@ def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     save_file.close()
 
 
-def save_to_es(es, datas_zip, type='conversation'):
-    if type == es_helper.conversation_type:
+def save_to_es(es, datas_zip, doc_type='conversation'):
+    if doc_type == es_helper.conversation_type:
         for hash_value, subreddit_name, conversation_id, response_score, dialogue_turn in datas_zip:
             body = {
                 'hash_value': hash_value,
@@ -323,8 +323,8 @@ def save_to_es(es, datas_zip, type='conversation'):
                 'dialogue_turn': dialogue_turn,
             }
             es_helper.insert_to_es(
-                es, body, es_helper.index, es_helper.conversation_type)
-    elif type == es_helper.fact_type:
+                es, body, es_helper.index, doc_type)
+    elif doc_type == es_helper.fact_type:
         for hash_value, subreddit_name, conversation_id, domain_name, fact in datas_zip:
             body = {
                 'hash_value': hash_value,
@@ -334,7 +334,7 @@ def save_to_es(es, datas_zip, type='conversation'):
                 'fact': fact,
             }
             es_helper.insert_to_es(
-                es, body, es_helper.index, es_helper.conversation_type)
+                es, body, es_helper.index, doc_type)
 
 
 '''save count'''
@@ -514,6 +514,7 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
+    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(
         None,
@@ -530,6 +531,8 @@ if __name__ == '__main__':
 
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText.txt')
+
+    """
 
     """
     # training own word embedding.
@@ -569,11 +572,11 @@ if __name__ == '__main__':
 
     # save to elasticsearch, conversaton - response
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
-                       response_scores, dialogue_turns), type=es_helper.conversation_type)
+                       response_scores, dialogue_turns), doc_type=es_helper.conversation_type)
 
     # save to elasticsearch, facts
     save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
-                       domain_names, facts), type=es_helper.fact_type)
+                       domain_names, facts), doc_type=es_helper.fact_type)
 
 
     logger.info('Preprocess finished.')
