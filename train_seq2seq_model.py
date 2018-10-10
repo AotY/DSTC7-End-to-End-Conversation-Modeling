@@ -217,7 +217,6 @@ def evaluate(seq2seq_model=None,
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                 dialog_decoder_inputs=dialog_decoder_inputs,
-                dialog_decoder_inputs_length=dialog_decoder_inputs_length,
                 batch_size=opt.batch_size)
 
             #  Compute loss
