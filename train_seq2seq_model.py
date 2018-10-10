@@ -20,7 +20,7 @@ from modules.embeddings import Embedding
 
 from misc.vocab import Vocab
 from train_evaluate_opt import data_set_opt, train_seq2seq_opt
-from seq2seq_model import Seq2SeqModel
+from model import Seq2SeqModel
 from misc.data_set import Seq2seqDataSet
 
 program = os.path.basename(sys.argv[0])
@@ -51,8 +51,8 @@ logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 torch.manual_seed(opt.seed)
 
 
-def train_epochs(seq2seq_model=None,
-                 seq2seq_dataset=None,
+def train_epochs(model=None,
+                 dataset=None,
                  optimizer=None,
                  criterion=None,
                  vocab=None,
@@ -61,28 +61,26 @@ def train_epochs(seq2seq_model=None,
     start = time.time()
 
     log_loss_total = 0  # Reset every logger.info_every
-    max_load = int(np.ceil(seq2seq_dataset.n_train / opt.batch_size))
+    max_load = int(np.ceil(dataset.n_train / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
-        seq2seq_dataset.reset_data('train')
+        dataset.reset_data('train')
         for load in range(1, max_load + 1):
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 epoch, opt.epochs, 100 * load / max_load)
             logger.info(logger_str)
 
             # load data
-            dialog_encoder_inputs, \
+            dialog_encoder_inputs, dialog_encoder_inputs_length, \
                 dialog_decoder_inputs, dialog_decoder_targets, \
-                dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
-                conversation_texts, response_texts = seq2seq_dataset.load_data(
+                conversation_texts, response_texts = dataset.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
-            loss = train(seq2seq_model,
+            loss = train(model,
                          dialog_encoder_inputs,
+                         dialog_encoder_inputs_length,
                          dialog_decoder_inputs,
                          dialog_decoder_targets,
-                         dialog_encoder_inputs_length,
-                         dialog_decoder_inputs_length,
                          optimizer,
                          criterion,
                          vocab,
@@ -99,8 +97,8 @@ def train_epochs(seq2seq_model=None,
                 log_loss_total = 0
 
         # evaluate
-        evaluate_loss = evaluate(seq2seq_model=seq2seq_model,
-                                 seq2seq_dataset=seq2seq_dataset,
+        evaluate_loss = evaluate(model=model,
+                                 dataset=dataset,
                                  criterion=criterion,
                                  opt=opt)
 
@@ -112,7 +110,7 @@ def train_epochs(seq2seq_model=None,
         save_state = {
             'loss': evaluate_loss,
             'epoch': epoch,
-            'state_dict': seq2seq_model.state_dict(),
+            'state_dict': model.state_dict(),
             'optimizer': optimizer.optimizer.state_dict()
         }
 
@@ -126,27 +124,25 @@ def train_epochs(seq2seq_model=None,
 ''' start traing '''
 
 
-def train(seq2seq_model,
+def train(model,
           dialog_encoder_inputs,
+          dialog_encoder_inputs_length,
           dialog_decoder_inputs,
           dialog_decoder_targets,
-          dialog_encoder_inputs_length,
-          dialog_decoder_inputs_length,
           optimizer,
           criterion,
           vocab,
           opt):
 
     # Turn on training mode which enables dropout.
-    seq2seq_model.train()
+    model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
         (dialog_decoder_final_state, dialog_decoder_outputs, dialog_decoder_attns) \
-        = seq2seq_model(
+        = model(
         dialog_encoder_inputs=dialog_encoder_inputs,
         dialog_encoder_inputs_length=dialog_encoder_inputs_length,
         dialog_decoder_inputs=dialog_decoder_inputs,
-        dialog_decoder_inputs_length=dialog_decoder_inputs_length,
         dialog_decoder_targets=dialog_decoder_targets,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
         batch_size=opt.batch_size)
@@ -170,12 +166,11 @@ def train(seq2seq_model,
 
     # Clip gradients: gradients are modified in place
     _ = torch.nn.utils.clip_grad_norm_(
-        seq2seq_model.parameters(), opt.dialog_decoder_clipnorm)
+        model.parameters(), opt.dialog_decoder_clipnorm)
 
     # optimizer
     optimizer.step()
 
-    #  return batch_loss / torch.sum(dialog_decoder_inputs_length)
     return loss.item()
 
 
@@ -192,33 +187,36 @@ evaluate model.
 '''
 
 
-def evaluate(seq2seq_model=None,
-             seq2seq_dataset=None,
+def evaluate(model=None,
+             dataset=None,
              criterion=None,
              opt=None):
 
     # Turn on evaluation mode which disables dropout.
-    seq2seq_model.eval()
+    model.eval()
     loss_total = 0
-    max_load = int(np.ceil(seq2seq_dataset.n_eval / opt.batch_size))
-    seq2seq_dataset.reset_data('eval')
+    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
+    dataset.reset_data('eval')
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            dialog_encoder_inputs, \
+            dialog_encoder_inputs, dialog_encoder_inputs_length, \
                 dialog_decoder_inputs, dialog_decoder_targets, \
-                dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
-                conversation_texts, response_texts = seq2seq_dataset.load_data(
+                conversation_texts, response_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
             (dialog_encoder_final_state, dialog_encoder_memory_bank), \
                 (dialog_decoder_final_state, dialog_decoder_outputs,
-                 dialog_decoder_attns) = seq2seq_model.evaluate(
+                 dialog_decoder_attns) = model.evaluate(
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
+
+            # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
+            dialog_decoder_outputs_argmax = torch.argmax(
+                dialog_decoder_outputs, dim=2)
 
             #  Compute loss
             dialog_decoder_outputs = dialog_decoder_outputs.view(
@@ -230,16 +228,14 @@ def evaluate(seq2seq_model=None,
             loss_total += loss.item()
 
             # generate sentence, and save to file
-            # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            print('evaluate dialog_decoder_outputs shape: {}'.format(dialog_decoder_outputs.shape))
-            dialog_decoder_outputs = torch.argmax(dialog_decoder_outputs, dim=2)
+
             # [max_length, batch_size]
-            generated_texts = seq2seq_dataset.generating_texts(
-                dialog_decoder_outputs.detach().cpu())
+            generated_texts = dataset.generating_texts(
+                dialog_decoder_outputs_argmax.detach().cpu())
 
             # save sentences
-            seq2seq_dataset.save_generated_texts(conversation_texts, response_texts, generated_texts,
-                                                 os.path.join(opt.save_path, 'generated_texts_{}.txt'.format(time_str)))
+            dataset.save_generated_texts(conversation_texts, response_texts,
+                                         generated_texts, os.path.join(opt.save_path, 'seq2seq_generated_texts_{}.txt'.format(time_str)))
 
     return loss_total / max_load
 
@@ -258,7 +254,7 @@ def build_optim(model, opt):
         opt.optim_method,
         opt.lr,
         opt.dialog_encoder_clipnorm,
-        # lr_decay=opt.learning_rate_decay,
+        # lr_decay=opt.learning_probability_decay,
         # start_decay_at=opt.start_decay_at,
         # beta1=opt.adam_beta1,
         # beta2=opt.adam_beta2,
@@ -294,12 +290,12 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
     dialog_encoder_embedding = Embedding(embedding_size=opt.dialog_encoder_embedding_size,
                                          vocab_size=dialog_encoder_vocab.get_vocab_size(),
                                          padding_idx=dialog_encoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_encoder_dropout_rate)
+                                         dropout_ratio=opt.dialog_encoder_dropout_probability)
 
     dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
                                          vocab_size=dialog_decoder_vocab.get_vocab_size(),
                                          padding_idx=dialog_decoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_decoder_dropout_rate)
+                                         dropout_ratio=opt.dialog_decoder_dropout_probability)
 
     ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
@@ -319,16 +315,15 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_embedding.set_pretrained_embedding(
             dialog_decoder_pretrained_embedding_weight, fixed=False)
 
-    seq2seq_model = Seq2SeqModel(
+    model = Seq2SeqModel(
         dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
         dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
         dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
         dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
         dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
-        dialog_encoder_dropout_rate=opt.dialog_encoder_dropout_rate,
+        dialog_encoder_dropout_probability=opt.dialog_encoder_dropout_probability,
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_clipnorm=opt.dialog_encoder_clipnorm,
-        dialog_encoder_clipvalue=opt.dialog_encoder_clipvalue,
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_embedding=dialog_encoder_embedding,
         dialog_encoder_pad_id=dialog_encoder_vocab.padid,
@@ -339,11 +334,9 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
         dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
         dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
-        dialog_decoder_dropout_rate=opt.dialog_decoder_dropout_rate,
+        dialog_decoder_dropout_probability=opt.dialog_decoder_dropout_probability,
         dialog_decoder_max_length=opt.dialog_decoder_max_length,
         dialog_decoder_clipnorm=opt.dialog_decoder_clipnorm,
-        dialog_decoder_clipvalue=opt.dialog_decoder_clipvalue,
-        dialog_decoder_bidirectional=opt.dialog_decoder_bidirectional,
         dialog_decoder_embedding=dialog_decoder_embedding,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
         dialog_decoder_eos_id=dialog_decoder_vocab.eosid,
@@ -351,10 +344,10 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
         dialog_decoder_tied=opt.dialog_decoder_tied,
         device=device)
 
-    seq2seq_model = seq2seq_model.to(device)
+    model = model.to(device)
 
-    print(seq2seq_model)
-    return seq2seq_model
+    print(model)
+    return model
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth'):
@@ -413,7 +406,7 @@ if __name__ == '__main__':
     vocab_size = vocab.get_vocab_size()
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
-    seq2seq_dataset = Seq2seqDataSet(
+    dataset = Seq2seqDataSet(
         path_conversations_responses_pair=opt.path_conversations_responses_pair,
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_vocab=vocab,
@@ -425,10 +418,10 @@ if __name__ == '__main__':
         logger=logger
     )
 
-    seq2seq_model = build_model(opt, vocab, vocab, None)
+    model = build_model(opt, vocab, vocab, None)
 
     # Build optimizer.
-    optimizer = build_optim(seq2seq_model, opt)
+    optimizer = build_optim(model, opt)
 
     # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
@@ -439,21 +432,21 @@ if __name__ == '__main__':
 
     '''if load checkpoint'''
     if checkpoint:
-        seq2seq_model.load_state_dict(checkpoint['state_dict'])
+        model.load_state_dict(checkpoint['state_dict'])
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
         opt.start_epoch = checkpoint['epoch'] + 1
 
     if opt.train_or_eval == 'train':
-        train_epochs(seq2seq_model=seq2seq_model,
-                     seq2seq_dataset=seq2seq_dataset,
+        train_epochs(model=model,
+                     dataset=dataset,
                      optimizer=optimizer,
                      criterion=criterion,
                      vocab=vocab,
                      opt=opt)
     elif opt.train_or_eval == 'eval':
         evaluate(
-            seq2seq_model=seq2seq_model,
-            seq2seq_dataset=seq2seq_dataset,
+            model=model,
+            dataset=dataset,
             criterion=criterion,
             opt=opt)
     else:

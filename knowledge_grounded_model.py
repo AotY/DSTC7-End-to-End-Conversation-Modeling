@@ -48,7 +48,7 @@ class KnowledgeGroundedModel(nn.Module):
                  dialog_decoder_num_layers=2,
                  dialog_decoder_rnn_type='LSTM',
                  dialog_decoder_dropout_rate=0.5,
-                 dialog_decoder_clipnorm=1.0,
+                 dialog_decoder_clipnorm=50.0,
                  dialog_decoder_max_length=32,
                  dialog_decoder_embedding=None,
                  dialog_decoder_pad_id=0,
@@ -280,9 +280,10 @@ class KnowledgeGroundedModel(nn.Module):
     def evaluate(self,
                  dialog_encoder_inputs,  # LongTensor
                  dialog_encoder_inputs_length,
+                 facts_inputs,
+                 facts_inputs_length,
                  dialog_decoder_inputs,
-                 batch_size=128
-                 ):
+                 batch_size=128):
 
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)

@@ -48,11 +48,15 @@ class Seq2seqDataSet:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
 
-                conversation_ids = self.dialog_encoder_vocab.words_to_id(conversation.split())
-                conversation_ids = conversation_ids[0: min(self.dialog_encoder_max_length - 2, len(conversation_ids))]
+                conversation_ids = self.dialog_encoder_vocab.words_to_id(
+                    conversation.split())
+                conversation_ids = conversation_ids[0: min(
+                    self.dialog_encoder_max_length - 2, len(conversation_ids))]
 
-                response_ids = self.dialog_decoder_vocab.words_to_id(response.split())
-                response_ids = response_ids[0: min(self.dialog_decoder_max_length - 2, len(response_ids))]
+                response_ids = self.dialog_decoder_vocab.words_to_id(
+                    response.split())
+                response_ids = response_ids[0: min(
+                    self.dialog_decoder_max_length - 2, len(response_ids))]
 
                 datas.append((conversation_ids, response_ids))
 
@@ -64,7 +68,7 @@ class Seq2seqDataSet:
 
         self._data_dict = {
             'train': datas[0: self.n_train],
-            'eval': datas[self.n_train: ]
+            'eval': datas[self.n_train:]
         }
         self._indicator_dict = {
             'train': 0,
@@ -74,7 +78,6 @@ class Seq2seqDataSet:
     def reset_data(self, task):
         np.random.shuffle(self._data_dict[task])
         self._indicator_dict[task] = 0
-
 
     def all_loaded(self, task):
         return self._data_dict[task]
@@ -94,35 +97,36 @@ class Seq2seqDataSet:
                          (task, self._indicator_dict[task], cur_indicator))
 
         encoder_inputs = torch.zeros((self.dialog_encoder_max_length, batch_size),
-                                         dtype=torch.long,
-                                         device=self.device)
+                                     dtype=torch.long,
+                                     device=self.device)
         encoder_inputs_length = []
 
         decoder_inputs = torch.zeros((self.dialog_decoder_max_length, batch_size),
-                                         dtype=torch.long,
-                                         device=self.device)
+                                     dtype=torch.long,
+                                     device=self.device)
         decoder_targets = torch.zeros((self.dialog_decoder_max_length, batch_size),
-                                          dtype=torch.long,
-                                          device=self.device)
-        decoder_inputs_length = []
+                                      dtype=torch.long,
+                                      device=self.device)
 
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]
+            : cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
 
             # append length
             encoder_inputs_length.append(len(conversation_ids))
-            decoder_inputs_length.append(len(response_ids))
 
             if response_ids[-1] != self.dialog_decoder_vocab.eosid:
                 response_ids.append(self.dialog_decoder_vocab.eosid)
             # ids to word
-            conversation_texts.append(' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
-            response_texts.append(' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
+            conversation_texts.append(
+                ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
+            response_texts.append(
+                ' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
 
             # encoder_inputs
             for t, token_id in enumerate(conversation_ids):
@@ -135,25 +139,25 @@ class Seq2seqDataSet:
                 decoder_targets[t, i] = token_id
 
         # To long tensor
-        encoder_inputs_length = torch.tensor(encoder_inputs_length, dtype=torch.long)
-        decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long)
+        encoder_inputs_length = torch.tensor(
+            encoder_inputs_length, dtype=torch.long)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
-        return encoder_inputs, decoder_inputs, \
-            decoder_targets, encoder_inputs_length, \
-            decoder_inputs_length, conversation_texts, response_texts
+        return encoder_inputs, encoder_inputs_length, \
+            decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts
 
-    def generating_texts(self, decoder_outputs, batch_size):
+    def generating_texts(self, decoder_outputs_argmax, batch_size):
         """
-        decoder_outputs: [max_length, batch_size]
+        decoder_outputs_argmax: [max_length, batch_size]
         return: [text * batch_size]
         """
         texts = []
-        decoder_outputs.transpose_(0, 1)
+        decoder_outputs_argmax.transpose_(0, 1)
         for bi in batch_size:
-            text_ids = decoder_outputs[bi]
+            text_ids = decoder_outputs_argmax[bi]
             words = self.dialog_encoder_vocab.ids_to_word(text_ids)
             text = ' '.join(words)
             texts.append(text)
@@ -227,11 +231,15 @@ class KnowledgeGroundedDataSet:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
 
-                conversation_ids = self.dialog_encoder_vocab.words_to_id(conversation.split())
-                conversation_ids = conversation_ids[0: min(self.dialog_encoder_max_length - 2, len(conversation_ids))]
+                conversation_ids = self.dialog_encoder_vocab.words_to_id(
+                    conversation.split())
+                conversation_ids = conversation_ids[0: min(
+                    self.dialog_encoder_max_length - 2, len(conversation_ids))]
 
-                response_ids = self.dialog_decoder_vocab.words_to_id(response.split())
-                response_ids = response_ids[0: min(self.dialog_decoder_max_length - 2, len(response_ids))]
+                response_ids = self.dialog_decoder_vocab.words_to_id(
+                    response.split())
+                response_ids = response_ids[0: min(
+                    self.dialog_decoder_max_length - 2, len(response_ids))]
 
                 datas.append((conversation_ids, response_ids, hash_value))
 
@@ -243,7 +251,7 @@ class KnowledgeGroundedDataSet:
 
         self._data_dict = {
             'train': datas[0: self.n_train],
-            'eval': datas[self.n_train: ]
+            'eval': datas[self.n_train:]
         }
         self._indicator_dict = {
             'train': 0,
@@ -253,7 +261,6 @@ class KnowledgeGroundedDataSet:
     def reset_data(self, task):
         np.random.shuffle(self._data_dict[task])
         self._indicator_dict[task] = 0
-
 
     def all_loaded(self, task):
         return self._data_dict[task]
@@ -273,37 +280,38 @@ class KnowledgeGroundedDataSet:
                          (task, self._indicator_dict[task], cur_indicator))
 
         encoder_inputs = torch.zeros((self.dialog_encoder_max_length, batch_size),
-                                         dtype=torch.long,
-                                         device=self.device)
+                                     dtype=torch.long,
+                                     device=self.device)
         encoder_inputs_length = []
 
         decoder_inputs = torch.zeros((self.dialog_decoder_max_length, batch_size),
-                                         dtype=torch.long,
-                                         device=self.device)
+                                     dtype=torch.long,
+                                     device=self.device)
         decoder_targets = torch.zeros((self.dialog_decoder_max_length, batch_size),
-                                          dtype=torch.long,
-                                          device=self.device)
-        decoder_inputs_length = []
+                                      dtype=torch.long,
+                                      device=self.device)
 
         conversation_texts = []
         response_texts = []
 
         facts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]
+            : cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or bool(hash_value):
                 continue
             # append length
             encoder_inputs_length.append(len(conversation_ids))
-            decoder_inputs_length.append(len(response_ids))
 
             if response_ids[-1] != self.dialog_decoder_vocab.eosid:
                 response_ids.append(self.dialog_decoder_vocab.eosid)
-                
+
             # ids to word
-            conversation_texts.append(' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
-            response_texts.append(' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
+            conversation_texts.append(
+                ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
+            response_texts.append(
+                ' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
 
             # encoder_inputs
             for t, token_id in enumerate(conversation_ids):
@@ -316,28 +324,30 @@ class KnowledgeGroundedDataSet:
                 decoder_targets[t, i] = token_id
 
             # search facts ?
-            facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(es, hash_value)
+            facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
+                es, hash_value)
 
         # To long tensor
-        encoder_inputs_length = torch.tensor(encoder_inputs_length, dtype=torch.long)
-        decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long)
+        encoder_inputs_length = torch.tensor(
+            encoder_inputs_length, dtype=torch.long)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
-        return encoder_inputs, decoder_inputs, \
-            decoder_targets, encoder_inputs_length, \
-            decoder_inputs_length, conversation_texts, response_texts
+        return encoder_inputs, encoder_inputs_length, \
+            facts_inputs, facts_inputs_length, \
+            decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts
 
-    def generating_texts(self, decoder_outputs, batch_size):
+    def generating_texts(self, decoder_outputs_argmax, batch_size):
         """
-        decoder_outputs: [max_length, batch_size]
+        decoder_outputs_argmax: [max_length, batch_size]
         return: [text * batch_size]
         """
         texts = []
-        decoder_outputs.transpose_(0, 1)
+        decoder_outputs_argmax.transpose_(0, 1)
         for bi in batch_size:
-            text_ids = decoder_outputs[bi]
+            text_ids = decoder_outputs_argmax[bi]
             words = self.dialog_encoder_vocab.ids_to_word(text_ids)
             text = ' '.join(words)
             texts.append(text)

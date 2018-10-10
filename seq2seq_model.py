@@ -22,10 +22,9 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_hidden_size=300,
                  dialog_encoder_num_layers=2,
                  dialog_encoder_rnn_type='LSTM',
-                 dialog_encoder_dropout_rate=0.5,
+                 dialog_encoder_dropout_probability=0.5,
                  dialog_encoder_max_length=32,
                  dialog_encoder_clipnorm=1.0,
-                 dialog_encoder_clipvalue=0.5,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_embedding=None,
                  dialog_encoder_pad_id=0,
@@ -36,11 +35,9 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_hidden_size=300,
                  dialog_decoder_num_layers=2,
                  dialog_decoder_rnn_type='LSTM',
-                 dialog_decoder_dropout_rate=0.5,
+                 dialog_decoder_dropout_probability=0.5,
                  dialog_decoder_clipnorm=1.0,
-                 dialog_decoder_clipvalue=0.5,
                  dialog_decoder_max_length=32,
-                 dialog_decoder_bidirectional=True,
                  dialog_decoder_embedding=None,
                  dialog_decoder_pad_id=0,
                  dialog_decoder_eos_id=3,
@@ -57,10 +54,9 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_hidden_size = dialog_encoder_hidden_size
         self.dialog_encoder_num_layers = dialog_encoder_num_layers
         self.dialog_encoder_rnn_type = dialog_encoder_rnn_type
-        self.dialog_encoder_dropout_rate = dialog_encoder_dropout_rate
+        self.dialog_encoder_dropout_probability = dialog_encoder_dropout_probability
         self.dialog_encoder_max_length = dialog_encoder_max_length
         self.dialog_encoder_clipnorm = dialog_encoder_clipnorm
-        self.dialog_encoder_clipvalue = dialog_encoder_clipvalue
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
         self.dialog_encoder_pad_id = dialog_encoder_pad_id
         self.dialog_encoder_tied = dialog_encoder_tied
@@ -71,11 +67,9 @@ class Seq2SeqModel(nn.Module):
         self.dialog_decoder_hidden_size = dialog_decoder_hidden_size
         self.dialog_decoder_num_layers = dialog_decoder_num_layers
         self.dialog_decoder_rnn_type = dialog_decoder_rnn_type
-        self.dialog_decoder_dropout_rate = dialog_decoder_dropout_rate
+        self.dialog_decoder_dropout_probability = dialog_decoder_dropout_probability
         self.dialog_decoder_max_length = dialog_decoder_max_length
         self.dialog_decoder_clipnorm = dialog_decoder_clipnorm
-        self.dialog_decoder_clipvalue = dialog_decoder_clipvalue
-        self.dialog_decoder_bidirectional = dialog_decoder_bidirectional
         self.dialog_decoder_pad_id = dialog_decoder_pad_id
         self.dialog_decoder_eos_id = dialog_decoder_eos_id
         self.dialog_decoder_attention_type = dialog_decoder_attention_type
@@ -93,17 +87,17 @@ class Seq2SeqModel(nn.Module):
             bidirectional=self.dialog_encoder_bidirectional,
             num_layers=self.dialog_encoder_num_layers,
             hidden_size=self.dialog_encoder_hidden_size,
-            dropout=self.dialog_encoder_dropout_rate,
+            dropout=self.dialog_encoder_dropout_probability,
             embedding=dialog_encoder_embedding
         )
 
         # Dialog Decoder with Attention
         self.dialog_decoder = StdRNNDecoder(
             rnn_type=self.dialog_decoder_rnn_type,
-            bidirectional_encoder=self.dialog_decoder_bidirectional,
+            bidirectional_encoder=self.dialog_encoder_bidirectional,
             num_layers=self.dialog_decoder_num_layers,
             hidden_size=self.dialog_decoder_hidden_size,
-            dropout=self.dialog_decoder_dropout_rate,
+            dropout=self.dialog_decoder_dropout_probability,
             embedding=dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
             attn_type=self.dialog_decoder_attention_type
         )
@@ -133,7 +127,6 @@ class Seq2SeqModel(nn.Module):
                 dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length,
                 dialog_decoder_inputs,
-                dialog_decoder_inputs_length,
                 dialog_decoder_targets,
                 teacher_forcing_ratio=0.5,
                 batch_size=128):
@@ -147,8 +140,7 @@ class Seq2SeqModel(nn.Module):
         dialog_encoder_state, dialog_encoder_memory_bank = self.dialog_encoder(
             src=dialog_encoder_inputs,
             lengths=dialog_encoder_inputs_length,
-            encoder_state=dialog_encoder_state,
-        )
+            encoder_state=dialog_encoder_state)
 
         '''dialog_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None

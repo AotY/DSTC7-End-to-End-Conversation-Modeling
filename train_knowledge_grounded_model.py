@@ -69,22 +69,20 @@ def train_epochs(model=None,
             logger.info(logger_str)
 
             # load data
-            dialog_encoder_inputs, \
-                dialog_decoder_inputs, dialog_decoder_targets, \
-                dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
-                conversation_texts, response_texts = dataset.load_data(
+            dialog_encoder_inputs, dialog_encoder_inputs_length,
+            facts_inputs, facts_inputs_length, \ 
+            dialog_decoder_inputs, dialog_decoder_targets, \ 
+            conversation_texts, response_texts = dataset.load_data(
                     'train', opt.batch_size)
-
-            # search facts
-            facts_inputs = dataset.search_fatcts(conversation_texts)
 
             # train and get cur loss
             loss = train(model,
                          dialog_encoder_inputs,
+                         dialog_encoder_inputs_length,
                          facts_inputs,
+                         facts_inputs_length,
                          dialog_decoder_inputs,
                          dialog_decoder_targets,
-                         dialog_encoder_inputs_length,
                          optimizer,
                          criterion,
                          vocab,
@@ -129,10 +127,11 @@ def train_epochs(model=None,
 
 def train(model,
           dialog_encoder_inputs,
+          dialog_encoder_inputs_length,
           facts_inputs,
+          facts_inputs_length,
           dialog_decoder_inputs,
           dialog_decoder_targets,
-          dialog_encoder_inputs_length,
           optimizer,
           criterion,
           vocab,
@@ -147,6 +146,7 @@ def train(model,
         dialog_encoder_inputs=dialog_encoder_inputs,
         dialog_encoder_inputs_length=dialog_encoder_inputs_length,
         facts_inputs=facts_inputs,
+        facts_inputs_length=facts_inputs_length,
         dialog_decoder_inputs=dialog_decoder_inputs,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
         batch_size=opt.batch_size)
@@ -205,14 +205,12 @@ def evaluate(model=None,
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            dialog_encoder_inputs, \
-                dialog_decoder_inputs, dialog_decoder_targets, \
-                dialog_encoder_inputs_length, dialog_decoder_inputs_length, \
-                conversation_texts, response_texts = dataset.load_data(
-                    'eval', opt.batch_size)
 
-            # search facts
-            facts_inputs = dataset.search_fatcts(conversation_texts)
+            dialog_encoder_inputs, dialog_encoder_inputs_length,
+            facts_inputs, facts_inputs_length, \ 
+            dialog_decoder_inputs, dialog_decoder_targets, \ 
+            conversation_texts, response_texts = dataset.load_data(
+                    'eval', opt.batch_size)
 
             # train and get cur loss
             (dialog_encoder_final_state, dialog_encoder_memory_bank), \
@@ -221,6 +219,7 @@ def evaluate(model=None,
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                 facts_inputs=facts_inputs,
+                facts_inputs_length=facts_inputs_length,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
