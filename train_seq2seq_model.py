@@ -20,7 +20,7 @@ from modules.embeddings import Embedding
 
 from misc.vocab import Vocab
 from train_evaluate_opt import data_set_opt, train_seq2seq_opt
-from model import Seq2SeqModel
+from seq2seq_model import Seq2SeqModel
 from misc.data_set import Seq2seqDataSet
 
 program = os.path.basename(sys.argv[0])

@@ -20,7 +20,7 @@ from modules.embeddings import Embedding
 
 from misc.vocab import Vocab
 from train_evaluate_opt import data_set_opt, train_seq2seq_opt
-from model import KnowledgeGroundedModel
+from knowledge_grounded_model import KnowledgeGroundedModel
 from misc.data_set import KnowledgeGroundedDataSet
 
 program = os.path.basename(sys.argv[0])
@@ -70,8 +70,8 @@ def train_epochs(model=None,
 
             # load data
             dialog_encoder_inputs, dialog_encoder_inputs_length,
-            facts_inputs, facts_inputs_length, \ 
-            dialog_decoder_inputs, dialog_decoder_targets, \ 
+            facts_inputs, facts_inputs_length, \
+            dialog_decoder_inputs, dialog_decoder_targets, \
             conversation_texts, response_texts = dataset.load_data(
                     'train', opt.batch_size)
 
@@ -207,8 +207,8 @@ def evaluate(model=None,
             # load data
 
             dialog_encoder_inputs, dialog_encoder_inputs_length,
-            facts_inputs, facts_inputs_length, \ 
-            dialog_decoder_inputs, dialog_decoder_targets, \ 
+            facts_inputs, facts_inputs_length, \
+            dialog_decoder_inputs, dialog_decoder_targets, \
             conversation_texts, response_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
