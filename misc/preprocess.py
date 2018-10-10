@@ -320,7 +320,7 @@ def save_to_es(es, datas_zip, doc_type='conversation'):
                 'subreddit_name': subreddit_name,
                 'conversation_id': conversation_id,
                 'response_score': response_score,
-                'dialogue_turn': dialogue_turn,
+                'dialogue_turn': dialogue_turn
             }
             es_helper.insert_to_es(
                 es, body, es_helper.index, doc_type)
@@ -331,7 +331,7 @@ def save_to_es(es, datas_zip, doc_type='conversation'):
                 'subreddit_name': subreddit_name,
                 'conversation_id': conversation_id,
                 'domain_name': domain_name,
-                'fact': fact,
+                'fact': fact
             }
             es_helper.insert_to_es(
                 es, body, es_helper.index, doc_type)
@@ -417,7 +417,7 @@ if __name__ == '__main__':
         conversations, responses, \
         conversations_length_distribution, conversation_max_length, \
         responses_length_distribution, response_max_length, \
-        hash_values, subreddit_names, conversation_ids, \
+        conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids, \
         response_scores, dialogue_turns, conversation_response_nums, \
         abnormal_conversations, abnormal_responses = read_convos(
             opt.convos_file_path, logger)
@@ -430,7 +430,7 @@ if __name__ == '__main__':
     save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
     # save raw pair
-    save_raw_pair(raw_conversations, raw_responses, hash_values)
+    save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
 
     # save abnormal_conversations, abnormal_responses
     save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
@@ -438,12 +438,12 @@ if __name__ == '__main__':
 
     # re-save conversations, responses, and facts
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-    save_data_to_pair(opt, conversations, responses, hash_values,
+    save_data_to_pair(opt, conversations, responses, conversation_hash_values,
                       filename='conversations_responses.pair.txt')
 
     # read facts
-    raw_facts, facts, hash_values, \
-        subreddit_names, conversation_ids, \
+    raw_facts, facts, facts_hash_values, \
+        facts_subreddit_names, facts_conversation_ids, \
         domain_names, conversation_fact_nums, \
         fact_max_length, facts_length_distribution, \
         abnormal_facts = read_facts(opt.facts_file_path, logger)
@@ -451,7 +451,7 @@ if __name__ == '__main__':
     logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
     # save raw facts to txt
-    save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names, \
+    save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, \
                    os.path.join(opt.save_path, 'facts.txt'))
 
     # save conversations, responses and facts count
@@ -571,11 +571,11 @@ if __name__ == '__main__':
     es_helper.create_index(es, es_helper.index)
 
     # save to elasticsearch, conversaton - response
-    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
+    save_to_es(es, zip(conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids,
                        response_scores, dialogue_turns), doc_type=es_helper.conversation_type)
 
     # save to elasticsearch, facts
-    save_to_es(es, zip(hash_values, subreddit_names, conversation_ids,
+    save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
 
 

@@ -5,6 +5,8 @@ from __future__ import absolute_import, division, print_function
 import torch
 import numpy as np
 
+from misc import es_helper
+
 
 class Seq2seqDataSet:
     """
@@ -209,6 +211,11 @@ class KnowledgeGroundedDataSet:
         self.logger = logger
         self._data_dict = {}
         self._indicator_dict = {}
+
+        # es
+        self.es = es_helper.get_connection()
+
+        # read text, prepare data
         self.read_txt(path_conversations_responses_pair, eval_split)
 
     def read_txt(self, path_conversations_responses_pair, eval_split):
@@ -281,6 +288,8 @@ class KnowledgeGroundedDataSet:
         conversation_texts = []
         response_texts = []
 
+        facts = []
+
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or bool(hash_value):
@@ -307,6 +316,7 @@ class KnowledgeGroundedDataSet:
                 decoder_targets[t, i] = token_id
 
             # search facts ?
+            facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(es, hash_value)
 
         # To long tensor
         encoder_inputs_length = torch.tensor(encoder_inputs_length, dtype=torch.long)
@@ -334,13 +344,14 @@ class KnowledgeGroundedDataSet:
 
         return texts
 
-    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, filename):
+    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, facts, filename):
         with open(filename, 'w', encoding='utf-8') as f:
             for conversation, response, generated_text in zip(conversation_texts, response_texts, generated_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
                 f.write('Generated: %s\n' % generated_text)
+                f.write('Facts: %s\n' % ' '.join(facts))
                 f.write('---------------------------------\n')
 
 

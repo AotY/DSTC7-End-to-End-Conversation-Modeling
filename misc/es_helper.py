@@ -33,6 +33,47 @@ def insert_to_es(es, body, index, doc_type):
     es.index(index=index, doc_type=doc_type, body=body)
 
 
+
+def search_facts_by_conversation_hash_value(es, hash_value):
+    # obtain subreddit_name, conversation_id
+    query_body = {
+        'query': {
+            'match': {
+                'hash_value': hash_value
+            }
+        }
+    }
+
+    result = es.search(index, conversation_type, query_body)
+    hits = result['hits']['hits']
+    subreddit_name, conversation_id = hits[0]['subreddit_name'], hits[0]['conversation_id']
+
+
+    # obtain facts by conversation_id
+    query_body = {
+        'query': {
+            'match': {
+                'conversation_id': conversation_id
+            }
+        }
+    }
+    result = es.search(index, fact_type, query_body)
+    hit_count = result['hits']['total']
+    hits = result['hits']['hits']
+    facts = []
+    facts_length = []
+    domains = []
+    conversation_ids = []
+    for hit in hits:
+        fact = hit['fact']
+        facts.append(fact)
+        facts_length.append(len(fact))
+        domains.append(hit['domain_name'])
+        conversation_ids.append(hit['conversation_id'])
+
+    return facts, domains, conversation_ids
+
+
 def simple_search(es, doc_type, query):
     '''
 
