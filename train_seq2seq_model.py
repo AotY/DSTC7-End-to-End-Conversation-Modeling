@@ -231,7 +231,8 @@ def evaluate(seq2seq_model=None,
 
             # generate sentence, and save to file
             # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            dialog_decoder_outputs = torch.argmax(dim=2)
+            print('evaluate dialog_decoder_outputs shape: {}'.format(dialog_decoder_outputs.shape))
+            dialog_decoder_outputs = torch.argmax(dialog_decoder_outputs, dim=2)
             # [max_length, batch_size]
             generated_texts = seq2seq_dataset.generating_texts(
                 dialog_decoder_outputs.detach().cpu())
