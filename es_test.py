@@ -16,7 +16,20 @@ def search_conversation_by_hash(es):
 
     res = es.count(es_helper.index, es_helper.conversation_type, body)
 
-    print('hash res: {}'.format(res))
+    print('hash Conversation res: {}'.format(res))
+
+def search_facts_by_hash(es):
+    body = {
+        'query': {
+            'match': {
+                'hash_value': '8e832cdf160d1492fedc75d01a6596a0f8c7c537428b0732c470468a'
+            }
+        }
+    }
+
+    res = es.count(es_helper.index, es_helper.fact_type, body)
+
+    print('hash facts res: {}'.format(res))
 
 
 def search_conversation_by_subreddit_and_id(es):
