@@ -222,8 +222,7 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_inputs,  # LongTensor
                  dialog_encoder_inputs_length,
                  dialog_decoder_inputs,
-                 batch_size=128
-                 ):
+                 batch_size=128):
 
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
