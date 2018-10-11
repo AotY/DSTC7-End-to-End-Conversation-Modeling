@@ -113,7 +113,7 @@ class Seq2seqDataSet:
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]                                           : cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
@@ -190,7 +190,7 @@ class KnowledgeGroundedDataSet:
     """
 
     def __init__(self,
-                 path_conversations_responses_pair,
+                 path_conversations_responses_pair=None,
                  dialog_encoder_max_length=50,
                  dialog_encoder_vocab=None,
                  fact_vocab=None,
@@ -224,7 +224,7 @@ class KnowledgeGroundedDataSet:
         self.top_k_facts_embedded_mean_dict = None
 
         # read text, prepare data
-        self.read_txt(path_conversations_responses_pair, eval_split)
+        self.read_text(path_conversations_responses_pair, eval_split)
 
     def read_txt(self, path_conversations_responses_pair, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
@@ -299,11 +299,11 @@ class KnowledgeGroundedDataSet:
         conversation_texts = []
         response_texts = []
 
-        # facts 
+        # facts
         facts_inputs = torch.zeros((batch_size, top_k, fact_embedding_size))
         facts_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]                                           : cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
                 continue
@@ -331,9 +331,8 @@ class KnowledgeGroundedDataSet:
 
             # load top_k facts
             top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(hash_value)
-
-			facts_inputs[i] = top_k_facts_embedded_mean
-			facts_texts.append(top_k_fact_texts)
+            facts_inputs[i] = top_k_facts_embedded_mean
+            facts_texts.append(top_k_fact_texts)
 
         # To long tensor
         encoder_inputs_length = torch.tensor(encoder_inputs_length,
