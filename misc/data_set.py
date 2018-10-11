@@ -309,17 +309,18 @@ class KnowledgeGroundedDataSet:
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
                 continue
+
+            # load top_k facts
+            top_k_facts_embedded_mean, top_k_fact_texts, \
+                top_k_indices_list = self.top_k_facts_embedded_mean_dict.get(hash_value, (None, None, None))
+            if top_k_facts_embedded_mean is None:
+                continue
+
             # append length
             encoder_inputs_length.append(len(conversation_ids))
 
             if response_ids[-1] != self.dialog_decoder_vocab.eosid:
                 response_ids.append(self.dialog_decoder_vocab.eosid)
-
-            # ids to word
-            conversation_texts.append(
-                ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
-            response_texts.append(
-                ' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
 
             # encoder_inputs
             for t, token_id in enumerate(conversation_ids):
@@ -331,9 +332,11 @@ class KnowledgeGroundedDataSet:
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
 
-            # load top_k facts
-            top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(
-                hash_value)
+            # ids to word
+            conversation_texts.append(
+                ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
+            response_texts.append(
+                ' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
 
             facts_inputs[i] = top_k_facts_embedded_mean
             facts_texts.append(top_k_fact_texts)
@@ -368,15 +371,17 @@ class KnowledgeGroundedDataSet:
                     for conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
+
                         # search facts ?
                         hit_count, facts = es_helper.search_facts_by_conversation_hash_value(
                             self.es, hash_value)
 
                         # facts to id
-                        facts_ids = [self.fact_vocab.words_to_id(
-                            fact) for fact in facts]
-                        facts_ids = facts_ids[0: min(
-                            self.fact_max_length - 2, len(facts_ids))]
+                        facts_ids = [self.fact_vocab.words_to_id(fact) for fact in facts]
+                        if len(facts_ids) == 0:
+                            continue
+
+                        facts_ids = [fact_ids[0: min(self.fact_max_length - 2, len(facts_ids))] for fact_ids in facts_ids]
 
                         fact_texts = [' '.join(fact) for fact in facts]
 
