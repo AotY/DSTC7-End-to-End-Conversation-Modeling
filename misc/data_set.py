@@ -369,11 +369,7 @@ class KnowledgeGroundedDataSet:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
                         # search facts ?
-<<<<<<< HEAD
-                        hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
-=======
                         hit_count, facts = es_helper.search_facts_by_conversation_hash_value(
->>>>>>> b48d184e78cd70522ecd5cd11c118a584a4cacbb
                             self.es, hash_value)
 
                         # facts to id
