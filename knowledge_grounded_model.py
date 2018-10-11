@@ -117,6 +117,9 @@ class KnowledgeGroundedModel(nn.Module):
         self.facts_linearC = nn.Linear(self.dialog_encoder_embedding_size,
                                        self.dialog_decoder_hidden_size)
 
+        self.fact_decoder_linear = nn.Linear(
+            self.fact_embedding_size, self.dialog_decoder_hidden_size)
+
         # Dialog Decoder with Attention
         self.dialog_decoder = StdRNNDecoder(
             rnn_type=self.dialog_decoder_rnn_type,
@@ -151,7 +154,7 @@ class KnowledgeGroundedModel(nn.Module):
     def forward(self,
                 dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length,
-                fact_inputs,
+                facts_inputs,
                 dialog_decoder_inputs,
                 fact_top_k=20,
                 teacher_forcing_ratio=0.5,
@@ -160,7 +163,7 @@ class KnowledgeGroundedModel(nn.Module):
         Args:
             - dialog_encoder_inputs: [max_length, batch_size]
             - dialog_encoder_inputs_length: [max_length, batch_size]
-            - fact_inputs: [facts_size, fact_embedding_size]
+            - facts_inputs: [facts_size, fact_embedding_size]
             - dialog_decoder_inputs: [max_length, batch_size]
         """
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
@@ -174,26 +177,17 @@ class KnowledgeGroundedModel(nn.Module):
             lengths=dialog_encoder_inputs_length,
             encoder_state=dialog_encoder_state,
         )
+
         # init decoder sate
         dialog_decoder_state = self.dialog_decoder.init_decoder_state(
             encoder_final=dialog_encoder_state)
 
-        ''' compute similarity '''
-        # fact_inputs batch_size, len(), len()
-        new_fact_inputs = get_top_k_fact_average(self.dialog_encoder_embedding, self.fact_embedding,
-                                                             self.dialog_encoder_embedding_size, self.fact_embedding_size,
-                                                             dialog_encoder_inputs, fact_inputs, batch_size,
-                                                             top_k=fact_top_k, device=self.device)
-
         '''facts encoder forward'''
         new_hidden_tuple = self.facts_forward(
-            new_fact_inputs, dialog_decoder_state.hidden, batch_size)
+            facts_inputs, dialog_decoder_state.hidden, batch_size)
         dialog_decoder_state.update_state(new_hidden_tuple)
 
         '''dialog_decoder forward'''
-
-        # init decoder state
-
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length,
@@ -237,28 +231,34 @@ class KnowledgeGroundedModel(nn.Module):
                     break
 
                     # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
-        dialog_decoder_outputs = self.dialog_decoder_linear(dialog_decoder_outputs)
+        dialog_decoder_outputs = self.dialog_decoder_linear(
+            dialog_decoder_outputs)
 
         # log softmax
-        dialog_decoder_outputs = self.dialog_decoder_softmax(dialog_decoder_outputs)
+        dialog_decoder_outputs = self.dialog_decoder_softmax(
+            dialog_decoder_outputs)
 
         return ((dialog_encoder_state, dialog_encoder_memory_bank),
                 (dialog_decoder_state, dialog_decoder_outputs, dialog_decoder_attns_std))
 
     def facts_forward(self,
-                      fact_inputs,
+                      facts_inputs,
                       hidden_tuple,
                       batch_size):
         """
         Args:
-            - fact_inputs: [batch_size, top_k, embedding_size]
+            - facts_inputs: [batch_size, top_k, embedding_size]
             - hidden_tuple: ([num_layers, batch_size, hidden_size], [])
             - batch_size
         """
+
+        if self.fact_embedding_size != self.dialog_decoder_hidden_size:
+                facts_inputs = self.fact_decoder_linear(facts_inputs)
+
         # M
-        fact_M = self.fact_linearA(fact_inputs)
+        fact_M = self.fact_linearA(facts_inputs)
         # C
-        fact_C = self.fact_linearC(fact_inputs)
+        fact_C = self.fact_linearC(facts_inputs)
 
         # hidden_tuple is a tuple object
         new_hidden_list = []
@@ -268,13 +268,13 @@ class KnowledgeGroundedModel(nn.Module):
                                             self.dialog_decoder_hidden_size),
                                            device=self.device)
             for i in range(self.dialog_decoder_num_layers):
-                u = hidden_state[i]
+                u = hidden_state[i]  # [batch_size, hidden_size]
                 # batch product
-                tmpP = torch.bmm(fact_inputs, u.unsqueeze(2)
+                tmpP = torch.bmm(facts_inputs, u.unsqueeze(2)
                                  )  # [batch_size, top_k, 1]
                 P = F.softmax(tmpP.squeeze(2), dim=1)  # [batch_size, top_k]
                 # [batch_size, hidden_size, 1]
-                o = torch.bmm(fact_inputs.transpose(1, 2), P.squeeze(2))
+                o = torch.bmm(facts_inputs.transpose(1, 2), P.squeeze(2))
                 u_ = o + u  # [batch_size, hidden_size, 1]
                 new_hidden_state[i] = u_.squeeze(2)
                 # new_hidden_state -> [num_layers, batch_size, hidden_size]
@@ -286,7 +286,7 @@ class KnowledgeGroundedModel(nn.Module):
     def evaluate(self,
                  dialog_encoder_inputs,  # LongTensor
                  dialog_encoder_inputs_length,
-                 fact_inputs,
+                 facts_inputs,
                  facts_inputs_length,
                  dialog_decoder_inputs,
                  batch_size=128):
@@ -305,8 +305,7 @@ class KnowledgeGroundedModel(nn.Module):
             encoder_final=dialog_encoder_state)
 
         '''facts encoder forward'''
-        new_hidden_tuple = self.facts_forward(
-            new_fact_inputs, dialog_decoder_state.hidden, batch_size)
+        new_hidden_tuple = self.facts_forward(facts_inputs, dialog_decoder_state.hidden, batch_size)
         dialog_decoder_state.update_state(new_hidden_tuple)
 
         '''dialog_decoder forward'''
