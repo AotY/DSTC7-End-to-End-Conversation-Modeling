@@ -69,7 +69,7 @@ def train_epochs(model=None,
 
             # load data
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+                fact_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
                 conversation_texts, response_texts, fact_texts = dataset.load_data(
                     'train', opt.batch_size)
 
@@ -77,7 +77,7 @@ def train_epochs(model=None,
             loss = train(model,
                          dialog_encoder_inputs,
                          dialog_encoder_inputs_length,
-                         facts_inputs,
+                         fact_inputs,
                          dialog_decoder_inputs,
                          dialog_decoder_targets,
                          optimizer,
@@ -125,7 +125,7 @@ def train_epochs(model=None,
 def train(model,
           dialog_encoder_inputs,
           dialog_encoder_inputs_length,
-          facts_inputs,
+          fact_inputs,
           dialog_decoder_inputs,
           dialog_decoder_targets,
           optimizer,
@@ -140,7 +140,7 @@ def train(model,
         (dialog_decoder_final_state, dialog_decoder_outputs,
          dialog_decoder_attns) = model(dialog_encoder_inputs=dialog_encoder_inputs,
                                        dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-                                       facts_inputs=facts_inputs,
+                                       fact_inputs=fact_inputs,
                                        dialog_decoder_inputs=dialog_decoder_inputs,
                                        teacher_forcing_ratio=opt.teacher_forcing_ratio,
                                        batch_size=opt.batch_size)
@@ -201,7 +201,7 @@ def evaluate(model=None,
             # load data
 
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+                fact_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
                 conversation_texts, response_texts, fact_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
@@ -211,7 +211,7 @@ def evaluate(model=None,
                  dialog_decoder_attns) = model.evaluate(
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-                facts_inputs=facts_inputs,
+                fact_inputs=fact_inputs,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
@@ -334,7 +334,6 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_embedding=dialog_encoder_embedding,
         dialog_encoder_pad_id=dialog_encoder_vocab.padid,
-        dialog_encoder_tied=opt.dialog_encoder_tied,
 
         fact_embedding_size=opt.fact_embedding_size,
         fact_vocab_size=fact_vocab.get_vocab_size(),
