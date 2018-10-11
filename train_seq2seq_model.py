@@ -231,7 +231,7 @@ def evaluate(model=None,
 
             # [max_length, batch_size]
             generated_texts = dataset.generating_texts(
-                dialog_decoder_outputs_argmax.detach().cpu())
+                dialog_decoder_outputs_argmax.detach().cpu(), opt.batch_size)
 
             # save sentences
             dataset.save_generated_texts(conversation_texts, response_texts,
