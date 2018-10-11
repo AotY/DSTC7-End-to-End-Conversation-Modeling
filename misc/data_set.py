@@ -340,7 +340,7 @@ class KnowledgeGroundedDataSet:
         # To long tensor
         encoder_inputs_length = torch.tensor(
             encoder_inputs_length,
-            dtype=torch.long
+            dtype=torch.long,
             device=self.device)
 
         # update _indicator_dict[task]
@@ -357,7 +357,7 @@ class KnowledgeGroundedDataSet:
         """
         texts = []
         decoder_outputs_argmax.transpose_(0, 1)
-        for bi in batch_size:
+        for bi in range(batch_size):
             text_ids = decoder_outputs_argmax[bi]
             words = self.dialog_encoder_vocab.ids_to_word(text_ids)
             text = ' '.join(words)
