@@ -8,7 +8,7 @@ python preprocess.py \
     --save_path ./../data \
     --vocab_save_path ./../data/vocab_word2idx_{}.dict \
     --min_count 3 \
-    --max_vocab_size 5e4 \
+    --max_vocab_size 6e4 \
     --word_embedding_model_name v1.0_word_embedding \
     --google_vec_file /home/taoqing/Research/data/GoogleNews-vectors-negative300.bin \
     --google_vec_dim 300 \
@@ -20,7 +20,7 @@ python preprocess.py \
     --alpha 0.025 \
     --negative 7 \
     --epochs 7 \
-    --model_name seq2seq 
+    --model_name knowledge_grounded 
 
 
 /
