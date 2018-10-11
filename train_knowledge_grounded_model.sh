@@ -17,7 +17,7 @@ python train_knowledge_grounded_model.py \
     --fact_embedding_size 300 \
     --fact_max_length 70 \
     --fact_top_k 20 \
-    --fact_dropout_probability 0.8 \
+    --fact_dropout_probability 0.0 \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 300 \
     --dialog_decoder_num_layers 2 \
