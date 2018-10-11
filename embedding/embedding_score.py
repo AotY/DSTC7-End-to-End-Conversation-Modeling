@@ -70,8 +70,7 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
 
     encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
     encoder_input_embedded = encoder_embedding(encoder_input, is_dropout=False)
-    encoder_input_embedded_mean = encoder_input_embedded.mean(
-        dim=0)  # [1, embedding_size]
+    encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0).unsqueeze(0)  # [1, embedding_size]
     print(encoder_input_embedded_mean.shape)
 
     facts_embedded_mean = torch.zeros(
@@ -79,14 +78,12 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
     for fi, fact_ids in enumerate(facts_ids):
         fact_input = torch.tensor(fact_ids, dtype=torch.long, device=device)
         fact_input_embedded = fact_embedding(fact_input, is_dropout=False)
-        fact_input_embedded_mean = fact_input_embedded.mean(
-            dim=0)  # [1, embedding_size]
+        fact_input_embedded_mean = fact_input_embedded.mean(dim=0)  # [embedding_size]
         print(fact_input_embedded_mean.shape)
         facts_embedded_mean[fi] = fact_input_embedded_mean
 
     # get top_k
-    cosine_scores = F.cosine_similarity(
-        encoder_input_embedded_mean, facts_embedded_mean)  # [len(facts_ids)]
+    cosine_scores = F.cosine_similarity(encoder_input_embedded_mean, facts_embedded_mean)  # [len(facts_ids)]
     # sort
     sorted_scores, sorted_indices = cosine_scores.sort(dim=0, descending=True)
 
