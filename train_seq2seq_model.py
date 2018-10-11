@@ -419,8 +419,7 @@ if __name__ == '__main__':
 
         eval_split=opt.eval_split,  # how many hold out as eval data
         device=device,
-        logger=logger
-    )
+        logger=logger)
 
     model = build_model(opt, vocab, vocab, None)
 
@@ -431,8 +430,7 @@ if __name__ == '__main__':
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     criterion = nn.NLLLoss(
         ignore_index=vocab.padid,
-        reduction='elementwise_mean'
-    )
+        reduction='elementwise_mean')
 
     '''if load checkpoint'''
     if checkpoint:
