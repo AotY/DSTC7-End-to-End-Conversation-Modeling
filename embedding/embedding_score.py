@@ -67,35 +67,35 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
         - conversation_ids: [len]
         - facts_ids: total_num, len
     """
+    with torch.no_grad():
+        encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
+        encoder_input_embedded = encoder_embedding(encoder_input, is_dropout=False)
+        encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0).unsqueeze(0)  # [1, embedding_size]
 
-    encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
-    encoder_input_embedded = encoder_embedding(encoder_input, is_dropout=False)
-    encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0).unsqueeze(0)  # [1, embedding_size]
+        facts_embedded_mean = torch.zeros((len(facts_ids), fact_embedding_size), device=device)
+        for fi, fact_ids in enumerate(facts_ids):
+            fact_input = torch.tensor(fact_ids, dtype=torch.long, device=device)
+            fact_input_embedded = fact_embedding(fact_input, is_dropout=False)
+            fact_input_embedded_mean = fact_input_embedded.mean(dim=0)  # [embedding_size]
+            facts_embedded_mean[fi] = fact_input_embedded_mean
 
-    facts_embedded_mean = torch.zeros((len(facts_ids), fact_embedding_size), device=device)
-    for fi, fact_ids in enumerate(facts_ids):
-        fact_input = torch.tensor(fact_ids, dtype=torch.long, device=device)
-        fact_input_embedded = fact_embedding(fact_input, is_dropout=False)
-        fact_input_embedded_mean = fact_input_embedded.mean(dim=0)  # [embedding_size]
-        facts_embedded_mean[fi] = fact_input_embedded_mean
+        # get top_k
+        print(facts_embedded_mean.shape)
+        print(encoder_input_embedded_mean.shape)
+        cosine_scores = F.cosine_similarity(facts_embedded_mean, encoder_input_embedded_mean)  # [len(facts_ids)]
+        # sort
+        sorted_scores, sorted_indices = cosine_scores.sort(dim=0, descending=True)
 
-    # get top_k
-    print(facts_embedded_mean.shape)
-    print(encoder_input_embedded_mean.shape)
-    cosine_scores = F.cosine_similarity(facts_embedded_mean, encoder_input_embedded_mean)  # [len(facts_ids)]
-    # sort
-    sorted_scores, sorted_indices = cosine_scores.sort(dim=0, descending=True)
+        top_k_indices = sorted_indices[:top_k]
+        print(top_k_indices)
 
-    top_k_indices = sorted_indices[:top_k]
-    print(top_k_indices)
+        top_k_facts_embedded_mean = torch.ones((top_k, fact_embedding_size), device=device)
+        for i in top_k_indices:
+            top_k_facts_embedded_mean[i] = facts_embedded_mean[i]
+        # [top_k, embedding_size]
+        #  top_k_facts_embedded_mean = facts_embedded_mean[top_k_indices]
 
-    top_k_facts_embedded_mean = torch.ones((top_k, fact_embedding_size), device=device)
-    for i in top_k_indices:
-        top_k_facts_embedded_mean[i] = facts_embedded_mean[i]
-    # [top_k, embedding_size]
-    #  top_k_facts_embedded_mean = facts_embedded_mean[top_k_indices]
-
-    return top_k_facts_embedded_mean, top_k_indices
+    return top_k_facts_embedded_mean.detach(), top_k_indices.detach()
 
 
 '''
