@@ -368,7 +368,7 @@ class KnowledgeGroundedDataSet:
                             continue
                         # search facts ?
                         hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
-                            sread_teelf.es, hash_value)
+                            self.es, hash_value)
 
                         # facts to id
                         facts_ids = [self.fact_vocab.words_to_id(

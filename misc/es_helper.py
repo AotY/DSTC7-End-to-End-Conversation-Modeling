@@ -75,7 +75,7 @@ def search_facts_by_conversation_hash_value(es, hash_value):
         domains.append(hit['domain_name'])
         conversation_ids.append(hit['conversation_id'])
 
-    assert hit_count == len(facts)
+    # assert hit_count == len(facts)
     return hit_count, facts, domains, conversation_ids
 
 
