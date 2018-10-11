@@ -320,6 +320,10 @@ def build_embeddings(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab
         fact_embedding.set_pretrained_embedding(
             dialog_decoder_pretrained_embedding_weight, fixed=False)
 
+    dialog_encoder_embedding.to(device=device)
+    dialog_decoder_embedding.to(device=device)
+    fact_embedding.to(device=device)
+
     return dialog_encoder_embedding, dialog_decoder_embedding, fact_embedding
 
 
