@@ -38,8 +38,8 @@ train_seq2seq_opt(parser)
 opt = parser.parse_args()
 
 # logger file
-#  time_str = time.strftime('%Y-%m-%d_%H:%M')
-time_str = time.strftime('%Y-%m-%d')
+time_str = time.strftime('%Y-%m-%d_%H:%M')
+#  time_str = time.strftime('%Y-%m-%d')
 opt.log_file = opt.log_file.format(time_str)
 logger.info('log_file: {}'.format(opt.log_file))
 
