@@ -49,6 +49,7 @@ class Vocab(object):
         return self.idx2word.get(id, UNK)
 
     def ids_to_word(self, ids):
+        print('ids: {}'.format(ids))
         words = [self.id_to_word(id) for id in ids]
         return words
 
