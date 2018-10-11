@@ -8,7 +8,7 @@ python train_seq2seq_model.py \
     --dialog_encoder_embedding_size 300 \
     --dialog_encoder_hidden_size 300 \
     --dialog_encoder_num_layers 2 \
-    --dialog_encoder_rnn_type LSTM \
+    --dialog_encoder_rnn_type GRU \
     --dialog_encoder_dropout_probability 0.8 \
     --dialog_encoder_max_length 50 \
     --dialog_encoder_clipnorm 50.0 \
@@ -18,7 +18,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 300 \
     --dialog_decoder_num_layers 2 \
-    --dialog_decoder_rnn_type LSTM \
+    --dialog_decoder_rnn_type GRU \
     --dialog_decoder_dropout_probability 0.8 \
     --dialog_decoder_max_length 50 \
     --dialog_decoder_clipnorm 50.0 \
@@ -36,8 +36,8 @@ python train_seq2seq_model.py \
     --model_save_path ./models \
     --eval_split 0.2 \
     --optim_method adam \
-    --start_epoch 3 \
-    --train_or_eval eval \
-    --checkpoint ./models/checkpoint.epoch-5.pth  
+    --start_epoch 1 \
+    --train_or_eval train \
+    # --checkpoint ./models/checkpoint.epoch-5.pth  
 
     /
