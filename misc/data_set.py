@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import absolute_import, division, print_function
+
+import os
+import pickle
 
 import torch
 import numpy as np
@@ -111,7 +113,7 @@ class Seq2seqDataSet:
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]                                           : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
@@ -218,6 +220,9 @@ class KnowledgeGroundedDataSet:
         # es
         self.es = es_helper.get_connection()
 
+        # facts dict
+        self.top_k_facts_embedded_mean_dict = None
+
         # read text, prepare data
         self.read_txt(path_conversations_responses_pair, eval_split)
 
@@ -265,7 +270,7 @@ class KnowledgeGroundedDataSet:
     def all_loaded(self, task):
         return self._data_dict[task]
 
-    def load_data(self, task, batch_size):
+    def load_data(self, task, batch_size, top_k, fact_embedding_size):
         # if batch > len(self._data_dict[task] raise error
         task_len = len(self._data_dict[task])
         if batch_size > task_len:
@@ -294,13 +299,13 @@ class KnowledgeGroundedDataSet:
         conversation_texts = []
         response_texts = []
 
-        fact_inputs = []
-        fact_texts = []
+        # facts 
+        facts_inputs = torch.zeros((batch_size, top_k, fact_embedding_size))
+        facts_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]
-            : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
-            if not bool(response_ids) or not bool(conversation_ids) or bool(hash_value):
+            if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
                 continue
             # append length
             encoder_inputs_length.append(len(conversation_ids))
@@ -324,31 +329,69 @@ class KnowledgeGroundedDataSet:
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
 
-            # search facts ?
-            hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
-                self.es, hash_value)
+            # load top_k facts
+            top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(hash_value)
 
-            # facts to id
-            facts_id = [self.fact_vocab.words_to_id(fact) for fact in facts]
-            facts_id = facts_id[0: min(
-                self.fact_max_length - 2, len(facts_id))]
-
-            # three dimension
-            fact_inputs.append(facts_id)
-
-            fact_texts.append([' '.join(fact) for fact in facts])
+			facts_inputs[i] = top_k_facts_embedded_mean
+			facts_texts.append(top_k_fact_texts)
 
         # To long tensor
         encoder_inputs_length = torch.tensor(encoder_inputs_length,
                                              dtype=torch.long,
                                              device=self.device)
-
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
         return encoder_inputs, encoder_inputs_length, \
-            fact_inputs, decoder_inputs, decoder_targets, \
-            conversation_texts, response_texts, fact_texts
+            facts_inputs, decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts, facts_texts
+
+    def computing_similarity_offline(self, encoder_embedding, fact_embedding,
+                                     encoder_embedding_size, fact_embedding_size,
+                                     top_k, device, filename, logger):
+        if os.path.exists(filename):
+            logger.info('Loading top_k_facts_embedded_mean_dict')
+            self.top_k_facts_embedded_mean_dict = pickle.load(
+                open(filename, 'rb'))
+        else:
+            logger.info('Computing top_k_facts_embedded_mean_dict')
+
+            top_k_facts_embedded_mean_dict = {}
+            with torch.no_grad():
+                """ computing similarity between conversation and facts, then saving to dict"""
+                for task, datas in self._data_dict.items():
+                    logger.info('computing similarity: %s ' % task)
+
+                    for conversation_ids, _, hash_value in datas:
+                        if not bool(conversation_ids) or not bool(hash_value):
+                            continue
+                        # search facts ?
+                        hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
+                            self.es, hash_value)
+
+                        # facts to id
+                        facts_ids = [self.fact_vocab.words_to_id(
+                            fact) for fact in facts]
+                        facts_ids = facts_ids[0: min(
+                            self.fact_max_length - 2, len(facts_ids))]
+
+                        fact_texts = [' '.join(fact) for fact in facts]
+
+                        # score top_k_facts_embedded -> [top_k, embedding_size]
+                        top_k_facts_embedded_mean, top_k_indices = get_top_k_fact_average(encoder_embedding, fact_embedding,
+                                                                                          encoder_embedding_size, fact_embedding_size,
+                                                                                          conversation_ids, facts_ids, top_k, device)
+                        top_k_fact_texts = []
+                        top_k_indices_list = top_k_indices.tolist()
+                        for topi in top_k_indices_list:
+                            top_k_fact_texts.append(fact_texts[topi])
+
+                        top_k_facts_embedded_mean_dict[hash_value] = (
+                            top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list)
+
+            # save top_k_facts_embedded_mean_dict
+            pickle.dum(top_k_facts_embedded_mean_dict, open(filename, 'wb'))
+            self.top_k_facts_embedded_mean_dict = top_k_facts_embedded_mean_dict
 
     def generating_texts(self, decoder_outputs_argmax, batch_size):
         """
@@ -365,14 +408,15 @@ class KnowledgeGroundedDataSet:
 
         return texts
 
-    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, facts, filename):
+    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, top_k_fact_texts, filename):
         with open(filename, 'w', encoding='utf-8') as f:
             for conversation, response, generated_text in zip(conversation_texts, response_texts, generated_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
                 f.write('Generated: %s\n' % generated_text)
-                f.write('Facts: %s\n' % ' '.join(facts))
+                for fi, fact_text in enumerate(top_k_fact_texts):
+                    f.write('Facts %d: %s\n' % (fi, fact_text))
                 f.write('---------------------------------\n')
 
 
