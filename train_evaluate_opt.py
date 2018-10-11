@@ -13,10 +13,6 @@ def data_set_opt(parser):
                        type=str,
                        help='location of the conversations and responses pair. ')
 
-    group.add_argument('--facts_path',
-                       type=str,
-                       help='location of the facts.  ')
-
     group.add_argument('--save_path',
                        type=str,
                        help='location of save files. ')
@@ -269,27 +265,32 @@ def train_knowledge_gournded_opt(parser):
                        type=str,
                        help='pre-trained embedding for dialog encoder.')
 
-    '''facts encoder parameters'''
+    '''fact encoder parameters'''
 
-    group.add_argument('--facts_embedding_size',
+    group.add_argument('--fact_embedding_size',
                        type=int,
                        default=300,
-                       help='embedding size for facts embedding.')
+                       help='embedding size for fact embedding.')
 
-    group.add_argument('--facts_vocab_size',
+    group.add_argument('--fact_vocab_size',
                        default=8e5 + 4,
                        type=float,
                        help="fact vocab size.")
 
-    group.add_argument('--facts_dropout_probability',
+    group.add_argument('--fact_dropout_probability',
                        type=float,
                        default=0.8,
                        help='dropout probability.')
 
-    group.add_argument('--facts_max_length',
+    group.add_argument('--fact_max_length',
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
+
+    group.add_argument('--fact_top_k',
+                       default=20,
+                       type=int,
+                       help='select top k by cosine similarity.')
 
     '''dialog decoder parameters'''
 

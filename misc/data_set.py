@@ -156,7 +156,7 @@ class Seq2seqDataSet:
         """
         texts = []
         decoder_outputs_argmax.transpose_(0, 1)
-        for bi in batch_size:
+        for bi in range(batch_size):
             text_ids = decoder_outputs_argmax[bi]
             words = self.dialog_encoder_vocab.ids_to_word(text_ids)
             text = ' '.join(words)
@@ -180,8 +180,8 @@ class KnowledgeGroundedDataSet:
         conversations_responses_pair (Conversation, response, hash_value)
         dialog_encoder_vocab
         dialog_encoder_max_length
-        facts_vocab
-        facts_max_length
+        fact_vocab
+        fact_max_length
         dialog_decoder_vocab
         dialog_decoder_max_length
         device
@@ -192,8 +192,8 @@ class KnowledgeGroundedDataSet:
                  path_conversations_responses_pair,
                  dialog_encoder_max_length=50,
                  dialog_encoder_vocab=None,
-                 facts_vocab=None,
-                 facts_max_length=50,
+                 fact_vocab=None,
+                 fact_max_length=50,
                  dialog_decoder_max_length=50,
                  dialog_decoder_vocab=None,
                  eval_split=0.2,  # how many hold out as eval data
@@ -204,8 +204,8 @@ class KnowledgeGroundedDataSet:
         self.dialog_encoder_max_length = dialog_encoder_max_length
         self.dialog_encoder_vocab = dialog_encoder_vocab
 
-        self.facts_max_length = facts_max_length
-        self.facts_vocab = facts_vocab
+        self.fact_max_length = fact_max_length
+        self.fact_vocab = fact_vocab
 
         self.dialog_decoder_vocab_size = dialog_decoder_vocab.get_vocab_size()
         self.dialog_decoder_max_length = dialog_decoder_max_length
@@ -233,6 +233,7 @@ class KnowledgeGroundedDataSet:
 
                 conversation_ids = self.dialog_encoder_vocab.words_to_id(
                     conversation.split())
+
                 conversation_ids = conversation_ids[0: min(
                     self.dialog_encoder_max_length - 2, len(conversation_ids))]
 
@@ -294,10 +295,10 @@ class KnowledgeGroundedDataSet:
         conversation_texts = []
         response_texts = []
 
-        facts = []
+        fact_inputs = []
+        fact_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]
-            : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or bool(hash_value):
                 continue
@@ -324,20 +325,30 @@ class KnowledgeGroundedDataSet:
                 decoder_targets[t, i] = token_id
 
             # search facts ?
-            facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
+            hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
                 es, hash_value)
+
+            # facts to id
+            facts_id = [self.fact_vocab.words_to_id(fact) for fact in facts]
+            facts_id = facts_id[0: min(self.fact_max_length - 2, len(facts_id))]
+
+            # three dimension
+            fact_inputs.append(facts_id)
+
+            fact_texts.append([' '.join(fact) for fact in facts])
 
         # To long tensor
         encoder_inputs_length = torch.tensor(
-            encoder_inputs_length, dtype=torch.long)
+            encoder_inputs_length,
+            dtype=torch.long
+            device=self.device)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
         return encoder_inputs, encoder_inputs_length, \
-            facts_inputs, facts_inputs_length, \
-            decoder_inputs, decoder_targets, \
-            conversation_texts, response_texts
+            fact_inputs, decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts, fact_texts
 
     def generating_texts(self, decoder_outputs_argmax, batch_size):
         """
