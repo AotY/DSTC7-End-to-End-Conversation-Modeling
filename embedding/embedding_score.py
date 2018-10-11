@@ -18,20 +18,23 @@ def get_top_k_fact_average_batch(encoder_embedding, fact_embedding, encoder_embe
                            batch_size=1, top_k=20, device=None):
 
     encoder_inputs_embedded = encoder_embedding(encoder_inputs)
-    encoder_inputs_embedded_mean = encoder_inputs_embedded.transpose(0, 1).mean(dim=1)  # [batch_size, embedding_size]
+    encoder_inputs_embedded_mean = encoder_inputs_embedded.transpose(
+        0, 1).mean(dim=1)  # [batch_size, embedding_size]
 
     new_fact_inputs = torch.zeros(
         (batch_size, top_k, fact_embedding_size), device=device)
     for bi in range(batch_size):
         cur_fact_input = fact_inputs[bi]
         # cur_fact_input: [total_n, len()]
-        cur_fact_input_embedded_mean = torch.zeros((len(cur_fact_input), fact_embedding_size), device=device)
+        cur_fact_input_embedded_mean = torch.zeros(
+            (len(cur_fact_input), fact_embedding_size), device=device)
         for fi, cur_part_fact in enumerate(cur_fact_input):
             cur_part_fact = torch.LongTensor(cur_part_fact, device=device)
             cur_part_fact_embedded = fact_embedding(cur_part_fact.view(1, -1))
             cur_part_fact_embedded_mean = cur_part_fact_embedded.mean(dim=1)
 
-            cur_fact_input_embedded_mean[fi] = cur_part_fact_embedded_mean.view(-1)
+            cur_fact_input_embedded_mean[fi] = cur_part_fact_embedded_mean.view(
+                -1)
 
         # get top_k
         cur_encoder_input_embedded_mean = encoder_inputs_embedded_mean[bi]
@@ -54,6 +57,8 @@ def get_top_k_fact_average_batch(encoder_embedding, fact_embedding, encoder_embe
 
 
 '''without batch'''
+
+
 def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_size,
                            fact_embedding_size, conversation_ids, facts_ids,
                            top_k=20, device=None):
@@ -63,21 +68,26 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
         - facts_ids: total_num, len
     """
 
-    encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
+    encoder_input = torch.tensor(
+        conversation_ids, dtype=torch.long, device=device)
     encoder_input_embedded = encoder_embedding(encoder_input, is_dropout=False)
-    encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0)  # [1, embedding_size]
+    encoder_input_embedded_mean = encoder_input_embedded.mean(
+        dim=0)  # [1, embedding_size]
     print(encoder_input_embedded_mean.shape)
 
-    facts_embedded_mean = torch.zeros((len(facts_ids), fact_embedding_size), device=device)
+    facts_embedded_mean = torch.zeros(
+        (len(facts_ids), fact_embedding_size), device=device)
     for fi, fact_ids in enumerate(facts_ids):
         fact_input = torch.LongTensor(fact_ids, device=device)
         fact_input_embedded = fact_embedding(fact_input, is_dropout=False)
-        fact_input_embedded_mean = fact_input_embedded.mean(dim=0) # [1, embedding_size]
+        fact_input_embedded_mean = fact_input_embedded.mean(
+            dim=0)  # [1, embedding_size]
         print(fact_input_embedded_mean.shape)
         facts_embedded_mean[fi] = fact_input_embedded_mean
 
     # get top_k
-    cosine_scores = F.cosine_similarity(encoder_input_embedded_mean, facts_embedded_mean) #[len(facts_ids)]
+    cosine_scores = F.cosine_similarity(
+        encoder_input_embedded_mean, facts_embedded_mean)  # [len(facts_ids)]
     # sort
     sorted_scores, sorted_indices = cosine_scores.sort(dim=0, descending=True)
 
@@ -89,12 +99,17 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
 
     return top_k_facts_embedded_mean, top_k_indices
 
+
 '''
 Extreme:
 Achieve an utterance representation by taking the largest extreme values among the embedding vectors of all the words it contains
 '''
-def get_extreme_embedding_score(vocab, gensim_model, input_str, candidate_replies, stop_word_obj, lower=None, normal=False): query_words = stop_word_obj.remove_words( input_str.strip().replace('\t', ' ')) # to lower if lower:
-        query_words = [word.lower() for word in query_words]
+
+
+def get_extreme_embedding_score(vocab, gensim_model, input_str, candidate_replies,
+                                stop_word_obj, lower=None, normal=False):
+    query_words = stop_word_obj.remove_words(input_str.strip().replace('\t', ' '))  # to lower if lower:
+    query_words = [word.lower() for word in query_words]
 
     query_words_embedding = []
     for word in query_words:
