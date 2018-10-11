@@ -214,13 +214,9 @@ def evaluate(model=None,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
-            print('dialog_decoder_outputs shape: {}'.format(dialog_decoder_outputs.shape))
             # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
             dialog_decoder_outputs_argmax = torch.argmax(
                 dialog_decoder_outputs, dim=2)
-
-            print(dialog_decoder_outputs_argmax.shape)
-            print(dialog_decoder_outputs_argmax)
 
             #  Compute loss
             dialog_decoder_outputs = dialog_decoder_outputs.view(
@@ -371,16 +367,6 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
 def load_checkpoint(filename='checkpoint.pth'):
     checkpoint = torch.load(filename)
     return checkpoint
-
-
-def interact(self):
-    while True:
-        logger.info('----- please input -----')
-        input_text = input()
-        if not bool(input_text):
-            break
-        logger.info(self.dialog(input_text))
-
 
 def asMinutes(s):
     m = math.floor(s / 60)
