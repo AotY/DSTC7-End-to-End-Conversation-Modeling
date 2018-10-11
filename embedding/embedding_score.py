@@ -63,6 +63,7 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
     """
 
     encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
+    print(encoder_input.shape)
     encoder_input_embedded = encoder_embedding(encoder_input)
     encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0)  # [1, embedding_size]
     print(encoder_input_embedded_mean.shape)
