@@ -161,12 +161,9 @@ class Seq2seqDataSet:
         # [max_length, batch_size] -> [batch_size, max_length]
         decoder_outputs_argmax = decoder_outputs_argmax.transpose(0, 1)
         for bi in range(batch_size):
-            word_ids = decoder_outputs_argmax[bi]
-            print("word_ids: {}".format(word_ids))
+            word_ids = decoder_outputs_argmax[bi].tolist()
             words = self.dialog_encoder_vocab.ids_to_word(word_ids)
-            print('words: {}'.format(words))
             text = ' '.join(words)
-            print('text: {}'.format(text))
             texts.append(text)
 
         return texts
@@ -413,7 +410,7 @@ class KnowledgeGroundedDataSet:
         texts = []
         decoder_outputs_argmax.transpose_(0, 1)
         for bi in range(batch_size):
-            word_ids = decoder_outputs_argmax[bi]
+            word_ids = decoder_outputs_argmax[bi].tolist()
             words = self.dialog_encoder_vocab.ids_to_word(word_ids)
             text = ' '.join(words)
             texts.append(text)
