@@ -52,6 +52,7 @@ def get_top_k_fact_average_batch(encoder_embedding, fact_embedding, encoder_embe
 
     return new_fact_inputs
 
+
 '''without batch'''
 def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_size,
                            fact_embedding_size, conversation_ids, facts_ids,
@@ -63,15 +64,14 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
     """
 
     encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
-    print(encoder_input.shape)
-    encoder_input_embedded = encoder_embedding(encoder_input)
+    encoder_input_embedded = encoder_embedding(encoder_input, is_dropout=False)
     encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0)  # [1, embedding_size]
     print(encoder_input_embedded_mean.shape)
 
     facts_embedded_mean = torch.zeros((len(facts_ids), fact_embedding_size), device=device)
     for fi, fact_ids in enumerate(facts_ids):
         fact_input = torch.LongTensor(fact_ids, device=device)
-        fact_input_embedded = fact_embedding(fact_input)
+        fact_input_embedded = fact_embedding(fact_input, is_dropout=False)
         fact_input_embedded_mean = fact_input_embedded.mean(dim=0) # [1, embedding_size]
         print(fact_input_embedded_mean.shape)
         facts_embedded_mean[fi] = fact_input_embedded_mean
@@ -93,14 +93,7 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
 Extreme:
 Achieve an utterance representation by taking the largest extreme values among the embedding vectors of all the words it contains
 '''
-
-
-def get_extreme_embedding_score(vocab, gensim_model, input_str, candidate_replies, stop_word_obj, lower=None,
-                                normal=False):
-    query_words = stop_word_obj.remove_words(
-        input_str.strip().replace('\t', ' '))
-    # to lower
-    if lower:
+def get_extreme_embedding_score(vocab, gensim_model, input_str, candidate_replies, stop_word_obj, lower=None, normal=False): query_words = stop_word_obj.remove_words( input_str.strip().replace('\t', ' ')) # to lower if lower:
         query_words = [word.lower() for word in query_words]
 
     query_words_embedding = []
