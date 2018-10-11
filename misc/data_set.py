@@ -225,7 +225,7 @@ class KnowledgeGroundedDataSet:
         self.top_k_facts_embedded_mean_dict = None
 
         # read text, prepare data
-        self.read_text(path_conversations_responses_pair, eval_split)
+        self.read_txt(path_conversations_responses_pair, eval_split)
 
     def read_txt(self, path_conversations_responses_pair, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
@@ -368,7 +368,7 @@ class KnowledgeGroundedDataSet:
                             continue
                         # search facts ?
                         hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
-                            self.es, hash_value)
+                            sread_teelf.es, hash_value)
 
                         # facts to id
                         facts_ids = [self.fact_vocab.words_to_id(

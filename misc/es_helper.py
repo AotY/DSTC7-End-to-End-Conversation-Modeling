@@ -46,7 +46,7 @@ def search_facts_by_conversation_hash_value(es, hash_value):
 
     result = es.search(index, conversation_type, query_body)
     hits = result['hits']['hits']
-    subreddit_name, conversation_id = hits[0]['subreddit_name'], hits[0]['conversation_id']
+    subreddit_name, conversation_id = hits[0]['_source']['subreddit_name'], hits[0]['_source']['conversation_id']
 
     # obtain facts by conversation_id
     query_body = {
@@ -65,6 +65,7 @@ def search_facts_by_conversation_hash_value(es, hash_value):
     domains = []
     conversation_ids = []
     for hit in hits:
+        hit = hit['_source']
         fact = hit['fact']
         if len(fact) <= 1:
             continue
