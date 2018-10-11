@@ -62,8 +62,6 @@ def search_facts_by_conversation_hash_value(es, hash_value):
 
     facts = []
     facts_length = []
-    domains = []
-    conversation_ids = []
     for hit in hits:
         hit = hit['_source']
         fact = hit['fact']
@@ -72,11 +70,9 @@ def search_facts_by_conversation_hash_value(es, hash_value):
 
         facts.append(fact)
         facts_length.append(len(fact))
-        domains.append(hit['domain_name'])
-        conversation_ids.append(hit['conversation_id'])
 
-    assert hit_count == len(facts)
-    return hit_count, facts, domains, conversation_ids
+    #  assert hit_count == len(facts)
+    return hit_count, facts
 
 
 def simple_search(es, doc_type, query):

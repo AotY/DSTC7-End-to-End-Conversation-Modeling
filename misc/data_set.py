@@ -114,7 +114,8 @@ class Seq2seqDataSet:
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]
+            : cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
@@ -304,7 +305,7 @@ class KnowledgeGroundedDataSet:
         facts_inputs = torch.zeros((batch_size, top_k, fact_embedding_size))
         facts_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]                                           : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
                 continue
@@ -331,7 +332,8 @@ class KnowledgeGroundedDataSet:
                 decoder_targets[t, i] = token_id
 
             # load top_k facts
-            top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(hash_value)
+            top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(
+                hash_value)
 
             facts_inputs[i] = top_k_facts_embedded_mean
             facts_texts.append(top_k_fact_texts)
@@ -367,8 +369,8 @@ class KnowledgeGroundedDataSet:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
                         # search facts ?
-                        hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
-                            sread_teelf.es, hash_value)
+                        hit_count, facts = es_helper.search_facts_by_conversation_hash_value(
+                            self.es, hash_value)
 
                         # facts to id
                         facts_ids = [self.fact_vocab.words_to_id(
