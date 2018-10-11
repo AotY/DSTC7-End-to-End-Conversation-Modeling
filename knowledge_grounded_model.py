@@ -169,6 +169,8 @@ class KnowledgeGroundedModel(nn.Module):
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
 
+        facts_inputs = facts_inputs.to(device=self.device)
+
         '''dialog_encoder forward'''
         dialog_encoder_state, dialog_encoder_memory_bank = self.dialog_encoder(
             src=dialog_encoder_inputs,
@@ -288,6 +290,8 @@ class KnowledgeGroundedModel(nn.Module):
                  facts_inputs_length,
                  dialog_decoder_inputs,
                  batch_size=128):
+
+        facts_inputs = facts_inputs.to(device=self.device)
 
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
