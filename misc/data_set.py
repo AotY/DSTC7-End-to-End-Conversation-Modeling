@@ -169,7 +169,7 @@ class Seq2seqDataSet:
         return texts
 
     def save_generated_texts(self, conversation_texts, response_texts, generated_texts, filename):
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filename, 'a', encoding='utf-8') as f:
             for conversation, response, generated_text in zip(conversation_texts, response_texts, generated_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
