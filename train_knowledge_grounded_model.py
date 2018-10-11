@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import division
 from __future__ import print_function
 
@@ -69,10 +68,9 @@ def train_epochs(model=None,
             logger.info(logger_str)
 
             # load data
-            dialog_encoder_inputs, dialog_encoder_inputs_length,
-            facts_inputs, facts_inputs_length, \
-            dialog_decoder_inputs, dialog_decoder_targets, \
-            conversation_texts, response_texts = dataset.load_data(
+            dialog_encoder_inputs, dialog_encoder_inputs_length, \
+            facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+            conversation_texts, response_texts, fact_texts = dataset.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
@@ -80,7 +78,6 @@ def train_epochs(model=None,
                          dialog_encoder_inputs,
                          dialog_encoder_inputs_length,
                          facts_inputs,
-                         facts_inputs_length,
                          dialog_decoder_inputs,
                          dialog_decoder_targets,
                          optimizer,
@@ -129,7 +126,6 @@ def train(model,
           dialog_encoder_inputs,
           dialog_encoder_inputs_length,
           facts_inputs,
-          facts_inputs_length,
           dialog_decoder_inputs,
           dialog_decoder_targets,
           optimizer,
@@ -141,15 +137,13 @@ def train(model,
     model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_final_state, dialog_decoder_outputs, dialog_decoder_attns) \
-        = model(
-        dialog_encoder_inputs=dialog_encoder_inputs,
-        dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-        facts_inputs=facts_inputs,
-        facts_inputs_length=facts_inputs_length,
-        dialog_decoder_inputs=dialog_decoder_inputs,
-        teacher_forcing_ratio=opt.teacher_forcing_ratio,
-        batch_size=opt.batch_size)
+    (dialog_decoder_final_state, dialog_decoder_outputs, \
+    dialog_decoder_attns) = model(dialog_encoder_inputs=dialog_encoder_inputs,
+                                    dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+                                    facts_inputs=facts_inputs,
+                                    dialog_decoder_inputs=dialog_decoder_inputs,
+                                    teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                                    batch_size=opt.batch_size)
 
     optimizer.zero_grad()
 
@@ -206,10 +200,9 @@ def evaluate(model=None,
         for load in range(1, max_load + 1):
             # load data
 
-            dialog_encoder_inputs, dialog_encoder_inputs_length,
-            facts_inputs, facts_inputs_length, \
-            dialog_decoder_inputs, dialog_decoder_targets, \
-            conversation_texts, response_texts = dataset.load_data(
+            dialog_encoder_inputs, dialog_encoder_inputs_length, \
+            facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+            conversation_texts, response_texts, fact_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
@@ -219,7 +212,6 @@ def evaluate(model=None,
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                 facts_inputs=facts_inputs,
-                facts_inputs_length=facts_inputs_length,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
@@ -260,7 +252,7 @@ def build_optim(model, opt):
         opt.optim_method,
         opt.lr,
         opt.dialog_encoder_clipnorm,
-        # lr_decay=opt.learning_rate_decay,
+        # lr_decay=opt.learning_probability_decay,
         # start_decay_at=opt.start_decay_at,
         # beta1=opt.adam_beta1,
         # beta2=opt.adam_beta2,
@@ -289,20 +281,24 @@ def tally_parameters(model):
     logger.info('project: ', dec)
 
 
-def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, facts_vocab):
+def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
     logger.info('Building model...')
 
     ''' embedding for encoder and decoder '''
     dialog_encoder_embedding = Embedding(embedding_size=opt.dialog_encoder_embedding_size,
                                          vocab_size=dialog_encoder_vocab.get_vocab_size(),
                                          padding_idx=dialog_encoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_encoder_dropout_rate)
+                                         dropout_ratio=opt.dialog_encoder_dropout_probability)
 
     dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
                                          vocab_size=dialog_decoder_vocab.get_vocab_size(),
                                          padding_idx=dialog_decoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_decoder_dropout_rate)
+                                         dropout_ratio=opt.dialog_decoder_dropout_probability)
 
+    fact_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
+                                         vocab_size=dialog_decoder_vocab.get_vocab_size(),
+                                         padding_idx=dialog_decoder_vocab.padid,
+                                         dropout_ratio=opt.dialog_decoder_dropout_probability)
     ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
 
@@ -321,36 +317,36 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, facts_vocab):
         dialog_decoder_embedding.set_pretrained_embedding(
             dialog_decoder_pretrained_embedding_weight, fixed=False)
 
+        fact_embedding.set_pretrained_embedding(
+            dialog_decoder_pretrained_embedding_weight, fixed=False)
+
     model = KnowledgeGroundedModel(
         dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
         dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
         dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
         dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
         dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
-        dialog_encoder_dropout_rate=opt.dialog_encoder_dropout_rate,
+        dialog_encoder_dropout_probability=opt.dialog_encoder_dropout_probability,
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_clipnorm=opt.dialog_encoder_clipnorm,
-        dialog_encoder_clipvalue=opt.dialog_encoder_clipvalue,
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_embedding=dialog_encoder_embedding,
         dialog_encoder_pad_id=dialog_encoder_vocab.padid,
         dialog_encoder_tied=opt.dialog_encoder_tied,
 
-        facts_embedding_size=opt.facts_embedding_size,
-        facts_vocab_size=facts_vocab.get_vocab_size(),
-        facts_dropout_rate=opt.facts_dropout_rate,
-        facts_max_length=opt.facts_max_length,
+        fact_embedding_size=opt.fact_embedding_size,
+        fact_vocab_size=fact_vocab.get_vocab_size(),
+        fact_dropout_probability=opt.fact_dropout_probability,
+        fact_max_length=opt.fact_max_length,
 
         dialog_decoder_embedding_size=opt.dialog_decoder_embedding_size,
         dialog_decoder_vocab_size=dialog_decoder_vocab.get_vocab_size(),
         dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
         dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
         dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
-        dialog_decoder_dropout_rate=opt.dialog_decoder_dropout_rate,
+        dialog_decoder_dropout_probability=opt.dialog_decoder_dropout_probability,
         dialog_decoder_max_length=opt.dialog_decoder_max_length,
         dialog_decoder_clipnorm=opt.dialog_decoder_clipnorm,
-        dialog_decoder_clipvalue=opt.dialog_decoder_clipvalue,
-        dialog_decoder_bidirectional=opt.dialog_decoder_bidirectional,
         dialog_decoder_embedding=dialog_decoder_embedding,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
         dialog_decoder_eos_id=dialog_decoder_vocab.eosid,
@@ -424,13 +420,13 @@ if __name__ == '__main__':
         path_conversations_responses_pair=opt.path_conversations_responses_pair,
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_vocab=vocab,
+        fact_vocab=vocab,
+        fact_max_length=fact_max_length,
         dialog_decoder_max_length=opt.dialog_encoder_max_length,
         dialog_decoder_vocab=vocab,
-
         eval_split=opt.eval_split,  # how many hold out as eval data
         device=device,
-        logger=logger
-    )
+        logger=logger)
 
     model = build_model(opt, vocab, vocab, vocab, None)
 

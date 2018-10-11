@@ -3,9 +3,12 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-import torch
 from collections import Counter
+
 import gensim
+
+import torch
+import torch.nn.functional as F
 
 '''
 Get embedding score with tfidf weight
@@ -115,54 +118,41 @@ An utterance representation can be obtained by averaging the embeddings of all t
 '''
 
 
-def get_avg_embedding_score(vocab, gensim_model, input_str, candidate_replies, 
-                            stop_word_obj, lower=None, normal=False):
-    query_words = stop_word_obj.remove_words(input_str.strip().replace('\t', ' '))
+def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_size,
+                            fact_embedding_size, encoder_inputs, fact_inputs, batch_size,
+                            top_k=20, device=None):
 
-    # to lower
-    if lower:
-        query_words = [word.lower() for word in query_words]
+    encoder_inputs_embedded = encoder_embedding(encoder_inputs)
+    encoder_inputs_embedded_mean = encoder_inputs_embedded.transpose(0, 1).mean(dim=1) # [batch_size, embedding_size]
 
-    query_words_embedding = []
-    for word in query_words:
-        try:
-            word_embedding = gensim_model.wv[word]
-        except KeyError:
-            word_embedding = gensim_model.wv[vocab.unk]
-        query_words_embedding.append(word_embedding)
+    new_fact_inputs = torch.zeros((batch_size, top_k, fact_embedding_size), device=device)
+    for bi in range(batch_size):
+        cur_fact_input = fact_inputs[bi]
+        # cur_fact_input: [total_n, len()]
+        cur_fact_input_embedded_mean = torch.zeros((len(cur_part_fact), fact_embedding_size), device=device)
+        for ci, cur_part_fact in enumerate(cur_fact_input):
+            cur_part_fact = torch.LongTensor(cur_part_fact, device=device)
+            cur_part_fact_embedded = fact_embedding(cur_part_fact.view(1, -1))
+            cur_part_fact_embedded_mean = cur_part_fact_embedded.mean(dim=1)
 
-        # print('word: {}, word_embedding: {}'.format(word, word_embedding))
-    avg_vector_query = np.array(query_words_embedding).mean(axis=0)
+            cur_fact_input_embedded_mean[ci] = cur_part_fact_embedded_mean.view(-1)
 
-    avg_matrix_candidate = []
-    for candidate_reply in candidate_replies:
-        candidate_words = stop_word_obj.remove_words(candidate_reply.strip().replace('\t', ' '))
+        # get top_k
+        cur_encoder_input_embedded_mean = encoder_inputs_embedded_mean[bi]
 
-        # to lower
-        if lower:
-            candidate_words = [word.lower() for word in candidate_words]
+        cosine_socres = F.cosine_similarity(cur_encoder_input_embedded_mean, cur_fact_input_embedded_mean)
 
-        candidate_words_embedding = []
-        for word in candidate_words:
-            try:
-                word_embedding = gensim_model.wv[word]
-            except KeyError:
-                word_embedding = gensim_model.wv[vocab.unk]
-            candidate_words_embedding.append(word_embedding)
+        # sort
+        sorted_scores, sorted_indices = cosine_socres.sort(dim=0, descending=True)
 
-        avg_vector_candidate = np.array(candidate_words_embedding).mean(axis=0)
+        top_k_indices = sorted_indices[:top_k]
 
-        avg_matrix_candidate.append(avg_vector_candidate)
+        # [top_k, embedding_size]
+        top_k_fact_embedded = cur_fact_input_embedded_mean[top_k_indices]
 
-    avg_matrix_candidate = np.array(avg_matrix_candidate)
+        new_fact_inputs[bi] = top_k_fact_embedded
 
-    score_vector = gensim_model.cosine_similarities(avg_vector_query, avg_matrix_candidate)
-
-    # normalization
-    if normal:
-        score_vector = score_normalization(score_vector)
-
-    return score_vector
+    return new_fact_inputs
 
 
 '''

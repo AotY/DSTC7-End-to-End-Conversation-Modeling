@@ -14,9 +14,10 @@ python train_knowledge_grounded_model.py \
     --dialog_encoder_clipnorm 50.0 \
     --dialog_encoder_bidirectional \
     --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
-    --facts_embedding_size 300 \
-    --facts_max_length 50 \
-    --facts_dropout_probability 0.8 \
+    --fact_embedding_size 300 \
+    --fact_max_length 70 \
+    --fact_top_k 20 \
+    --fact_dropout_probability 0.8 \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 300 \
     --dialog_decoder_num_layers 2 \

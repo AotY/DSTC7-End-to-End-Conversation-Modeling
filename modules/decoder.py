@@ -63,6 +63,7 @@ class RNNDecoderState(DecoderState):
         # Init the input feed.
         batch_size = self.hidden[0].size(1)
 
+        # 
         h_size = (batch_size, hidden_size)
 
         #  self.input_feed = Variable(self.hidden[0].data.new(*h_size).zero_(),
@@ -176,8 +177,7 @@ class DecoderBase(nn.Module):
         if isinstance(encoder_final, tuple):  # LSTM
             return RNNDecoderState(self.hidden_size, tuple([_fix_enc_hidden(enc_hid) for enc_hid in encoder_final]))
         else:  # GRU RNN
-            return RNNDecoderState(self.hidden_size,
-                                   _fix_enc_hidden(encoder_final))
+            return RNNDecoderState(self.hidden_size, _fix_enc_hidden(encoder_final))
 
     # apply to encoder outputs to get weighted average
     def _input_size(self):

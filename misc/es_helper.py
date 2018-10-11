@@ -48,7 +48,6 @@ def search_facts_by_conversation_hash_value(es, hash_value):
     hits = result['hits']['hits']
     subreddit_name, conversation_id = hits[0]['subreddit_name'], hits[0]['conversation_id']
 
-
     # obtain facts by conversation_id
     query_body = {
         'query': {
@@ -60,18 +59,23 @@ def search_facts_by_conversation_hash_value(es, hash_value):
     result = es.search(index, fact_type, query_body)
     hit_count = result['hits']['total']
     hits = result['hits']['hits']
+
     facts = []
     facts_length = []
     domains = []
     conversation_ids = []
     for hit in hits:
         fact = hit['fact']
+        if len(fact) <= 1:
+            continue
+
         facts.append(fact)
         facts_length.append(len(fact))
         domains.append(hit['domain_name'])
         conversation_ids.append(hit['conversation_id'])
 
-    return facts, domains, conversation_ids
+    assert hit_count == len(facts)
+    return hit_count, facts, domains, conversation_ids
 
 
 def simple_search(es, doc_type, query):
