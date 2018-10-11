@@ -30,8 +30,7 @@ logging.root.setLevel(level=logging.INFO)
 logger.info("Running %s", ' '.join(sys.argv))
 
 # get optional parameters
-parser = argparse.ArgumentParser(description=program,
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description=program, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 data_set_opt(parser)
 train_knowledge_gournded_opt(parser)
 opt = parser.parse_args()
@@ -69,15 +68,15 @@ def train_epochs(model=None,
 
             # load data
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                fact_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
-                conversation_texts, response_texts, fact_texts = dataset.load_data(
-                    'train', opt.batch_size)
+                facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+                conversation_texts, response_texts, facts_texts = dataset.load_data(
+                    'train', opt.batch_size, opt.top_k, opt.fact_embedding_size)
 
             # train and get cur loss
             loss = train(model,
                          dialog_encoder_inputs,
                          dialog_encoder_inputs_length,
-                         fact_inputs,
+                         facts_inputs,
                          dialog_decoder_inputs,
                          dialog_decoder_targets,
                          optimizer,
@@ -125,7 +124,7 @@ def train_epochs(model=None,
 def train(model,
           dialog_encoder_inputs,
           dialog_encoder_inputs_length,
-          fact_inputs,
+          facts_inputs,
           dialog_decoder_inputs,
           dialog_decoder_targets,
           optimizer,
@@ -140,7 +139,7 @@ def train(model,
         (dialog_decoder_final_state, dialog_decoder_outputs,
          dialog_decoder_attns) = model(dialog_encoder_inputs=dialog_encoder_inputs,
                                        dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-                                       fact_inputs=fact_inputs,
+                                       facts_inputs=facts_inputs,
                                        dialog_decoder_inputs=dialog_decoder_inputs,
                                        teacher_forcing_ratio=opt.teacher_forcing_ratio,
                                        batch_size=opt.batch_size)
@@ -201,9 +200,9 @@ def evaluate(model=None,
             # load data
 
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                fact_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
-                conversation_texts, response_texts, fact_texts = dataset.load_data(
-                    'eval', opt.batch_size)
+                facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+                conversation_texts, response_texts, facts_texts = dataset.load_data(
+                    'eval', opt.batch_size, opt.top_k, opt.fact_embedding_size)
 
             # train and get cur loss
             (dialog_encoder_final_state, dialog_encoder_memory_bank), \
@@ -211,7 +210,7 @@ def evaluate(model=None,
                  dialog_decoder_attns) = model.evaluate(
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-                fact_inputs=fact_inputs,
+                facts_inputs=facts_inputs,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
@@ -234,7 +233,7 @@ def evaluate(model=None,
                 dialog_decoder_outputs_argmax.detach().cpu(), opt.batch_size)
 
             # save sentences
-            dataset.save_generated_texts(conversation_texts, response_texts, generated_texts,
+            dataset.save_generated_texts(conversation_texts, response_texts, generated_texts, facts_texts,
                                          os.path.join(opt.save_path, 'generated_texts_{}_knowledge_grounded.txt'.format(time_str)))
 
     return loss_total / max_load
@@ -283,9 +282,7 @@ def tally_parameters(model):
     logger.info('project: ', dec)
 
 
-def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
-    logger.info('Building model...')
-
+def build_embeddings(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
     ''' embedding for encoder and decoder '''
     dialog_encoder_embedding = Embedding(embedding_size=opt.dialog_encoder_embedding_size,
                                          vocab_size=dialog_encoder_vocab.get_vocab_size(),
@@ -301,6 +298,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
                                vocab_size=dialog_decoder_vocab.get_vocab_size(),
                                padding_idx=dialog_decoder_vocab.padid,
                                dropout_ratio=opt.dialog_decoder_dropout_probability)
+
     ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
 
@@ -321,6 +319,13 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
 
         fact_embedding.set_pretrained_embedding(
             dialog_decoder_pretrained_embedding_weight, fixed=False)
+
+    return dialog_encoder_embedding, dialog_decoder_embedding, fact_embedding
+
+
+def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab,
+                dialog_encoder_embedding, dialog_decoder_embedding, fact_embedding):
+    logger.info('Building model...')
 
     model = KnowledgeGroundedModel(
         dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
@@ -369,7 +374,6 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
     :param filename: save filename.
     :return:
     '''
-    save_path = os.path.join(opt.model_save_path, filename)
     torch.save(state, filename)
     if is_best:
         shutil.copy(filename, 'model_best.pth')
@@ -404,13 +408,6 @@ def timeSince(since, percent):
 
 
 if __name__ == '__main__':
-    # Load checkpoint if we resume from a previous training.
-
-    if opt.checkpoint:
-        logger.info('Loading checkpoint from: %s' % opt.checkpoint)
-        checkpoint = load_checkpoint(filename=opt.checkpoint)
-    else:
-        checkpoint = None
 
     vocab = Vocab()
     vocab.load(opt.vocab_save_path)
@@ -429,7 +426,16 @@ if __name__ == '__main__':
         device=device,
         logger=logger)
 
-    model = build_model(opt, vocab, vocab, vocab)
+    """ computing similarity between conversation and fact """
+    dialog_encoder_embedding, dialog_decoder_embedding, fact_embedding = build_embeddings(opt, vocab, vocab, vocab)
+
+    filename = os.path.join(opt.save_path, 'top_k_facts_embedded_mean_dict.pkl')
+    dataset.computing_similarity_offline(dialog_encoder_embedding, fact_embedding,
+                                         opt.dialog_decoder_embedding_size, opt.fact_embedding_size,
+                                         opt.top_k, device, filename, logger)
+
+    model = build_model(opt, vocab, vocab, vocab, dialog_encoder_embedding,
+                        dialog_decoder_embedding, fact_embedding)
 
     # Build optimizer.
     optimizer = build_optim(model, opt)
@@ -440,6 +446,13 @@ if __name__ == '__main__':
         ignore_index=vocab.padid,
         reduction='elementwise_mean'
     )
+
+    # Load checkpoint if we resume from a previous training.
+    if opt.checkpoint:
+        logger.info('Loading checkpoint from: %s' % opt.checkpoint)
+        checkpoint = load_checkpoint(filename=opt.checkpoint)
+    else:
+        checkpoint = None
 
     '''if load checkpoint'''
     if checkpoint:
@@ -455,11 +468,10 @@ if __name__ == '__main__':
                      vocab=vocab,
                      opt=opt)
     elif opt.train_or_eval == 'eval':
-        evaluate(
-            model=model,
-            dataset=dataset,
-            criterion=criterion,
-            opt=opt)
+        evaluate(model=model,
+                 dataset=dataset,
+                 criterion=criterion,
+                 opt=opt)
     else:
         raise ValueError(
             "train_or_eval must be train or eval, no %s " % opt.train_or_eval)
