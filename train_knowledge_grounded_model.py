@@ -456,11 +456,10 @@ if __name__ == '__main__':
                      vocab=vocab,
                      opt=opt)
     elif opt.train_or_eval == 'eval':
-        evaluate(
-            model=model,
-            dataset=dataset,
-            criterion=criterion,
-            opt=opt)
+        evaluate(model=model,
+                dataset=dataset,
+                criterion=criterion,
+                opt=opt)
     else:
         raise ValueError(
             "train_or_eval must be train or eval, no %s " % opt.train_or_eval)
