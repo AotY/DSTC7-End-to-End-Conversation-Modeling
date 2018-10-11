@@ -225,7 +225,7 @@ class KnowledgeGroundedDataSet:
         self.top_k_facts_embedded_mean_dict = None
 
         # read text, prepare data
-        self.read_text(path_conversations_responses_pair, eval_split)
+        self.read_txt(path_conversations_responses_pair, eval_split)
 
     def read_txt(self, path_conversations_responses_pair, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
