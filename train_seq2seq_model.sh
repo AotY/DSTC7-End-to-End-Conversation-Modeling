@@ -37,7 +37,7 @@ python train_seq2seq_model.py \
     --eval_split 0.2 \
     --optim_method adam \
     --start_epoch 3 \
-    --train_or_eval train \
-    # --checkpoint ./models/checkpoint.epoch-4.pth  
+    --train_or_eval eval \
+    --checkpoint ./models/checkpoint.epoch-5.pth  
 
     /
