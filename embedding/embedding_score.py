@@ -24,7 +24,8 @@ def get_top_k_fact_average_batch(encoder_embedding, fact_embedding, encoder_embe
         (batch_size, top_k, fact_embedding_size), device=device)
     for bi in range(batch_size):
         cur_fact_input = fact_inputs[bi]
-        # cur_fact_input: [total_n, len()] cur_fact_input_embedded_mean = torch.zeros((len(cur_fact_input), fact_embedding_size), device=device)
+        # cur_fact_input: [total_n, len()]
+        cur_fact_input_embedded_mean = torch.zeros((len(cur_fact_input), fact_embedding_size), device=device)
         for fi, cur_part_fact in enumerate(cur_fact_input):
             cur_part_fact = torch.LongTensor(cur_part_fact, device=device)
             cur_part_fact_embedded = fact_embedding(cur_part_fact.view(1, -1))
@@ -64,15 +65,17 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
     encoder_input = torch.tensor(conversation_ids, dtype=torch.long, device=device)
     encoder_input_embedded = encoder_embedding(encoder_input)
     encoder_input_embedded_mean = encoder_input_embedded.mean(dim=0)  # [1, embedding_size]
+    print(encoder_input_embedded_mean.shape)
 
     facts_embedded_mean = torch.zeros((len(facts_ids), fact_embedding_size), device=device)
     for fi, fact_ids in enumerate(facts_ids):
         fact_input = torch.LongTensor(fact_ids, device=device)
         fact_input_embedded = fact_embedding(fact_input)
         fact_input_embedded_mean = fact_input_embedded.mean(dim=0) # [1, embedding_size]
+        print(fact_input_embedded_mean.shape)
         facts_embedded_mean[fi] = fact_input_embedded_mean
 
-    # get top_k 
+    # get top_k
     cosine_scores = F.cosine_similarity(encoder_input_embedded_mean, facts_embedded_mean) #[len(facts_ids)]
     # sort
     sorted_scores, sorted_indices = cosine_scores.sort(dim=0, descending=True)
@@ -81,6 +84,7 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
 
     # [top_k, embedding_size]
     top_k_facts_embedded_mean = facts_embedded_mean[top_k_indices]
+    print(top_k_facts_embedded_mean.shape)
 
     return top_k_facts_embedded_mean, top_k_indices
 
