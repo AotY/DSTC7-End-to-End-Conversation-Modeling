@@ -214,9 +214,13 @@ def evaluate(model=None,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
+            print('dialog_decoder_outputs shape: {}'.format(dialog_decoder_outputs.shape))
             # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
             dialog_decoder_outputs_argmax = torch.argmax(
                 dialog_decoder_outputs, dim=2)
+
+            print(dialog_decoder_outputs_argmax.shape)
+            print(dialog_decoder_outputs_argmax)
 
             #  Compute loss
             dialog_decoder_outputs = dialog_decoder_outputs.view(
