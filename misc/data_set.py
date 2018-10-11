@@ -332,8 +332,8 @@ class KnowledgeGroundedDataSet:
             # load top_k facts
             top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(hash_value)
 
-			facts_inputs[i] = top_k_facts_embedded_mean
-			facts_texts.append(top_k_fact_texts)
+            facts_inputs[i] = top_k_facts_embedded_mean
+            facts_texts.append(top_k_fact_texts)
 
         # To long tensor
         encoder_inputs_length = torch.tensor(encoder_inputs_length,
