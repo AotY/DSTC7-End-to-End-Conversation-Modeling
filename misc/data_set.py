@@ -8,6 +8,7 @@ import torch
 import numpy as np
 
 from misc import es_helper
+from embedding.embedding_score import get_top_k_fact_average
 
 
 class Seq2seqDataSet:
@@ -113,7 +114,7 @@ class Seq2seqDataSet:
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]                                           : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
@@ -331,6 +332,7 @@ class KnowledgeGroundedDataSet:
 
             # load top_k facts
             top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list = self.top_k_facts_embedded_mean_dict(hash_value)
+
             facts_inputs[i] = top_k_facts_embedded_mean
             facts_texts.append(top_k_fact_texts)
 

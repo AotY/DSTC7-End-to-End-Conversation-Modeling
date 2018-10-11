@@ -9,8 +9,6 @@ import torch.nn.functional as F
 from modules.encoder import RNNEncoder
 from modules.decoder import StdRNNDecoder
 
-from embedding.embedding_score import get_top_k_fact_average
-
 """
 KnowledgeGroundedModel
 1. dialog_encoder
