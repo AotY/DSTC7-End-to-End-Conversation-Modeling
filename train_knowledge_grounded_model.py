@@ -18,7 +18,7 @@ from modules.optim import Optim
 from modules.embeddings import Embedding
 
 from misc.vocab import Vocab
-from train_evaluate_opt import data_set_opt, train_seq2seq_opt
+from train_evaluate_opt import data_set_opt, train_knowledge_gournded_opt
 from knowledge_grounded_model import KnowledgeGroundedModel
 from misc.data_set import KnowledgeGroundedDataSet
 
@@ -69,8 +69,8 @@ def train_epochs(model=None,
 
             # load data
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
-            facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
-            conversation_texts, response_texts, fact_texts = dataset.load_data(
+                facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+                conversation_texts, response_texts, fact_texts = dataset.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
@@ -137,13 +137,13 @@ def train(model,
     model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-    (dialog_decoder_final_state, dialog_decoder_outputs, \
-    dialog_decoder_attns) = model(dialog_encoder_inputs=dialog_encoder_inputs,
-                                    dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-                                    facts_inputs=facts_inputs,
-                                    dialog_decoder_inputs=dialog_decoder_inputs,
-                                    teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                                    batch_size=opt.batch_size)
+        (dialog_decoder_final_state, dialog_decoder_outputs,
+         dialog_decoder_attns) = model(dialog_encoder_inputs=dialog_encoder_inputs,
+                                       dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+                                       facts_inputs=facts_inputs,
+                                       dialog_decoder_inputs=dialog_decoder_inputs,
+                                       teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                                       batch_size=opt.batch_size)
 
     optimizer.zero_grad()
 
@@ -201,8 +201,8 @@ def evaluate(model=None,
             # load data
 
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
-            facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
-            conversation_texts, response_texts, fact_texts = dataset.load_data(
+                facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
+                conversation_texts, response_texts, fact_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
@@ -215,6 +215,10 @@ def evaluate(model=None,
                 dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
+            # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
+            dialog_decoder_outputs_argmax = torch.argmax(
+                dialog_decoder_outputs, dim=2)
+
             #  Compute loss
             dialog_decoder_outputs = dialog_decoder_outputs.view(
                 -1, dialog_decoder_outputs.shape[-1])
@@ -225,15 +229,13 @@ def evaluate(model=None,
             loss_total += loss.item()
 
             # generate sentence, and save to file
-            # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            dialog_decoder_outputs = torch.argmax(dim=2)
             # [max_length, batch_size]
             generated_texts = dataset.generating_texts(
-                dialog_decoder_outputs.detach().cpu())
+                dialog_decoder_outputs_argmax.detach().cpu(), opt.batch_size)
 
             # save sentences
             dataset.save_generated_texts(conversation_texts, response_texts, generated_texts,
-                                         os.path.join(opt.save_path, 'generated_texts_{}.txt'.format(time_str)))
+                                         os.path.join(opt.save_path, 'generated_texts_{}_knowledge_grounded.txt'.format(time_str)))
 
     return loss_total / max_load
 
@@ -296,9 +298,9 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
                                          dropout_ratio=opt.dialog_decoder_dropout_probability)
 
     fact_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
-                                         vocab_size=dialog_decoder_vocab.get_vocab_size(),
-                                         padding_idx=dialog_decoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_decoder_dropout_probability)
+                               vocab_size=dialog_decoder_vocab.get_vocab_size(),
+                               padding_idx=dialog_decoder_vocab.padid,
+                               dropout_ratio=opt.dialog_decoder_dropout_probability)
     ''' load pretrained_weight'''
     if opt.dialog_encoder_pretrained_embedding_path:
 
@@ -421,7 +423,7 @@ if __name__ == '__main__':
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_vocab=vocab,
         fact_vocab=vocab,
-        fact_max_length=fact_max_length,
+        fact_max_length=opt.fact_max_length,
         dialog_decoder_max_length=opt.dialog_encoder_max_length,
         dialog_decoder_vocab=vocab,
         eval_split=opt.eval_split,  # how many hold out as eval data
