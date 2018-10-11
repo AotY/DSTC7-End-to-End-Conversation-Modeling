@@ -164,6 +164,7 @@ class Seq2seqDataSet:
             word_ids = decoder_outputs_argmax[bi]
             words = self.dialog_encoder_vocab.ids_to_word(word_ids)
             text = ' '.join(words)
+            print(text)
             texts.append(text)
 
         return texts
