@@ -51,6 +51,7 @@ class Vocab(object):
     '''ids to word'''
     def ids_to_word(self, ids):
         words = [self.id_to_word(id) for id in ids]
+        print(words)
         return words
 
     def build_for_frequency(self, freq_list):

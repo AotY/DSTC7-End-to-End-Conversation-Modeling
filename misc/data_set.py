@@ -162,6 +162,7 @@ class Seq2seqDataSet:
         decoder_outputs_argmax = decoder_outputs_argmax.transpose(0, 1)
         for bi in range(batch_size):
             word_ids = decoder_outputs_argmax[bi]
+            print(word_ids)
             words = self.dialog_encoder_vocab.ids_to_word(word_ids)
             text = ' '.join(words)
             print(text)
