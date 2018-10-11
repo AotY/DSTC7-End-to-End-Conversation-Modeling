@@ -59,11 +59,10 @@ def train_epochs(model=None,
                  opt=None):
 
     start = time.time()
-
-    log_loss_total = 0  # Reset every logger.info_every
     max_load = int(np.ceil(dataset.n_train / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
         dataset.reset_data('train')
+        log_loss_total = 0  # Reset every logger.info_every
         for load in range(1, max_load + 1):
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 epoch, opt.epochs, 100 * load / max_load)
@@ -118,7 +117,7 @@ def train_epochs(model=None,
         # optimizer.state_dict()
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d.pth' % epoch))
+                        filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d_seq2seq.pth' % epoch))
 
 
 ''' start traing '''
@@ -165,8 +164,8 @@ def train(model,
     loss.backward()
 
     # Clip gradients: gradients are modified in place
-    _ = torch.nn.utils.clip_grad_norm_(
-        model.parameters(), opt.dialog_decoder_clipnorm)
+    #  _ = torch.nn.utils.clip_grad_norm_(
+        #  model.parameters(), opt.dialog_decoder_clipnorm)
 
     # optimizer
     optimizer.step()
@@ -282,7 +281,7 @@ def tally_parameters(model):
     logger.info('project: ', dec)
 
 
-def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None):
+def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab):
     logger.info('Building model...')
 
     ''' embedding for encoder and decoder '''
@@ -297,7 +296,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, checkpoint=None
                                          dropout_ratio=opt.dialog_decoder_dropout_probability)
 
     ''' load pretrained_weight'''
-    if opt.dialog_encoder_pretrained_embedding_path:
+    if opt.dialog_encoder_pretrained_embedding_path and False:
 
         # load pre-trained embedding
         logger.info("Load pre-trained word embeddig: %s ." %
@@ -406,7 +405,7 @@ if __name__ == '__main__':
         device=device,
         logger=logger)
 
-    model = build_model(opt, vocab, vocab, None)
+    model = build_model(opt, vocab, vocab)
 
     # Build optimizer.
     optimizer = build_optim(model, opt)
