@@ -278,6 +278,7 @@ build vocab
 def build_vocab(freq_list):
     vocab = Vocab()
     vocab.build_for_frequency(freq_list)
+    opt.vocab_save_path = opt.vocab_save_path.format(opt.model_name)
     vocab.save(opt.vocab_save_path)
     return vocab
 
@@ -410,6 +411,7 @@ if __name__ == '__main__':
     preprocess_opt(parser)
     train_embedding_opt(parser)
     opt = parser.parse_args()
+    model_name = opt.model_name
 
     logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
 
@@ -474,8 +476,12 @@ if __name__ == '__main__':
     stat_frequency(facts, ['facts'], 0, 0, logger)
 
     # share a vocab
-    datas = conversations + responses + facts
-    datas_name = ['conversations', 'responses', 'facts']
+    if model_name == 'seq2seq':
+        datas = conversations + responses
+        datas_name = ['conversations', 'responses']
+    else:
+        datas = conversations + responses + facts
+        datas_name = ['conversations', 'responses', 'facts']
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
@@ -483,7 +489,7 @@ if __name__ == '__main__':
     save_token_type_nums(total_token_nums, total_type_nums)
     vocab = build_vocab(sorted_freq_list)
     vocab_size = int(vocab.get_vocab_size())
-    logger.info('vocab_size: %s' % vocab_size)
+    logger.info('%s vocab_size: %s' % (model_name, vocab_size))
 
     """
     generate_num(conversations, vocab, opt.conversations_num_save_path)
@@ -514,7 +520,6 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
-    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(
         None,
@@ -522,17 +527,16 @@ if __name__ == '__main__':
         opt.fasttext_vec_file,
         opt.fasttext_vec_dim,
         None,
-        os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.txt' % (vocab_size, opt.google_vec_dim)), logger)
+        os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
 
-    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab.%d.%dd.npy' % (vocab_size, opt.google_vec_dim)),
+    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.npy' % (model_name, vocab_size, opt.google_vec_dim)),
             vocab_embedding)
     logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' %
                 out_of_vocab_count)  #
 
     # save out of vocab words
-    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText.txt')
+    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
 
-    """
 
     """
     # training own word embedding.
@@ -561,6 +565,8 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
+
+    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -578,7 +584,7 @@ if __name__ == '__main__':
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
 
-
+    """
     logger.info('Preprocess finished.')
 
 

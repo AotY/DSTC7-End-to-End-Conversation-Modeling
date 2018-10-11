@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=5,6
 python train_seq2seq_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
-    --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx.dict \
+    --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx_seq2seq.dict \
     --dialog_encoder_embedding_size 300 \
     --dialog_encoder_hidden_size 300 \
     --dialog_encoder_num_layers 2 \
@@ -13,7 +13,7 @@ python train_seq2seq_model.py \
     --dialog_encoder_max_length 50 \
     --dialog_encoder_clipnorm 50.0 \
     --dialog_encoder_bidirectional \
-    --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
+    --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
     --dialog_encoder_tied \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 300 \
@@ -22,7 +22,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_dropout_probability 0.8 \
     --dialog_decoder_max_length 50 \
     --dialog_decoder_clipnorm 50.0 \
-    --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab.50004.300d.npy \
+    --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
     --dialog_decoder_attention_type general \
     --dialog_decoder_tied \
     --lr 0.001 \
