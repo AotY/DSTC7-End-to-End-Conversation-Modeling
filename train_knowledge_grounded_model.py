@@ -430,7 +430,7 @@ if __name__ == '__main__':
         device=device,
         logger=logger)
 
-    model = build_model(opt, vocab, vocab, vocab, None)
+    model = build_model(opt, vocab, vocab, vocab)
 
     # Build optimizer.
     optimizer = build_optim(model, opt)
