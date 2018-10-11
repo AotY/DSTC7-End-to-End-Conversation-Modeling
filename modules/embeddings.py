@@ -125,7 +125,7 @@ class Embedding(nn.Module):
             if fixed:
                 self.embedding.weight.requires_grad = False
 
-    def forward(self, inputs):
+    def forward(self, inputs, is_dropout=True):
         """
         Computes the embedding for words and features.
         Args:
@@ -134,23 +134,22 @@ class Embedding(nn.Module):
             `FloatTensor`: word embedding `[len x batch x embeddededding_size]`
         """
 
-        in_length, in_batch = inputs.size()
-
-        # aeq(nfeat, len(self.embedded_luts))
+        dim = inputs.dim()
+        if dim == 2:
+            # with batch
+            in_length, in_batch = inputs.size()
 
         embedded = self.embedding(inputs)
-        
 
-        if self.dropout is not None:
+        if self.dropout is not None and is_dropout:
             embedded = self.dropout(embedded)
 
-        out_length, out_batch, embedded_size = embedded.size()
-
-        aeq(in_length, out_length)
-        aeq(in_batch, out_batch)
-        aeq(embedded_size, self.embedding_size)
+        if dim == 2:
+            out_length, out_batch, embedded_size = embedded.size()
+            aeq(in_length, out_length)
+            aeq(in_batch, out_batch)
+            aeq(embedded_size, self.embedding_size)
 
         return embedded
 
 
-    
