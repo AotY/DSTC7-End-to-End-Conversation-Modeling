@@ -111,8 +111,7 @@ class Seq2seqDataSet:
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]
-            : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]                                           : cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids):
                 continue
@@ -298,7 +297,8 @@ class KnowledgeGroundedDataSet:
         fact_inputs = []
         fact_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]
+            : cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             if not bool(response_ids) or not bool(conversation_ids) or bool(hash_value):
                 continue
@@ -326,11 +326,12 @@ class KnowledgeGroundedDataSet:
 
             # search facts ?
             hit_count, facts, domains, conversation_ids = es_helper.search_facts_by_conversation_hash_value(
-                es, hash_value)
+                self.es, hash_value)
 
             # facts to id
             facts_id = [self.fact_vocab.words_to_id(fact) for fact in facts]
-            facts_id = facts_id[0: min(self.fact_max_length - 2, len(facts_id))]
+            facts_id = facts_id[0: min(
+                self.fact_max_length - 2, len(facts_id))]
 
             # three dimension
             fact_inputs.append(facts_id)
@@ -338,10 +339,9 @@ class KnowledgeGroundedDataSet:
             fact_texts.append([' '.join(fact) for fact in facts])
 
         # To long tensor
-        encoder_inputs_length = torch.tensor(
-            encoder_inputs_length,
-            dtype=torch.long,
-            device=self.device)
+        encoder_inputs_length = torch.tensor(encoder_inputs_length,
+                                             dtype=torch.long,
+                                             device=self.device)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
