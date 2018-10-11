@@ -228,7 +228,6 @@ def evaluate(model=None,
             loss_total += loss.item()
 
             # generate sentence, and save to file
-
             # [max_length, batch_size]
             generated_texts = dataset.generating_texts(
                 dialog_decoder_outputs_argmax.detach().cpu(), opt.batch_size)
