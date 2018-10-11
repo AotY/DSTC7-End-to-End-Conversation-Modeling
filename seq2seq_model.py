@@ -168,11 +168,9 @@ class Seq2SeqModel(nn.Module):
                         state=dialog_decoder_state,
                         memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
-                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                    0)
+                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
         else:
-            # Without teacher forcing: use its own predictions as the next
-            # input
+            # Without teacher forcing: use its own predictions as the next input
             dialog_decoder_input = dialog_decoder_inputs[0]
             for di in range(self.dialog_decoder_max_length):
                 dialog_decoder_state, dialog_decoder_output, \

@@ -162,8 +162,8 @@ def train(model,
     loss.backward()
 
     # Clip gradients: gradients are modified in place
-    _ = torch.nn.utils.clip_grad_norm_(
-        model.parameters(), opt.dialog_decoder_clipnorm)
+    #  _ = torch.nn.utils.clip_grad_norm_(
+        #  model.parameters(), opt.dialog_decoder_clipnorm)
 
     # optimizer
     optimizer.step()
@@ -234,7 +234,7 @@ def evaluate(model=None,
 
             # save sentences
             dataset.save_generated_texts(conversation_texts, response_texts, generated_texts, facts_texts,
-                                         os.path.join(opt.save_path, 'generated_texts_{}_knowledge_grounded.txt'.format(time_str)))
+                                         os.path.join(opt.save_path, 'knowledge_grounded_generated_texts_{}.txt'.format(time_str)))
 
     return loss_total / max_load
 
@@ -266,21 +266,6 @@ def build_optim(model, opt):
     optim.set_parameters(model.parameters())
 
     return optim
-
-
-def tally_parameters(model):
-    n_params = sum([p.nelement() for p in model.parameters()])
-    logger.info('* number of parameters: %d' % n_params)
-    enc = 0
-    dec = 0
-    for name, param in model.named_parameters():
-        if 'encoder' in name:
-            enc += param.nelement()
-        else:
-            dec += param.nelement()
-    logger.info('encoder: ', enc)
-    logger.info('project: ', dec)
-
 
 def build_embeddings(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab):
     ''' embedding for encoder and decoder '''
@@ -386,16 +371,6 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
 def load_checkpoint(filename='checkpoint.pth'):
     checkpoint = torch.load(filename)
     return checkpoint
-
-
-def interact(self):
-    while True:
-        logger.info('----- please input -----')
-        input_text = input()
-        if not bool(input_text):
-            break
-        logger.info(self.dialog(input_text))
-
 
 def asMinutes(s):
     m = math.floor(s / 60)
