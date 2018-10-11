@@ -70,7 +70,7 @@ def train_epochs(model=None,
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
                 facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
                 conversation_texts, response_texts, facts_texts = dataset.load_data(
-                    'train', opt.batch_size, opt.top_k, opt.fact_embedding_size)
+                    'train', opt.batch_size, opt.fact_top_k, opt.fact_embedding_size)
 
             # train and get cur loss
             loss = train(model,
@@ -202,7 +202,7 @@ def evaluate(model=None,
             dialog_encoder_inputs, dialog_encoder_inputs_length, \
                 facts_inputs, dialog_decoder_inputs, dialog_decoder_targets, \
                 conversation_texts, response_texts, facts_texts = dataset.load_data(
-                    'eval', opt.batch_size, opt.top_k, opt.fact_embedding_size)
+                    'eval', opt.batch_size, opt.fact_top_k, opt.fact_embedding_size)
 
             # train and get cur loss
             (dialog_encoder_final_state, dialog_encoder_memory_bank), \
@@ -415,14 +415,14 @@ if __name__ == '__main__':
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
     dataset = KnowledgeGroundedDataSet(
-        path_conversations_responses_pair=opt.path_conversations_responses_pair,
+		path_conversations_responses_pair=opt.path_conversations_responses_pair,
         dialog_encoder_max_length=opt.dialog_encoder_max_length,
         dialog_encoder_vocab=vocab,
         fact_vocab=vocab,
         fact_max_length=opt.fact_max_length,
         dialog_decoder_max_length=opt.dialog_encoder_max_length,
         dialog_decoder_vocab=vocab,
-        eval_split=opt.eval_split,  # how many hold out as eval data
+		eval_split=opt.eval_split,
         device=device,
         logger=logger)
 
@@ -432,7 +432,7 @@ if __name__ == '__main__':
     filename = os.path.join(opt.save_path, 'top_k_facts_embedded_mean_dict.pkl')
     dataset.computing_similarity_offline(dialog_encoder_embedding, fact_embedding,
                                          opt.dialog_decoder_embedding_size, opt.fact_embedding_size,
-                                         opt.top_k, device, filename, logger)
+                                         opt.fact_top_k, device, filename, logger)
 
     model = build_model(opt, vocab, vocab, vocab, dialog_encoder_embedding,
                         dialog_decoder_embedding, fact_embedding)

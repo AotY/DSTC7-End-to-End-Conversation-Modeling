@@ -132,9 +132,6 @@ class RNNEncoder(EncoderBase):
                 * memory bank for attention, `[src_len x batch x hidden]`
         """
 
-        print(src)
-        print(lengths)
-
         self._check_args(src, lengths, encoder_state)
 
         # rank the sequences according to their lengths
