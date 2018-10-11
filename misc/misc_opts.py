@@ -73,3 +73,7 @@ def preprocess_opt(parser):
     group.add_argument('--vocab_save_path',
                        type=str,
                        help='location of save vocab dict file. ')
+
+    group.add_argument('--model_name',
+                       type=str,
+                       help='model name, seq2seq or Knowledge_grounded')

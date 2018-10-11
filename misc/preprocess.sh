@@ -6,7 +6,7 @@ python preprocess.py \
     --conversations_num_save_path ./../data/train.conversations.num.txt \
     --responses_num_save_path ./../data/train.responses.num.txt \
     --save_path ./../data \
-    --vocab_save_path ./../data/vocab_word2idx.dict \
+    --vocab_save_path ./../data/vocab_word2idx_{}.dict \
     --min_count 3 \
     --max_vocab_size 5e4 \
     --word_embedding_model_name v1.0_word_embedding \
@@ -20,6 +20,7 @@ python preprocess.py \
     --alpha 0.025 \
     --negative 7 \
     --epochs 7 \
+    --model_name seq2seq 
 
 
 /
