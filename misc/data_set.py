@@ -24,6 +24,7 @@ class Seq2seqDataSet:
                  dialog_encoder_vocab=None,
                  dialog_decoder_max_length=50,
                  dialog_decoder_vocab=None,
+                 save_path=None,
                  eval_split=0.2,  # how many hold out as eval data
                  device=None,
                  logger=None):
@@ -44,9 +45,9 @@ class Seq2seqDataSet:
         self._data_dict = {}
         self._indicator_dict = {}
 
-        self.read_txt(path_conversations_responses_pair, eval_split)
+        self.read_txt(save_path, path_conversations_responses_pair, eval_split)
 
-    def read_txt(self, path_conversations_responses_pair, eval_split):
+    def read_txt(self, save_path, path_conversations_responses_pair, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
 
@@ -228,6 +229,7 @@ class KnowledgeGroundedDataSet:
                  fact_max_length=50,
                  dialog_decoder_max_length=50,
                  dialog_decoder_vocab=None,
+                 save_path=None,
                  eval_split=0.2,  # how many hold out as eval data
                  device=None,
                  logger=None):
@@ -255,58 +257,66 @@ class KnowledgeGroundedDataSet:
         self.top_k_facts_embedded_mean_dict = None
 
         # read text, prepare data
-        self.read_txt(path_conversations_responses_pair, eval_split)
+        self.read_txt(save_path, path_conversations_responses_pair, eval_split)
 
-    def read_txt(self, path_conversations_responses_pair, eval_split):
+    def read_txt(self, save_path, path_conversations_responses_pair, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
-        # load source-target pairs, tokenized
-        datas = []
-        with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
-            for line in f:
-                conversation, response, hash_value = line.rstrip().split('\t')
-                if not bool(conversation) or not bool(response):
-                    continue
 
-                # START EOS
-                if not conversation.startswith('START EOS'):
-                    continue
+        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')): 
+            # load source-target pairs, tokenized
+            datas = []
+            with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
+                for line in f:
+                    conversation, response, hash_value = line.rstrip().split('\t')
 
-                response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                if int(response_score) < 1:
-                    continue
-                print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
+                    if not bool(conversation) or not bool(response):
+                        continue
 
-                conversation_ids = self.dialog_encoder_vocab.words_to_id(
-                    conversation.split())
-                response_ids = self.dialog_decoder_vocab.words_to_id(
-                    response.split())
+                    # START EOS
+                    if not conversation.startswith('START EOS'):
+                        continue
 
-                # for simple
-                if len(conversation_ids) > 50 or len(response_ids) > 50:
-                    continue
+                    response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
+                    if int(response_score) < 1:
+                        continue
 
-                #  conversation_ids = conversation_ids[0: min(
-                    #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
-                #  response_ids = response_ids[0: min(
-                    #  self.dialog_decoder_max_length - 2, len(response_ids))]
-                conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
-                response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
+                    print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
-                datas.append((conversation_ids, response_ids))
+                    conversation_ids = self.dialog_encoder_vocab.words_to_id(
+                        conversation.split())
+                    response_ids = self.dialog_decoder_vocab.words_to_id(
+                        response.split())
 
-                datas.append((conversation_ids, response_ids, hash_value))
+                    # for simple
+                    if len(conversation_ids) > 50 or len(response_ids) > 50:
+                        continue
 
-        np.random.shuffle(datas)
+                    #  conversation_ids = conversation_ids[0: min(
+                        #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
+                    #  response_ids = response_ids[0: min(
+                        #  self.dialog_decoder_max_length - 2, len(response_ids))]
+                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
+                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
 
-        # train-eval split
-        self.n_train = int(len(datas) * (1. - eval_split))
-        self.n_eval = len(datas) - self.n_train
+                    datas.append((conversation_ids, response_ids, hash_value))
 
-        self._data_dict = {
-            'train': datas[0: self.n_train],
-            'eval': datas[self.n_train:]
-        }
+            np.random.shuffle(datas)
+            # train-eval split
+            self.n_train = int(len(self._data_dict[train]) * (1. - eval_split))
+            self.n_eval = len(datas) - self.n_train
+
+            self._data_dict = {
+                'train': datas[0: self.n_train],
+                'eval': datas[self.n_train:]
+            }
+
+            pickle.dump(self._data_dict, open(os.path.join(save_path, 'seq2seq_data_dict.pkl'), 'wb'))
+        else:
+            self._data_dict = pickle.load(open(os.path.join(save_path, 'seq2seq_data_dict.pkl'), 'rb'))
+            self.n_train = len(self._data_dict['train'])
+            self.n_eval = len(self._data_dict['eval'])
+
         self._indicator_dict = {
             'train': 0,
             'eval': 0
