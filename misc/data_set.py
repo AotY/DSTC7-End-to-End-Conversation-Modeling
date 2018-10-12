@@ -49,52 +49,61 @@ class Seq2seqDataSet:
     def read_txt(self, path_conversations_responses_pair, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
-        # load source-target pairs, tokenized
-        datas = []
-        with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
-            for line in f:
-                conversation, response, hash_value = line.rstrip().split('\t')
 
-                if not bool(conversation) or not bool(response):
-                    continue
+        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')): 
+            # load source-target pairs, tokenized
+            datas = []
+            with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
+                for line in f:
+                    conversation, response, hash_value = line.rstrip().split('\t')
 
-                # START EOS
-                if not conversation.startswith('START EOS'):
-                    continue
+                    if not bool(conversation) or not bool(response):
+                        continue
 
-                response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                if response_score < 1:
-                    continue
-                print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
+                    # START EOS
+                    if not conversation.startswith('START EOS'):
+                        continue
 
-                conversation_ids = self.dialog_encoder_vocab.words_to_id(
-                    conversation.split())
-                response_ids = self.dialog_decoder_vocab.words_to_id(
-                    response.split())
+                    response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
+                    if int(response_score) < 1:
+                        continue
 
-                # for simple
-                if len(conversation_ids) > 50 or len(response_ids) > 50:
-                    continue
+                    print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
-                #  conversation_ids = conversation_ids[0: min(
-                    #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
-                #  response_ids = response_ids[0: min(
-                    #  self.dialog_decoder_max_length - 2, len(response_ids))]
-                conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
-                response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
+                    conversation_ids = self.dialog_encoder_vocab.words_to_id(
+                        conversation.split())
+                    response_ids = self.dialog_decoder_vocab.words_to_id(
+                        response.split())
 
-                datas.append((conversation_ids, response_ids))
+                    # for simple
+                    if len(conversation_ids) > 50 or len(response_ids) > 50:
+                        continue
 
-        np.random.shuffle(datas)
+                    #  conversation_ids = conversation_ids[0: min(
+                        #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
+                    #  response_ids = response_ids[0: min(
+                        #  self.dialog_decoder_max_length - 2, len(response_ids))]
+                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
+                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
 
-        # train-eval split
-        self.n_train = int(len(datas) * (1. - eval_split))
-        self.n_eval = len(datas) - self.n_train
+                    datas.append((conversation_ids, response_ids))
 
-        self._data_dict = {
-            'train': datas[0: self.n_train],
-            'eval': datas[self.n_train:]
-        }
+            np.random.shuffle(datas)
+            # train-eval split
+            self.n_train = int(len(self._data_dict[train]) * (1. - eval_split))
+            self.n_eval = len(datas) - self.n_train
+
+            self._data_dict = {
+                'train': datas[0: self.n_train],
+                'eval': datas[self.n_train:]
+            }
+
+            pickle.dump(self._data_dict, open(os.path.join(save_path, 'seq2seq_data_dict.pkl'), 'wb'))
+        else:
+            self._data_dict = pickle.load(open(os.path.join(save_path, 'seq2seq_data_dict.pkl'), 'rb'))
+            self.n_train = len(self._data_dict['train'])
+            self.n_eval = len(self._data_dict['eval'])
+
         self._indicator_dict = {
             'train': 0,
             'eval': 0
@@ -264,7 +273,7 @@ class KnowledgeGroundedDataSet:
                     continue
 
                 response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                if response_score < 1:
+                if int(response_score) < 1:
                     continue
                 print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 

@@ -105,6 +105,9 @@ def train_epochs(model=None,
         logger.info(logger_str)
         save_logger(logger_str)
 
+        # generate sentence
+        generate(model, dataset, opt)
+
         # save model of each epoch
         save_state = {
             'loss': evaluate_loss,
@@ -142,7 +145,6 @@ def train(model,
         dialog_encoder_inputs=dialog_encoder_inputs,
         dialog_encoder_inputs_length=dialog_encoder_inputs_length,
         dialog_decoder_inputs=dialog_decoder_inputs,
-        dialog_decoder_targets=dialog_decoder_targets,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
         batch_size=opt.batch_size)
 
@@ -210,7 +212,6 @@ def evaluate(model=None,
                  dialog_decoder_attns) = model.evaluate(
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-                dialog_decoder_inputs=dialog_decoder_inputs,
                 batch_size=opt.batch_size)
 
             # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
@@ -226,10 +227,33 @@ def evaluate(model=None,
 
             loss_total += loss.item()
 
+    return loss_total / max_load
+
+
+def generate(model, dataset, opt):
+    # Turn on evaluation mode which disables dropout.
+    model.eval()
+    loss_total = 0
+    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
+    dataset.reset_data('eval')
+    with torch.no_grad():
+        for load in range(1, max_load + 1):
+            # load data
+            dialog_encoder_inputs, dialog_encoder_inputs_length, \
+                dialog_decoder_inputs, dialog_decoder_targets, \
+                conversation_texts, response_texts = dataset.load_data(
+                    'eval', opt.batch_size)
+
+            # train and get cur loss
+            dialog_decoder_outputs_argmax = model.generate(
+            dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
+            dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+            batch_size=opt.batch_size)
+
             # generate sentence, and save to file
             # [max_length, batch_size]
             generated_texts = dataset.generating_texts(
-                dialog_decoder_outputs_argmax.detach().cpu(), opt.batch_size)
+                dialog_decoder_outputs_argmax, opt.batch_size)
 
             # save sentences
             dataset.save_generated_texts(conversation_texts, response_texts,
@@ -237,13 +261,6 @@ def evaluate(model=None,
 
     return loss_total / max_load
 
-
-def dialog(self, input_text):
-    source_seq_int = []
-    for token in input_text.strip().strip('\n').split(' '):
-        source_seq_int.append(
-            self.dataset.token2index.get(token, self.dataset.UNK))
-    return self._infer(np.atleast_2d(source_seq_int))
 
 
 def build_optim(model, opt):
