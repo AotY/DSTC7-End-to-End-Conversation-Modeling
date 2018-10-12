@@ -296,7 +296,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab):
                                          dropout_ratio=opt.dialog_decoder_dropout_probability)
 
     ''' load pretrained_weight'''
-    if opt.dialog_encoder_pretrained_embedding_path and False:
+    if opt.dialog_encoder_pretrained_embedding_path:
 
         # load pre-trained embedding
         logger.info("Load pre-trained word embeddig: %s ." %
@@ -335,8 +335,10 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab):
         dialog_decoder_clipnorm=opt.dialog_decoder_clipnorm,
         dialog_decoder_embedding=dialog_decoder_embedding,
         dialog_decoder_pad_id=dialog_decoder_vocab.padid,
+        dialog_decoder_sos_id=dialog_decoder_vocab.sosid,
         dialog_decoder_eos_id=dialog_decoder_vocab.eosid,
         dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
+		dialog_decoder_type=opt.dialog_decoder_type,
         dialog_decoder_tied=opt.dialog_decoder_tied,
         device=device)
 
