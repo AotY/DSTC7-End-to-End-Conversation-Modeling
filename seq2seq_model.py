@@ -93,9 +93,9 @@ class Seq2SeqModel(nn.Module):
             embedding=dialog_encoder_embedding)
 
         if self.dialog_encoder_rnn_type == 'LSTM':
-            init_lstm_orth(self.dialog_encoder)
+            init_lstm_orth(self.dialog_encoder.rnn)
         elif self.dialog_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialog_encoder)
+            init_gru_orth(self.dialog_encoder.rnn)
 
         # Dialog Decoder with Attention
         self.dialog_decoder = StdRNNDecoder(
@@ -108,9 +108,9 @@ class Seq2SeqModel(nn.Module):
             attn_type=self.dialog_decoder_attention_type)
 
         if self.dialog_decoder == 'LSTM':
-            init_lstm_orth(self.dialog_decoder)
+            init_lstm_orth(self.dialog_decoder.rnn)
         elif self.dialog_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialog_decoder)
+            init_gru_orth(self.dialog_decoder.rnn)
 
         self.dialog_decoder_linear = nn.Linear(
             self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
@@ -182,11 +182,12 @@ class Seq2SeqModel(nn.Module):
         else:
             # Without teacher forcing: use its own predictions as the next input
 			if self.dialog_decoder_type == 'greedy':
-				dialog_decoder_outputs = self.greedy_decode(
-				    dialog_decoder_inputs, dialog_encoder_memory_bank, dialog_decoder_state, dialog_encoder_inputs_length, dialog_decoder_outputs)
+				dialog_decoder_outputs = self.greedy_decode(dialog_decoder_inputs, dialog_encoder_memory_bank, \
+                                                            dialog_decoder_state, dialog_encoder_inputs_length, \
+                                                            dialog_decoder_outputs)
 			elif self.dialog_decoder_type == 'beam_search':
-				#  dialog_decoder_outputs = self.beam_search_decoder()
                 pass
+				#  dialog_decoder_outputs = self.beam_search_decoder()
             else:
                 raise ValueError('invalid decoder type: %s, greedy or beam_search' % self.dialog_decoder_type)
 

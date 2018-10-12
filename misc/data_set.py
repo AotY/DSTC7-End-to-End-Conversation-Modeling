@@ -414,7 +414,7 @@ class KnowledgeGroundedDataSet:
                         if len(facts_ids) == 0:
                             continue
 
-                        facts_ids = [fact_ids[0: min(self.fact_max_length - 2, len(facts_ids))] for fact_ids in facts_ids]
+                        facts_ids = [fact_ids[-min(self.fact_max_length - 2, len(facts_ids)): ] for fact_ids in facts_ids]
 
                         fact_texts = [' '.join(fact) for fact in facts]
 
@@ -446,7 +446,6 @@ class KnowledgeGroundedDataSet:
             words = self.dialog_encoder_vocab.ids_to_word(word_ids)
             text = ' '.join(words)
             texts.append(text)
-
         return texts
 
     def save_generated_texts(self, conversation_texts, response_texts, generated_texts, top_k_fact_texts, filename):

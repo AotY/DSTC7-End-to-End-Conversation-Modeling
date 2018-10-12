@@ -152,7 +152,7 @@ class RNNEncoder(EncoderBase):
             packed_embedded = pack_padded_sequence(
                 packed_embedded, lengths)
 
-        memory_bank, encoder_final = self.rnn.forward(
+        memory_bank, encoder_final = self.rnn(
             packed_embedded, encoder_state)
 
         # undo the packing operation
