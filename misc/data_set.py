@@ -263,7 +263,7 @@ class KnowledgeGroundedDataSet:
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
 
-        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')):
+        if not os.path.exists(os.path.join(save_path, 'Knowledge_grounded_data_dict.pkl')):
             # load source-target pairs, tokenized
             datas = []
             with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
@@ -311,9 +311,9 @@ class KnowledgeGroundedDataSet:
                 'eval': datas[self.n_train:]
             }
 
-            pickle.dump(self._data_dict, open(os.path.join(save_path, 'seq2seq_data_dict.pkl'), 'wb'))
+            pickle.dump(self._data_dict, open(os.path.join(save_path, 'Knowledge_grounded_data_dict.pkl'), 'wb'))
         else:
-            self._data_dict = pickle.load(open(os.path.join(save_path, 'seq2seq_data_dict.pkl'), 'rb'))
+            self._data_dict = pickle.load(open(os.path.join(save_path, 'Knowledge_grounded_data_dict.pkl'), 'rb'))
             self.n_train = len(self._data_dict['train'])
             self.n_eval = len(self._data_dict['eval'])
 
