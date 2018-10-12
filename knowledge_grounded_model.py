@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 from modules.encoder import RNNEncoder
 from modules.decoder import StdRNNDecoder
+from modules.utils import init_lstm_orth, init_gru_orth
 
 """
 KnowledgeGroundedModel
@@ -36,7 +37,6 @@ class KnowledgeGroundedModel(nn.Module):
                  dialog_encoder_clipnorm=50.0,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_embedding=None,
-                 dialog_encoder_pad_id=0,
 
                  fact_embedding_size=300,
                  fact_vocab_size=None,
@@ -71,7 +71,6 @@ class KnowledgeGroundedModel(nn.Module):
         self.dialog_encoder_max_length = dialog_encoder_max_length
         self.dialog_encoder_clipnorm = dialog_encoder_clipnorm
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
-        self.dialog_encoder_pad_id = dialog_encoder_pad_id
 
         '''facts encoder parameters'''
         self.fact_embedding_size = fact_embedding_size
@@ -107,6 +106,11 @@ class KnowledgeGroundedModel(nn.Module):
             dropout=self.dialog_encoder_dropout_probability,
             embedding=dialog_encoder_embedding)
 
+        if self.dialog_encoder_rnn_type == 'LSTM':
+            init_lstm_orth(self.dialog_encoder)
+        elif self.dialog_encoder_rnn_type == 'GRU':
+            init_gru_orth(self.dialog_encoder)
+
         # facts encoder
         # mi = A * ri
         self.fact_linearA = nn.Linear(self.dialog_encoder_embedding_size,
@@ -128,6 +132,11 @@ class KnowledgeGroundedModel(nn.Module):
             embedding=dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
             attn_type=self.dialog_decoder_attention_type)
 
+        if self.dialog_decoder == 'LSTM':
+            init_lstm_orth(self.dialog_decoder)
+        elif self.dialog_encoder_rnn_type == 'GRU':
+            init_gru_orth(self.dialog_decoder)
+
         self.dialog_decoder_linear = nn.Linear(
             self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
         # Optionally tie weights as in:
@@ -146,7 +155,7 @@ class KnowledgeGroundedModel(nn.Module):
         self.dialog_decoder_softmax = nn.LogSoftmax(dim=1)
 
     '''
-    Seq2SeqModel forward
+    KnowledgeGroundedModel forward
     '''
 
     def forward(self,
@@ -168,8 +177,6 @@ class KnowledgeGroundedModel(nn.Module):
 
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
-
-        facts_inputs = facts_inputs.to(device=self.device)
 
         '''dialog_encoder forward'''
         dialog_encoder_state, dialog_encoder_memory_bank = self.dialog_encoder(
@@ -290,8 +297,6 @@ class KnowledgeGroundedModel(nn.Module):
                  facts_inputs_length,
                  dialog_decoder_inputs,
                  batch_size=128):
-
-        #  facts_inputs = facts_inputs.to(device=self.device)
 
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)

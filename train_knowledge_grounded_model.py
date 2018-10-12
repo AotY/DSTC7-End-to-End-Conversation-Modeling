@@ -161,10 +161,6 @@ def train(model,
     # backward
     loss.backward()
 
-    # Clip gradients: gradients are modified in place
-    #  _ = torch.nn.utils.clip_grad_norm_(
-        #  model.parameters(), opt.dialog_decoder_clipnorm)
-
     # optimizer
     optimizer.step()
 
@@ -327,7 +323,6 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab,
         dialog_encoder_clipnorm=opt.dialog_encoder_clipnorm,
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_embedding=dialog_encoder_embedding,
-        dialog_encoder_pad_id=dialog_encoder_vocab.padid,
 
         fact_embedding_size=opt.fact_embedding_size,
         fact_vocab_size=fact_vocab.get_vocab_size(),

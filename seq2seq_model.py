@@ -84,8 +84,7 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialog_encoder_num_layers,
             hidden_size=self.dialog_encoder_hidden_size,
             dropout=self.dialog_encoder_dropout_probability,
-            embedding=dialog_encoder_embedding
-        )
+            embedding=dialog_encoder_embedding)
 
         if self.dialog_encoder_rnn_type == 'LSTM':
             init_lstm_orth(self.dialog_encoder)
@@ -101,8 +100,8 @@ class Seq2SeqModel(nn.Module):
             hidden_size=self.dialog_decoder_hidden_size,
             dropout=self.dialog_decoder_dropout_probability,
             embedding=dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
-            attn_type=self.dialog_decoder_attention_type
-        )
+            attn_type=self.dialog_decoder_attention_type)
+
         if self.dialog_decoder == 'LSTM':
             init_lstm_orth(self.dialog_decoder)
         elif self.dialog_encoder_rnn_type == 'GRU':
