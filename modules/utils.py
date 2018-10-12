@@ -22,7 +22,7 @@ def init_gru_orth(model, gain=1):
     model.reset_parameters()
     # orthogonal initialization of gru weights
     for _, hh, _, _ in model.all_weights:
-        for i in range(0, hh.size(0), model.hhidden_size):
+        for i in range(0, hh.size(0), model.hidden_size):
             I.orthogonal_(hh[i:i + model.hidden_size], gain=gain)
 
 def init_lstm_orth(model, gain=1):
