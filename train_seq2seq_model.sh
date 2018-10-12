@@ -14,7 +14,6 @@ python train_seq2seq_model.py \
     --dialog_encoder_clipnorm 50.0 \
     --dialog_encoder_bidirectional \
     --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
-    --dialog_encoder_tied \
     --dialog_decoder_embedding_size 300 \
     --dialog_decoder_hidden_size 512 \
     --dialog_decoder_num_layers 2 \
@@ -37,8 +36,8 @@ python train_seq2seq_model.py \
     --eval_split 0.2 \
     --optim_method adam \
     --start_epoch 1 \
-    --train_or_eval train \
-    # --checkpoint ./models/checkpoint.epoch-5.pth  
+    --train_or_eval train 
+    # --checkpoint ./models/checkpoint.epoch-5.pth \
     # --dialog_decoder_tied \
 
     /

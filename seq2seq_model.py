@@ -137,12 +137,10 @@ class Seq2SeqModel(nn.Module):
                 dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length,
                 dialog_decoder_inputs,
-                dialog_decoder_targets,
                 teacher_forcing_ratio=0.5,
                 batch_size=128):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
-
         dialog_encoder_state = self.dialog_encoder.init_hidden(
             batch_size, self.device)
 
@@ -156,15 +154,6 @@ class Seq2SeqModel(nn.Module):
         # tgt, memory_bank, state, memory_lengths=None
         dialog_decoder_state = self.dialog_decoder.init_decoder_state(
             encoder_final=dialog_encoder_state)
-
-        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length,
-                                             batch_size, self.dialog_decoder_hidden_size),
-                                            device=self.device) * self.dialog_decoder_pad_id
-
-        dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
-                                                batch_size, self.dialog_decoder_max_length-2),
-                                               device=self.device,
-                                               dtype=torch.float)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
         if use_teacher_forcing:
@@ -181,13 +170,13 @@ class Seq2SeqModel(nn.Module):
                     0)
         else:
             # Without teacher forcing: use its own predictions as the next input
-			if self.dialog_decoder_type == 'greedy':
-				dialog_decoder_outputs = self.greedy_decode(dialog_decoder_inputs, dialog_encoder_memory_bank, \
-                                                            dialog_decoder_state, dialog_encoder_inputs_length, \
-                                                            dialog_decoder_outputs)
-			elif self.dialog_decoder_type == 'beam_search':
+            if self.dialog_decoder_type == 'greedy':
+                dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
+                dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank, \
+                        dialog_decoder_state, dialog_encoder_inputs_length)
+            elif self.dialog_decoder_type == 'beam_search':
                 pass
-				#  dialog_decoder_outputs = self.beam_search_decoder()
+                #  dialog_decoder_outputs = self.beam_search_decoder()
             else:
                 raise ValueError('invalid decoder type: %s, greedy or beam_search' % self.dialog_decoder_type)
 
@@ -205,7 +194,6 @@ class Seq2SeqModel(nn.Module):
     def evaluate(self,
                  dialog_encoder_inputs,  # LongTensor
                  dialog_encoder_inputs_length,
-                 dialog_decoder_inputs,
                  batch_size=128):
 
         dialog_encoder_state=self.dialog_encoder.init_hidden(
@@ -226,13 +214,11 @@ class Seq2SeqModel(nn.Module):
         dialog_decoder_attns_std=torch.zeros((self.dialog_decoder_max_length,
                                                 batch_size, self.dialog_decoder_max_length-2))
 
-        dialog_decoder_input=dialog_decoder_inputs[0]
-
         if self.dialog_decoder_type == 'greedy':
             dialog_decoder_state=self.dialog_decoder.init_decoder_state(
                 encoder_final=dialog_encoder_state)
-            dialog_decoder_outputs = self.greedy_decode(dialog_decoder_inputs, dialog_encoder_memory_bank,
-                                dialog_decoder_state, dialog_encoder_inputs_length, dialog_decoder_outputs)
+            dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
+                                dialog_decoder_state, dialog_encoder_inputs_length)
         elif self.dialog_decoder_type == 'beam_search':
             #  dialog_decoder_outputs = self.beam_search_decoder()
             pass
@@ -250,33 +236,89 @@ class Seq2SeqModel(nn.Module):
         return ((dialog_encoder_state, dialog_encoder_memory_bank),
                 (dialog_decoder_state, dialog_decoder_outputs, dialog_decoder_attns_std))
 
-	def greedy_decode(self, dialog_decoder_inputs, dialog_encoder_memory_bank,
-                        dialog_decoder_state, dialog_encoder_inputs_length, dialog_decoder_outputs):
-		dialog_decoder_input=dialog_decoder_inputs[0]
-		for di in range(self.dialog_decoder_max_length):
-			dialog_decoder_state, dialog_decoder_output, \
-            dialog_decoder_attn=self.dialog_decoder(tgt=dialog_decoder_input.view(1, -1),
-                                        memory_bank=dialog_encoder_memory_bank,
-                                        state=dialog_decoder_state,
-                                        memory_lengths=dialog_encoder_inputs_length)
+    """return sentence"""
+    def generate(self,
+                 dialog_encoder_inputs,  # LongTensor
+                 dialog_encoder_inputs_length,
+                 batch_size=128):
 
-			dialog_decoder_output=dialog_decoder_output.detach().squeeze(0)
-			dialog_decoder_outputs[di]=dialog_decoder_output
-			dialog_decoder_attns_std[di]=dialog_decoder_attn['std'].squeeze(0)
-			dialog_decoder_input=torch.argmax(
-				dialog_decoder_output, dim=1)
+        dialog_encoder_state=self.dialog_encoder.init_hidden(
+            batch_size, self.device)
 
-			if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
-				break
+        '''dialog_encoder forward'''
+        dialog_encoder_state, dialog_encoder_memory_bank=self.dialog_encoder(
+            src=dialog_encoder_inputs,
+            lengths=dialog_encoder_inputs_length,
+            encoder_state=dialog_encoder_state)
 
-		return dialog_decoder_outputs
+        '''dialog_decoder forward'''
 
+        dialog_decoder_outputs=torch.ones((self.dialog_decoder_max_length,
+                                             batch_size, self.dialog_decoder_hidden_size),
+                                            device=self.device) * self.dialog_decoder_pad_id
+
+        if self.dialog_decoder_type == 'greedy':
+            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
+            dialog_decoder_state=self.dialog_decoder.init_decoder_state(
+                encoder_final=dialog_encoder_state)
+            dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
+                                dialog_decoder_state, dialog_encoder_inputs_length)
+        elif self.dialog_decoder_type == 'beam_search':
+            pass
+        else:
+            raise ValueError('invalid decoder type: %s, greedy or beam_search' % self.dialog_decoder_type)
+
+        # beam search  dialog_decoder_outputs -> [tgt_len x batch x hidden]
+        dialog_decoder_outputs=self.dialog_decoder_linear(
+            dialog_decoder_outputs)
+
+        # log softmax
+        dialog_decoder_outputs=self.dialog_decoder_softmax(
+            dialog_decoder_outputs)
+
+        # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
+        dialog_decoder_outputs_argmax = torch.argmax(dialog_decoder_outputs, dim=2)
+
+        return dialog_decoder_outputs_argmax.detach().numpy()
+
+    def greedy_decode(self, dialog_decoder_input, dialog_encoder_memory_bank, 
+                      dialog_decoder_state, dialog_encoder_inputs_length):
+        """
+        dialog_encoder_memory_bank: [max_length, batch_size, hidden_size]
+        dialog_decoder_state:
+        dialog_encoder_inputs_length: [batch_size]
+        dialog_decoder_outputs: [max_length, batch_size, hidden]
+        """
+        dialog_decoder_outputs = torch.ones((self.dialog_decoder_max_length,
+                                             batch_size, self.dialog_decoder_hidden_size),
+                                            device=self.device) * self.dialog_decoder_pad_id
+
+        dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
+                                                batch_size, self.dialog_decoder_max_length-2),
+                                               device=self.device,
+                                               dtype=torch.float)
+        for di in range(self.dialog_decoder_max_length):
+            dialog_decoder_state, dialog_decoder_output, \
+            dialog_decoder_attn = self.dialog_decoder(tgt=dialog_decoder_input.view(1, -1), 
+                    memory_bank=dialog_encoder_memory_bank,
+                    state=dialog_decoder_state,
+                    memory_lengths=dialog_encoder_inputs_length)
+
+            dialog_decoder_output=dialog_decoder_output.detach().squeeze(0)
+            dialog_decoder_outputs[di]=dialog_decoder_output
+            dialog_decoder_attns_std[di]=dialog_decoder_attn['std'].squeeze(0)
+            dialog_decoder_input=torch.argmax(
+                    dialog_decoder_output, dim=1)
+
+            if dialog_decoder_input[0].item() == self.dialog_decoder_eos_id:
+                    break
+
+        return dialog_decoder_outputs, dialog_decoder_attns_std
 
     def beam_search_decode(self, dialog_encoder_memory_bank,
-                           dialog_encoder_state, dialog_encoder_inputs_length, dialog_decoder_outputs,
+                           dialog_encoder_state, dialog_encoder_inputs_length,
                            batch_size, beam_width=10, topk=1):
         """
-        dialog_decoder_inputs: [max_length, batch_size]
         dialog_encoder_memory_bank: [max_length, batch_size, hidden_size]
         dialog_encoder_state: [num_layers*num_directions, batch_size, hidden_size // 2]
         dialog_encoder_inputs_length: [batch_size]
@@ -300,7 +342,6 @@ class Seq2SeqModel(nn.Module):
             dialog_encoder_inputs_length_bi = dialog_encoder_inputs_length[bi]
 
 
-            # start with dialog_decoder_inputs[0]
             dialog_decoder_input = torch.LongTensor([[self.dialog_decoder_sos_id]], device=self.device) #[1, 1]
 
             # Number of sentence to generate
@@ -367,13 +408,15 @@ class Seq2SeqModel(nn.Module):
             # choose n_best paths, back trace them
             if len(end_nodes) == 0:
                 end_nodes = [nodes.get() for _ in range(topk)]
-
+            
+            """
             dialog_decoder_outputs_bi = torch.ones((self.dialog_decoder_max_length,
                                                     self.), dtype=torch.long,
                                                     device=self.device) * self.dialog_decoder_pad_id
 
             for i, score, node in enumerate(sorted(end_nodes, key=operator.itemgetter(0))):
                 dialog_decoder_output = torch.ones((1, ))
+            """
 
 
 
