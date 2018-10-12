@@ -396,6 +396,7 @@ if __name__ == '__main__':
         fact_max_length=opt.fact_max_length,
         dialog_decoder_max_length=opt.dialog_encoder_max_length,
         dialog_decoder_vocab=vocab,
+        save_path=opt.save_path,
 		eval_split=opt.eval_split,
         device=device,
         logger=logger)
