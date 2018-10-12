@@ -7,11 +7,33 @@ from __future__ import unicode_literals
 import torch
 import numpy as np
 import torch.nn as nn
+import torch.nn.init as I
+import torch.nn.functional as functional
 
 """
     Utils
 """
 
+
+"""
+orthogonal initialization
+"""
+def init_gru_orth(model, gain=1):
+    model.reset_parameters()
+
+    # orthogonal initialization of gru weights
+    for _, hh, _, _ in model.all_weights:
+        for i in range(0, hh.size(0), model.hhidden_size):
+            I.orthogonal_(hh[i:i + model.hidden_size], gain=gain)
+
+def init_lstm_orth(model, gain=1):
+    init_gru(model, gain)
+
+    #positive forget gate bias (Jozefowicz es at. 2015)
+    for _, _, ih_b, hh_b in model.all_weights:
+        l = len(in_h)
+        ih_b[l // 4 : l // 2].data.fill_(1.0)
+        hh_b[l // 4 : l // 2].data.fill_(1.0)
 
 def aeq(*args):
     """
@@ -30,6 +52,8 @@ def use_gpu(opt):
 
 def sequence_mask(lengths, max_len=None):
     """
+
+from modules.utils import init_lstm_orth, init_gru_orth
     Creates a boolean mask from sequence lengths.
     """
     batch_size = lengths.numel()

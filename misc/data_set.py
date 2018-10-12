@@ -303,7 +303,7 @@ class KnowledgeGroundedDataSet:
         response_texts = []
 
         # facts
-        facts_inputs = torch.zeros((batch_size, top_k, fact_embedding_size))
+        facts_inputs = torch.zeros((batch_size, top_k, fact_embedding_size), device=self.device)
         facts_texts = []
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
@@ -399,7 +399,7 @@ class KnowledgeGroundedDataSet:
                             top_k_facts_embedded_mean, top_k_fact_texts, top_k_indices_list)
 
             # save top_k_facts_embedded_mean_dict
-            pickle.dum(top_k_facts_embedded_mean_dict, open(filename, 'wb'))
+            pickle.dump(top_k_facts_embedded_mean_dict, open(filename, 'wb'))
             self.top_k_facts_embedded_mean_dict = top_k_facts_embedded_mean_dict
 
     def generating_texts(self, decoder_outputs_argmax, batch_size):

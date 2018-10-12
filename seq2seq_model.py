@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from modules.encoder import RNNEncoder
 from modules.decoder import StdRNNDecoder
+from modules.utils import init_lstm_orth, init_gru_orth
 
 
 class Seq2SeqModel(nn.Module):
@@ -24,11 +25,9 @@ class Seq2SeqModel(nn.Module):
                  dialog_encoder_rnn_type='LSTM',
                  dialog_encoder_dropout_probability=0.5,
                  dialog_encoder_max_length=32,
-                 dialog_encoder_clipnorm=1.0,
+                 dialog_encoder_clipnorm=50.0,
                  dialog_encoder_bidirectional=True,
                  dialog_encoder_embedding=None,
-                 dialog_encoder_pad_id=0,
-                 dialog_encoder_tied=True,
 
                  dialog_decoder_embedding_size=300,
                  dialog_decoder_vocab_size=None,
@@ -36,15 +35,14 @@ class Seq2SeqModel(nn.Module):
                  dialog_decoder_num_layers=2,
                  dialog_decoder_rnn_type='LSTM',
                  dialog_decoder_dropout_probability=0.5,
-                 dialog_decoder_clipnorm=1.0,
+                 dialog_decoder_clipnorm=50.0,
                  dialog_decoder_max_length=32,
                  dialog_decoder_embedding=None,
                  dialog_decoder_pad_id=0,
                  dialog_decoder_eos_id=3,
-                 dialog_decoder_attention_type='dot',
+                 dialog_decoder_attention_type='general',
                  dialog_decoder_tied=True,
-                 device=None
-                 ):
+                 device=None):
         # super init
         super(Seq2SeqModel, self).__init__()
 
@@ -58,8 +56,6 @@ class Seq2SeqModel(nn.Module):
         self.dialog_encoder_max_length = dialog_encoder_max_length
         self.dialog_encoder_clipnorm = dialog_encoder_clipnorm
         self.dialog_encoder_bidirectional = dialog_encoder_bidirectional
-        self.dialog_encoder_pad_id = dialog_encoder_pad_id
-        self.dialog_encoder_tied = dialog_encoder_tied
 
         '''Dialog decoder parameters'''
         self.dialog_decoder_vocab_size = dialog_decoder_vocab_size
@@ -91,6 +87,12 @@ class Seq2SeqModel(nn.Module):
             embedding=dialog_encoder_embedding
         )
 
+        if self.dialog_encoder_rnn_type == 'LSTM':
+            init_lstm_orth(self.dialog_encoder)
+        elif self.dialog_encoder_rnn_type == 'GRU':
+            init_gru_orth(self.dialog_encoder)
+
+
         # Dialog Decoder with Attention
         self.dialog_decoder = StdRNNDecoder(
             rnn_type=self.dialog_decoder_rnn_type,
@@ -101,6 +103,10 @@ class Seq2SeqModel(nn.Module):
             embedding=dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
             attn_type=self.dialog_decoder_attention_type
         )
+        if self.dialog_decoder == 'LSTM':
+            init_lstm_orth(self.dialog_decoder)
+        elif self.dialog_encoder_rnn_type == 'GRU':
+            init_gru_orth(self.dialog_decoder)
 
         self.dialog_decoder_linear = nn.Linear(
             self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)

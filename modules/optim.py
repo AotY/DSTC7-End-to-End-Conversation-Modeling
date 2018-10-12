@@ -103,9 +103,8 @@ class Optim(object):
 
         if self.max_grad_norm:
             #clip_grad_norm(self.params, self.max_grad_norm)
-            clip_grad_norm_(self.params, self.max_grad_norm)
+            _ = clip_grad_norm_(self.params, self.max_grad_norm)
             
-
         self.optimizer.step()
 
     def update_learning_rate(self, ppl, epoch):
