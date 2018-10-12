@@ -51,7 +51,7 @@ class Seq2seqDataSet:
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
 
-        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')): 
+        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')):
             # load source-target pairs, tokenized
             datas = []
             with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
@@ -91,7 +91,7 @@ class Seq2seqDataSet:
 
             np.random.shuffle(datas)
             # train-eval split
-            self.n_train = int(len(self._data_dict[train]) * (1. - eval_split))
+            self.n_train = int(len(datas) * (1. - eval_split))
             self.n_eval = len(datas) - self.n_train
 
             self._data_dict = {
@@ -263,7 +263,7 @@ class KnowledgeGroundedDataSet:
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
 
-        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')): 
+        if not os.path.exists(os.path.join(save_path, 'seq2seq_data_dict.pkl')):
             # load source-target pairs, tokenized
             datas = []
             with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
@@ -303,7 +303,7 @@ class KnowledgeGroundedDataSet:
 
             np.random.shuffle(datas)
             # train-eval split
-            self.n_train = int(len(self._data_dict[train]) * (1. - eval_split))
+            self.n_train = int(len(datas) * (1. - eval_split))
             self.n_eval = len(datas) - self.n_train
 
             self._data_dict = {
