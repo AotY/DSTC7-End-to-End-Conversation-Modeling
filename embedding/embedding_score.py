@@ -89,7 +89,6 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
         del encoder_input_embedded
         del encoder_input
         del cosine_scores
-        del top_k_indices
 
     return top_k_facts_embedded_mean.detach().cpu(), top_k_indices.detach().cpu()
 
