@@ -164,8 +164,8 @@ def train(model,
     loss.backward()
 
     # Clip gradients: gradients are modified in place
-    #  _ = torch.nn.utils.clip_grad_norm_(
-        #  model.parameters(), opt.dialog_decoder_clipnorm)
+    #  total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), opt.dialog_decoder_clipnorm)
+    #  print('total_norm: {}'.format(total_norm))
 
     # optimizer
     optimizer.step()
@@ -324,8 +324,6 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab):
         dialog_encoder_clipnorm=opt.dialog_encoder_clipnorm,
         dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
         dialog_encoder_embedding=dialog_encoder_embedding,
-        dialog_encoder_pad_id=dialog_encoder_vocab.padid,
-        dialog_encoder_tied=opt.dialog_encoder_tied,
 
         dialog_decoder_embedding_size=opt.dialog_decoder_embedding_size,
         dialog_decoder_vocab_size=dialog_decoder_vocab.get_vocab_size(),
