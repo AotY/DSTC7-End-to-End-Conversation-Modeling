@@ -63,8 +63,9 @@ class Seq2seqDataSet:
                     continue
 
                 response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                if response_score < 1:
+                if int(response_score) < 1:
                     continue
+
                 print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
                 conversation_ids = self.dialog_encoder_vocab.words_to_id(
@@ -264,7 +265,7 @@ class KnowledgeGroundedDataSet:
                     continue
 
                 response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                if response_score < 1:
+                if int(response_score) < 1:
                     continue
                 print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
