@@ -6,10 +6,10 @@ python train_knowledge_grounded_model.py \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
     --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx_knowledge_grounded.dict \
     --dialog_encoder_embedding_size 300 \
-    --dialog_encoder_hidden_size 300 \
+    --dialog_encoder_hidden_size 512 \
     --dialog_encoder_num_layers 2 \
     --dialog_encoder_rnn_type GRU \
-    --dialog_encoder_dropout_probability 0.8 \
+    --dialog_encoder_dropout_probability 0.5 \
     --dialog_encoder_max_length 50 \
     --dialog_encoder_clipnorm 50.0 \
     --dialog_encoder_bidirectional \
@@ -19,18 +19,18 @@ python train_knowledge_grounded_model.py \
     --fact_top_k 20 \
     --fact_dropout_probability 0.0 \
     --dialog_decoder_embedding_size 300 \
-    --dialog_decoder_hidden_size 300 \
+    --dialog_decoder_hidden_size 512 \
     --dialog_decoder_num_layers 2 \
     --dialog_decoder_rnn_type GRU \
-    --dialog_decoder_dropout_probability 0.8 \
+    --dialog_decoder_dropout_probability 0.5 \
     --dialog_decoder_max_length 50 \
     --dialog_decoder_clipnorm 50.0 \
     --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
     --dialog_decoder_attention_type general \
     --dialog_decoder_tied \
-    --lr 0.001 \
+    --lr 0.005 \
     --epochs 5 \
-    --batch_size 128 \
+    --batch_size 256 \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \

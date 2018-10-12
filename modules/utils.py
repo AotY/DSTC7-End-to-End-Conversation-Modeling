@@ -27,11 +27,11 @@ def init_gru_orth(model, gain=1):
             I.orthogonal_(hh[i:i + model.hidden_size], gain=gain)
 
 def init_lstm_orth(model, gain=1):
-    init_gru(model, gain)
+    init_gru_orth(model, gain)
 
     #positive forget gate bias (Jozefowicz es at. 2015)
     for _, _, ih_b, hh_b in model.all_weights:
-        l = len(in_h)
+        l = len(ih_b)
         ih_b[l // 4 : l // 2].data.fill_(1.0)
         hh_b[l // 4 : l // 2].data.fill_(1.0)
 

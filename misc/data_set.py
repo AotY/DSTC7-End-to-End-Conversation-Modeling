@@ -38,8 +38,12 @@ class Seq2seqDataSet:
 
         self.device = device
         self.logger = logger
+        # es
+        self.es = es_helper.get_connection()
+
         self._data_dict = {}
         self._indicator_dict = {}
+
         self.read_txt(path_conversations_responses_pair, eval_split)
 
     def read_txt(self, path_conversations_responses_pair, eval_split):
@@ -50,16 +54,32 @@ class Seq2seqDataSet:
         with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
+                
+                if not bool(conversation) or not bool(response):
+                    continue
+
+                # START EOS
+                if not conversation.startswith('START EOS'):
+                    continue
+
+                response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
+                print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
                 conversation_ids = self.dialog_encoder_vocab.words_to_id(
                     conversation.split())
-                conversation_ids = conversation_ids[0: min(
-                    self.dialog_encoder_max_length - 2, len(conversation_ids))]
-
                 response_ids = self.dialog_decoder_vocab.words_to_id(
                     response.split())
-                response_ids = response_ids[0: min(
-                    self.dialog_decoder_max_length - 2, len(response_ids))]
+
+                # for simple
+                if len(conversation_ids) > 50 or len(response_ids) > 50:
+                    continue
+
+                #  conversation_ids = conversation_ids[0: min(
+                    #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
+                #  response_ids = response_ids[0: min(
+                    #  self.dialog_decoder_max_length - 2, len(response_ids))]
+                conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
+                response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
 
                 datas.append((conversation_ids, response_ids))
 
@@ -114,11 +134,8 @@ class Seq2seqDataSet:
         conversation_texts = []
         response_texts = []
 
-        batch_data = self._data_dict[task][self._indicator_dict[task]
-            : cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids) in enumerate(batch_data):
-            if not bool(response_ids) or not bool(conversation_ids):
-                continue
 
             # append length
             encoder_inputs_length.append(len(conversation_ids))
@@ -240,14 +257,24 @@ class KnowledgeGroundedDataSet:
 
                 conversation_ids = self.dialog_encoder_vocab.words_to_id(
                     conversation.split())
-
-                conversation_ids = conversation_ids[0: min(
-                    self.dialog_encoder_max_length - 2, len(conversation_ids))]
-
                 response_ids = self.dialog_decoder_vocab.words_to_id(
                     response.split())
-                response_ids = response_ids[0: min(
-                    self.dialog_decoder_max_length - 2, len(response_ids))]
+
+                if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
+                    continue
+
+                fact_count = es_helper.search_fact_count(self.es, hash_value)
+                if fact_count == 0:
+                    continue
+
+                response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
+
+                #  conversation_ids = conversation_ids[0: min(
+                    #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
+                #  response_ids = response_ids[0: min(
+                    #  self.dialog_decoder_max_length - 2, len(response_ids))]
+                conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
+                response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
 
                 datas.append((conversation_ids, response_ids, hash_value))
 
@@ -308,14 +335,10 @@ class KnowledgeGroundedDataSet:
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
-            if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
-                continue
 
             # load top_k facts
             top_k_facts_embedded_mean, top_k_fact_texts, \
                 top_k_indices_list = self.top_k_facts_embedded_mean_dict.get(hash_value, (None, None, None))
-            if top_k_facts_embedded_mean is None:
-                continue
 
             # append length
             encoder_inputs_length.append(len(conversation_ids))
@@ -374,8 +397,7 @@ class KnowledgeGroundedDataSet:
                             continue
 
                         # search facts ?
-                        hit_count, facts = es_helper.search_facts_by_conversation_hash_value(
-                            self.es, hash_value)
+                        hit_count, facts = es_helper.search_facts(self.es, hash_value)
 
                         # facts to id
                         facts_ids = [self.fact_vocab.words_to_id(fact) for fact in facts]
