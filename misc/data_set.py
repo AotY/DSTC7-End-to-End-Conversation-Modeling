@@ -256,20 +256,26 @@ class KnowledgeGroundedDataSet:
         with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
+                if not bool(conversation) or not bool(response):
+                    continue
+
+                # START EOS
+                if not conversation.startswith('START EOS'):
+                    continue
+
+                response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
+                if response_score < 1:
+                    continue
+                print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
                 conversation_ids = self.dialog_encoder_vocab.words_to_id(
                     conversation.split())
                 response_ids = self.dialog_decoder_vocab.words_to_id(
                     response.split())
 
-                if not bool(response_ids) or not bool(conversation_ids) or not bool(hash_value):
+                # for simple
+                if len(conversation_ids) > 50 or len(response_ids) > 50:
                     continue
-
-                fact_count = es_helper.search_fact_count(self.es, hash_value)
-                if fact_count == 0:
-                    continue
-
-                response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
 
                 #  conversation_ids = conversation_ids[0: min(
                     #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
@@ -277,6 +283,8 @@ class KnowledgeGroundedDataSet:
                     #  self.dialog_decoder_max_length - 2, len(response_ids))]
                 conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
                 response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
+
+                datas.append((conversation_ids, response_ids))
 
                 datas.append((conversation_ids, response_ids, hash_value))
 
