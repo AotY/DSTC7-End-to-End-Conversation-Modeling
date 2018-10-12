@@ -24,6 +24,7 @@ python train_seq2seq_model.py \
     --dialog_decoder_clipnorm 50.0 \
     --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
     --dialog_decoder_attention_type general \
+	--dialog_decoder_type greedy \
     --lr 0.005 \
     --epochs 7 \
     --batch_size 256 \

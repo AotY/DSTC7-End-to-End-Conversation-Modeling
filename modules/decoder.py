@@ -62,8 +62,6 @@ class RNNDecoderState(DecoderState):
 
         # Init the input feed.
         batch_size = self.hidden[0].size(1)
-
-        # 
         h_size = (batch_size, hidden_size)
 
         #  self.input_feed = Variable(self.hidden[0].data.new(*h_size).zero_(),

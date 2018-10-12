@@ -6,9 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch.autograd import Variable
-from torch.nn.utils.rnn import pack_padded_sequence as pack
-from torch.nn.utils.rnn import pad_packed_sequence as unpack
+from torch.nn.utils.rnn import pack_padded_sequence
+from torch.nn.utils.rnn import pad_packed_sequence
 
 from modules.utils import aeq, rnn_factory
 
@@ -135,7 +134,7 @@ class RNNEncoder(EncoderBase):
         self._check_args(src, lengths, encoder_state)
 
         # rank the sequences according to their lengths
-        lengths = Variable(lengths)
+        #  lengths = Variable(lengths)
 
         # sort by length, descending
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
@@ -150,7 +149,7 @@ class RNNEncoder(EncoderBase):
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
             lengths = lengths.view(-1).tolist()
-            packed_embedded = nn.utils.rnn.pack_padded_sequence(
+            packed_embedded = pack_padded_sequence(
                 packed_embedded, lengths)
 
         memory_bank, encoder_final = self.rnn.forward(
@@ -158,7 +157,7 @@ class RNNEncoder(EncoderBase):
 
         # undo the packing operation
         if lengths is not None:
-            memory_bank = nn.utils.rnn.pad_packed_sequence(memory_bank)[0]
+            memory_bank = pad_packed_sequence(memory_bank)[0]
 
         # map to input order
         _, out_order = torch.sort(sorted_indices)

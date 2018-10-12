@@ -54,7 +54,7 @@ class Seq2seqDataSet:
         with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
             for line in f:
                 conversation, response, hash_value = line.rstrip().split('\t')
-                
+
                 if not bool(conversation) or not bool(response):
                     continue
 
@@ -63,6 +63,8 @@ class Seq2seqDataSet:
                     continue
 
                 response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
+                if response_score < 1:
+                    continue
                 print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
                 conversation_ids = self.dialog_encoder_vocab.words_to_id(

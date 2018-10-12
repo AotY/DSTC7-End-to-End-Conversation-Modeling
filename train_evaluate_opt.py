@@ -77,11 +77,6 @@ def train_seq2seq_opt(parser):
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
-    group.add_argument('--dialog_encoder_clipvalue',
-                       type=float,
-                       default=0.5,
-                       help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
-
     group.add_argument('--dialog_encoder_bidirectional',
                        action='store_true',
                        help='is bidirectional.')
@@ -89,10 +84,6 @@ def train_seq2seq_opt(parser):
     group.add_argument('--dialog_encoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog encoder.')
-
-    group.add_argument('--dialog_encoder_tied',
-                       action='store_true',
-                       help='tie the word embedding and softmax weights')
 
     '''dialog decoder parameters'''
 
@@ -130,11 +121,6 @@ def train_seq2seq_opt(parser):
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
-    group.add_argument('--dialog_decoder_clipvalue',
-                       type=float,
-                       default=0.5,
-                       help='All parameter gradients will be clipped to a maximum value of clipvalue and a minimum value of -clipvalue')
-
     group.add_argument('--dialog_decoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog decoder.')
@@ -144,10 +130,14 @@ def train_seq2seq_opt(parser):
                        default='dot',
                        help='dialog decoder attention type. "dot", "general", or "mlp" ')
 
+    group.add_argument('--dialog_decoder_type',
+                       type=str,
+                       default='greedy',
+                       help='beam search or greedy search.')
+
     group.add_argument('--dialog_decoder_tied',
                        action='store_true',
-                       help='tie the word embedding and softmax weights'
-                       )
+                       help='tie the word embedding and softmax weights')
 
     ''' train parameters '''
     group.add_argument('--lr', type=float, default=0.001,
