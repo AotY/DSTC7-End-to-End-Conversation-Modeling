@@ -182,14 +182,13 @@ class Seq2SeqModel(nn.Module):
         else:
             # Without teacher forcing: use its own predictions as the next input
 			if self.dialog_decoder_type == 'greedy':
-				dialog_decoder_outputs = self.greedy_decode(dialog_decoder_inputs, dialog_encoder_memory_bank,
-									dialog_decoder_state, dialog_encoder_inputs_length, dialog_decoder_outputs)
+				dialog_decoder_outputs = self.greedy_decode(
+				    dialog_decoder_inputs, dialog_encoder_memory_bank, dialog_decoder_state, dialog_encoder_inputs_length, dialog_decoder_outputs)
 			elif self.dialog_decoder_type == 'beam_search':
 				#  dialog_decoder_outputs = self.beam_search_decoder()
                 pass
             else:
                 raise ValueError('invalid decoder type: %s, greedy or beam_search' % self.dialog_decoder_type)
-
 
         #  dialog_decoder_outputs -> [tgt_len x batch x hidden]
         dialog_decoder_outputs=self.dialog_decoder_linear(
@@ -282,16 +281,16 @@ class Seq2SeqModel(nn.Module):
         dialog_encoder_inputs_length: [batch_size]
         dialog_decoder_outputs: [max_length, batch_size, hidden_size]
 
-        batch_size: 
-        beam_width: 
+        batch_size:
+        beam_width:
         """
-        
+
         for bi in range(batch_size):
             if isinstance(dialog_encoder_state, tuple): # LSTM
                 dialog_decoder_hidden_bi = tuple([item[:, bi, :].unsqueeze(1) for item in dialog_encoder_state[bi]])
             else:
                 dialog_decoder_hidden_bi = dialog_encoder_state[:, bi, :].unsqueeze(1)
-            
+
             # dialog_decoder_hidden_bi: [num_layers*num_directions, 1,
             # hidden_size // 2]  ->  [num_layers, 1, hidden_size]
             dialog_decoder_state_bi = self.dialog_decoder.init_decoder_state(dialog_decoder_hidden_bi)
@@ -307,7 +306,7 @@ class Seq2SeqModel(nn.Module):
             end_nodes = []
             number_required = min((topk + 1), topk - len(end_nodes))
 
-            # starting node 
+            # starting node
             node = BeamsearchNode(dialog_decoder_state_bi, None, dialog_decoder_input, 0, 1)
             nodes = PriorityQueue()
 
@@ -315,7 +314,7 @@ class Seq2SeqModel(nn.Module):
             nodes.put((-node.evaluate(), node))
             q_size = 1
 
-            # start beam search 
+            # start beam search
             while True:
                 # give up, when decoding takes too long
                 if q_size > 2000:
@@ -328,7 +327,7 @@ class Seq2SeqModel(nn.Module):
 
                 if n.decoder_input.item() == self.dialog_decoder_eos_id and cur_node.previous_node != None:
                     end_nodes.append((cur_score, cur_node))
-                    # if we reached maximum 
+                    # if we reached maximum
                     if len(end_nodes) >= number_required:
                         break
                     else:
@@ -338,7 +337,7 @@ class Seq2SeqModel(nn.Module):
                 cur_dialog_decoder_state_bi, decoder_output_bi, attns_bi = self.dialog_decoder(
                     tgt=cur_dialog_decoder_input,
                     memory_bank=dialog_encoder_memory_bank_bi,
-                    state=cur_dialog_decoder_state_bi, 
+                    state=cur_dialog_decoder_state_bi,
                     memory_lengths=dialog_encoder_inputs_length_bi)
 
                 # decoder_output_bi: [1, 1, hidden_size]
@@ -355,7 +354,7 @@ class Seq2SeqModel(nn.Module):
 
                     new_score = - new_node.evaluate()
                     next_nodes.append((new_score, new_node))
-                   
+
                 # put them into queue
                 for i in range(len(next_nodes)):
                     score, node = next_node[i]
@@ -363,7 +362,7 @@ class Seq2SeqModel(nn.Module):
 
                 # increase q_size
                 q_size += len(next_nodes) - 1
-            
+
             # choose n_best paths, back trace them
             if len(end_nodes) == 0:
                 end_nodes = [nodes.get() for _ in range(topk)]
@@ -376,12 +375,12 @@ class Seq2SeqModel(nn.Module):
                 dialog_decoder_output = torch.ones((1, ))
 
 
-                
 
 
 
-                    
-                
+
+
+
 
 
 
@@ -439,4 +438,3 @@ def beam_search_decoder(memory_bank, beam_size):
 
     outputs=[sequence[0] for sequence in sequences]
     return outputs
-
