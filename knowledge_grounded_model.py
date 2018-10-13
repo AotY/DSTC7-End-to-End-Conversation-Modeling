@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import math
 import random
 import torch
 import torch.nn as nn
@@ -113,10 +112,10 @@ class KnowledgeGroundedModel(nn.Module):
 
         # facts encoder
         # mi = A * ri    fact_linearA(300, 512)
-        self.fact_linearA = nn.Linear(self.dialog_encoder_embedding_size,
+        self.fact_linearA = nn.Linear(self.dialog_decoder_hidden_size,
                                       self.dialog_decoder_hidden_size)
         # ci = C * ri
-        self.fact_linearC = nn.Linear(self.dialog_encoder_embedding_size,
+        self.fact_linearC = nn.Linear(self.dialog_decoder_hidden_size,
                                        self.dialog_decoder_hidden_size)
 
         self.fact_decoder_linear = nn.Linear(
@@ -259,8 +258,8 @@ class KnowledgeGroundedModel(nn.Module):
             - batch_size
         """
 
-        #  if self.fact_embedding_size != self.dialog_decoder_hidden_size:
-                #  facts_inputs = self.fact_decoder_linear(facts_inputs)
+        if self.fact_embedding_size != self.dialog_decoder_hidden_size:
+                facts_inputs = self.fact_decoder_linear(facts_inputs)
 
         print('facts_inputs shape: {}'.format(facts_inputs.shape))
         # M [batch_size, topk, hidden_size]
