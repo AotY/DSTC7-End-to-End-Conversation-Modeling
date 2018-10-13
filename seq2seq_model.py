@@ -93,10 +93,13 @@ class Seq2SeqModel(nn.Module):
             dropout=self.dialog_encoder_dropout_probability,
             embedding=dialog_encoder_embedding)
 
+        # get the recommended gain value for the given nonlinearity function.
+        gain = nn.init.calculate_gain('sigmoid')
+
         if self.dialog_encoder_rnn_type == 'LSTM':
-            init_lstm_orth(self.dialog_encoder.rnn)
+            init_lstm_orth(self.dialog_encoder.rnn, gain)
         elif self.dialog_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialog_encoder.rnn)
+            init_gru_orth(self.dialog_encoder.rnn, gain)
 
         # Dialog Decoder with Attention
         self.dialog_decoder = StdRNNDecoder(
@@ -107,11 +110,11 @@ class Seq2SeqModel(nn.Module):
             dropout=self.dialog_decoder_dropout_probability,
             embedding=dialog_decoder_embedding,  # maybe replace by dialog_decoder_embedding
             attn_type=self.dialog_decoder_attention_type)
-
+        
         if self.dialog_decoder == 'LSTM':
-            init_lstm_orth(self.dialog_decoder.rnn)
+            init_lstm_orth(self.dialog_decoder.rnn, gain)
         elif self.dialog_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialog_decoder.rnn)
+            init_gru_orth(self.dialog_decoder.rnn, gain)
 
         self.dialog_decoder_linear = nn.Linear(
             self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)
@@ -161,7 +164,7 @@ class Seq2SeqModel(nn.Module):
                                             device=self.device) * self.dialog_decoder_pad_id
 
         dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
-                                                batch_size, self.dialog_decoder_max_length-2),
+                                                batch_size, self.dialog_decoder_max_length-1),
                                                device=self.device,
                                                dtype=torch.float)
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False

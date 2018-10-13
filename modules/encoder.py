@@ -174,31 +174,23 @@ class RNNEncoder(EncoderBase):
 
         return (out_encode_final, out_memory_bank)
 
-    def init_hidden(self, batch_size, device):
-        initial_state_scale = math.sqrt(3.0 / self.hidden_size)
+    def init_hidden(self, batch_size, device, initial_state_scale=None):
+        if initial_state_scale is None:
+            initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         if self.rnn_type == 'LSTM':
-            initial_state1 = torch.rand(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
-            initial_state2 = torch.rand(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
-            initial_state1 = (-initial_state_scale - initial_state_scale) * initial_state1 + initial_state_scale
-            initial_state2 = (-initial_state_scale - initial_state_scale) * initial_state2 + initial_state_scale
-            #  initial_state1.data.uniform_(-initial_state_scale,
-                                         #  initial_state_scale)
-            #  initial_state2.data.uniform_(-initial_state_scale,
-                                         #  initial_state_scale)
-            initial_state1 = initial_state1.to(device)
-            initial_state2 = initial_state2.to(device)
+            initial_state1 = torch.empty(
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
+            initial_state2 = torch.empty(
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
+            nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
+            nn.init_uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
             return (initial_state1, initial_state2)
 
         else:
             initial_state = torch.rand(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size))
-            initial_state = (-initial_state_scale - initial_state_scale) * initial_state + initial_state_scale
-            #  initial_state.data.uniform_(-initial_state_scale,
-                                        #  initial_state_scale)
-            initial_state = initial_state.to(device)
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
+            nn.init_uniform_(initial_state, a=-initial_state_scale, b=initial_state_scale)
             return initial_state
 
 
