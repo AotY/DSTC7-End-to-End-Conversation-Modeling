@@ -174,13 +174,12 @@ class Seq2SeqModel(nn.Module):
                         state=dialog_decoder_state,
                         memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
-                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                    0)
+                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(0)
         else:
             # Without teacher forcing: use its own predictions as the next input
             if self.dialog_decoder_type == 'greedy':
                 dialog_decoder_input = torch.ones(
-                    (1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
+                    (1, batch_size), dtype=torch.long, device=self.device) * self.dialog_decoder_sos_id
                 dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
                                                                                       dialog_decoder_state, dialog_encoder_inputs_length,
                                                                                       dialog_decoder_outputs, dialog_decoder_attns_std)
@@ -226,13 +225,12 @@ class Seq2SeqModel(nn.Module):
                                                 batch_size, self.dialog_decoder_max_length-2))
 
         if self.dialog_decoder_type == 'greedy':
-            dialog_decoder_state = self.dialog_decoder.init_decoder_state(
-                encoder_final=dialog_encoder_state)
+            dialog_decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_state)
+            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
             dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
                                                                                   dialog_decoder_state, dialog_encoder_inputs_length,
                                                                                   dialog_decoder_outputs, dialog_decoder_attns_std)
         elif self.dialog_decoder_type == 'beam_search':
-            #  dialog_decoder_outputs = self.beam_search_decoder()
             pass
         else:
             raise ValueError(
@@ -272,10 +270,8 @@ class Seq2SeqModel(nn.Module):
                                             device=self.device) * self.dialog_decoder_pad_id
 
         if self.dialog_decoder_type == 'greedy':
-            dialog_decoder_input = torch.ones(
-                (1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
-            dialog_decoder_state = self.dialog_decoder.init_decoder_state(
-                encoder_final=dialog_encoder_state)
+            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
+            dialog_decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_state)
             dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
                                                                                   dialog_decoder_state, dialog_encoder_inputs_length)
         elif self.dialog_decoder_type == 'beam_search':

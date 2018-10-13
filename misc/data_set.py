@@ -152,8 +152,6 @@ class Seq2seqDataSet:
             # append length
             encoder_inputs_length.append(len(conversation_ids))
 
-            if response_ids[-1] != self.dialog_decoder_vocab.eosid:
-                response_ids.append(self.dialog_decoder_vocab.eosid)
             # ids to word
             conversation_texts.append(
                 ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
@@ -164,11 +162,16 @@ class Seq2seqDataSet:
             for t, token_id in enumerate(conversation_ids):
                 encoder_inputs[t, i] = token_id
 
+            #  if response_ids[-1] != self.dialog_decoder_vocab.eosid:
+                #  response_ids.append(self.dialog_decoder_vocab.eosid)
+
             # decoder_inputs
             decoder_inputs[0, i] = self.dialog_decoder_vocab.sosid
             for t, token_id in enumerate(response_ids):
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
+
+            decoder_targets[t] = self.dialog_decoder_vocab.eosid
 
         # To long tensor
         encoder_inputs_length = torch.tensor(
@@ -191,7 +194,9 @@ class Seq2seqDataSet:
         decoder_outputs_argmax = decoder_outputs_argmax.transpose(0, 1)
         for bi in range(batch_size):
             word_ids = decoder_outputs_argmax[bi].tolist()
-            words = self.dialog_encoder_vocab.ids_to_word(word_ids)
+            words = self.dialog_decoder_vocab.ids_to_word(word_ids)
+            # remove pad, sos, eos, unk
+            words = [word for word in words if word not in [self.dialog_decoder_vocab.get_pad_unk_sos_eos()]]
             text = ' '.join(words)
             texts.append(text)
 
@@ -372,9 +377,6 @@ class KnowledgeGroundedDataSet:
             # append length
             encoder_inputs_length.append(len(conversation_ids))
 
-            if response_ids[-1] != self.dialog_decoder_vocab.eosid:
-                response_ids.append(self.dialog_decoder_vocab.eosid)
-
             # encoder_inputs
             for t, token_id in enumerate(conversation_ids):
                 encoder_inputs[t, i] = token_id
@@ -384,6 +386,8 @@ class KnowledgeGroundedDataSet:
             for t, token_id in enumerate(response_ids):
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
+
+            decoder_targets[t] = self.dialog_decoder_vocab.eosid
 
             # ids to word
             conversation_texts.append(
@@ -463,6 +467,7 @@ class KnowledgeGroundedDataSet:
         for bi in range(batch_size):
             word_ids = decoder_outputs_argmax[bi].tolist()
             words = self.dialog_encoder_vocab.ids_to_word(word_ids)
+            words = [word for word in words if word not in [self.dialog_decoder_vocab.get_pad_unk_sos_eos()]]
             text = ' '.join(words)
             texts.append(text)
         return texts
