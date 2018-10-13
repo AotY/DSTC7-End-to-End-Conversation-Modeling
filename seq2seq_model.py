@@ -294,7 +294,7 @@ class Seq2SeqModel(nn.Module):
         dialog_decoder_outputs_argmax = torch.argmax(
             dialog_decoder_outputs, dim=2)
 
-        return dialog_decoder_outputs_argmax.detach().numpy()
+        return dialog_decoder_outputs_argmax.detach().cpu().numpy()
 
     def greedy_decode(self, dialog_decoder_input, dialog_encoder_memory_bank,
                       dialog_decoder_state, dialog_encoder_inputs_length,

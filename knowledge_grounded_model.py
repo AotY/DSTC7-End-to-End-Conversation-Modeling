@@ -266,7 +266,7 @@ class KnowledgeGroundedModel(nn.Module):
         # M [batch_size, topk, hidden_size]
         fact_M = self.fact_linearA(facts_inputs)
         print('fact_M shape: {}'.format(fact_M.shape))
-        # C
+        # C [batch_size, topk, hidden_size]
         fact_C = self.fact_linearC(facts_inputs)
 
         # hidden_tuple is a tuple object
@@ -278,12 +278,13 @@ class KnowledgeGroundedModel(nn.Module):
                                            device=self.device)
             for i in range(self.dialog_decoder_num_layers):
                 u = hidden_state[i]  # [batch_size, hidden_size]
+                print('u shape: {}'.format(u.shape))
                 # batch product
                 tmpP = torch.bmm(facts_inputs, u.unsqueeze(2))  # [batch_size, top_k, 1]
                 P = F.softmax(tmpP.squeeze(2), dim=1)  # [batch_size, top_k]
                 print('P: {}'.format(P.shape))
                 # [batch_size, hidden_size, 1]
-                o = torch.bmm(facts_inputs.transpose(1, 2), P.squeeze(2))
+                o = torch.bmm(facts_inputs.transpose(1, 2), P.unsqueeze(2))
                 u_ = o + u  # [batch_size, hidden_size, 1]
                 print('u_: {}'.format(u_.shape))
                 new_hidden_state[i] = u_.squeeze(2)
