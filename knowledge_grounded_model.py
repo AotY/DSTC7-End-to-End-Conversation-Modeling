@@ -200,9 +200,6 @@ class KnowledgeGroundedModel(nn.Module):
                                              batch_size, self.dialog_decoder_hidden_size),
                                             device=self.device) * self.dialog_decoder_pad_id
 
-        dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
-                                                batch_size, self.dialog_decoder_max_length-2))
-
         if use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
             for di in range(self.dialog_decoder_max_length):
@@ -213,8 +210,6 @@ class KnowledgeGroundedModel(nn.Module):
                         state=dialog_decoder_state,
                         memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_outputs[di] = dialog_decoder_output.squeeze(0)
-                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                    0)
         else:
             # Without teacher forcing: use its own predictions as the next
             # input
@@ -228,8 +223,6 @@ class KnowledgeGroundedModel(nn.Module):
                         memory_lengths=dialog_encoder_inputs_length)
                 dialog_decoder_output = dialog_decoder_output.detach().squeeze(0)
                 dialog_decoder_outputs[di] = dialog_decoder_output
-                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                    0)
                 dialog_decoder_input = torch.argmax(
                     dialog_decoder_output, dim=1)
 
@@ -245,7 +238,7 @@ class KnowledgeGroundedModel(nn.Module):
             dialog_decoder_outputs)
 
         return ((dialog_encoder_state, dialog_encoder_memory_bank),
-                (dialog_decoder_state, dialog_decoder_outputs, dialog_decoder_attns_std))
+                (dialog_decoder_state, dialog_decoder_outputs))
 
     def facts_forward(self,
                       facts_inputs,
@@ -319,9 +312,6 @@ class KnowledgeGroundedModel(nn.Module):
                                              batch_size, self.dialog_decoder_hidden_size),
                                             device=self.device) * self.dialog_decoder_pad_id
 
-        dialog_decoder_attns_std = torch.zeros((self.dialog_decoder_max_length,
-                                                batch_size, self.dialog_decoder_max_length-2))
-
         dialog_decoder_input = dialog_decoder_inputs[0]
         for di in range(self.dialog_decoder_max_length):
             dialog_decoder_state, dialog_decoder_output, \
@@ -332,8 +322,6 @@ class KnowledgeGroundedModel(nn.Module):
                     memory_lengths=dialog_encoder_inputs_length)
             dialog_decoder_output = dialog_decoder_output.detach().squeeze(0)
             dialog_decoder_outputs[di] = dialog_decoder_output
-            dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                0)
             dialog_decoder_input = torch.argmax(dialog_decoder_output, dim=1)
             # greedy search
 
@@ -349,4 +337,4 @@ class KnowledgeGroundedModel(nn.Module):
             dialog_decoder_outputs)
 
         return ((dialog_encoder_state, dialog_encoder_memory_bank),
-                (dialog_decoder_state, dialog_decoder_outputs, dialog_decoder_attns_std))
+                (dialog_decoder_state, dialog_decoder_outputs))

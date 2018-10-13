@@ -10,7 +10,7 @@ python train_knowledge_grounded_model.py \
     --dialog_encoder_num_layers 2 \
     --dialog_encoder_rnn_type GRU \
     --dialog_encoder_dropout_probability 0.5 \
-    --dialog_encoder_max_length 50 \
+    --dialog_encoder_max_length 32 \
     --dialog_encoder_clipnorm 50.0 \
     --dialog_encoder_bidirectional \
     --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
@@ -23,7 +23,7 @@ python train_knowledge_grounded_model.py \
     --dialog_decoder_num_layers 2 \
     --dialog_decoder_rnn_type GRU \
     --dialog_decoder_dropout_probability 0.5 \
-    --dialog_decoder_max_length 50 \
+    --dialog_decoder_max_length 32 \
     --dialog_decoder_clipnorm 50.0 \
     --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
     --dialog_decoder_attention_type general \
@@ -39,7 +39,7 @@ python train_knowledge_grounded_model.py \
     --eval_split 0.2 \
     --optim_method adam \
     --start_epoch 1 \
-    --train_or_eval train 
-    # --checkpoint ./models/checkpoint.epoch-4.pth 
+    --train_or_eval train
+    # --checkpoint ./models/checkpoint.epoch-4.pth
 
-    /
+/

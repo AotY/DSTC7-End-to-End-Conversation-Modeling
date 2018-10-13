@@ -84,8 +84,8 @@ class Seq2seqDataSet:
                         #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
                     #  response_ids = response_ids[0: min(
                         #  self.dialog_decoder_max_length - 2, len(response_ids))]
-                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
-                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
+                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 1, len(conversation_ids)):]
+                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids))
 
@@ -161,9 +161,6 @@ class Seq2seqDataSet:
             # encoder_inputs
             for t, token_id in enumerate(conversation_ids):
                 encoder_inputs[t, i] = token_id
-
-            #  if response_ids[-1] != self.dialog_decoder_vocab.eosid:
-                #  response_ids.append(self.dialog_decoder_vocab.eosid)
 
             # decoder_inputs
             decoder_inputs[0, i] = self.dialog_decoder_vocab.sosid
@@ -301,8 +298,8 @@ class KnowledgeGroundedDataSet:
                         #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
                     #  response_ids = response_ids[0: min(
                         #  self.dialog_decoder_max_length - 2, len(response_ids))]
-                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 2, len(conversation_ids)):]
-                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 2, len(response_ids)):]
+                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 1, len(conversation_ids)):]
+                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids, hash_value))
 
@@ -438,7 +435,7 @@ class KnowledgeGroundedDataSet:
                         if len(facts_ids) == 0:
                             continue
 
-                        facts_ids = [fact_ids[-min(self.fact_max_length - 2, len(facts_ids)): ] for fact_ids in facts_ids]
+                        facts_ids = [fact_ids[-min(self.fact_max_length, len(facts_ids)): ] for fact_ids in facts_ids]
 
                         fact_texts = [' '.join(fact) for fact in facts]
 

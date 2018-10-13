@@ -136,8 +136,7 @@ def train(model,
     model.train()
 
     (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_final_state, dialog_decoder_outputs,
-         dialog_decoder_attns) = model(dialog_encoder_inputs=dialog_encoder_inputs,
+    (dialog_decoder_final_state, dialog_decoder_outputs) = model(dialog_encoder_inputs=dialog_encoder_inputs,
                                        dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                                        facts_inputs=facts_inputs,
                                        dialog_decoder_inputs=dialog_decoder_inputs,
@@ -202,8 +201,7 @@ def evaluate(model=None,
 
             # train and get cur loss
             (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-                (dialog_decoder_final_state, dialog_decoder_outputs,
-                 dialog_decoder_attns) = model.evaluate(
+                (dialog_decoder_final_state, dialog_decoder_outputs) = model.evaluate(
                 dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
                 dialog_encoder_inputs_length=dialog_encoder_inputs_length,
                 facts_inputs=facts_inputs,
@@ -350,7 +348,7 @@ def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab, fact_vocab,
     return model
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth'):
+def save_checkpoint(state, is_best, filename):
     '''
     Saving a model in pytorch.
     :param state: is a dict object, including epoch, optimizer, model etc.
@@ -363,7 +361,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
         shutil.copy(filename, 'model_best.pth')
 
 
-def load_checkpoint(filename='checkpoint.pth'):
+def load_checkpoint(filename):
     checkpoint = torch.load(filename)
     return checkpoint
 
