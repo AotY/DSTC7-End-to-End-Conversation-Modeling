@@ -273,8 +273,9 @@ class Seq2SeqModel(nn.Module):
         if self.dialog_decoder_type == 'greedy':
             dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * self.dialog_decoder_sos_id
             dialog_decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_state)
-            dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
-                                                                                  dialog_decoder_state, dialog_encoder_inputs_length)
+            dialog_decoder_outputs, _ = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
+                                                                                  dialog_decoder_state, dialog_encoder_inputs_length,
+                                                                                  dialog_decoder_outputs, None)
         elif self.dialog_decoder_type == 'beam_search':
             pass
         else:
@@ -297,7 +298,7 @@ class Seq2SeqModel(nn.Module):
 
     def greedy_decode(self, dialog_decoder_input, dialog_encoder_memory_bank,
                       dialog_decoder_state, dialog_encoder_inputs_length,
-                      dialog_decoder_outputs, dialog_decoder_attns_std):
+                      dialog_decoder_outputs, dialog_decoder_attns_std=None):
         """
         dialog_encoder_memory_bank: [max_length, batch_size, hidden_size]
         dialog_decoder_state:
@@ -313,8 +314,9 @@ class Seq2SeqModel(nn.Module):
 
             dialog_decoder_output = dialog_decoder_output.detach().squeeze(0)
             dialog_decoder_outputs[di] = dialog_decoder_output
-            dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
-                0)
+            if dialog_decoder_attns_std is not None:
+                dialog_decoder_attns_std[di] = dialog_decoder_attn['std'].squeeze(
+                    0)
             dialog_decoder_input = torch.argmax(
                 dialog_decoder_output, dim=1)
 
