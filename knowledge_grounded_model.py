@@ -107,9 +107,9 @@ class KnowledgeGroundedModel(nn.Module):
             embedding=dialog_encoder_embedding)
 
         if self.dialog_encoder_rnn_type == 'LSTM':
-            init_lstm_orth(self.dialog_encoder)
+            init_lstm_orth(self.dialog_encoder.rnn)
         elif self.dialog_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialog_encoder)
+            init_gru_orth(self.dialog_encoder.rnn)
 
         # facts encoder
         # mi = A * ri
@@ -133,9 +133,9 @@ class KnowledgeGroundedModel(nn.Module):
             attn_type=self.dialog_decoder_attention_type)
 
         if self.dialog_decoder == 'LSTM':
-            init_lstm_orth(self.dialog_decoder)
+            init_lstm_orth(self.dialog_decoder.rnn)
         elif self.dialog_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialog_decoder)
+            init_gru_orth(self.dialog_decoder.rnn)
 
         self.dialog_decoder_linear = nn.Linear(
             self.dialog_decoder_hidden_size, self.dialog_decoder_vocab_size)

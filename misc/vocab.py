@@ -109,24 +109,29 @@ class Vocab(object):
 
     @property
     def unk(self):
-        """return the id of unknown word
+        """return the str of unknown word
         """
         return UNK
 
     @property
     def pad(self):
-        """return the id of padding
+        """return the str of padding
         """
         return PAD
 
     @property
     def sos(self):
-        """return the id of padding
+        """return the str of padding
         """
         return SOS
 
     @property
     def eos(self):
-        """return the id of padding
+        """return the str of padding
         """
         return EOS
+
+    def get_pad_unk_sos_eos(self):
+        return [self.pad, self.unk, self.sos, self.eos]
+
+
