@@ -2,6 +2,7 @@
 
 import math
 import random
+import operator
 from queue import PriorityQueue
 
 import torch
@@ -226,7 +227,7 @@ class Seq2SeqModel(nn.Module):
 
         if self.dialog_decoder_type == 'greedy':
             dialog_decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_state)
-            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
+            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * self.dialog_decoder_sos_id
             dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
                                                                                   dialog_decoder_state, dialog_encoder_inputs_length,
                                                                                   dialog_decoder_outputs, dialog_decoder_attns_std)
@@ -270,7 +271,7 @@ class Seq2SeqModel(nn.Module):
                                             device=self.device) * self.dialog_decoder_pad_id
 
         if self.dialog_decoder_type == 'greedy':
-            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=device) * self.dialog_decoder_sos_id
+            dialog_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * self.dialog_decoder_sos_id
             dialog_decoder_state = self.dialog_decoder.init_decoder_state(encoder_final=dialog_encoder_state)
             dialog_decoder_outputs, dialog_decoder_attns_std = self.greedy_decode(dialog_decoder_input, dialog_encoder_memory_bank,
                                                                                   dialog_decoder_state, dialog_encoder_inputs_length)
@@ -336,6 +337,7 @@ class Seq2SeqModel(nn.Module):
         beam_width:
         """
 
+        batch_utterances = []
         for bi in range(batch_size):
             if isinstance(dialog_encoder_state, tuple):  # LSTM
                 dialog_decoder_hidden_bi = tuple(
