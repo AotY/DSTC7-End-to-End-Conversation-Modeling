@@ -293,7 +293,6 @@ class KnowledgeGroundedModel(nn.Module):
                  dialog_encoder_inputs,  # LongTensor
                  dialog_encoder_inputs_length,
                  facts_inputs,
-                 facts_inputs_length,
                  dialog_decoder_inputs,
                  batch_size=128):
 
@@ -311,7 +310,8 @@ class KnowledgeGroundedModel(nn.Module):
             encoder_final=dialog_encoder_state)
 
         '''facts encoder forward'''
-        new_hidden_tuple = self.facts_forward(facts_inputs, dialog_decoder_state.hidden, batch_size)
+        new_hidden_tuple = self.facts_forward(
+            facts_inputs, dialog_decoder_state.hidden, batch_size)
         dialog_decoder_state.update_state(new_hidden_tuple)
 
         '''dialog_decoder forward'''
