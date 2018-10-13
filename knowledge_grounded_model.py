@@ -284,9 +284,9 @@ class KnowledgeGroundedModel(nn.Module):
                 print('P: {}'.format(P.shape))
                 # [batch_size, hidden_size, 1]
                 o = torch.bmm(facts_inputs.transpose(1, 2), P.unsqueeze(2))
-                u_ = o + u  # [batch_size, hidden_size, 1]
+                u_ = o.squeeze(2) + u  # [batch_size, hidden_size]
                 print('u_: {}'.format(u_.shape))
-                new_hidden_state[i] = u_.squeeze(2)
+                new_hidden_state[i] = u_
                 # new_hidden_state -> [num_layers, batch_size, hidden_size]
             new_hidden_list.append(new_hidden_state)
 
