@@ -367,12 +367,13 @@ class KnowledgeGroundedDataSet:
         facts_inputs = torch.zeros((batch_size, top_k, fact_embedding_size), device=self.device)
         facts_texts = []
 
+        default_facts_embedded_mean = torch.zeros((top_k, fact_embedding_size), device=self.device)
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
 
             # load top_k facts
             top_k_facts_embedded_mean, top_k_fact_texts, \
-                top_k_indices_list = self.top_k_facts_embedded_mean_dict.get(hash_value, (None, None, None))
+                top_k_indices_list = self.top_k_facts_embedded_mean_dict.get(hash_value, (default_facts_embedded_mean, None, None))
 
             # append length
             encoder_inputs_length.append(len(conversation_ids))
