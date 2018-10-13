@@ -116,7 +116,7 @@ class KnowledgeGroundedModel(nn.Module):
         self.fact_linearA = nn.Linear(self.dialog_encoder_embedding_size,
                                       self.dialog_decoder_hidden_size)
         # ci = C * ri
-        self.facts_linearC = nn.Linear(self.dialog_encoder_embedding_size,
+        self.fact_linearC = nn.Linear(self.dialog_encoder_embedding_size,
                                        self.dialog_decoder_hidden_size)
 
         self.fact_decoder_linear = nn.Linear(
