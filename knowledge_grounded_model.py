@@ -258,13 +258,12 @@ class KnowledgeGroundedModel(nn.Module):
             - batch_size
         """
 
+        # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
         if self.fact_embedding_size != self.dialog_decoder_hidden_size:
                 facts_inputs = self.fact_decoder_linear(facts_inputs)
 
-        print('facts_inputs shape: {}'.format(facts_inputs.shape))
         # M [batch_size, topk, hidden_size]
         fact_M = self.fact_linearA(facts_inputs)
-        print('fact_M shape: {}'.format(fact_M.shape))
         # C [batch_size, topk, hidden_size]
         fact_C = self.fact_linearC(facts_inputs)
 
@@ -277,15 +276,12 @@ class KnowledgeGroundedModel(nn.Module):
                                            device=self.device)
             for i in range(self.dialog_decoder_num_layers):
                 u = hidden_state[i]  # [batch_size, hidden_size]
-                print('u shape: {}'.format(u.shape))
                 # batch product
                 tmpP = torch.bmm(facts_inputs, u.unsqueeze(2))  # [batch_size, top_k, 1]
                 P = F.softmax(tmpP.squeeze(2), dim=1)  # [batch_size, top_k]
-                print('P: {}'.format(P.shape))
                 # [batch_size, hidden_size, 1]
                 o = torch.bmm(facts_inputs.transpose(1, 2), P.unsqueeze(2))
                 u_ = o.squeeze(2) + u  # [batch_size, hidden_size]
-                print('u_: {}'.format(u_.shape))
                 new_hidden_state[i] = u_
                 # new_hidden_state -> [num_layers, batch_size, hidden_size]
             new_hidden_list.append(new_hidden_state)
