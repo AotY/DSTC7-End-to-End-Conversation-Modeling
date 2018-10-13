@@ -30,7 +30,7 @@ python train_knowledge_grounded_model.py \
     --dialog_decoder_tied \
     --lr 0.005 \
     --epochs 5 \
-    --batch_size 256 \
+    --batch_size 128 \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \

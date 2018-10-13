@@ -112,7 +112,7 @@ class KnowledgeGroundedModel(nn.Module):
             init_gru_orth(self.dialog_encoder.rnn)
 
         # facts encoder
-        # mi = A * ri
+        # mi = A * ri    fact_linearA(300, 512)
         self.fact_linearA = nn.Linear(self.dialog_encoder_embedding_size,
                                       self.dialog_decoder_hidden_size)
         # ci = C * ri
@@ -259,17 +259,19 @@ class KnowledgeGroundedModel(nn.Module):
             - batch_size
         """
 
-        if self.fact_embedding_size != self.dialog_decoder_hidden_size:
-                facts_inputs = self.fact_decoder_linear(facts_inputs)
+        #  if self.fact_embedding_size != self.dialog_decoder_hidden_size:
+                #  facts_inputs = self.fact_decoder_linear(facts_inputs)
 
-        # M
+        print('facts_inputs shape: {}'.format(facts_inputs.shape))
+        # M [batch_size, topk, hidden_size]
         fact_M = self.fact_linearA(facts_inputs)
+        print('fact_M shape: {}'.format(fact_M.shape))
         # C
         fact_C = self.fact_linearC(facts_inputs)
 
         # hidden_tuple is a tuple object
         new_hidden_list = []
-        for hidden_state in hidden_tuple:
+        for hidden_state in hidden_tuple[:1]:
             new_hidden_state = torch.zeros((self.dialog_decoder_num_layers,
                                             batch_size,
                                             self.dialog_decoder_hidden_size),
@@ -277,12 +279,13 @@ class KnowledgeGroundedModel(nn.Module):
             for i in range(self.dialog_decoder_num_layers):
                 u = hidden_state[i]  # [batch_size, hidden_size]
                 # batch product
-                tmpP = torch.bmm(facts_inputs, u.unsqueeze(2)
-                                 )  # [batch_size, top_k, 1]
+                tmpP = torch.bmm(facts_inputs, u.unsqueeze(2))  # [batch_size, top_k, 1]
                 P = F.softmax(tmpP.squeeze(2), dim=1)  # [batch_size, top_k]
+                print('P: {}'.format(P.shape))
                 # [batch_size, hidden_size, 1]
                 o = torch.bmm(facts_inputs.transpose(1, 2), P.squeeze(2))
                 u_ = o + u  # [batch_size, hidden_size, 1]
+                print('u_: {}'.format(u_.shape))
                 new_hidden_state[i] = u_.squeeze(2)
                 # new_hidden_state -> [num_layers, batch_size, hidden_size]
             new_hidden_list.append(new_hidden_state)
