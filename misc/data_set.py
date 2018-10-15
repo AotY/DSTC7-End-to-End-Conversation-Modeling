@@ -64,8 +64,8 @@ class Seq2seqDataSet:
                         continue
 
                     response_ids = self.dialogue_decoder_vocab.words_to_id(response.split())
-					if len(response_ids) <= 3:
-						continue
+                    if len(response_ids) <= 3:
+                            continue
                     # conversation split by EOS, START
                     if conversation.startswith('START EOS'):
                         # START: special symbol indicating the start of the
