@@ -11,7 +11,7 @@ python train_seq2seq_model.py \
     --dialogue_encoder_rnn_type LSTM \
     --dialogue_encoder_dropout_probability 0.5 \
     --dialogue_encoder_max_length 32 \
-    --dialogue_encoder_clipnorm 80.0 \
+    --dialogue_encoder_clipnorm 100.0 \
     --dialogue_encoder_bidirectional \
     --dialogue_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
     --dialogue_decoder_embedding_size 300 \
@@ -20,9 +20,9 @@ python train_seq2seq_model.py \
     --dialogue_decoder_rnn_type LSTM \
     --dialogue_decoder_dropout_probability 0.5 \
     --dialogue_decoder_max_length 32 \
-    --dialogue_decoder_clipnorm 80.0 \
+    --dialogue_decoder_clipnorm 100.0 \
     --dialogue_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
-    --dialogue_decoder_attention_type dot \
+    --dialogue_decoder_attention_type general \
 	--dialogue_decode_type greedy \
     --dialogue_turn_num 1 \
     --beam_width 10 \
@@ -33,7 +33,7 @@ python train_seq2seq_model.py \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda:0 \
-    --log_interval 50 \
+    --log_interval 20 \
     --log_file ./logs/train_seq2seq_model_{}.log \
     --model_save_path ./models \
     --eval_split 0.2 \

@@ -229,7 +229,7 @@ class Seq2SeqModel(nn.Module):
                                               device=self.device) * self.dialogue_decoder_pad_id
 
         dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length,
-                                                  batch_size, self.dialogue_decoder_max_length-2))
+                                                  batch_size, self.dialogue_decoder_max_length-1))
 
         if self.dialogue_decode_type == 'greedy':
             dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(
