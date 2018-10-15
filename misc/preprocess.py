@@ -59,7 +59,7 @@ def read_convos(convos_file_path, logger=None):
     responses_length_distribution = {}
 
     # each conversation contains the number of response
-    conversation_response_nums = {}
+	conversation_response_nums = {}
 
     # abnormal_conversations
     abnormal_conversations = []
@@ -70,8 +70,7 @@ def read_convos(convos_file_path, logger=None):
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' %
-                        (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
@@ -124,10 +123,6 @@ def read_convos(convos_file_path, logger=None):
         responses_length_distribution[response_length] = responses_length_distribution.get(
             response_length, 0) + 1
 
-        # append to data set
-        if response_length <= 3:
-            continue
-
         conversations.append(conversation_tokens)
         responses.append(response_tokens)
 
@@ -176,20 +171,18 @@ def read_facts(facts_file_path, logger):
     conversation_ids = []
     domain_names = []
 
-    conversation_fact_nums = {}
+	conversation_fact_nums = {}
 
     max_len = 0
     len_distribution = {}
 
     abnormal_facts = []
-
     n = 0
     for line in lines:
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' %
-                        (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
@@ -304,11 +297,9 @@ def save_distribution(distribution, name):
 
 def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     '''Save data in pair format.'''
-    save_file = open(os.path.join(opt.save_path, filename),
-                     'w', encoding='utf-8')
+    save_file = open(os.path.join(opt.save_path, filename),'w', encoding='utf-8')
     for conversation, response, hash_value in zip(conversations, responses, hash_values):
-        save_file.write('%s\t%s\t%s\n' % (
-            ' '.join(conversation), ' '.join(response), hash_value))
+        save_file.write('%sSPLITTOKEN%sSPLITTOKEN%s\n' % (' '.join(conversation), ' '.join(response), hash_value))
 
     save_file.close()
 
@@ -354,7 +345,7 @@ def save_conversations_responses_facts_count(conversations, responses, facts):
 def save_raw_pair(raw_conversations, raw_responses, hash_values):
     with open(os.path.join(opt.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8') as f:
         for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
-            f.write("%s\t%s\t\%s\n" % (conversation, response, hash_value))
+            f.write("%sSPLITTOKEN%sSPLITTOKEN\%s\n" % (conversation, response, hash_value))
 
 
 '''save token, type nums '''
@@ -429,7 +420,7 @@ if __name__ == '__main__':
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
     # save conversation response nums
-    save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
+	save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
     # save raw pair
     save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
@@ -465,7 +456,6 @@ if __name__ == '__main__':
     # save abnormal_facts
     save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
 
-
     # save lens distribution
     save_distribution(conversations_length_distribution, 'conversations')
     save_distribution(responses_length_distribution, 'responses')
@@ -482,6 +472,7 @@ if __name__ == '__main__':
     else:
         datas = conversations + responses + facts
         datas_name = ['conversations', 'responses', 'facts']
+
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 

@@ -15,7 +15,6 @@ python preprocess.py \
     --fasttext_vec_file /home/taoqing/Research/data/crawl-300d-2M-subword.vec \
     --fasttext_vec_dim 300 \
     --binary \
-    --size 300 \
     --window 7 \
     --alpha 0.025 \
     --negative 7 \
