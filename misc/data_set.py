@@ -86,8 +86,6 @@ class Seq2seqDataSet:
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
-                    print('response ids: {} \n'.format(response_ids))
-                    print('conversation_ids: {} \n'.format(conversation_ids))
 
                     datas.append((conversation_ids, response_ids))
 
@@ -117,7 +115,7 @@ class Seq2seqDataSet:
         assemble conversation context by dialogue turn (default 1)
         """
         dialogues = conversation.split('EOS')
-        dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogue.split()) <= self.dialogue_encoder_max_length * dialogue_turn_num)]
+        dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogue.split()) <= (self.dialogue_encoder_max_length + 10) * dialogue_turn_num)]
         if len(dialogues) == 0:
             return None
         dialogues = dialogues[-min(dialogue_turn_num, len(dialogues)): ]
@@ -237,7 +235,7 @@ class Seq2seqDataSet:
                 f.write('Response: %s\n' % response)
                 if decode_type == 'greedy':
                     f.write('Generated: %s\n' % generated_text)
-                elif decoder == 'beam_search':
+                elif decode_type == 'beam_search':
                     for i, topk_text in enumerate(batch_texts):
                         f.write('Generated %d: %s\n' % (i, topk_text))
 
