@@ -38,8 +38,6 @@ Read convos file.
 def read_convos(convos_file_path, logger=None):
     with open(convos_file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
-
-    # 读取  convos，保存到
     conversations = []
     responses = []
 
@@ -59,7 +57,7 @@ def read_convos(convos_file_path, logger=None):
     responses_length_distribution = {}
 
     # each conversation contains the number of response
-	conversation_response_nums = {}
+    conversation_response_nums = {}
 
     # abnormal_conversations
     abnormal_conversations = []
@@ -70,7 +68,8 @@ def read_convos(convos_file_path, logger=None):
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' %
+                        (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
@@ -98,14 +97,14 @@ def read_convos(convos_file_path, logger=None):
         conversation_length = len(conversation_tokens)
 
         if conversation_length in [203, 204, 205, 206, 207]:
-            abnormal_conversations.append(conversation_tokens + [sub[1], sub[2]])
+            abnormal_conversations.append(
+                conversation_tokens + [sub[1], sub[2]])
 
         conversation_max_length = max(
             conversation_max_length, conversation_length)
 
         conversations_length_distribution[conversation_length] = conversations_length_distribution.get(
             conversation_length, 0) + 1
-
 
         response_tokens = tokenizer.preprocess(response)
         response_tokens = tokenizer.replace_url(response_tokens)
@@ -134,7 +133,8 @@ def read_convos(convos_file_path, logger=None):
 
         # TodayILearned-f2ruz nums
         key_value = sub[1] + '-' + sub[2]
-        conversation_response_nums[key_value] = conversation_response_nums.get(key_value, 0) + 1
+        conversation_response_nums[key_value] = conversation_response_nums.get(
+            key_value, 0) + 1
 
     return raw_conversations, raw_responses, \
         conversations, responses, \
@@ -145,13 +145,14 @@ def read_convos(convos_file_path, logger=None):
         abnormal_conversations, abnormal_responses
 
 
-
-
 ''' save abnormal datas'''
+
+
 def save_abnormal_datas(datas, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         for data in datas:
             f.write("%s\n" % (' '.join(data)))
+
 
 '''
 Read facts file.
@@ -171,7 +172,7 @@ def read_facts(facts_file_path, logger):
     conversation_ids = []
     domain_names = []
 
-	conversation_fact_nums = {}
+    conversation_fact_nums = {}
 
     max_len = 0
     len_distribution = {}
@@ -182,7 +183,8 @@ def read_facts(facts_file_path, logger):
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' %
+                        (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
@@ -215,12 +217,13 @@ def read_facts(facts_file_path, logger):
 
         # TodayILearned-f2ruz nums
         key_value = sub[1] + '-' + sub[2]
-        conversation_fact_nums[key_value] = conversation_fact_nums.get(key_value, 0) + 1
+        conversation_fact_nums[key_value] = conversation_fact_nums.get(
+            key_value, 0) + 1
 
     return raw_facts, facts, hash_values, subreddit_names, \
-           conversation_ids, domain_names, \
-           conversation_fact_nums, max_len, \
-           len_distribution, abnormal_facts
+        conversation_ids, domain_names, \
+        conversation_fact_nums, max_len, \
+        len_distribution, abnormal_facts
 
 
 '''
@@ -297,9 +300,11 @@ def save_distribution(distribution, name):
 
 def save_data_to_pair(opt, conversations, responses, hash_values, filename):
     '''Save data in pair format.'''
-    save_file = open(os.path.join(opt.save_path, filename),'w', encoding='utf-8')
+    save_file = open(os.path.join(opt.save_path, filename),
+                     'w', encoding='utf-8')
     for conversation, response, hash_value in zip(conversations, responses, hash_values):
-        save_file.write('%sSPLITTOKEN%sSPLITTOKEN%s\n' % (' '.join(conversation), ' '.join(response), hash_value))
+        save_file.write('%sSPLITTOKEN%sSPLITTOKEN%s\n' % (
+            ' '.join(conversation), ' '.join(response), hash_value))
 
     save_file.close()
 
@@ -345,7 +350,8 @@ def save_conversations_responses_facts_count(conversations, responses, facts):
 def save_raw_pair(raw_conversations, raw_responses, hash_values):
     with open(os.path.join(opt.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8') as f:
         for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
-            f.write("%sSPLITTOKEN%sSPLITTOKEN\%s\n" % (conversation, response, hash_value))
+            f.write("%sSPLITTOKEN%sSPLITTOKEN\%s\n" %
+                    (conversation, response, hash_value))
 
 
 '''save token, type nums '''
@@ -358,12 +364,15 @@ def save_token_type_nums(total_token_nums, total_type_nums):
         f.write("%s\t%.4f\n" %
                 ('token/type', total_token_nums/total_type_nums))
 
+
 ''' save_conversation_response_facts_nums '''
+
 
 def save_conversation_response_facts_nums(name_num_dict, filename):
     avg_num = sum(list(name_num_dict.values())) / len(name_num_dict)
     # sort
-    sorted_list = sorted(name_num_dict.items(), key=lambda item: item[1], reverse=True)
+    sorted_list = sorted(name_num_dict.items(),
+                         key=lambda item: item[1], reverse=True)
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write('%s\t%.4f\n' % ('avg', avg_num))
@@ -371,8 +380,8 @@ def save_conversation_response_facts_nums(name_num_dict, filename):
             f.write("%s\t%d\n" % (name, count))
 
 
-
 ''' save_out_of_vocab_words '''
+
 
 def save_out_of_vocab_words(out_of_vocab_words, filename):
     with open(filename, 'w', encoding='utf-8') as f:
@@ -383,8 +392,8 @@ def save_out_of_vocab_words(out_of_vocab_words, filename):
 def save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         for fact, subreddit, conversation_id, domain in zip(raw_facts, subreddit_names, conversation_ids, domain_names):
-            f.write('%s\t%s\t%s\t%s\n' % (subreddit, conversation_id, domain, fact))
-
+            f.write('%s\t%s\t%s\t%s\n' %
+                    (subreddit, conversation_id, domain, fact))
 
 
 if __name__ == '__main__':
@@ -420,7 +429,8 @@ if __name__ == '__main__':
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
     # save conversation response nums
-	save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
+    save_conversation_response_facts_nums(
+        conversation_response_nums, 'conversation_response_nums.txt')
 
     # save raw pair
     save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
@@ -444,14 +454,15 @@ if __name__ == '__main__':
     logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
     # save raw facts to txt
-    save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, \
+    save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names,
                    os.path.join(opt.save_path, 'facts.txt'))
 
     # save conversations, responses and facts count
     save_conversations_responses_facts_count(conversations, responses, facts)
 
     # save conversation fact nums
-    save_conversation_response_facts_nums(conversation_fact_nums, 'conversation_fact_nums.txt')
+    save_conversation_response_facts_nums(
+        conversation_fact_nums, 'conversation_fact_nums.txt')
 
     # save abnormal_facts
     save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
@@ -489,7 +500,6 @@ if __name__ == '__main__':
 
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
-
     """
     # google word2vec
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_word2vec(
@@ -526,8 +536,8 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
 
     # save out of vocab words
-    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
-
+    save_out_of_vocab_words(
+        out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
 
     """
     # training own word embedding.
@@ -556,7 +566,6 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
-
     """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
@@ -577,8 +586,3 @@ if __name__ == '__main__':
 
     """
     logger.info('Preprocess finished.')
-
-
-
-
-
