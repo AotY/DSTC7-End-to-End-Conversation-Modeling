@@ -19,9 +19,9 @@ from modules.optim import Optim
 from modules.embeddings import Embedding
 
 from misc.vocab import Vocab
-from train_evaluate_opt import data_set_opt, train_seq2seq_opt
 from seq2seq_model import Seq2SeqModel
 from misc.data_set import Seq2seqDataSet
+from train_evaluate_opt import data_set_opt, train_seq2seq_opt
 
 program = os.path.basename(sys.argv[0])
 logger = logging.getLogger(program)
@@ -48,8 +48,8 @@ logging.info("device: %s" % device)
 
 logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 
-torch.manual_seed(opt.seed)
-
+if opt.seed:
+    torch.manual_seed(opt.seed)
 
 def train_epochs(model=None,
                  dataset=None,

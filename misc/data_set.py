@@ -56,34 +56,25 @@ class Seq2seqDataSet:
             datas = []
             with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
                 for line in f:
-                    conversation, response, hash_value = line.rstrip().split('\t')
-
+                    conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
                     if not bool(conversation) or not bool(response):
                         continue
 
-                    # START EOS
-                    if not conversation.startswith('START EOS'):
-                        continue
+                    response_ids = self.dialog_decoder_vocab.words_to_id(response.split())
+					if len(response_ids) <= 3:
+						continue
 
-                    response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                    if int(response_score) < 1:
-                        continue
-
-                    print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
-
-                    conversation_ids = self.dialog_encoder_vocab.words_to_id(
-                        conversation.split())
-                    response_ids = self.dialog_decoder_vocab.words_to_id(
-                        response.split())
+					# conversation split by EOS, START
+					if conversation.startswith('START EOS'):
+                        # START: special symbol indicating the start of the
+                        # conversation
+                        
+                    conversation_ids = self.dialog_encoder_vocab.words_to_id(conversation.split())
 
                     # for simple
                     if len(conversation_ids) > 50 or len(response_ids) > 50:
                         continue
 
-                    #  conversation_ids = conversation_ids[0: min(
-                        #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
-                    #  response_ids = response_ids[0: min(
-                        #  self.dialog_decoder_max_length - 2, len(response_ids))]
                     conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 1, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialog_decoder_max_length - 1, len(response_ids)):]
 
