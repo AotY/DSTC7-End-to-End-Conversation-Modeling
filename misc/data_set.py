@@ -63,8 +63,7 @@ class Seq2seqDataSet:
                     if not bool(conversation) or not bool(response):
                         continue
 
-                    response_ids = self.dialogue_decoder_vocab.words_to_id(
-                        response.split())
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split())
 					if len(response_ids) <= 3:
 						continue
 
@@ -147,11 +146,11 @@ class Seq2seqDataSet:
             self.reset_data(task)
             cur_indicator = batch_size
 
-        self.logger.info('building %s data from %d to %d' %
-                         (task, self._indicator_dict[task], cur_indicator))
+        #  self.logger.info('building %s data from %d to %d' %
+                         #  (task, self._indicator_dict[task], cur_indicator))
 
         encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
-                                     dtype=torch.long,
+                                    dtype=torch.long,
                                      device=self.device)
         encoder_inputs_length = []
 
@@ -209,11 +208,11 @@ class Seq2seqDataSet:
             batch_utterances: [batch_size, topk, len]
             return: [batch_size, topk]
         """
-        
+
         batch_texts = []
         if decode_type == 'greedy':
             for bi in range(batch_size):
-                text = self.ids_to_text(utterances[bi].tolist())
+                text = self.ids_to_text(batch_utterances[bi].tolist())
                 batch_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
@@ -235,7 +234,7 @@ class Seq2seqDataSet:
 
     def save_generated_texts(self, conversation_texts, response_texts, batch_texts, filename, decode_type='greed'):
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation, response, generated_text in zip(conversation_texts, response_texts, enerated_texts):
+            for conversation, response, generated_text in zip(conversation_texts, response_texts, batch_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
@@ -379,8 +378,8 @@ class KnowledgeGroundedDataSet:
             self.reset_data(task)
             cur_indicator = batch_size
 
-        self.logger.info('building %s data from %d to %d' %
-                         (task, self._indicator_dict[task], cur_indicator))
+        #  self.logger.info('building %s data from %d to %d' %
+                         #  (task, self._indicator_dict[task], cur_indicator))
 
         encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
                                      dtype=torch.long,
