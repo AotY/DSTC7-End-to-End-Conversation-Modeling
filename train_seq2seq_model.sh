@@ -27,8 +27,8 @@ python train_seq2seq_model.py \
     --dialogue_turn_num 1 \
     --beam_width 10 \
     --topk 2 \
-    --lr 0.005 \
-    --epochs 7 \
+    --lr 0.001 \
+    --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
@@ -40,6 +40,6 @@ python train_seq2seq_model.py \
     --optim_method adam \
     --start_epoch 1 \
     --train_or_eval train 
-    # --checkpoint ./models/checkpoint.epoch-5.pth \
+    --checkpoint ./models/checkpoint.epoch-5_seq2seq.pth \
 
     /

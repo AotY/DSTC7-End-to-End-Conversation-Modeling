@@ -66,17 +66,16 @@ class Seq2seqDataSet:
                     response_ids = self.dialogue_decoder_vocab.words_to_id(response.split())
 					if len(response_ids) <= 3:
 						continue
-
-					# conversation split by EOS, START
-					if conversation.startswith('START EOS'):
+                    # conversation split by EOS, START
+                    if conversation.startswith('START EOS'):
                         # START: special symbol indicating the start of the
                         # conversation
                         conversation = conversation.replace('START EOS', '')
-                        conversation_context = assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
                     elif conversation.startswith('EOS'):
                         # EOS: special symbol indicating a turn transition
                         conversation = conversation.replace('EOS', '')
-                        conversation_context = assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
                     else:
                         continue
 
@@ -115,7 +114,7 @@ class Seq2seqDataSet:
             'eval': 0
         }
 
-    def assembel_conversation_context(conversation, dialogue_turn_num=1):
+    def assembel_conversation_context(self, conversation, dialogue_turn_num=1):
         """
         assemble conversation context by dialogue turn (default 1)
         """
