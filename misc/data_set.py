@@ -117,7 +117,7 @@ class Seq2seqDataSet:
         assemble conversation context by dialogue turn (default 1)
         """
         dialogues = conversation.split('EOS')
-        dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogu.split()) <= self.dialogue_encoder_max_length * dialogue_turn_num)]
+        dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogue.split()) <= self.dialogue_encoder_max_length * dialogue_turn_num)]
         if len(dialogues) == 0:
             return None
         dialogues = dialogues[-min(dialogue_turn_num, len(dialogues)): ]
