@@ -180,8 +180,8 @@ class Seq2seqDataSet:
             for t, token_id in enumerate(response_ids):
                 decoder_targets[t, i] = token_id
                 decoder_inputs[t + 1, i] = token_id
-
-            decoder_targets[t, i] = self.dialogue_decoder_vocab.eosid
+            
+            decoder_targets[t + 1, i] = self.dialogue_decoder_vocab.eosid
 
         # To long tensor
         encoder_inputs_length = torch.tensor(
@@ -416,7 +416,7 @@ class KnowledgeGroundedDataSet:
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
 
-            decoder_targets[t, i] = self.dialogue_decoder_vocab.eosid
+            decoder_targets[t + 1, i] = self.dialogue_decoder_vocab.eosid
 
             # ids to word
             conversation_texts.append(
