@@ -63,21 +63,20 @@ class Seq2seqDataSet:
                     if not bool(conversation) or not bool(response):
                         continue
 
-                    response_ids = self.dialogue_decoder_vocab.words_to_id(
-                        response.split())
-					if len(response_ids) <= 3:
-						continue
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split())
+                    if len(response_ids) <= 3:
+                            continue
 
-					# conversation split by EOS, START
-					if conversation.startswith('START EOS'):
+                    # conversation split by EOS, START
+                    if conversation.startswith('START EOS'):
                         # START: special symbol indicating the start of the
                         # conversation
                         conversation = conversation.replace('START EOS', '')
-                        conversation_context = assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
                     elif conversation.startswith('EOS'):
                         # EOS: special symbol indicating a turn transition
                         conversation = conversation.replace('EOS', '')
-                        conversation_context = assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
                     else:
                         continue
 
@@ -116,7 +115,7 @@ class Seq2seqDataSet:
             'eval': 0
         }
 
-    def assembel_conversation_context(conversation, dialogue_turn_num=1):
+    def assembel_conversation_context(self, conversation, dialogue_turn_num=1):
         """
         assemble conversation context by dialogue turn (default 1)
         """
@@ -147,8 +146,8 @@ class Seq2seqDataSet:
             self.reset_data(task)
             cur_indicator = batch_size
 
-        self.logger.info('building %s data from %d to %d' %
-                         (task, self._indicator_dict[task], cur_indicator))
+        #  self.logger.info('building %s data from %d to %d' %
+                         #  (task, self._indicator_dict[task], cur_indicator))
 
         encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
                                      dtype=torch.long,
@@ -213,7 +212,7 @@ class Seq2seqDataSet:
         batch_texts = []
         if decode_type == 'greedy':
             for bi in range(batch_size):
-                text = self.ids_to_text(utterances[bi].tolist())
+                text = self.ids_to_text(batch_utterances[bi].tolist())
                 batch_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
@@ -235,7 +234,7 @@ class Seq2seqDataSet:
 
     def save_generated_texts(self, conversation_texts, response_texts, batch_texts, filename, decode_type='greed'):
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation, response, generated_text in zip(conversation_texts, response_texts, enerated_texts):
+            for conversation, response, generated_text in zip(conversation_texts, response_texts, batch_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
