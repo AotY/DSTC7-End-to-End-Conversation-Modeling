@@ -391,7 +391,6 @@ def timeSince(since, percent):
 
 if __name__ == '__main__':
     # Load checkpoint if we resume from a previous training.
-
     if opt.checkpoint:
         logger.info('Loading checkpoint from: %s' % opt.checkpoint)
         checkpoint = load_checkpoint(filename=opt.checkpoint)
@@ -431,6 +430,7 @@ if __name__ == '__main__':
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
+        logger_str = '\nevaluate ---------------------------------> %.4f' % evaluate_loss
 
     if opt.train_or_eval == 'train':
         train_epochs(model=model,
