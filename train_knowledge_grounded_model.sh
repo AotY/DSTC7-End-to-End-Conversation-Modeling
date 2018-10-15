@@ -5,28 +5,28 @@ python train_knowledge_grounded_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
     --save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/ \
     --vocab_save_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/vocab_word2idx_knowledge_grounded.dict \
-    --dialog_encoder_embedding_size 300 \
-    --dialog_encoder_hidden_size 512 \
-    --dialog_encoder_num_layers 2 \
-    --dialog_encoder_rnn_type GRU \
-    --dialog_encoder_dropout_probability 0.5 \
-    --dialog_encoder_max_length 32 \
-    --dialog_encoder_clipnorm 50.0 \
-    --dialog_encoder_bidirectional \
-    --dialog_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
+    --dialogue_encoder_embedding_size 300 \
+    --dialogue_encoder_hidden_size 512 \
+    --dialogue_encoder_num_layers 2 \
+    --dialogue_encoder_rnn_type GRU \
+    --dialogue_encoder_dropout_probability 0.5 \
+    --dialogue_encoder_max_length 32 \
+    --dialogue_encoder_clipnorm 50.0 \
+    --dialogue_encoder_bidirectional \
+    --dialogue_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
     --fact_embedding_size 300 \
     --fact_max_length 70 \
     --fact_top_k 20 \
     --fact_dropout_probability 0.0 \
-    --dialog_decoder_embedding_size 300 \
-    --dialog_decoder_hidden_size 512 \
-    --dialog_decoder_num_layers 2 \
-    --dialog_decoder_rnn_type GRU \
-    --dialog_decoder_dropout_probability 0.5 \
-    --dialog_decoder_max_length 32 \
-    --dialog_decoder_clipnorm 50.0 \
-    --dialog_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
-    --dialog_decoder_attention_type general \
+    --dialogue_decoder_embedding_size 300 \
+    --dialogue_decoder_hidden_size 512 \
+    --dialogue_decoder_num_layers 2 \
+    --dialogue_decoder_rnn_type GRU \
+    --dialogue_decoder_dropout_probability 0.5 \
+    --dialogue_decoder_max_length 32 \
+    --dialogue_decoder_clipnorm 50.0 \
+    --dialogue_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
+    --dialogue_decoder_attention_type general \
     --lr 0.005 \
     --epochs 5 \
     --batch_size 128 \

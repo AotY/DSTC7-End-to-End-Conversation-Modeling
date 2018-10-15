@@ -25,6 +25,11 @@ def data_set_opt(parser):
                        type=int,
                        default=3,
                        help="Ignores all words with total frequency lower than this.")
+    
+    group.add_argument('--dialogue_turn_num',
+                       type=int,
+                       default=1,
+                       help='input of the model including how many turn dialogue.')
 
     group.add_argument('--eval_split',
                        default=0.2,
@@ -37,105 +42,115 @@ def train_seq2seq_opt(parser):
     group = parser.add_argument_group('Train Seq2seq Model.')
 
     '''dialog encoder parameters'''
-    # group.add_argument('--dialog_encoder_vocab_size',
+    # group.add_argument('--dialogue_encoder_vocab_size',
     #                    default=8e5 + 4,
     #                    type=float,
     #                    help="Dialog encoder vocab size. Because encoder and decoder can have different vocab")
 
-    group.add_argument('--dialog_encoder_embedding_size',
+    group.add_argument('--dialogue_encoder_embedding_size',
                        type=int,
                        default=300,
                        help='embedding size for dialog encoder.')
 
-    group.add_argument('--dialog_encoder_hidden_size',
+    group.add_argument('--dialogue_encoder_hidden_size',
                        type=int,
                        default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument('--dialog_encoder_num_layers',
+    group.add_argument('--dialogue_encoder_num_layers',
                        type=int,
                        default=2,
                        help='number of layers')
 
-    group.add_argument('--dialog_encoder_rnn_type',
+    group.add_argument('--dialogue_encoder_rnn_type',
                        type=str,
                        default='LSTM',
                        help='type of recurrent net (RNN, LSTM, GRU)')
 
-    group.add_argument('--dialog_encoder_dropout_probability',
+    group.add_argument('--dialogue_encoder_dropout_probability',
                        type=float,
                        default=0.8,
                        help='size of word embeddings')
 
-    group.add_argument('--dialog_encoder_max_length',
+    group.add_argument('--dialogue_encoder_max_length',
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_encoder_clipnorm',
+    group.add_argument('--dialogue_encoder_clipnorm',
                        type=float,
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
-    group.add_argument('--dialog_encoder_bidirectional',
+    group.add_argument('--dialogue_encoder_bidirectional',
                        action='store_true',
                        help='is bidirectional.')
 
-    group.add_argument('--dialog_encoder_pretrained_embedding_path',
+    group.add_argument('--dialogue_encoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog encoder.')
 
     '''dialog decoder parameters'''
 
-    group.add_argument('--dialog_decoder_embedding_size',
+    group.add_argument('--dialogue_decoder_embedding_size',
                        type=int,
                        default=300,
                        help='embedding size for dialog decoder.')
 
-    group.add_argument('--dialog_decoder_vocab_size',
+    group.add_argument('--dialogue_decoder_vocab_size',
                        default=8e5 + 4,
                        type=float,
                        help="Dialog decoder vocab size. Because encoder and decoder can have different vocab")
 
-    group.add_argument('--dialog_decoder_hidden_size', type=int, default=300,
+    group.add_argument('--dialogue_decoder_hidden_size', type=int, default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument('--dialog_decoder_num_layers',
+    group.add_argument('--dialogue_decoder_num_layers',
                        type=int,
                        default=2,
                        help='number of layers')
 
-    group.add_argument('--dialog_decoder_rnn_type', type=str, default='LSTM',
+    group.add_argument('--dialogue_decoder_rnn_type', type=str, default='LSTM',
                        help='type of recurrent net (RNN, LSTM, GRU)')
 
-    group.add_argument('--dialog_decoder_dropout_probability', type=float, default=0.8,
+    group.add_argument('--dialogue_decoder_dropout_probability', type=float, default=0.8,
                        help='size of word embeddings')
 
-    group.add_argument('--dialog_decoder_max_length',
+    group.add_argument('--dialogue_decoder_max_length',
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_decoder_clipnorm',
+    group.add_argument('--dialogue_decoder_clipnorm',
                        type=float,
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
-    group.add_argument('--dialog_decoder_pretrained_embedding_path',
+    group.add_argument('--dialogue_decoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog decoder.')
 
-    group.add_argument('--dialog_decoder_attention_type',
+    group.add_argument('--dialogue_decoder_attention_type',
                        type=str,
                        default='dot',
                        help='dialog decoder attention type. "dot", "general", or "mlp" ')
 
-    group.add_argument('--dialog_decoder_type',
+    group.add_argument('--dialogue_decode_type',
                        type=str,
                        default='greedy',
                        help='beam search or greedy search.')
 
-    group.add_argument('--dialog_decoder_tied',
+    group.add_argument('--beam_width',
+                       type=int,
+                       default=10,
+                       help='beam width for beam search')
+
+    group_add_argument('--topk',
+                       type=int,
+                       default=2,
+                       help='topk sentence for beam search.')
+
+    group.add_argument('--dialogue_decoder_tied',
                        action='store_true',
                        help='tie the word embedding and softmax weights')
 
@@ -212,46 +227,46 @@ def train_knowledge_gournded_opt(parser):
     group = parser.add_argument_group('Train KnowledgeGroundedModel Model.')
 
     '''dialog encoder parameters'''
-    group.add_argument('--dialog_encoder_embedding_size',
+    group.add_argument('--dialogue_encoder_embedding_size',
                        type=int,
                        default=300,
                        help='embedding size for dialog encoder.')
 
-    group.add_argument('--dialog_encoder_hidden_size',
+    group.add_argument('--dialogue_encoder_hidden_size',
                        type=int,
                        default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument('--dialog_encoder_num_layers',
+    group.add_argument('--dialogue_encoder_num_layers',
                        type=int,
                        default=2,
                        help='number of layers')
 
-    group.add_argument('--dialog_encoder_rnn_type',
+    group.add_argument('--dialogue_encoder_rnn_type',
                        type=str,
                        default='LSTM',
                        help='type of recurrent net (RNN, LSTM, GRU)')
 
-    group.add_argument('--dialog_encoder_dropout_probability',
+    group.add_argument('--dialogue_encoder_dropout_probability',
                        type=float,
                        default=0.8,
                        help='size of word embeddings')
 
-    group.add_argument('--dialog_encoder_max_length',
+    group.add_argument('--dialogue_encoder_max_length',
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_encoder_clipnorm',
+    group.add_argument('--dialogue_encoder_clipnorm',
                        type=float,
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
-    group.add_argument('--dialog_encoder_bidirectional',
+    group.add_argument('--dialogue_encoder_bidirectional',
                        action='store_true',
                        help='is bidirectional.')
 
-    group.add_argument('--dialog_encoder_pretrained_embedding_path',
+    group.add_argument('--dialogue_encoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog encoder.')
 
@@ -284,50 +299,50 @@ def train_knowledge_gournded_opt(parser):
 
     '''dialog decoder parameters'''
 
-    group.add_argument('--dialog_decoder_embedding_size',
+    group.add_argument('--dialogue_decoder_embedding_size',
                        type=int,
                        default=300,
                        help='embedding size for dialog decoder.')
 
-    group.add_argument('--dialog_decoder_vocab_size',
+    group.add_argument('--dialogue_decoder_vocab_size',
                        default=8e5 + 4,
                        type=float,
                        help="Dialog decoder vocab size. Because encoder and decoder can have different vocab")
 
-    group.add_argument('--dialog_decoder_hidden_size', type=int, default=300,
+    group.add_argument('--dialogue_decoder_hidden_size', type=int, default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument('--dialog_decoder_num_layers',
+    group.add_argument('--dialogue_decoder_num_layers',
                        type=int,
                        default=2,
                        help='number of layers')
 
-    group.add_argument('--dialog_decoder_rnn_type', type=str, default='LSTM',
+    group.add_argument('--dialogue_decoder_rnn_type', type=str, default='LSTM',
                        help='type of recurrent net (RNN, LSTM, GRU)')
 
-    group.add_argument('--dialog_decoder_dropout_probability', type=float, default=0.8,
+    group.add_argument('--dialogue_decoder_dropout_probability', type=float, default=0.8,
                        help='size of word embeddings')
 
-    group.add_argument('--dialog_decoder_max_length',
+    group.add_argument('--dialogue_decoder_max_length',
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialog_decoder_clipnorm',
+    group.add_argument('--dialogue_decoder_clipnorm',
                        type=float,
                        default=1.0,
                        help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
-    group.add_argument('--dialog_decoder_pretrained_embedding_path',
+    group.add_argument('--dialogue_decoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog decoder.')
 
-    group.add_argument('--dialog_decoder_attention_type',
+    group.add_argument('--dialogue_decoder_attention_type',
                        type=str,
                        default='dot',
                        help='dialog decoder attention type. "dot", "general", or "mlp" ')
 
-    group.add_argument('--dialog_decoder_tied',
+    group.add_argument('--dialogue_decoder_tied',
                        action='store_true',
                        help='tie the word embedding and softmax weights'
                        )

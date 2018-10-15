@@ -20,22 +20,23 @@ class Seq2seqDataSet:
 
     def __init__(self,
                  path_conversations_responses_pair,
-                 dialog_encoder_max_length=50,
-                 dialog_encoder_vocab=None,
-                 dialog_decoder_max_length=50,
-                 dialog_decoder_vocab=None,
+                 dialogue_encoder_max_length=50,
+                 dialogue_encoder_vocab=None,
+                 dialogue_decoder_max_length=50,
+                 dialogue_decoder_vocab=None,
                  save_path=None,
+                 dialogue_turn_num=1,
                  eval_split=0.2,  # how many hold out as eval data
                  device=None,
                  logger=None):
 
-        self.dialog_encoder_vocab_size = dialog_encoder_vocab.get_vocab_size()
-        self.dialog_encoder_max_length = dialog_encoder_max_length
-        self.dialog_encoder_vocab = dialog_encoder_vocab
+        self.dialogue_encoder_vocab_size = dialogue_encoder_vocab.get_vocab_size()
+        self.dialogue_encoder_max_length = dialogue_encoder_max_length
+        self.dialogue_encoder_vocab = dialogue_encoder_vocab
 
-        self.dialog_decoder_vocab_size = dialog_decoder_vocab.get_vocab_size()
-        self.dialog_decoder_max_length = dialog_decoder_max_length
-        self.dialog_decoder_vocab = dialog_decoder_vocab
+        self.dialogue_decoder_vocab_size = dialogue_decoder_vocab.get_vocab_size()
+        self.dialogue_decoder_max_length = dialogue_decoder_max_length
+        self.dialogue_decoder_vocab = dialogue_decoder_vocab
 
         self.device = device
         self.logger = logger
@@ -45,9 +46,11 @@ class Seq2seqDataSet:
         self._data_dict = {}
         self._indicator_dict = {}
 
-        self.read_txt(save_path, path_conversations_responses_pair, eval_split)
+        self.read_txt(save_path, path_conversations_responses_pair,
+                      dialogue_turn_num, eval_split)
 
-    def read_txt(self, save_path, path_conversations_responses_pair, eval_split):
+    def read_txt(self, save_path, path_conversations_responses_pair,
+                 dialogue_turn_num, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
 
@@ -60,7 +63,8 @@ class Seq2seqDataSet:
                     if not bool(conversation) or not bool(response):
                         continue
 
-                    response_ids = self.dialog_decoder_vocab.words_to_id(response.split())
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(
+                        response.split())
 					if len(response_ids) <= 3:
 						continue
 
@@ -68,15 +72,26 @@ class Seq2seqDataSet:
 					if conversation.startswith('START EOS'):
                         # START: special symbol indicating the start of the
                         # conversation
-                        
-                    conversation_ids = self.dialog_encoder_vocab.words_to_id(conversation.split())
-
-                    # for simple
-                    if len(conversation_ids) > 50 or len(response_ids) > 50:
+                        conversation = conversation.replace('START EOS', '')
+                        conversation_context = assembel_conversation_context(conversation, dialogue_turn_num)
+                    elif conversation.startswith('EOS'):
+                        # EOS: special symbol indicating a turn transition
+                        conversation = conversation.replace('EOS', '')
+                        conversation_context = assembel_conversation_context(conversation, dialogue_turn_num)
+                    else:
                         continue
 
-                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 1, len(conversation_ids)):]
-                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 1, len(response_ids)):]
+                    if conversation_context is None:
+                        continue
+
+                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
+
+                    # for simple
+                    if len(conversation_ids) > (self.dialogue_encoder_max_length * dialogue_turn_num):
+                        continue
+
+                    conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
+                    response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids))
 
@@ -101,6 +116,19 @@ class Seq2seqDataSet:
             'eval': 0
         }
 
+    def assembel_conversation_context(conversation, dialogue_turn_num=1):
+        """
+        assemble conversation context by dialogue turn (default 1)
+        """
+        dialogues = conversation.split('EOS')
+        dialogues = [dialogue for dialogue in dialogues if len(dialogue.split()) > 3]
+        if len(dialogues) == 0:
+            return None
+        dialogues = dialogues[-min(dialogue_turn_num, len(dialogues)): ]
+        # for simple
+        conversation_context = ' '.join(dialogues)
+        return conversation_context
+
     def reset_data(self, task):
         np.random.shuffle(self._data_dict[task])
         self._indicator_dict[task] = 0
@@ -122,15 +150,15 @@ class Seq2seqDataSet:
         self.logger.info('building %s data from %d to %d' %
                          (task, self._indicator_dict[task], cur_indicator))
 
-        encoder_inputs = torch.zeros((self.dialog_encoder_max_length, batch_size),
+        encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
         encoder_inputs_length = []
 
-        decoder_inputs = torch.zeros((self.dialog_decoder_max_length, batch_size),
+        decoder_inputs = torch.zeros((self.dialogue_decoder_max_length, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
-        decoder_targets = torch.zeros((self.dialog_decoder_max_length, batch_size),
+        decoder_targets = torch.zeros((self.dialogue_decoder_max_length, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
 
@@ -145,21 +173,21 @@ class Seq2seqDataSet:
 
             # ids to word
             conversation_texts.append(
-                ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
+                ' '.join(self.dialogue_encoder_vocab.ids_to_word(conversation_ids)))
             response_texts.append(
-                ' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
+                ' '.join(self.dialogue_decoder_vocab.ids_to_word(response_ids)))
 
             # encoder_inputs
             for t, token_id in enumerate(conversation_ids):
                 encoder_inputs[t, i] = token_id
 
             # decoder_inputs
-            decoder_inputs[0, i] = self.dialog_decoder_vocab.sosid
+            decoder_inputs[0, i] = self.dialogue_decoder_vocab.sosid
             for t, token_id in enumerate(response_ids):
-                decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
+                decoder_inputs[t + 1, i] = token_id
 
-            decoder_targets[t] = self.dialog_decoder_vocab.eosid
+            decoder_targets[t] = self.dialogue_decoder_vocab.eosid
 
         # To long tensor
         encoder_inputs_length = torch.tensor(
@@ -172,71 +200,93 @@ class Seq2seqDataSet:
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts
 
-    def generating_texts(self, decoder_outputs_argmax, batch_size):
+    def generating_texts(self, batch_utterances, batch_size, decode_type='greedy'):
         """
-        decoder_outputs_argmax: [max_length, batch_size]
-        return: [text * batch_size]
+        decode_type == greedy:
+            batch_utterances: [batch_size, max_length]
+            return: [batch_size]
+        decode_type == 'beam_search':
+            batch_utterances: [batch_size, topk, len]
+            return: [batch_size, topk]
         """
-        texts = []
-        # [max_length, batch_size] -> [batch_size, max_length]
-        decoder_outputs_argmax = decoder_outputs_argmax.transpose(0, 1)
-        for bi in range(batch_size):
-            word_ids = decoder_outputs_argmax[bi].tolist()
-            words = self.dialog_decoder_vocab.ids_to_word(word_ids)
-            # remove pad, sos, eos, unk
-            words = [word for word in words if word not in [self.dialog_decoder_vocab.get_pad_unk_sos_eos()]]
-            text = ' '.join(words)
-            texts.append(text)
+        
+        batch_texts = []
+        if decode_type == 'greedy':
+            for bi in range(batch_size):
+                text = self.ids_to_text(utterances[bi].tolist())
+                batch_texts.append(text)
+        elif decode_type == 'beam_search':
+            for bi in range(batch_size):
+                topk_text_ids = batch_utterances[bi]
+                topk_texts = []
+                for ids in topk_text_ids:
+                    text = self.ids_to_text(ids)
+                    topk_texts.append(text)
+                batch_texts.append(topk_texts)
 
-        return texts
+        return batch_texts
 
-    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, filename):
+    def ids_to_text(self, ids):
+        words = self.dialogue_decoder_vocab.ids_to_word(ids)
+        # remove pad, sos, eos, unk
+        words = [word for word in words if word not in [self.dialogue_decoder_vocab.get_pad_unk_sos_eos()]]
+        text = ' '.join(words)
+        return text
+
+    def save_generated_texts(self, conversation_texts, response_texts, batch_texts, filename, decode_type='greed'):
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation, response, generated_text in zip(conversation_texts, response_texts, generated_texts):
+            for conversation, response, generated_text in zip(conversation_texts, response_texts, enerated_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
-                f.write('Generated: %s\n' % generated_text)
+                if decode_type == 'greedy':
+                    f.write('Generated: %s\n' % generated_text)
+                elif decoder == 'beam_search':
+                    for i, topk_text in enumerate(batch_texts):
+                        f.write('Generated %d: %s\n' % (i, topk_text))
+
                 f.write('---------------------------------\n')
+
+
 
 
 class KnowledgeGroundedDataSet:
     """
     KnowledgeGroundedDataSet
         conversations_responses_pair (Conversation, response, hash_value)
-        dialog_encoder_vocab
-        dialog_encoder_max_length
+        dialogue_encoder_vocab
+        dialogue_encoder_max_length
         fact_vocab
         fact_max_length
-        dialog_decoder_vocab
-        dialog_decoder_max_length
+        dialogue_decoder_vocab
+        dialogue_decoder_max_length
         device
         logger
     """
 
     def __init__(self,
                  path_conversations_responses_pair=None,
-                 dialog_encoder_max_length=50,
-                 dialog_encoder_vocab=None,
+                 dialogue_encoder_max_length=50,
+                 dialogue_encoder_vocab=None,
                  fact_vocab=None,
                  fact_max_length=50,
-                 dialog_decoder_max_length=50,
-                 dialog_decoder_vocab=None,
+                 dialogue_decoder_max_length=50,
+                 dialogue_decoder_vocab=None,
                  save_path=None,
                  eval_split=0.2,  # how many hold out as eval data
                  device=None,
                  logger=None):
 
-        self.dialog_encoder_vocab_size = dialog_encoder_vocab.get_vocab_size()
-        self.dialog_encoder_max_length = dialog_encoder_max_length
-        self.dialog_encoder_vocab = dialog_encoder_vocab
+        self.dialogue_encoder_vocab_size = dialogue_encoder_vocab.get_vocab_size()
+        self.dialogue_encoder_max_length = dialogue_encoder_max_length
+        self.dialogue_encoder_vocab = dialogue_encoder_vocab
 
         self.fact_max_length = fact_max_length
         self.fact_vocab = fact_vocab
 
-        self.dialog_decoder_vocab_size = dialog_decoder_vocab.get_vocab_size()
-        self.dialog_decoder_max_length = dialog_decoder_max_length
-        self.dialog_decoder_vocab = dialog_decoder_vocab
+        self.dialogue_decoder_vocab_size = dialogue_decoder_vocab.get_vocab_size()
+        self.dialogue_decoder_max_length = dialogue_decoder_max_length
+        self.dialogue_decoder_vocab = dialogue_decoder_vocab
 
         self.device = device
         self.logger = logger
@@ -267,8 +317,10 @@ class KnowledgeGroundedDataSet:
                         continue
 
                     # START EOS
-                    if not conversation.startswith('START EOS'):
+                    if conversation.startswith('START EOS'):
                         continue
+                    elif conversation.startswith('EOS'):
+                        pass
 
                     response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
                     if int(response_score) < 1:
@@ -276,39 +328,33 @@ class KnowledgeGroundedDataSet:
 
                     print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
 
-                    conversation_ids = self.dialog_encoder_vocab.words_to_id(
+                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(
                         conversation.split())
-                    response_ids = self.dialog_decoder_vocab.words_to_id(
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(
                         response.split())
 
                     # for simple
                     if len(conversation_ids) > 50 or len(response_ids) > 50:
                         continue
 
-                    #  conversation_ids = conversation_ids[0: min(
-                        #  self.dialog_encoder_max_length - 2, len(conversation_ids))]
-                    #  response_ids = response_ids[0: min(
-                        #  self.dialog_decoder_max_length - 2, len(response_ids))]
-                    conversation_ids = conversation_ids[-min(self.dialog_encoder_max_length - 1, len(conversation_ids)):]
-                    response_ids = response_ids[-min(self.dialog_decoder_max_length - 1, len(response_ids)):]
+                    conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
+                    response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
-            self.n_train = int(len(datas) * (1. - eval_split))
-            self.n_eval = len(datas) - self.n_train
+            n_train = int(len(datas) * (1. - eval_split))
+            n_eval = len(datas) - n_train
 
             self._data_dict = {
-                'train': datas[0: self.n_train],
-                'eval': datas[self.n_train:]
+                'train': datas[0: n_train],
+                'eval': datas[n_train:]
             }
 
             pickle.dump(self._data_dict, open(os.path.join(save_path, 'Knowledge_grounded_data_dict.pkl'), 'wb'))
         else:
             self._data_dict = pickle.load(open(os.path.join(save_path, 'Knowledge_grounded_data_dict.pkl'), 'rb'))
-            self.n_train = len(self._data_dict['train'])
-            self.n_eval = len(self._data_dict['eval'])
 
         self._indicator_dict = {
             'train': 0,
@@ -336,15 +382,15 @@ class KnowledgeGroundedDataSet:
         self.logger.info('building %s data from %d to %d' %
                          (task, self._indicator_dict[task], cur_indicator))
 
-        encoder_inputs = torch.zeros((self.dialog_encoder_max_length, batch_size),
+        encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
         encoder_inputs_length = []
 
-        decoder_inputs = torch.zeros((self.dialog_decoder_max_length, batch_size),
+        decoder_inputs = torch.zeros((self.dialogue_decoder_max_length, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
-        decoder_targets = torch.zeros((self.dialog_decoder_max_length, batch_size),
+        decoder_targets = torch.zeros((self.dialogue_decoder_max_length, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
 
@@ -371,18 +417,18 @@ class KnowledgeGroundedDataSet:
                 encoder_inputs[t, i] = token_id
 
             # decoder_inputs
-            decoder_inputs[0, i] = self.dialog_decoder_vocab.sosid
+            decoder_inputs[0, i] = self.dialogue_decoder_vocab.sosid
             for t, token_id in enumerate(response_ids):
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
 
-            decoder_targets[t] = self.dialog_decoder_vocab.eosid
+            decoder_targets[t] = self.dialogue_decoder_vocab.eosid
 
             # ids to word
             conversation_texts.append(
-                ' '.join(self.dialog_encoder_vocab.ids_to_word(conversation_ids)))
+                ' '.join(self.dialogue_encoder_vocab.ids_to_word(conversation_ids)))
             response_texts.append(
-                ' '.join(self.dialog_decoder_vocab.ids_to_word(response_ids)))
+                ' '.join(self.dialogue_decoder_vocab.ids_to_word(response_ids)))
 
             facts_inputs[i] = top_k_facts_embedded_mean
             facts_texts.append(top_k_fact_texts)
@@ -451,19 +497,19 @@ class KnowledgeGroundedDataSet:
         decoder_outputs_argmax: [max_length, batch_size]
         return: [text * batch_size]
         """
-        texts = []
+        batch_texts = []
         decoder_outputs_argmax.transpose_(0, 1)
         for bi in range(batch_size):
             word_ids = decoder_outputs_argmax[bi].tolist()
-            words = self.dialog_encoder_vocab.ids_to_word(word_ids)
-            words = [word for word in words if word not in [self.dialog_decoder_vocab.get_pad_unk_sos_eos()]]
+            words = self.dialogue_encoder_vocab.ids_to_word(word_ids)
+            words = [word for word in words if word not in [self.dialogue_decoder_vocab.get_pad_unk_sos_eos()]]
             text = ' '.join(words)
-            texts.append(text)
-        return texts
+            batch_texts.append(text)
+        return batch_texts
 
-    def save_generated_texts(self, conversation_texts, response_texts, generated_texts, top_k_fact_texts, filename):
+    def save_generated_texts(self, conversation_texts, response_texts, batch_texts, top_k_fact_texts, filename):
         with open(filename, 'w', encoding='utf-8') as f:
-            for conversation, response, generated_text in zip(conversation_texts, response_texts, generated_texts):
+            for conversation, response, generated_text in zip(conversation_texts, response_texts, batch_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
@@ -471,6 +517,7 @@ class KnowledgeGroundedDataSet:
                 for fi, fact_text in enumerate(top_k_fact_texts):
                     f.write('Facts %d: %s\n' % (fi, fact_text))
                 f.write('---------------------------------\n')
+
 
 
 if __name__ == '__main__':
