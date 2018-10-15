@@ -39,7 +39,6 @@ opt = parser.parse_args()
 
 # logger file
 time_str = time.strftime('%Y-%m-%d_%H:%M')
-#  time_str = time.strftime('%Y-%m-%d')
 opt.log_file = opt.log_file.format(time_str)
 logger.info('log_file: {}'.format(opt.log_file))
 
@@ -69,17 +68,17 @@ def train_epochs(model=None,
             logger.info(logger_str)
 
             # load data
-            dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                dialog_decoder_inputs, dialog_decoder_targets, \
+            dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
+                dialogue_decoder_inputs, dialogue_decoder_targets, \
                 conversation_texts, response_texts = dataset.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
             loss = train(model,
-                         dialog_encoder_inputs,
-                         dialog_encoder_inputs_length,
-                         dialog_decoder_inputs,
-                         dialog_decoder_targets,
+                         dialogue_encoder_inputs,
+                         dialogue_encoder_inputs_length,
+                         dialogue_decoder_inputs,
+                         dialogue_decoder_targets,
                          optimizer,
                          criterion,
                          vocab,
@@ -127,10 +126,10 @@ def train_epochs(model=None,
 
 
 def train(model,
-          dialog_encoder_inputs,
-          dialog_encoder_inputs_length,
-          dialog_decoder_inputs,
-          dialog_decoder_targets,
+          dialogue_encoder_inputs,
+          dialogue_encoder_inputs_length,
+          dialogue_decoder_inputs,
+          dialogue_decoder_targets,
           optimizer,
           criterion,
           vocab,
@@ -139,12 +138,12 @@ def train(model,
     # Turn on training mode which enables dropout.
     model.train()
 
-    (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-        (dialog_decoder_final_state, dialog_decoder_outputs, dialog_decoder_attns) \
+    (dialogue_encoder_final_state, dialogue_encoder_memory_bank), \
+        (dialogue_decoder_final_state, dialogue_decoder_outputs, dialogue_decoder_attns) \
         = model(
-        dialog_encoder_inputs=dialog_encoder_inputs,
-        dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-        dialog_decoder_inputs=dialog_decoder_inputs,
+        dialogue_encoder_inputs=dialogue_encoder_inputs,
+        dialogue_encoder_inputs_length=dialogue_encoder_inputs_length,
+        dialogue_decoder_inputs=dialogue_decoder_inputs,
         teacher_forcing_ratio=opt.teacher_forcing_ratio,
         batch_size=opt.batch_size)
 
@@ -153,20 +152,20 @@ def train(model,
     loss = 0
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
-    dialog_decoder_outputs = dialog_decoder_outputs.view(
-        -1, dialog_decoder_outputs.shape[-1])
+    dialogue_decoder_outputs = dialogue_decoder_outputs.view(
+        -1, dialogue_decoder_outputs.shape[-1])
 
-    # , dialog_decoder_targets.shape[1])
-    dialog_decoder_targets = dialog_decoder_targets.view(-1)
+    # , dialogue_decoder_targets.shape[1])
+    dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
     # compute loss
-    loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
+    loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
 
     # backward
     loss.backward()
 
     # Clip gradients: gradients are modified in place
-    #  total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), opt.dialog_decoder_clipnorm)
+    #  total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), opt.dialogue_decoder_clipnorm)
     #  print('total_norm: {}'.format(total_norm))
 
     # optimizer
@@ -201,29 +200,29 @@ def evaluate(model=None,
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                dialog_decoder_inputs, dialog_decoder_targets, \
+            dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
+                dialogue_decoder_inputs, dialogue_decoder_targets, \
                 conversation_texts, response_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
-            (dialog_encoder_final_state, dialog_encoder_memory_bank), \
-                (dialog_decoder_final_state, dialog_decoder_outputs,
-                 dialog_decoder_attns) = model.evaluate(
-                dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
-                dialog_encoder_inputs_length=dialog_encoder_inputs_length,
+            (dialogue_encoder_final_state, dialogue_encoder_memory_bank), \
+                (dialogue_decoder_final_state, dialogue_decoder_outputs,
+                 dialogue_decoder_attns) = model.evaluate(
+                dialogue_encoder_inputs=dialogue_encoder_inputs,  # LongTensor
+                dialogue_encoder_inputs_length=dialogue_encoder_inputs_length,
                 batch_size=opt.batch_size)
 
-            # dialog_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            dialog_decoder_outputs_argmax = torch.argmax(
-                dialog_decoder_outputs, dim=2)
+            # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
+            dialogue_decoder_outputs_argmax = torch.argmax(
+                dialogue_decoder_outputs, dim=2)
 
             #  Compute loss
-            dialog_decoder_outputs = dialog_decoder_outputs.view(
-                -1, dialog_decoder_outputs.shape[-1])
-            dialog_decoder_targets = dialog_decoder_targets.view(-1)
+            dialogue_decoder_outputs = dialogue_decoder_outputs.view(
+                -1, dialogue_decoder_outputs.shape[-1])
+            dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
-            loss = criterion(dialog_decoder_outputs, dialog_decoder_targets)
+            loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
 
             loss_total += loss.item()
 
@@ -239,25 +238,31 @@ def generate(model, dataset, opt):
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            dialog_encoder_inputs, dialog_encoder_inputs_length, \
-                dialog_decoder_inputs, dialog_decoder_targets, \
+            dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
+                dialogue_decoder_inputs, dialogue_decoder_targets, \
                 conversation_texts, response_texts = dataset.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
-            dialog_decoder_outputs_argmax = model.generate(
-            dialog_encoder_inputs=dialog_encoder_inputs,  # LongTensor
-            dialog_encoder_inputs_length=dialog_encoder_inputs_length,
-            batch_size=opt.batch_size)
+            batch_utterances = model.generate(
+                dialogue_encoder_inputs,  # LongTensor
+                dialogue_encoder_inputs_length,
+                opt.batch_size,
+                opt.beam_width,
+                opt.topk)
 
             # generate sentence, and save to file
             # [max_length, batch_size]
-            generated_texts = dataset.generating_texts(
-                dialog_decoder_outputs_argmax, opt.batch_size)
+            batch_texts = dataset.generating_texts(batch_utterances, 
+                                                       opt.batch_size, 
+                                                       opt.dialogue_decode_type)
 
             # save sentences
-            dataset.save_generated_texts(conversation_texts, response_texts,
-                                         generated_texts, os.path.join(opt.save_path, 'seq2seq_generated_texts_{}.txt'.format(time_str)))
+            dataset.save_generated_texts(conversation_texts, 
+                                         response_texts,
+                                         batch_texts, 
+                                         os.path.join(opt.save_path, 'seq2seq_generated_texts_%s_%s.txt' % (opt.dialogue_decode_type, time_str)),
+                                         opt.dialogue_decode_type)
 
     return loss_total / max_load
 
@@ -268,7 +273,7 @@ def build_optim(model, opt):
     optim = Optim(
         opt.optim_method,
         opt.lr,
-        opt.dialog_encoder_clipnorm,
+        opt.dialogue_encoder_clipnorm,
         # lr_decay=opt.learning_probability_decay,
         # start_decay_at=opt.start_decay_at,
         # beta1=opt.adam_beta1,
@@ -284,79 +289,66 @@ def build_optim(model, opt):
     return optim
 
 
-def tally_parameters(model):
-    n_params = sum([p.nelement() for p in model.parameters()])
-    logger.info('* number of parameters: %d' % n_params)
-    enc = 0
-    dec = 0
-    for name, param in model.named_parameters():
-        if 'encoder' in name:
-            enc += param.nelement()
-        else:
-            dec += param.nelement()
-    logger.info('encoder: ', enc)
-    logger.info('project: ', dec)
 
-
-def build_model(opt, dialog_encoder_vocab, dialog_decoder_vocab):
+def build_model(opt, dialogue_encoder_vocab, dialogue_decoder_vocab):
     logger.info('Building model...')
 
     ''' embedding for encoder and decoder '''
-    dialog_encoder_embedding = Embedding(embedding_size=opt.dialog_encoder_embedding_size,
-                                         vocab_size=dialog_encoder_vocab.get_vocab_size(),
-                                         padding_idx=dialog_encoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_encoder_dropout_probability)
+    dialogue_encoder_embedding = Embedding(embedding_size=opt.dialogue_encoder_embedding_size,
+                                         vocab_size=dialogue_encoder_vocab.get_vocab_size(),
+                                         padding_idx=dialogue_encoder_vocab.padid,
+                                         dropout_ratio=opt.dialogue_encoder_dropout_probability)
 
-    dialog_decoder_embedding = Embedding(embedding_size=opt.dialog_decoder_embedding_size,
-                                         vocab_size=dialog_decoder_vocab.get_vocab_size(),
-                                         padding_idx=dialog_decoder_vocab.padid,
-                                         dropout_ratio=opt.dialog_decoder_dropout_probability)
+    dialogue_decoder_embedding = Embedding(embedding_size=opt.dialogue_decoder_embedding_size,
+                                         vocab_size=dialogue_decoder_vocab.get_vocab_size(),
+                                         padding_idx=dialogue_decoder_vocab.padid,
+                                         dropout_ratio=opt.dialogue_decoder_dropout_probability)
 
     ''' load pretrained_weight'''
-    if opt.dialog_encoder_pretrained_embedding_path:
+    if opt.dialogue_encoder_pretrained_embedding_path:
 
         # load pre-trained embedding
         logger.info("Load pre-trained word embeddig: %s ." %
-                    opt.dialog_decoder_pretrained_embedding_path)
+                    opt.dialogue_decoder_pretrained_embedding_path)
 
-        dialog_encoder_pretrained_embedding_weight = np.load(
-            opt.dialog_decoder_pretrained_embedding_path)
-        dialog_decoder_pretrained_embedding_weight = dialog_encoder_pretrained_embedding_weight
+        dialogue_encoder_pretrained_embedding_weight = np.load(
+            opt.dialogue_decoder_pretrained_embedding_path)
+        dialogue_decoder_pretrained_embedding_weight = dialogue_encoder_pretrained_embedding_weight
 
         # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
-        dialog_encoder_embedding.set_pretrained_embedding(
-            dialog_encoder_pretrained_embedding_weight, fixed=False)
+        dialogue_encoder_embedding.set_pretrained_embedding(
+            dialogue_encoder_pretrained_embedding_weight, fixed=False)
 
-        dialog_decoder_embedding.set_pretrained_embedding(
-            dialog_decoder_pretrained_embedding_weight, fixed=False)
+        dialogue_decoder_embedding.set_pretrained_embedding(
+            dialogue_decoder_pretrained_embedding_weight, fixed=False)
 
     model = Seq2SeqModel(
-        dialog_encoder_embedding_size=opt.dialog_encoder_embedding_size,
-        dialog_encoder_vocab_size=dialog_encoder_vocab.get_vocab_size(),
-        dialog_encoder_hidden_size=opt.dialog_encoder_hidden_size,
-        dialog_encoder_num_layers=opt.dialog_encoder_num_layers,
-        dialog_encoder_rnn_type=opt.dialog_encoder_rnn_type,
-        dialog_encoder_dropout_probability=opt.dialog_encoder_dropout_probability,
-        dialog_encoder_max_length=opt.dialog_encoder_max_length,
-        dialog_encoder_clipnorm=opt.dialog_encoder_clipnorm,
-        dialog_encoder_bidirectional=opt.dialog_encoder_bidirectional,
-        dialog_encoder_embedding=dialog_encoder_embedding,
+        dialogue_encoder_embedding_size=opt.dialogue_encoder_embedding_size,
+        dialogue_encoder_vocab_size=dialogue_encoder_vocab.get_vocab_size(),
+        dialogue_encoder_hidden_size=opt.dialogue_encoder_hidden_size,
+        dialogue_encoder_num_layers=opt.dialogue_encoder_num_layers,
+        dialogue_encoder_rnn_type=opt.dialogue_encoder_rnn_type,
+        dialogue_encoder_dropout_probability=opt.dialogue_encoder_dropout_probability,
+        dialogue_encoder_max_length=opt.dialogue_encoder_max_length,
+        dialogue_encoder_clipnorm=opt.dialogue_encoder_clipnorm,
+        dialogue_encoder_bidirectional=opt.dialogue_encoder_bidirectional,
+        dialogue_encoder_embedding=dialogue_encoder_embedding,
 
-        dialog_decoder_embedding_size=opt.dialog_decoder_embedding_size,
-        dialog_decoder_vocab_size=dialog_decoder_vocab.get_vocab_size(),
-        dialog_decoder_hidden_size=opt.dialog_decoder_hidden_size,
-        dialog_decoder_num_layers=opt.dialog_decoder_num_layers,
-        dialog_decoder_rnn_type=opt.dialog_decoder_rnn_type,
-        dialog_decoder_dropout_probability=opt.dialog_decoder_dropout_probability,
-        dialog_decoder_max_length=opt.dialog_decoder_max_length,
-        dialog_decoder_clipnorm=opt.dialog_decoder_clipnorm,
-        dialog_decoder_embedding=dialog_decoder_embedding,
-        dialog_decoder_pad_id=dialog_decoder_vocab.padid,
-        dialog_decoder_sos_id=dialog_decoder_vocab.sosid,
-        dialog_decoder_eos_id=dialog_decoder_vocab.eosid,
-        dialog_decoder_attention_type=opt.dialog_decoder_attention_type,
-		dialog_decoder_type=opt.dialog_decoder_type,
-        dialog_decoder_tied=opt.dialog_decoder_tied,
+        dialogue_decoder_embedding_size=opt.dialogue_decoder_embedding_size,
+        dialogue_decoder_vocab_size=dialogue_decoder_vocab.get_vocab_size(),
+        dialogue_decoder_hidden_size=opt.dialogue_decoder_hidden_size,
+        dialogue_decoder_num_layers=opt.dialogue_decoder_num_layers,
+        dialogue_decoder_rnn_type=opt.dialogue_decoder_rnn_type,
+        dialogue_decoder_dropout_probability=opt.dialogue_decoder_dropout_probability,
+        dialogue_decoder_max_length=opt.dialogue_decoder_max_length,
+        dialogue_decoder_clipnorm=opt.dialogue_decoder_clipnorm,
+        dialogue_decoder_embedding=dialogue_decoder_embedding,
+        dialogue_decoder_pad_id=dialogue_decoder_vocab.padid,
+        dialogue_decoder_sos_id=dialogue_decoder_vocab.sosid,
+        dialogue_decoder_eos_id=dialogue_decoder_vocab.eosid,
+        dialogue_decoder_attention_type=opt.dialogue_decoder_attention_type,
+		dialogue_decode_type=opt.dialogue_decode_type,
+        dialogue_decoder_tied=opt.dialogue_decoder_tied,
         device=device)
 
     model = model.to(device)
@@ -413,11 +405,12 @@ if __name__ == '__main__':
 
     dataset = Seq2seqDataSet(
         path_conversations_responses_pair=opt.path_conversations_responses_pair,
-        dialog_encoder_max_length=opt.dialog_encoder_max_length,
-        dialog_encoder_vocab=vocab,
-        dialog_decoder_max_length=opt.dialog_encoder_max_length,
-        dialog_decoder_vocab=vocab,
+        dialogue_encoder_max_length=opt.dialogue_encoder_max_length,
+        dialogue_encoder_vocab=vocab,
+        dialogue_decoder_max_length=opt.dialogue_encoder_max_length,
+        dialogue_decoder_vocab=vocab,
         save_path=opt.save_path,
+        dialogue_turn_num=opt.dialogue_turn_num,
         eval_split=opt.eval_split,  # how many hold out as eval data
         device=device,
         logger=logger)
@@ -427,7 +420,6 @@ if __name__ == '__main__':
     # Build optimizer.
     optimizer = build_optim(model, opt)
 
-    # criterion = nn.CrossEntropyLoss()
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     criterion = nn.NLLLoss(
         ignore_index=vocab.padid,
@@ -438,6 +430,7 @@ if __name__ == '__main__':
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
         opt.start_epoch = checkpoint['epoch'] + 1
+        loss = checkpoint['loss']
 
     if opt.train_or_eval == 'train':
         train_epochs(model=model,
