@@ -145,7 +145,7 @@ def train_seq2seq_opt(parser):
                        default=10,
                        help='beam width for beam search')
 
-    group_add_argument('--topk',
+    group.add_argument('--topk',
                        type=int,
                        default=2,
                        help='topk sentence for beam search.')

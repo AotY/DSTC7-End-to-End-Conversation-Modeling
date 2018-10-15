@@ -65,7 +65,7 @@ def train_epochs(model=None,
         for load in range(1, max_load + 1):
             logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 epoch, opt.epochs, 100 * load / max_load)
-            logger.info(logger_str)
+            #  logger.info(logger_str)
 
             # load data
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
