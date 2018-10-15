@@ -77,19 +77,17 @@ class Seq2seqDataSet:
                         conversation = conversation.replace('EOS', '')
                         conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
                     else:
-                        continue
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
 
                     if conversation_context is None:
                         continue
 
+
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
-
-                    # for simple
-                    if len(conversation_ids) > (self.dialogue_encoder_max_length * dialogue_turn_num):
-                        continue
-
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
+                    print('response ids: {} \n'.format(response_ids))
+                    print('conversation_ids: {} \n'.format(conversation_ids))
 
                     datas.append((conversation_ids, response_ids))
 
@@ -119,7 +117,7 @@ class Seq2seqDataSet:
         assemble conversation context by dialogue turn (default 1)
         """
         dialogues = conversation.split('EOS')
-        dialogues = [dialogue for dialogue in dialogues if len(dialogue.split()) > 3]
+        dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogu.split()) <= self.dialogue_encoder_max_length * dialogue_turn_num)]
         if len(dialogues) == 0:
             return None
         dialogues = dialogues[-min(dialogue_turn_num, len(dialogues)): ]
@@ -185,7 +183,7 @@ class Seq2seqDataSet:
                 decoder_targets[t, i] = token_id
                 decoder_inputs[t + 1, i] = token_id
 
-            decoder_targets[t] = self.dialogue_decoder_vocab.eosid
+            decoder_targets[t, i] = self.dialogue_decoder_vocab.eosid
 
         # To long tensor
         encoder_inputs_length = torch.tensor(
@@ -420,7 +418,7 @@ class KnowledgeGroundedDataSet:
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
 
-            decoder_targets[t] = self.dialogue_decoder_vocab.eosid
+            decoder_targets[t, i] = self.dialogue_decoder_vocab.eosid
 
             # ids to word
             conversation_texts.append(

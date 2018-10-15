@@ -60,11 +60,12 @@ def train_epochs(model=None,
     start = time.time()
     max_load = int(np.ceil(dataset.n_train / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
+        logger.info('------------------- epoch: %d ----------------------------' % epoch)
         dataset.reset_data('train')
         log_loss_total = 0  # Reset every logger.info_every
         for load in range(1, max_load + 1):
-            logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
-                epoch, opt.epochs, 100 * load / max_load)
+            #  logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
+                #  epoch, opt.epochs, 100 * load / max_load)
             #  logger.info(logger_str)
 
             # load data
@@ -253,14 +254,14 @@ def generate(model, dataset, opt):
 
             # generate sentence, and save to file
             # [max_length, batch_size]
-            batch_texts = dataset.generating_texts(batch_utterances, 
-                                                       opt.batch_size, 
+            batch_texts = dataset.generating_texts(batch_utterances,
+                                                       opt.batch_size,
                                                        opt.dialogue_decode_type)
 
             # save sentences
-            dataset.save_generated_texts(conversation_texts, 
+            dataset.save_generated_texts(conversation_texts,
                                          response_texts,
-                                         batch_texts, 
+                                         batch_texts,
                                          os.path.join(opt.save_path, 'seq2seq_generated_texts_%s_%s.txt' % (opt.dialogue_decode_type, time_str)),
                                          opt.dialogue_decode_type)
 
@@ -430,7 +431,7 @@ if __name__ == '__main__':
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
-        logger_str = '\nevaluate ---------------------------------> %.4f' % evaluate_loss
+        logger_str = '\nevaluate ---------------------------------> %.4f' % loss
 
     if opt.train_or_eval == 'train':
         train_epochs(model=model,
