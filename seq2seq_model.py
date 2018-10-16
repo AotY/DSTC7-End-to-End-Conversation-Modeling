@@ -46,7 +46,7 @@ class Seq2SeqModel(nn.Module):
                  dialogue_decoder_eos_id=3,
                  dialogue_decoder_attention_type='general',
                  dialogue_decode_type='greedy',
-                 dialogue_decoder_tied=True,
+                 dialogue_decoder_tied=False,
                  device=None):
         # super init
         super(Seq2SeqModel, self).__init__()

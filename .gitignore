@@ -4,6 +4,7 @@
 ### Data
 data/
 misc/*.txt
+*.txt
 
 ### models
 models/
