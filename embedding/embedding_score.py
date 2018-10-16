@@ -95,7 +95,8 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
 
 '''
 Extreme:
-Achieve an utterance representation by taking the largest extreme values among the embedding vectors of all the words it contains
+Achieve an utterance representation by taking the 
+largest extreme values among the embedding vectors of all the words it contains
 '''
 
 
@@ -150,7 +151,8 @@ def get_extreme_embedding_score(vocab, gensim_model, input_str, candidate_replie
 
 '''
 Greedy:
-Greedily match words in two given utterances based on the cosine similarities of their embeddings, and to average the obtained scores
+Greedily match words in two given utterances based on the cosine similarities of their embeddings, 
+and to average the obtained scores
 '''
 
 

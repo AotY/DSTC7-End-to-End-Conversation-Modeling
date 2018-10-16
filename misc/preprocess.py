@@ -11,7 +11,7 @@ sys.path.append('..')
 import numpy as np
 
 from misc.vocab import Vocab
-from misc.tokenizer import Tokenizer
+from misc.utils import Tokenizer
 from misc.misc_opts import preprocess_opt
 from misc import es_helper
 from embedding.embedding_opt import train_embedding_opt

@@ -186,7 +186,7 @@ def build_vocab_fastText(fasttest_model, vocab, vec_file, embedding_dim, binary,
         if word_embedded is not None:
             vocab_embedded[id] = word_embedded
 
-        vector_str = ' '.join([str(s) for s in word_embedded])
+        vector_str = ' '.join([str(s) for s in vocab_embedded[id]])
         save_f.write('%s %s\n' % (word, vector_str))
 
     save_f.close()
