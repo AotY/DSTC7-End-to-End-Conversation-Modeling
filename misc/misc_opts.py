@@ -32,12 +32,6 @@ def preprocess_opt(parser):
     group.add_argument('--facts_file_path', required=True,
                        help="train, test or valid facts.txt file path.")
 
-    group.add_argument('--conversations_num_save_path', required=True,
-                       help="Path for saving conversations num.")
-
-    group.add_argument('--responses_num_save_path', required=True,
-                       help="Path for saving responses num.")
-
     group.add_argument('--min_count',
                        type=int,
                        default=3,
