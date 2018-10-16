@@ -77,11 +77,6 @@ def train_seq2seq_opt(parser):
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialogue_encoder_clipnorm',
-                       type=float,
-                       default=1.0,
-                       help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
-
     group.add_argument('--dialogue_encoder_bidirectional',
                        action='store_true',
                        help='is bidirectional.')
@@ -120,11 +115,6 @@ def train_seq2seq_opt(parser):
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
-
-    group.add_argument('--dialogue_decoder_clipnorm',
-                       type=float,
-                       default=1.0,
-                       help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
     group.add_argument('--dialogue_decoder_pretrained_embedding_path',
                        type=str,
@@ -208,10 +198,10 @@ def train_seq2seq_opt(parser):
                        type=str,
                        help='path to save logger.')
 
-    group.add_argument('--optim_method',
-                       type=str,
-                       default='adam',
-                       help='''method (:obj:`str`): one of [sgd, adagrad, adadelta, adam] ''')
+    group.add_argument('--max_norm',
+                       type=float,
+                       default=100.0,
+                       help='max norm of the gradients.')
 
     group.add_argument('--checkpoint',
                        type=str,
@@ -256,11 +246,6 @@ def train_knowledge_gournded_opt(parser):
                        default=50,
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
-
-    group.add_argument('--dialogue_encoder_clipnorm',
-                       type=float,
-                       default=1.0,
-                       help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
 
     group.add_argument('--dialogue_encoder_bidirectional',
                        action='store_true',
@@ -328,11 +313,6 @@ def train_knowledge_gournded_opt(parser):
                        type=int,
                        help="tokens after the first max_seq_len tokens will be discarded.")
 
-    group.add_argument('--dialogue_decoder_clipnorm',
-                       type=float,
-                       default=1.0,
-                       help='All parameter gradients will be clipped to a maximum norm of clipnorm.')
-
     group.add_argument('--dialogue_decoder_pretrained_embedding_path',
                        type=str,
                        help='pre-trained embedding for dialog decoder.')
@@ -350,6 +330,11 @@ def train_knowledge_gournded_opt(parser):
     ''' train parameters '''
     group.add_argument('--lr', type=float, default=0.001,
                        help='initial learning rate')
+
+    group.add_argument('--max_norm',
+                       type=float,
+                       default=100.0,
+                       help='max norm of the gradients.')
 
     group.add_argument('--epochs', type=int, default=5,
                        help='upper epoch limit')
@@ -397,11 +382,6 @@ def train_knowledge_gournded_opt(parser):
     group.add_argument('--log_file',
                        type=str,
                        help='path to save logger.')
-
-    group.add_argument('--optim_method',
-                       type=str,
-                       default='adam',
-                       help='''method (:obj:`str`): one of [sgd, adagrad, adadelta, adam] ''')
 
     group.add_argument('--checkpoint',
                        type=str,

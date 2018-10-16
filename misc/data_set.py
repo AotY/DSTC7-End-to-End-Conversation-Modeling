@@ -67,20 +67,22 @@ class Seq2seqDataSet:
                     if len(response_ids) <= 3:
                             continue
                     # conversation split by EOS, START
-                    if conversation.startswith('START EOS'):
+                    if conversation.startswith('start eos'):
                         # START: special symbol indicating the start of the
                         # conversation
-                        conversation = conversation.replace('START EOS', '')
-                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num, 'conversation')
-                    elif conversation.startswith('EOS'):
+                        conversation = conversation.replace('start eos', '')
+                        history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'conversation')
+                    elif conversation.startswith('eos'):
                         # EOS: special symbol indicating a turn transition
-                        conversation = conversation.replace('EOS', '')
-                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num, 'turn')
+                        conversation = conversation.replace('eos', '')
+                        history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'turn')
                     else:
-                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num, 'other')
+                        history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'other')
 
-                    if conversation_context is None:
+                    if history_dialogues is None:
                         continue
+
+                    conversation_context = ' '.join(history_dialogues)
 
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
@@ -113,15 +115,15 @@ class Seq2seqDataSet:
         """
         assemble conversation context by dialogue turn (default 1)
         """
-        dialogues = conversation.split('EOS')
-        
-        dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogue.split()) <= (self.dialogue_encoder_max_length + 10) * dialogue_turn_num)]
-        if len(dialogues) == 0:
+        history_dialogues = conversation.split('eos')
+        history_dialogues = [history_dialogue for history_dialogue in history_dialogues if len(history_dialogue.split()) > 3]
+
+        if len(history_dialogues) == 0:
             return None
-        dialogues = dialogues[-min(dialogue_turn_num, len(dialogues)): ]
-        # for simple
-        conversation_context = ' '.join(dialogues)
-        return conversation_context
+        
+        history_dialogues = history_dialogues[-min(dialogue_turn_num, len(history_dialogues)): ]
+
+        return history_dialogues
 
     def reset_data(self, task):
         np.random.shuffle(self._data_dict[task])
@@ -172,16 +174,16 @@ class Seq2seqDataSet:
                 ' '.join(self.dialogue_decoder_vocab.ids_to_word(response_ids)))
 
             # encoder_inputs
-            for t, token_id in enumerate(conversation_ids):
-                encoder_inputs[t, i] = token_id
+            for c, token_id in enumerate(conversation_ids):
+                encoder_inputs[c, i] = token_id
 
             # decoder_inputs
             decoder_inputs[0, i] = self.dialogue_decoder_vocab.sosid
-            for t, token_id in enumerate(response_ids):
-                decoder_targets[t, i] = token_id
-                decoder_inputs[t + 1, i] = token_id
+            for r, token_id in enumerate(response_ids):
+                decoder_targets[r, i] = token_id
+                decoder_inputs[r + 1, i] = token_id
             
-            decoder_targets[t + 1, i] = self.dialogue_decoder_vocab.eosid
+            decoder_targets[r + 1, i] = self.dialogue_decoder_vocab.eosid
 
         # To long tensor
         encoder_inputs_length = torch.tensor(

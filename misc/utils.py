@@ -18,7 +18,12 @@ class Tokenizer:
         self.number_re = re.compile(number_regex_str, re.VERBOSE | re.IGNORECASE)
 
         self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
-        self.R = tokenizer.RedditTokenizer(preserve_case=False, preserve_handles=True, preserve_hashes=True, regularize=True, preserve_emoji=True, preserve_url=False)
+        self.R = tokenizer.RedditTokenizer(preserve_case=False,
+                                           preserve_handles=True, 
+                                           preserve_hashes=True, 
+                                           regularize=True, 
+                                           preserve_emoji=True, 
+                                           preserve_url=True)
 
     ''' replace url by URL_TAG'''
     def replace_url(self, tokens):
