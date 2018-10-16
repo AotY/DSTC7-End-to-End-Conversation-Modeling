@@ -13,7 +13,7 @@ python train_seq2seq_model.py \
     --dialogue_encoder_max_length 32 \
     --dialogue_encoder_clipnorm 100.0 \
     --dialogue_encoder_bidirectional \
-    --dialogue_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
+    --dialogue_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     --dialogue_decoder_embedding_size 300 \
     --dialogue_decoder_hidden_size 512 \
     --dialogue_decoder_num_layers 2 \
@@ -21,7 +21,7 @@ python train_seq2seq_model.py \
     --dialogue_decoder_dropout_probability 0.5 \
     --dialogue_decoder_max_length 32 \
     --dialogue_decoder_clipnorm 100.0 \
-    --dialogue_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
+    --dialogue_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     --dialogue_decoder_attention_type general \
 	--dialogue_decode_type greedy \
     --dialogue_turn_num 1 \
