@@ -11,7 +11,7 @@ sys.path.append('..')
 import numpy as np
 
 from misc.vocab import Vocab
-from misc.tokenizer import Tokenizer
+from misc.utils import Tokenizer
 from misc.misc_opts import preprocess_opt
 from misc import es_helper
 from embedding.embedding_opt import train_embedding_opt
@@ -82,7 +82,6 @@ def read_convos(convos_file_path, logger=None):
 
         # token
         conversation_tokens = tokenizer.tokenize(conversation)
-
         # abnormal lengths: 203, 204, 205, 206, 207
         conversation_length = len(conversation_tokens)
 
@@ -96,12 +95,12 @@ def read_convos(convos_file_path, logger=None):
             conversation_length, 0) + 1
 
         response_tokens = tokenizer.tokenize(response)
+        response_length = len(response_tokens)
 
         if conversation_length <=1 or response_length <= 1:
             continue
 
         # abnormal lengths: < 7
-        response_length = len(response_tokens)
         if response_length <= 7:
             # save_abnormal_response(response_tokens)
             abnormal_responses.append(response_tokens)
