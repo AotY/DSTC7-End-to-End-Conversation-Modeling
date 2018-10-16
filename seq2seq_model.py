@@ -28,7 +28,6 @@ class Seq2SeqModel(nn.Module):
                  dialogue_encoder_rnn_type='LSTM',
                  dialogue_encoder_dropout_probability=0.5,
                  dialogue_encoder_max_length=32,
-                 dialogue_encoder_clipnorm=50.0,
                  dialogue_encoder_bidirectional=True,
                  dialogue_encoder_embedding=None,
 
@@ -38,7 +37,6 @@ class Seq2SeqModel(nn.Module):
                  dialogue_decoder_num_layers=2,
                  dialogue_decoder_rnn_type='LSTM',
                  dialogue_decoder_dropout_probability=0.5,
-                 dialogue_decoder_clipnorm=50.0,
                  dialogue_decoder_max_length=32,
                  dialogue_decoder_embedding=None,
                  dialogue_decoder_pad_id=0,
@@ -59,7 +57,6 @@ class Seq2SeqModel(nn.Module):
         self.dialogue_encoder_rnn_type = dialogue_encoder_rnn_type
         self.dialogue_encoder_dropout_probability = dialogue_encoder_dropout_probability
         self.dialogue_encoder_max_length = dialogue_encoder_max_length
-        self.dialogue_encoder_clipnorm = dialogue_encoder_clipnorm
         self.dialogue_encoder_bidirectional = dialogue_encoder_bidirectional
 
         '''Dialog decoder parameters'''
@@ -70,7 +67,6 @@ class Seq2SeqModel(nn.Module):
         self.dialogue_decoder_rnn_type = dialogue_decoder_rnn_type
         self.dialogue_decoder_dropout_probability = dialogue_decoder_dropout_probability
         self.dialogue_decoder_max_length = dialogue_decoder_max_length
-        self.dialogue_decoder_clipnorm = dialogue_decoder_clipnorm
         self.dialogue_decoder_pad_id = dialogue_decoder_pad_id
         self.dialogue_decoder_sos_id = dialogue_decoder_sos_id
         self.dialogue_decoder_eos_id = dialogue_decoder_eos_id

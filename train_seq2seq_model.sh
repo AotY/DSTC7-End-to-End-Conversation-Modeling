@@ -37,7 +37,6 @@ python train_seq2seq_model.py \
     --log_file ./logs/train_seq2seq_model_{}.log \
     --model_save_path ./models \
     --eval_split 0.2 \
-    --optim_method adam \
     --start_epoch 1 \
     --train_or_eval train \
     # --checkpoint ./models/checkpoint.epoch-5_seq2seq.pth \
