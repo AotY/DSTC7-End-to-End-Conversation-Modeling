@@ -289,6 +289,13 @@ def build_optim(model, opt):
 
     return optim
 
+def build_criterion(padid):
+    # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
+    criterion = nn.NLLLoss(
+        ignore_index=padid,
+        reduction='elementwise_mean')
+
+    return criterion
 
 
 def build_model(opt, dialogue_encoder_vocab, dialogue_decoder_vocab):
@@ -420,10 +427,8 @@ if __name__ == '__main__':
     # Build optimizer.
     optimizer = build_optim(model, opt)
 
-    # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss(
-        ignore_index=vocab.padid,
-        reduction='elementwise_mean')
+    criterion = build_criterion(vocab.padid)
+
 
     '''if load checkpoint'''
     if checkpoint:

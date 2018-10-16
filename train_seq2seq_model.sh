@@ -24,6 +24,7 @@ python train_seq2seq_model.py \
     --dialogue_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     --dialogue_decoder_attention_type general \
 	--dialogue_decode_type greedy \
+    --dialogue_decoder_tied \
     --dialogue_turn_num 1 \
     --beam_width 10 \
     --topk 2 \
