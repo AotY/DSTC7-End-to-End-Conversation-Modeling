@@ -71,17 +71,16 @@ class Seq2seqDataSet:
                         # START: special symbol indicating the start of the
                         # conversation
                         conversation = conversation.replace('START EOS', '')
-                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num, 'conversation')
                     elif conversation.startswith('EOS'):
                         # EOS: special symbol indicating a turn transition
                         conversation = conversation.replace('EOS', '')
-                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num, 'turn')
                     else:
-                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num)
+                        conversation_context = self.assembel_conversation_context(conversation, dialogue_turn_num, 'other')
 
                     if conversation_context is None:
                         continue
-
 
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
@@ -110,11 +109,12 @@ class Seq2seqDataSet:
             'eval': 0
         }
 
-    def assembel_conversation_context(self, conversation, dialogue_turn_num=1):
+    def assembel_conversation_context(self, conversation, dialogue_turn_num=1, symbol='conversation'):
         """
         assemble conversation context by dialogue turn (default 1)
         """
         dialogues = conversation.split('EOS')
+        
         dialogues = [dialogue for dialogue in dialogues if (len(dialogue.split()) > 3 and len(dialogue.split()) <= (self.dialogue_encoder_max_length + 10) * dialogue_turn_num)]
         if len(dialogues) == 0:
             return None

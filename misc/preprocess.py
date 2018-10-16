@@ -80,18 +80,8 @@ def read_convos(convos_file_path, logger=None):
         if conversation == 'START' or len(conversation.rstrip()) == 0:
             continue
 
-        # raw data
-        raw_conversations.append(conversation)
-        raw_responses.append(response)
-
         # token
-        # maybe url --> TAG
-        conversation_tokens = tokenizer.preprocess(conversation)
-        # replace url
-        conversation_tokens = tokenizer.replace_url(conversation_tokens)
-        conversation_tokens = tokenizer.replace_number(conversation_tokens)
-        conversation_tokens = tokenizer.split_by_hyphen(conversation_tokens)
-        conversation_tokens = tokenizer.remove_by_len(conversation_tokens, 13)
+        conversation_tokens = tokenizer.tokenize(conversation)
 
         # abnormal lengths: 203, 204, 205, 206, 207
         conversation_length = len(conversation_tokens)
@@ -100,17 +90,15 @@ def read_convos(convos_file_path, logger=None):
             abnormal_conversations.append(
                 conversation_tokens + [sub[1], sub[2]])
 
-        conversation_max_length = max(
-            conversation_max_length, conversation_length)
+        conversation_max_length = max(conversation_max_length, conversation_length)
 
         conversations_length_distribution[conversation_length] = conversations_length_distribution.get(
             conversation_length, 0) + 1
 
-        response_tokens = tokenizer.preprocess(response)
-        response_tokens = tokenizer.replace_url(response_tokens)
-        response_tokens = tokenizer.replace_number(response_tokens)
-        response_tokens = tokenizer.split_by_hyphen(response_tokens)
-        response_tokens = tokenizer.remove_by_len(response_tokens, 13)
+        response_tokens = tokenizer.tokenize(response)
+
+        if conversation_length <=1 or response_length <= 1:
+            continue
 
         # abnormal lengths: < 7
         response_length = len(response_tokens)
@@ -121,6 +109,10 @@ def read_convos(convos_file_path, logger=None):
         response_max_length = max(response_max_length, response_length)
         responses_length_distribution[response_length] = responses_length_distribution.get(
             response_length, 0) + 1
+
+        # raw data
+        raw_conversations.append(conversation)
+        raw_responses.append(response)
 
         conversations.append(conversation_tokens)
         responses.append(response_tokens)
@@ -189,17 +181,12 @@ def read_facts(facts_file_path, logger):
         sub = line.split('\t')
 
         fact = sub[-1]
-        # skip if source has nothing
-        if fact == 'START' or len(fact.rstrip()) == 0:
-            continue
-        raw_facts.append(fact)
 
-        fact_tokens = tokenizer.preprocess(fact)
-        # url -> tag
-        fact_tokens = tokenizer.replace_url(fact_tokens)
-        fact_tokens = tokenizer.replace_number(fact_tokens)
-        fact_tokens = tokenizer.split_by_hyphen(fact_tokens)
-        fact_tokens = tokenizer.remove_by_len(fact_tokens, 13)
+
+        fact_tokens = tokenizer.tokenize(fact)
+        # skip if source has nothing
+        if len(fact_tokens) <= 1:
+            continue
 
         fact_len = len(fact_tokens)
         max_len = max(max_len, fact_len)
@@ -208,6 +195,7 @@ def read_facts(facts_file_path, logger):
         if fact_len <= 7:
             abnormal_facts.append(fact_tokens)
 
+        raw_facts.append(fact)
         facts.append(fact_tokens)
 
         hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
@@ -244,15 +232,14 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
 
     total_type_nums = len(freq_dict)
 
-    sorted_freq_list = sorted(
-        freq_dict.items(), key=lambda d: d[1], reverse=True)
+    sorted_freq_list = sorted(freq_dict.items(), key=lambda d: d[1], reverse=True)
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
         sorted_freq_list = [
-            item for item in sorted_freq_list if item[1] > min_count]
+            item for item in sorted_freq_list if item[1] >= min_count]
 
-    if max_vocab_size > 0 and len(sorted_freq_list) > max_vocab_size:
+    if max_vocab_size > 0 and len(sorted_freq_list) >= max_vocab_size:
         logger.info('Clip tokens by max_vocab_size')
         sorted_freq_list = sorted_freq_list[:max_vocab_size]
 
@@ -278,13 +265,6 @@ def build_vocab(freq_list):
     vocab.save(opt.vocab_save_path)
     return vocab
 
-
-def generate_num(datas, vocab, save_path):
-    nums = []
-    for tokens in datas:
-        nums.append(' '.join([str(id) for id in vocab.words_to_id(tokens)]))
-    with open(save_path, 'a', encoding="utf-8") as f:
-        f.write('\n'.join(nums))
 
 
 def save_distribution(distribution, name):
@@ -444,45 +424,45 @@ if __name__ == '__main__':
     save_data_to_pair(opt, conversations, responses, conversation_hash_values,
                       filename='conversations_responses.pair.txt')
 
-    # read facts
-    raw_facts, facts, facts_hash_values, \
-        facts_subreddit_names, facts_conversation_ids, \
-        domain_names, conversation_fact_nums, \
-        fact_max_length, facts_length_distribution, \
-        abnormal_facts = read_facts(opt.facts_file_path, logger)
-
-    logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
-
-    # save raw facts to txt
-    save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names,
-                   os.path.join(opt.save_path, 'facts.txt'))
-
-    # save conversations, responses and facts count
-    save_conversations_responses_facts_count(conversations, responses, facts)
-
-    # save conversation fact nums
-    save_conversation_response_facts_nums(
-        conversation_fact_nums, 'conversation_fact_nums.txt')
-
-    # save abnormal_facts
-    save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
-
-    # save lens distribution
-    save_distribution(conversations_length_distribution, 'conversations')
-    save_distribution(responses_length_distribution, 'responses')
-    save_distribution(facts_length_distribution, 'facts')
-
-    stat_frequency(conversations, ['conversations'], 0, 0, logger)
-    stat_frequency(responses, ['responses'], 0, 0, logger)
-    stat_frequency(facts, ['facts'], 0, 0, logger)
-
     # share a vocab
     if model_name == 'seq2seq':
         datas = conversations + responses
         datas_name = ['conversations', 'responses']
     else:
+        # read facts
+        raw_facts, facts, facts_hash_values, \
+            facts_subreddit_names, facts_conversation_ids, \
+            domain_names, conversation_fact_nums, \
+            fact_max_length, facts_length_distribution, \
+            abnormal_facts = read_facts(opt.facts_file_path, logger)
+
+        logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
+
+        # save raw facts to txt
+        save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names,
+                    os.path.join(opt.save_path, 'facts.txt'))
+
+        # save conversations, responses and facts count
+        save_conversations_responses_facts_count(conversations, responses, facts)
+
+        # save conversation fact nums
+        save_conversation_response_facts_nums(
+            conversation_fact_nums, 'conversation_fact_nums.txt')
+
+        # save abnormal_facts
+        save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
+
+        # save lens distribution
+        save_distribution(facts_length_distribution, 'facts')
+        stat_frequency(facts, ['facts'], 0, 0, logger)
+
         datas = conversations + responses + facts
         datas_name = ['conversations', 'responses', 'facts']
+
+    save_distribution(conversations_length_distribution, 'conversations')
+    save_distribution(responses_length_distribution, 'responses')
+    stat_frequency(conversations, ['conversations'], 0, 0, logger)
+    stat_frequency(responses, ['responses'], 0, 0, logger)
 
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
@@ -492,11 +472,6 @@ if __name__ == '__main__':
     vocab = build_vocab(sorted_freq_list)
     vocab_size = int(vocab.get_vocab_size())
     logger.info('%s vocab_size: %s' % (model_name, vocab_size))
-
-    """
-    generate_num(conversations, vocab, opt.conversations_num_save_path)
-    generate_num(responses, vocab, opt.responses_num_save_path)
-    """
 
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
 
