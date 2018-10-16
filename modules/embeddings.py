@@ -83,8 +83,10 @@ class Embedding(nn.Module):
 
         # The embedding matrix look-up tables. The first look-up table
         # is for words. Subsequent ones are for features, if any exist.
-        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size,
-                                      padding_idx=self.padding_idx, sparse=sparse)
+        self.embedding = nn.Embedding(self.vocab_size, 
+                                      self.embedding_size,
+                                      padding_idx=self.padding_idx, 
+                                      sparse=sparse)
 
         # The sequence of operations that converts the input sequence
         # into a sequence of embedding. At minimum this consists of

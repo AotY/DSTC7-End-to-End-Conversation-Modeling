@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=5,6,7
 
 python train_knowledge_grounded_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
@@ -11,7 +11,6 @@ python train_knowledge_grounded_model.py \
     --dialogue_encoder_rnn_type GRU \
     --dialogue_encoder_dropout_probability 0.5 \
     --dialogue_encoder_max_length 32 \
-    --dialogue_encoder_clipnorm 50.0 \
     --dialogue_encoder_bidirectional \
     --dialogue_encoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
     --fact_embedding_size 300 \
@@ -24,15 +23,15 @@ python train_knowledge_grounded_model.py \
     --dialogue_decoder_rnn_type GRU \
     --dialogue_decoder_dropout_probability 0.5 \
     --dialogue_decoder_max_length 32 \
-    --dialogue_decoder_clipnorm 50.0 \
     --dialogue_decoder_pretrained_embedding_path /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/fasttext_vec_for_vocab_knowledge_grounded.60004.300d.npy \
     --dialogue_decoder_attention_type general \
     --lr 0.005 \
+    --max_norm 100.0 \
     --epochs 5 \
     --batch_size 128 \
     --teacher_forcing_ratio 0.5 \
     --seed 7 \
-    --device cuda \
+    --device cuda:1 \
     --log_interval 50 \
     --log_file ./logs/train_knowledge_grounded_model{}.log \
     --model_save_path ./models \
