@@ -139,8 +139,6 @@ class RNNEncoder(EncoderBase):
 
         new_inputs = torch.index_select(inputs, 1, sorted_indices)
         inputs, lengths = (new_inputs, sorted_lengths)
-        print('new inputs--------------->\n')
-        print(inputs)
 
         embedded = self.embedding(inputs)
         packed_embedded = embedded
@@ -158,8 +156,6 @@ class RNNEncoder(EncoderBase):
         # map to input order
         _, out_order = torch.sort(sorted_indices)
         old_inputs = torch.index_select(inputs, 1, out_order)
-        print('------------>old inputs\n')
-        print(old_inputs)
 
         if isinstance(encoder_final, tuple):
             # LSTM
