@@ -148,7 +148,8 @@ class Seq2SeqModel(nn.Module):
         dialogue_encoder_state, dialogue_encoder_memory_bank = self.dialogue_encoder(
             inputs=dialogue_encoder_inputs,
             lengths=dialogue_encoder_inputs_length,
-            encoder_state=dialogue_encoder_state)
+            encoder_state=dialogue_encoder_state,
+            device=self.device)
 
         '''dialogue_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None
