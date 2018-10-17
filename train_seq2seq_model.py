@@ -160,6 +160,7 @@ def train(model,
 
     # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
     dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
+    accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     dialogue_decoder_outputs = dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
@@ -168,9 +169,7 @@ def train(model,
     dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
     # compute loss
-    loss = criterion(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
-
-    accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
+    loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
 
     # backward
     loss.backward()
@@ -238,6 +237,7 @@ def evaluate(model=None,
 
             # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
             dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
+            accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
             #  Compute loss
             dialogue_decoder_outputs = dialogue_decoder_outputs.view(
@@ -245,7 +245,6 @@ def evaluate(model=None,
             dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
             loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
-            accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
             loss_total += loss.item()
             accuracy_total += accuracy
