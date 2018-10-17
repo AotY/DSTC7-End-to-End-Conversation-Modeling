@@ -300,8 +300,6 @@ class StdRNNDecoder(DecoderBase):
         else:
             decoder_outputs = rnn_output
 
-        decoder_outputs = decoder_outputs.squeeze(0)
-
         # dropout
         decoder_outputs = self.dropout(decoder_outputs)
 
