@@ -24,10 +24,10 @@ class EncoderBase(nn.Module):
             n_batch_, = lengths.size()
             aeq(n_batch, n_batch_)
 
-    def forward(self, src, lengths=None, encoder_state=None):
+    def forward(self, inputs, lengths=None, encoder_state=None):
         """
         Args:
-            src (:obj:`LongTensor`):
+            inputs (:obj:`LongTensor`):
                padded sequences of sparse indices `[src_len x batch]`
             lengths (:obj:`LongTensor`): length of each sequence `[batch]`
             encoder_state (rnn-class specific):
@@ -55,15 +55,15 @@ class MeanEncoder(EncoderBase):
 
         self.encoder_type = 'mean'
 
-    def forward(self, src, lengths=None, encoder_state=None):
+    def forward(self, inputs, lengths=None, encoder_state=None):
         "See :obj:`EncoderBase.forward()`"
         """There still exists a problem about lengths.
            if length is not None, the mean should take it into account.
            But now, no such operation.
         """
-        self._check_args(src, lengths, encoder_state)
+        self._check_args(inputs, lengths, encoder_state)
 
-        embedded = self.embedding(src)
+        embedded = self.embedding(inputs)
         s_len, batch, emb_dim = embedded.siz()
         # calculating the embedding mean according to lengths
         if lengths is not None:
@@ -117,10 +117,10 @@ class RNNEncoder(EncoderBase):
 
         self.rnn_type = rnn_type
 
-    def forward(self, src, lengths=None, encoder_state=None):
+    def forward(self, inputs, lengths=None, encoder_state=None):
         """
         Args:
-            src (:obj:`LongTensor`):
+            inputs (:obj:`LongTensor`):
             padded sequences of sparse indices `[src_len x batch]`
             lengths (:obj:`LongTensor`): length of each sequence `[batch]`
             encoder_state (rnn-class specific):
@@ -131,20 +131,19 @@ class RNNEncoder(EncoderBase):
                 * memory bank for attention, `[src_len x batch x hidden]`
         """
 
-        self._check_args(src, lengths, encoder_state)
-
-        # rank the sequences according to their lengths
-        #  lengths = Variable(lengths)
+        self._check_args(inputs, lengths, encoder_state)
 
         # sort by length, descending
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
+        print('sorted_lengths ------------>\n')
+        print(sorted_lengths)
+        print(sorted_indices)
 
-        if src.is_cuda:
-            sorted_indices = sorted_indices.cuda()
+        sorted_indices = sorted_indices.cuda()
 
-        new_src = torch.index_select(src, 1, sorted_indices)
-        src, lengths = (new_src, sorted_lengths.data)
-        embedded = self.embedding(src)
+        new_inputs = torch.index_select(inputs, 1, sorted_indices)
+        inputs, lengths = (new_inputs, sorted_lengths.data)
+        embedded = self.embedding(inputs)
         packed_embedded = embedded
         if lengths is not None:
             # Lengths data is wrapped inside a Variable.
@@ -152,8 +151,7 @@ class RNNEncoder(EncoderBase):
             packed_embedded = pack_padded_sequence(
                 packed_embedded, lengths)
 
-        memory_bank, encoder_final = self.rnn(
-            packed_embedded, encoder_state)
+        memory_bank, encoder_final = self.rnn(packed_embedded, encoder_state)
 
         # undo the packing operation
         if lengths is not None:
@@ -161,6 +159,7 @@ class RNNEncoder(EncoderBase):
 
         # map to input order
         _, out_order = torch.sort(sorted_indices)
+        print(out_order)
 
         if isinstance(encoder_final, tuple):
             # LSTM
@@ -232,7 +231,7 @@ class CNNEncoder(EncoderBase):
         self.output_layer = nn.Linear(self.pool_feat_num, self.hidden_size)
         self.tanh = nn.Tanh()
 
-    def forward(self, src, lengths=None, encoder_state=None):
+    def forward(self, inputs, lengths=None, encoder_state=None):
         '''
             input, seq_len * batch_size, time-step control
                  ,
@@ -240,7 +239,7 @@ class CNNEncoder(EncoderBase):
         '''
         # s_len, batch, emb_dim = embedded.size()
         # batch_size * seq_len * hidden
-        embedded = self.embedding(src.transpose(0, 1))
+        embedded = self.embedding(inputs.transpose(0, 1))
         embedded = embedded.unsqueeze(1)  # batch_size * 1 * seq_len * hidden
         s_len, _, batch, emb_dim = embedded.size()
         conv_feats = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
