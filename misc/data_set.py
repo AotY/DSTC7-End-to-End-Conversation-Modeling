@@ -49,8 +49,7 @@ class Seq2seqDataSet:
         self.read_txt(save_path, path_conversations_responses_pair,
                       dialogue_turn_num, eval_split)
 
-    def read_txt(self, save_path, path_conversations_responses_pair,
-                 dialogue_turn_num, eval_split):
+    def read_txt(self, save_path, path_conversations_responses_pair, dialogue_turn_num, eval_split):
         self.logger.info('loading data from txt files: {}'.format(
             path_conversations_responses_pair))
 
@@ -62,19 +61,23 @@ class Seq2seqDataSet:
                     conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
                     if not bool(conversation) or not bool(response):
                         continue
+                    print(conversation)
+                    print(response)
+                    print(hash_value)
 
-                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split())
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split(' '))
                     if len(response_ids) <= 3:
                             continue
+
                     # conversation split by EOS, START
                     if conversation.startswith('start eos'):
                         # START: special symbol indicating the start of the
                         # conversation
-                        conversation = conversation.replace('start eos', '')
+                        conversation = conversation[10:]
                         history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'conversation')
                     elif conversation.startswith('eos'):
                         # EOS: special symbol indicating a turn transition
-                        conversation = conversation.replace('eos', '')
+                        conversation = conversation[4:]
                         history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'turn')
                     else:
                         history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'other')
@@ -83,6 +86,7 @@ class Seq2seqDataSet:
                         continue
 
                     conversation_context = ' '.join(history_dialogues)
+                    print('conversation_context: %s\n' % conversation_context)
 
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length, len(conversation_ids)):]
@@ -120,7 +124,7 @@ class Seq2seqDataSet:
 
         if len(history_dialogues) == 0:
             return None
-        
+
         history_dialogues = history_dialogues[-min(dialogue_turn_num, len(history_dialogues)): ]
 
         return history_dialogues
@@ -169,7 +173,7 @@ class Seq2seqDataSet:
 
             # ids to word
             conversation_text = ' '.join(self.dialogue_encoder_vocab.ids_to_word(conversation_ids))
-            response_text = ' '.join(self.dialogue_decoder_vocab.ids_to_word(response_ids)) 
+            response_text = ' '.join(self.dialogue_decoder_vocab.ids_to_word(response_ids))
             conversation_texts.append(conversation_text)
             response_texts.append(response_text)
 
@@ -185,9 +189,9 @@ class Seq2seqDataSet:
             for r, token_id in enumerate(response_ids):
                 decoder_inputs[r + 1, i] = token_id
                 decoder_targets[r, i] = token_id
-            
+
             decoder_targets[len(response_ids), i] = self.dialogue_decoder_vocab.eosid
-            
+
             print(encoder_inputs[:, i])
             print(decoder_inputs[:, i])
             print(decoder_targets[:, i])
