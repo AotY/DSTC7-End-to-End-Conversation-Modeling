@@ -47,6 +47,8 @@ logging.info("device: %s" % device)
 
 logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 
+logger.info(opt.dialogue_encoder_max_length)
+
 if opt.seed:
     torch.manual_seed(opt.seed)
 
@@ -274,7 +276,7 @@ def build_optim(model, opt):
     optim = Optim(
         opt.optim_method,
         opt.lr,
-        opt.dialogue_encoder_clipnorm,
+        opt.max_norm,
         # lr_decay=opt.learning_probability_decay,
         # start_decay_at=opt.start_decay_at,
         # beta1=opt.adam_beta1,
@@ -338,7 +340,6 @@ def build_model(opt, dialogue_encoder_vocab, dialogue_decoder_vocab):
         dialogue_encoder_rnn_type=opt.dialogue_encoder_rnn_type,
         dialogue_encoder_dropout_probability=opt.dialogue_encoder_dropout_probability,
         dialogue_encoder_max_length=opt.dialogue_encoder_max_length,
-        dialogue_encoder_clipnorm=opt.dialogue_encoder_clipnorm,
         dialogue_encoder_bidirectional=opt.dialogue_encoder_bidirectional,
         dialogue_encoder_embedding=dialogue_encoder_embedding,
 
@@ -349,7 +350,6 @@ def build_model(opt, dialogue_encoder_vocab, dialogue_decoder_vocab):
         dialogue_decoder_rnn_type=opt.dialogue_decoder_rnn_type,
         dialogue_decoder_dropout_probability=opt.dialogue_decoder_dropout_probability,
         dialogue_decoder_max_length=opt.dialogue_decoder_max_length,
-        dialogue_decoder_clipnorm=opt.dialogue_decoder_clipnorm,
         dialogue_decoder_embedding=dialogue_decoder_embedding,
         dialogue_decoder_pad_id=dialogue_decoder_vocab.padid,
         dialogue_decoder_sos_id=dialogue_decoder_vocab.sosid,
