@@ -184,7 +184,6 @@ def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
     """
     dialogue_decoder_targets: [seq_len, batch_size]
     """
-
     match_tensor = (dialogue_decoder_outputs_argmax == dialogue_decoder_targets)
     dialogue_decoder_mask = (dialogue_decoder_targets != 0).long()
 
