@@ -90,7 +90,7 @@ class RNNEncoder(EncoderBase):
     """
 
     def __init__(self, rnn_type, bidirectional, num_layers,
-                 hidden_size, dropout=0, embedding=None):
+                 hidden_size, dropout=0, embedding=None, device=None):
 
         super(RNNEncoder, self).__init__()
 
@@ -117,7 +117,9 @@ class RNNEncoder(EncoderBase):
 
         self.rnn_type = rnn_type
 
-    def forward(self, inputs, lengths=None, encoder_state=None, device=None):
+        self.device = device
+
+    def forward(self, inputs, lengths=None, encoder_state=None):
         """
         Args:
             inputs (:obj:`LongTensor`):
@@ -134,8 +136,6 @@ class RNNEncoder(EncoderBase):
         self._check_args(inputs, lengths, encoder_state)
         # sort by length, descending
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
-
-        sorted_indices.to(device=device)
 
         new_inputs = torch.index_select(inputs, 1, sorted_indices)
         inputs, lengths = (new_inputs, sorted_lengths.data)
@@ -172,21 +172,21 @@ class RNNEncoder(EncoderBase):
 
         return (out_encode_final, out_memory_bank)
 
-    def init_hidden(self, batch_size, device, initial_state_scale=None):
+    def init_hidden(self, batch_size, initial_state_scale=None):
         if initial_state_scale is None:
             initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         if self.rnn_type == 'LSTM':
             initial_state1 = torch.empty(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=self.device)
             initial_state2 = torch.empty(
-                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
+                (self.num_directions * self.num_layers, batch_size, self.hidden_size), device=self.device)
             torch.nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
             torch.nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
             return (initial_state1, initial_state2)
 
         else:
-            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size), device=device)
+            initial_state = torch.rand((self.num_directions * self.num_layers, batch_size, self.hidden_size), device=self.device)
             torch.nn.init.uniform_(initial_state, a=-initial_state_scale, b=initial_state_scale)
             return initial_state
 

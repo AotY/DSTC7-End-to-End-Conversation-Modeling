@@ -87,7 +87,8 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialogue_encoder_num_layers,
             hidden_size=self.dialogue_encoder_hidden_size,
             dropout=self.dialogue_encoder_dropout_probability,
-            embedding=dialogue_encoder_embedding)
+            embedding=dialogue_encoder_embedding,
+            device=device)
 
         # get the recommended gain value for the given nonlinearity function.
         gain = nn.init.calculate_gain('sigmoid')
@@ -141,15 +142,13 @@ class Seq2SeqModel(nn.Module):
                 batch_size=128):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
-        dialogue_encoder_state = self.dialogue_encoder.init_hidden(
-            batch_size, self.device)
+        dialogue_encoder_state = self.dialogue_encoder.init_hidden(batch_size)
 
         '''dialogue_encoder forward'''
         dialogue_encoder_state, dialogue_encoder_memory_bank = self.dialogue_encoder(
             inputs=dialogue_encoder_inputs,
             lengths=dialogue_encoder_inputs_length,
-            encoder_state=dialogue_encoder_state,
-            device=self.device)
+            encoder_state=dialogue_encoder_state)
 
         '''dialogue_decoder forward'''
         # tgt, memory_bank, state, memory_lengths=None

@@ -183,8 +183,7 @@ class Seq2seqDataSet:
             decoder_targets[len(response_ids), i] = self.dialogue_decoder_vocab.eosid
 
         # To long tensor
-        encoder_inputs_length = torch.tensor(
-            encoder_inputs_length, dtype=torch.long)
+        encoder_inputs_length = torch.tensor(encoder_inputs_length, dtype=torch.long, device=self.device)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
