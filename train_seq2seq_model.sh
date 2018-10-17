@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train_seq2seq_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
@@ -27,7 +27,7 @@ python train_seq2seq_model.py \
     --max_norm 100.0 \
     --epochs 5 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
     --log_interval 20 \
