@@ -168,7 +168,7 @@ def train(model,
     dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
     # compute loss
-    loss = criterion(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
+    loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
 
     accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
@@ -185,7 +185,6 @@ def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
     """
     dialogue_decoder_targets: [seq_len, batch_size]
     """
-
     match_tensor = (dialogue_decoder_outputs_argmax == dialogue_decoder_targets)
     dialogue_decoder_mask = (dialogue_decoder_targets != 0).long()
 
