@@ -18,7 +18,7 @@ python train_seq2seq_model.py \
     --dialogue_decoder_rnn_type LSTM \
     --dialogue_decoder_dropout_probability 0.8 \
     --dialogue_decoder_max_length 35 \
-    --dialogue_decoder_attention_type general \
+    --dialogue_decoder_attention_type dot \
 	--dialogue_decode_type greedy \
     --dialogue_turn_num 1 \
     --beam_width 10 \
@@ -26,8 +26,8 @@ python train_seq2seq_model.py \
     --lr 0.001 \
     --max_norm 100.0 \
     --epochs 5 \
-    --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --batch_size 64 \
+    --teacher_forcing_ratio 0.7 \
     --seed 7 \
     --device cuda \
     --log_interval 20 \
