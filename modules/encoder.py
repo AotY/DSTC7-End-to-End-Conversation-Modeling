@@ -117,7 +117,7 @@ class RNNEncoder(EncoderBase):
 
         self.rnn_type = rnn_type
 
-    def forward(self, inputs, lengths=None, encoder_state=None):
+    def forward(self, inputs, lengths=None, encoder_state=None, device=None):
         """
         Args:
             inputs (:obj:`LongTensor`):
@@ -132,14 +132,14 @@ class RNNEncoder(EncoderBase):
         """
 
         self._check_args(inputs, lengths, encoder_state)
-
-        print(inputs)
         # sort by length, descending
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
 
+        sorted_indices.to(device=device)
+
         new_inputs = torch.index_select(inputs, 1, sorted_indices)
         inputs, lengths = (new_inputs, sorted_lengths.data)
-        print('new inputs--------------->')
+        print('new inputs--------------->\n')
         print(inputs)
         embedded = self.embedding(inputs)
         packed_embedded = embedded
@@ -157,7 +157,7 @@ class RNNEncoder(EncoderBase):
         # map to input order
         _, out_order = torch.sort(sorted_indices)
         old_inputs = torch.index_select(inputs, 1, out_order)
-        print('------------>old inputs')
+        print('------------>old inputs\n')
         print(old_inputs)
 
         if isinstance(encoder_final, tuple):
