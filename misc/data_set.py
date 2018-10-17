@@ -189,8 +189,6 @@ class Seq2seqDataSet:
         self._indicator_dict[task] = cur_indicator
         print('------------>encoder_inputs\n')
         print(encoder_inputs)
-        print('------------>decoder_inputs\n')
-        print(decoder_inputs)
 
         return encoder_inputs, encoder_inputs_length, \
             decoder_inputs, decoder_targets, \
