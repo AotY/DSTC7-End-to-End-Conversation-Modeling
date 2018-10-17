@@ -65,6 +65,7 @@ def train_epochs(model=None,
         logger.info('------------------- epoch: %d ----------------------------' % epoch)
         dataset.reset_data('train')
         log_loss_total = 0  # Reset every logger.info_every
+        log_accuracy_total = 0
         for load in range(1, max_load + 1):
             #  logger_str = '\n*********************** Epoch %i/%i - load %.2f perc **********************' % (
                 #  epoch, opt.epochs, 100 * load / max_load)
@@ -77,7 +78,7 @@ def train_epochs(model=None,
                     'train', opt.batch_size)
 
             # train and get cur loss
-            loss = train(model,
+            loss, accuracy = train(model,
                          dialogue_encoder_inputs,
                          dialogue_encoder_inputs_length,
                          dialogue_decoder_inputs,
@@ -88,22 +89,25 @@ def train_epochs(model=None,
                          opt)
 
             log_loss_total += float(loss)
+            log_accuracy_total += accuracy
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
-                logger_str = '\ntrain -------------------------------> %s (%d %d%%) %.4f' % (timeSince(start, load / max_load),
+                log_accuracy_avg = log_accuracy_total / opt.log_interval
+                logger_str = '\ntrain -------------------------------> %s (%d %d%%) %.4f %.4f' % (timeSince(start, load / max_load),
                                                                                              load, load / max_load * 100,
-                                                                                             log_loss_avg)
+                                                                                             log_loss_avg, log_accuracy_avg)
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
+                log_accuracy_total = 0
 
         # evaluate
-        evaluate_loss = evaluate(model=model,
+        evaluate_loss, evaluate_accuracy = evaluate(model=model,
                                  dataset=dataset,
                                  criterion=criterion,
                                  opt=opt)
 
-        logger_str = '\nevaluate ---------------------------------> %.4f' % evaluate_loss
+        logger_str = '\nevaluate ---------------------------------> %.4f %.4f' % (evaluate_loss, evaluate_accuracy)
         logger.info(logger_str)
         save_logger(logger_str)
 
@@ -154,6 +158,9 @@ def train(model,
 
     loss = 0
 
+    # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
+    dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
+
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     dialogue_decoder_outputs = dialogue_decoder_outputs.view(
         -1, dialogue_decoder_outputs.shape[-1])
@@ -164,13 +171,31 @@ def train(model,
     # compute loss
     loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
 
+    accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
+
     # backward
     loss.backward()
 
     # optimizer
     optimizer.step()
 
-    return loss.item()
+    return loss.item(), accuracy
+
+
+def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
+    """
+    dialogue_decoder_targets: [seq_len, batch_size]
+    """
+
+    match_tensor = (dialogue_decoder_outputs_argmax == dialogue_decoder_targets)
+    dialogue_decoder_mask = (dialogue_decoder_targets != 0).long()
+
+    accuracy_tensor = match_tensor * dialogue_decoder_mask
+
+    accuracy = float(torch.sum(accuracy_tensor) / torch.sum(dialogue_decoder_mask))
+
+    return accuracy
+
 
 
 ''' save log to file '''
@@ -213,8 +238,7 @@ def evaluate(model=None,
                 batch_size=opt.batch_size)
 
             # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            dialogue_decoder_outputs_argmax = torch.argmax(
-                dialogue_decoder_outputs, dim=2)
+            dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
 
             #  Compute loss
             dialogue_decoder_outputs = dialogue_decoder_outputs.view(
@@ -222,10 +246,12 @@ def evaluate(model=None,
             dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
             loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
+            accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
             loss_total += loss.item()
+            accuracy_total += accuracy
 
-    return loss_total / max_load
+    return loss_total / max_load, accuracy_total / max_load
 
 
 def generate(model, dataset, opt):
