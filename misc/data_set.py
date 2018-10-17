@@ -10,6 +10,8 @@ import numpy as np
 from misc import es_helper
 from embedding.embedding_score import get_top_k_fact_average
 
+from url_tags_weight import tags_weight_dict
+
 
 class Seq2seqDataSet:
     """
@@ -305,33 +307,32 @@ class KnowledgeGroundedDataSet:
             datas = []
             with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
                 for line in f:
-                    conversation, response, hash_value = line.rstrip().split('\t')
-
+                    conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
                     if not bool(conversation) or not bool(response):
                         continue
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split(' '))
+                    if len(response_ids) <= 3:
+                            continue
 
-                    # START EOS
-                    if conversation.startswith('START EOS'):
-                        continue
-                    elif conversation.startswith('EOS'):
-                        pass
+                    # conversation split by EOS, START
+                    if conversation.startswith('start eos'):
+                        # START: special symbol indicating the start of the
+                        # conversation
+                        conversation = conversation[10:]
+                        history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'conversation')
+                    elif conversation.startswith('eos'):
+                        # EOS: special symbol indicating a turn transition
+                        conversation = conversation[4:]
+                        history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'turn')
+                    else:
+                        history_dialogues = self.assembel_conversation_context(conversation, dialogue_turn_num, 'other')
 
-                    response_score, response_turn = es_helper.search_response_score_turn(self.es, hash_value)
-                    if int(response_score) < 1:
-                        continue
-
-                    print('response_score: %s \t response_turn: %s' % (response_score, response_turn))
-
-                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(
-                        conversation.split())
-                    response_ids = self.dialogue_decoder_vocab.words_to_id(
-                        response.split())
-
-                    # for simple
-                    if len(conversation_ids) > 50 or len(response_ids) > 50:
+                    if history_dialogues is None:
                         continue
 
-                    conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
+                    conversation_context = ' '.join(history_dialogues)
+                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context.split(' '))
+                    conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids, hash_value))
@@ -373,9 +374,6 @@ class KnowledgeGroundedDataSet:
             self.reset_data(task)
             cur_indicator = batch_size
 
-        #  self.logger.info('building %s data from %d to %d' %
-                         #  (task, self._indicator_dict[task], cur_indicator))
-
         encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
@@ -416,7 +414,7 @@ class KnowledgeGroundedDataSet:
                 decoder_inputs[t + 1, i] = token_id
                 decoder_targets[t, i] = token_id
 
-            decoder_targets[t + 1, i] = self.dialogue_decoder_vocab.eosid
+            decoder_targets[len(response_ids), i] = self.dialogue_decoder_vocab.eosid
 
             # ids to word
             conversation_texts.append(
@@ -446,7 +444,7 @@ class KnowledgeGroundedDataSet:
             self.top_k_facts_embedded_mean_dict = pickle.load(
                 open(filename, 'rb'))
         else:
-            logger.info('Computing top_k_facts_embedded_mean_dict')
+            logger.info('Computing top_k_facts_embedded_mean_dict..........')
 
             top_k_facts_embedded_mean_dict = {}
             with torch.no_grad():
@@ -460,11 +458,14 @@ class KnowledgeGroundedDataSet:
 
                         # search facts ?
                         hit_count, facts = es_helper.search_facts(self.es, hash_value)
-
+                    
+                        # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
-                        facts_ids = [self.fact_vocab.words_to_id(fact) for fact in facts]
+                        facts, facts_weight = get_facts_weight(facts) 
+                        facts_ids = [self.fact_vocab.words_to_id(fact.split(' ')) for fact in facts]
                         if len(facts_ids) == 0:
                             continue
+                        facts_weight = torch.tensor(facts_weight, dtype=torch.float, device=self.device)
 
                         facts_ids = [fact_ids[-min(self.fact_max_length, len(facts_ids)): ] for fact_ids in facts_ids]
 
@@ -473,7 +474,8 @@ class KnowledgeGroundedDataSet:
                         # score top_k_facts_embedded -> [top_k, embedding_size]
                         top_k_facts_embedded_mean, top_k_indices = get_top_k_fact_average(encoder_embedding, fact_embedding,
                                                                                           encoder_embedding_size, fact_embedding_size,
-                                                                                          conversation_ids, facts_ids, top_k, device)
+                                                                                          conversation_ids, facts_ids, facts_weight,
+                                                                                          top_k, device)
                         top_k_fact_texts = []
                         top_k_indices_list = top_k_indices.tolist()
                         for topi in top_k_indices_list:
@@ -485,6 +487,29 @@ class KnowledgeGroundedDataSet:
             # save top_k_facts_embedded_mean_dict
             pickle.dump(top_k_facts_embedded_mean_dict, open(filename, 'wb'))
             self.top_k_facts_embedded_mean_dict = top_k_facts_embedded_mean_dict
+
+    def get_facts_weight(facts):
+        """ facts: [[w_n] * size]"""
+        facts_wight = []
+        new_facts = []
+        for fact in facts:
+            new_fact = ''
+            fact_weight = tags_weight_dict['default']
+            fact = ' '.join(fact)
+            for tag, weight in tags_weight_dict.items():
+                if not bool(fact):
+                    break
+                soup =  BeautifulSoup(fact, 'lxml')
+                tag = soup.find(tag)
+                if tag is not None:
+                    new_fact += tag.text
+                    fact_weight = max(fact_weight, weight)
+                    fact = fact.replace(str(tag), '')
+            new_facts.append(new_fact)
+            facts_wight.append(fact_weight)
+
+        return new_facts,  facts_weight
+
 
     def generating_texts(self, decoder_outputs_argmax, batch_size):
         """
