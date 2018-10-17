@@ -113,8 +113,7 @@ class Seq2SeqModel(nn.Module):
         elif self.dialogue_encoder_rnn_type == 'GRU':
             init_gru_orth(self.dialogue_decoder.rnn, gain)
 
-        self.dialogue_decoder_linear = nn.Linear(
-            self.dialogue_decoder_hidden_size, self.dialogue_decoder_vocab_size)
+        self.dialogue_decoder_linear = nn.Linear(self.dialogue_decoder_hidden_size, self.dialogue_decoder_vocab_size)
         # Optionally tie weights as in:
         # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
         # https://arxiv.org/abs/1608.05859
@@ -138,7 +137,7 @@ class Seq2SeqModel(nn.Module):
                 dialogue_encoder_inputs,  # LongTensor
                 dialogue_encoder_inputs_length,
                 dialogue_decoder_inputs,
-                teacher_forcing_ratio=0.5,
+                teacher_forcing_ratio,
                 batch_size=128):
 
         # init, [-sqrt(3/hidden_size), sqrt(3/hidden_size)]
@@ -160,11 +159,10 @@ class Seq2SeqModel(nn.Module):
                                                batch_size, self.dialogue_decoder_hidden_size),
                                               device=self.device) * self.dialogue_decoder_pad_id
 
-        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length,
-                                                  batch_size,
-                                                  self.dialogue_decoder_max_length-1),
+        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length, batch_size, self.dialogue_decoder_max_length),
                                                  device=self.device,
                                                  dtype=torch.float)
+
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
         if use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
@@ -175,10 +173,8 @@ class Seq2SeqModel(nn.Module):
                         memory_bank=dialogue_encoder_memory_bank,
                         state=dialogue_decoder_state,
                         memory_lengths=dialogue_encoder_inputs_length)
-                dialogue_decoder_outputs[di] = dialogue_decoder_output.squeeze(
-                    0)
-                dialogue_decoder_attns_std[di] = dialogue_decoder_attn['std'].squeeze(
-                    0)
+                dialogue_decoder_outputs[di] = dialogue_decoder_output.squeeze(0)
+                dialogue_decoder_attns_std[di] = dialogue_decoder_attn['std'].squeeze(0)
         else:
             # Without teacher forcing: use its own predictions as the next input
             if self.dialogue_decode_type == 'greedy':
@@ -194,13 +190,11 @@ class Seq2SeqModel(nn.Module):
                 raise ValueError(
                     'invalid decoder type: %s, greedy or beam_search' % self.dialogue_decode_type)
 
-        #  dialogue_decoder_outputs -> [tgt_len x batch x hidden]
-        dialogue_decoder_outputs = self.dialogue_decoder_linear(
-            dialogue_decoder_outputs)
+        #  dialogue_decoder_outputs -> [tgt_len x batch x hidden] ->
+        dialogue_decoder_outputs = self.dialogue_decoder_linear(dialogue_decoder_outputs)
 
         # log softmax
-        dialogue_decoder_outputs = self.dialogue_decoder_softmax(
-            dialogue_decoder_outputs)
+        dialogue_decoder_outputs = self.dialogue_decoder_softmax(dialogue_decoder_outputs)
 
         return ((dialogue_encoder_state, dialogue_encoder_memory_bank),
                 (dialogue_decoder_state, dialogue_decoder_outputs, dialogue_decoder_attns_std))
@@ -225,8 +219,8 @@ class Seq2SeqModel(nn.Module):
                                                batch_size, self.dialogue_decoder_hidden_size),
                                               device=self.device) * self.dialogue_decoder_pad_id
 
-        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length,
-                                                  batch_size, self.dialogue_decoder_max_length-1))
+        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length, batch_size, self.dialogue_decoder_max_length),
+                                                 device=self.device)
 
         if self.dialogue_decode_type == 'greedy':
             dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(
@@ -360,7 +354,8 @@ class Seq2SeqModel(nn.Module):
                 dialogue_decoder_hidden_bi = tuple(
                     [item[:, bi, :].unsqueeze(1) for item in dialogue_encoder_state[bi]])
             else:
-                dialogue_decoder_hidden_bi = dialogue_encoder_state[:, bi, :].unsqueeze(1)
+                dialogue_decoder_hidden_bi = dialogue_encoder_state[:, bi, :].unsqueeze(
+                    1)
 
             # dialogue_decoder_hidden_bi: [num_layers*num_directions, 1,
             # hidden_size // 2]  ->  [num_layers, 1, hidden_size]
@@ -429,7 +424,8 @@ class Seq2SeqModel(nn.Module):
 
                 next_nodes = []
                 for new_i in range(beam_width):
-                    new_decoder_input = indices[0][0][new_i].view(1, -1)  # [1, 1]
+                    new_decoder_input = indices[0][0][new_i].view(
+                        1, -1)  # [1, 1]
                     new_log_prob = log_probs[0][0][new_i].item()
 
                     new_node = BeamsearchNode(dialogue_decoder_state_bi, cur_node, new_decoder_input,
