@@ -146,7 +146,7 @@ class Seq2SeqModel(nn.Module):
 
         '''dialogue_encoder forward'''
         dialogue_encoder_state, dialogue_encoder_memory_bank = self.dialogue_encoder(
-            src=dialogue_encoder_inputs,
+            inputs=dialogue_encoder_inputs,
             lengths=dialogue_encoder_inputs_length,
             encoder_state=dialogue_encoder_state)
 

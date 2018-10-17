@@ -457,10 +457,10 @@ class KnowledgeGroundedDataSet:
 
                         # search facts ?
                         hit_count, facts = es_helper.search_facts(self.es, hash_value)
-                    
+
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
-                        facts, facts_weight = get_facts_weight(facts) 
+                        facts, facts_weight = get_facts_weight(facts)
                         facts_ids = [self.fact_vocab.words_to_id(fact.split(' ')) for fact in facts]
                         if len(facts_ids) == 0:
                             continue
