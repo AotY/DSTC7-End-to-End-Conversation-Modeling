@@ -133,23 +133,20 @@ class RNNEncoder(EncoderBase):
 
         self._check_args(inputs, lengths, encoder_state)
 
+        print(inputs)
         # sort by length, descending
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
-        print('sorted_lengths ------------>\n')
-        print(sorted_lengths)
-        print(sorted_indices)
-
-        sorted_indices = sorted_indices.cuda()
 
         new_inputs = torch.index_select(inputs, 1, sorted_indices)
         inputs, lengths = (new_inputs, sorted_lengths.data)
+        print('new inputs--------------->')
+        print(inputs)
         embedded = self.embedding(inputs)
         packed_embedded = embedded
+
         if lengths is not None:
-            # Lengths data is wrapped inside a Variable.
-            lengths = lengths.view(-1).tolist()
-            packed_embedded = pack_padded_sequence(
-                packed_embedded, lengths)
+            lengths = lengths.view(-1)
+            packed_embedded = pack_padded_sequence(packed_embedded, lengths)
 
         memory_bank, encoder_final = self.rnn(packed_embedded, encoder_state)
 
@@ -159,7 +156,9 @@ class RNNEncoder(EncoderBase):
 
         # map to input order
         _, out_order = torch.sort(sorted_indices)
-        print(out_order)
+        old_inputs = torch.index_select(inputs, 1, out_order)
+        print('------------>old inputs')
+        print(old_inputs)
 
         if isinstance(encoder_final, tuple):
             # LSTM
