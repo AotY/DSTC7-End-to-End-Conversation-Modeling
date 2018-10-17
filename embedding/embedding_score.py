@@ -52,7 +52,7 @@ def get_top_k_fact_average_batch(encoder_embedding, fact_embedding, encoder_embe
 
 
 def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_size,
-                           fact_embedding_size, conversation_ids, facts_ids,
+                           fact_embedding_size, conversation_ids, facts_ids, facts_weight,
                            top_k=20, device=None):
     """
     Args:
@@ -73,6 +73,11 @@ def get_top_k_fact_average(encoder_embedding, fact_embedding, encoder_embedding_
 
         # get top_k
         cosine_scores = F.cosine_similarity(facts_embedded_mean, encoder_input_embedded_mean)  # [len(facts_ids)]
+
+        cosine_scores = cosine_scores * facts_weight
+        
+        # * tag_weight
+
         # sort
         _, sorted_indices = cosine_scores.sort(dim=0, descending=True)
 
