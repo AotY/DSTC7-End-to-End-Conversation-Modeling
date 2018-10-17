@@ -167,10 +167,6 @@ def train(model,
     # backward
     loss.backward()
 
-    # Clip gradients: gradients are modified in place
-    #  total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), opt.dialogue_decoder_clipnorm)
-    #  print('total_norm: {}'.format(total_norm))
-
     # optimizer
     optimizer.step()
 
