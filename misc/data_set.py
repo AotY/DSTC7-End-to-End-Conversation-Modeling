@@ -81,6 +81,8 @@ class Seq2seqDataSet:
                     if history_dialogues is None:
                         continue
 
+                    conversation_context = ' '.join(history_dialogues)
+
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context.split(' ')]
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
@@ -170,9 +172,6 @@ class Seq2seqDataSet:
             conversation_texts.append(conversation_text)
             response_texts.append(response_text)
 
-            print('conversation: %s\n' % conversation_text)
-            print('response: %s\n' % response_text)
-
             # encoder_inputs
             for c, token_id in enumerate(conversation_ids):
                 encoder_inputs[c, i] = token_id
@@ -184,10 +183,6 @@ class Seq2seqDataSet:
                 decoder_targets[r, i] = token_id
 
             decoder_targets[len(response_ids), i] = self.dialogue_decoder_vocab.eosid
-
-            print(encoder_inputs[:, i])
-            print(decoder_inputs[:, i])
-            print(decoder_targets[:, i])
 
         # To long tensor
         encoder_inputs_length = torch.tensor(
