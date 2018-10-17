@@ -103,9 +103,9 @@ def train_epochs(model=None,
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
-                                 dataset=dataset,
-                                 criterion=criterion,
-                                 opt=opt)
+                                                    dataset=dataset,
+                                                    criterion=criterion,
+                                                    opt=opt)
 
         logger_str = '\nevaluate ---------------------------------> %.4f %.4f' % (evaluate_loss, evaluate_accuracy)
         logger.info(logger_str)
@@ -184,7 +184,8 @@ def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
     """
     dialogue_decoder_targets: [seq_len, batch_size]
     """
-
+    
+    print('---------------------->\n')
     print(dialogue_decoder_outputs_argmax)
     print(dialogue_decoder_targets)
 
@@ -270,12 +271,14 @@ def generate(model, dataset, opt):
                     'eval', opt.batch_size)
 
             # train and get cur loss
+            # greedy: [batch_size, max_len]
+            # beam_search: [batch_sizes, topk, len]
             batch_utterances = model.generate(
-                dialogue_encoder_inputs,  # LongTensor
-                dialogue_encoder_inputs_length,
-                opt.batch_size,
-                opt.beam_width,
-                opt.topk)
+                                dialogue_encoder_inputs,  # LongTensor
+                                dialogue_encoder_inputs_length,
+                                opt.batch_size,
+                                opt.beam_width,
+                                opt.topk)
 
             # generate sentence, and save to file
             # [max_length, batch_size]

@@ -41,16 +41,18 @@ class Vocab(object):
 
     def words_to_id(self, words):
         word_ids = [self.word_to_id(cur_word) for cur_word in words]
+        word_ids = [id for id in word_ids if id != self.unkid]
         return word_ids
 
     '''id to  word'''
 
     def id_to_word(self, id):
-        return self.idx2word.get(id, UNK)
+        return self.idx2word.get(id, self.unk)
 
     '''ids to word'''
     def ids_to_word(self, ids):
         words = [self.id_to_word(id) for id in ids]
+        words = [word for word in words if word != self.unk]
         return words
 
     def build_for_frequency(self, freq_list):
