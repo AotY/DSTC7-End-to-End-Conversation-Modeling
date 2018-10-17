@@ -10,7 +10,7 @@ import numpy as np
 from misc import es_helper
 from embedding.embedding_score import get_top_k_fact_average
 
-from url_tags_weight import tags_weight_dict
+from misc.url_tags_weight import tags_weight_dict
 
 
 class Seq2seqDataSet:
