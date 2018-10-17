@@ -10,7 +10,7 @@ import numpy as np
 from misc import es_helper
 from embedding.embedding_score import get_top_k_fact_average
 
-from url_tags_weight import tags_weight_dict
+from misc.url_tags_weight import tags_weight_dict
 
 
 class Seq2seqDataSet:
@@ -143,9 +143,6 @@ class Seq2seqDataSet:
             self.reset_data(task)
             cur_indicator = batch_size
 
-        #  self.logger.info('building %s data from %d to %d' %
-                         #  (task, self._indicator_dict[task], cur_indicator))
-
         encoder_inputs = torch.zeros((self.dialogue_encoder_max_length, batch_size),
                                     dtype=torch.long,
                                      device=self.device)
@@ -191,6 +188,8 @@ class Seq2seqDataSet:
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
+        print(encoder_inputs)
+        print(decoder_inputs)
 
         return encoder_inputs, encoder_inputs_length, \
             decoder_inputs, decoder_targets, \
@@ -458,10 +457,10 @@ class KnowledgeGroundedDataSet:
 
                         # search facts ?
                         hit_count, facts = es_helper.search_facts(self.es, hash_value)
-                    
+
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
-                        facts, facts_weight = get_facts_weight(facts) 
+                        facts, facts_weight = get_facts_weight(facts)
                         facts_ids = [self.fact_vocab.words_to_id(fact.split(' ')) for fact in facts]
                         if len(facts_ids) == 0:
                             continue
