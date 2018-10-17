@@ -61,10 +61,6 @@ class Seq2seqDataSet:
                     conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
                     if not bool(conversation) or not bool(response):
                         continue
-                    print(conversation)
-                    print(response)
-                    print(hash_value)
-
                     response_ids = self.dialogue_decoder_vocab.words_to_id(response.split(' '))
                     if len(response_ids) <= 3:
                             continue
@@ -85,10 +81,7 @@ class Seq2seqDataSet:
                     if history_dialogues is None:
                         continue
 
-                    conversation_context = ' '.join(history_dialogues)
-                    print('conversation_context: %s\n' % conversation_context)
-
-                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context)
+                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context.split(' ')]
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
 
