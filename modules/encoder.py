@@ -138,9 +138,10 @@ class RNNEncoder(EncoderBase):
         sorted_lengths, sorted_indices = torch.sort(lengths, descending=True)
 
         new_inputs = torch.index_select(inputs, 1, sorted_indices)
-        inputs, lengths = (new_inputs, sorted_lengths.data)
+        inputs, lengths = (new_inputs, sorted_lengths)
         print('new inputs--------------->\n')
         print(inputs)
+
         embedded = self.embedding(inputs)
         packed_embedded = embedded
 
