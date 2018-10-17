@@ -161,7 +161,8 @@ class Seq2SeqModel(nn.Module):
                                               device=self.device) * self.dialogue_decoder_pad_id
 
         dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length,
-                                                  batch_size, self.dialogue_decoder_max_length-1),
+                                                  batch_size,
+                                                  self.dialogue_decoder_max_length-1),
                                                  device=self.device,
                                                  dtype=torch.float)
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False

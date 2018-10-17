@@ -25,7 +25,7 @@ def data_set_opt(parser):
                        type=int,
                        default=3,
                        help="Ignores all words with total frequency lower than this.")
-    
+
     group.add_argument('--dialogue_turn_num',
                        type=int,
                        default=1,
@@ -147,6 +147,11 @@ def train_seq2seq_opt(parser):
     ''' train parameters '''
     group.add_argument('--lr', type=float, default=0.001,
                        help='initial learning rate')
+
+    group.add_argument('--optim_method',
+                       type=str,
+                       default='adam',
+                       help='Optim algorithm.')
 
     group.add_argument('--epochs', type=int, default=5,
                        help='upper epoch limit')
@@ -330,6 +335,11 @@ def train_knowledge_gournded_opt(parser):
     ''' train parameters '''
     group.add_argument('--lr', type=float, default=0.001,
                        help='initial learning rate')
+
+    group.add_argument('--optim_method',
+                       type=str,
+                       default='adam',
+                       help='Optim algorithm.')
 
     group.add_argument('--max_norm',
                        type=float,

@@ -47,6 +47,8 @@ logging.info("device: %s" % device)
 
 logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 
+logger.info(opt.dialogue_encoder_max_length)
+
 if opt.seed:
     torch.manual_seed(opt.seed)
 
