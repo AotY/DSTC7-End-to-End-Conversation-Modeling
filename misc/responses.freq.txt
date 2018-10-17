@@ -1,64 +1,65 @@
-.	555920
+.	555922
 the	336194
-,	275770
+,	275764
 i	225773
-a	200583
-to	183727
+a	200520
+to	183728
 is	166567
 it	155954
 of	144445
 not	142586
-and	135235
+and	135237
 that	123894
 you	117689
-in	112454
-?	94098
-"	87164
+in	112452
+?	94100
+"	87161
 was	83413
-NUMBER	79757
+NUMBER	79725
 for	68565
 are	68062
 have	65763
-this	62871
+this	62874
 they	58212
 he	55411
-!	55091
-do	50547
+!	55092
+do	50545
 but	50427
 on	50347
 be	47671
-...	44503
+...	44508
 with	42839
 would	42501
 as	42414
 *	41428
 just	40913
-)	38932
-(	38551
+)	38833
+(	38492
 like	37926
 my	37538
 if	36886
 so	35153
 can	32289
-am	31917
+am	31921
 what	31574
 about	31058
 at	29672
 all	28997
-or	28119
+or	28120
 one	28020
+URL	27246
 did	27197
 people	26964
 an	26832
 we	26765
 from	25700
-no	24692
+no	24689
 me	24294
 there	24099
 his	22730
 think	22669
 your	22621
-more	22462
+more	22463
 out	21321
 how	21287
 when	21176
@@ -72,18 +73,18 @@ get	19477
 '	18731
 had	18528
 by	18528
-:	18518
+:	18513
 them	18239
 because	18144
 that's	17528
-/	17489
+/	17478
 does	17454
 has	17415
 who	17298
 some	17166
 well	16975
 really	16951
-also	16578
+also	16581
 their	16474
 only	16329
 time	16228
@@ -99,9 +100,9 @@ even	13307
 been	13257
 still	13250
 much	13230
--	13002
+-	13001
 actually	12332
-see	11905
+see	11908
 never	11886
 right	11656
 make	11207
@@ -112,7 +113,7 @@ being	10939
 way	10870
 most	10737
 got	10729
-here	10680
+here	10682
 say	10633
 go	10408
 any	10372
@@ -147,11 +148,11 @@ always	7762
 better	7609
 ever	7573
 guy	7538
-probably	7480
+probably	7481
 said	7475
 someone	7449
+til	7433
 lot	7433
-til	7432
 many	7233
 off	7140
 before	7129
@@ -159,7 +160,7 @@ fuck	7098
 bad	6913
 great	6910
 every	6898
-yes	6831
+yes	6836
 mean	6752
 her	6644
 used	6582
@@ -192,7 +193,7 @@ true	5357
 maybe	5340
 there's	5237
 around	5197
-year	5130
+year	5129
 part	5127
 show	5125
 thanks	5111
@@ -204,7 +205,7 @@ little	4971
 money	4949
 name	4941
 few	4924
-%	4889
+%	4868
 enough	4856
 long	4854
 saying	4790
@@ -225,7 +226,7 @@ kind	4416
 give	4407
 both	4354
 might	4330
-;	4292
+;	4290
 guess	4289
 game	4254
 nothing	4221
@@ -240,19 +241,19 @@ reason	4026
 come	3968
 put	3903
 getting	3871
-s	3861
+s	3860
 watch	3842
 without	3833
 called	3829
 story	3812
 seems	3811
-r	3808
 school	3805
+r	3805
 doing	3796
 article	3779
 another	3765
 again	3760
-book	3753
+book	3750
 tell	3746
 through	3730
 american	3721
@@ -279,10 +280,10 @@ country	3496
 either	3492
 until	3487
 damn	3476
+source	3426
 trying	3425
-source	3425
 exactly	3422
-done	3407
+done	3408
 already	3369
 comment	3354
 nice	3302
@@ -299,7 +300,7 @@ history	3195
 agree	3191
 talking	3189
 stuff	3186
-link	3178
+link	3179
 quite	3178
 making	3174
 place	3171
@@ -330,12 +331,12 @@ knew	2774
 looks	2759
 problem	2750
 wait	2733
-=	2729
 yet	2722
+=	2722
 case	2721
 funny	2711
 death	2697
-:)	2676
+:)	2677
 between	2647
 ~	2642
 reading	2615
@@ -370,9 +371,9 @@ kids	2375
 amazing	2375
 state	2352
 food	2352
+lol	2344
 start	2344
 wanted	2343
-lol	2341
 job	2340
 movies	2337
 left	2334
@@ -385,11 +386,11 @@ pay	2301
 thinking	2299
 title	2283
 killed	2281
-seriously	2279
+seriously	2280
 eat	2257
-&	2250
+&	2247
 song	2233
-film	2227
+film	2225
 fair	2224
 hear	2202
 except	2200
@@ -461,15 +462,15 @@ usually	1835
 small	1835
 men	1828
 hand	1827
-:(	1822
+:(	1824
 based	1822
 games	1818
 home	1817
 etc	1810
 sad	1808
 english	1803
-+	1803
-tried	1799
+tried	1800
++	1800
 thread	1798
 check	1793
 likely	1791
@@ -493,8 +494,8 @@ difference	1710
 class	1707
 music	1702
 haha	1702
-season	1701
 often	1701
+season	1700
 countries	1695
 close	1684
 talk	1672
@@ -533,17 +534,17 @@ living	1546
 list	1541
 comments	1539
 actual	1538
+relevant	1536
 star	1534
 public	1521
 british	1517
-relevant	1508
 happy	1504
 worked	1504
 child	1503
 kinda	1502
 books	1496
 months	1492
-china	1489
+china	1488
 german	1486
 couple	1480
 military	1479
@@ -606,8 +607,8 @@ considered	1358
 glad	1350
 happens	1348
 shows	1343
-drink	1332
 loved	1331
+drink	1331
 gay	1330
 mention	1329
 jesus	1327
@@ -642,7 +643,7 @@ language	1268
 business	1263
 air	1260
 hot	1259
-yep	1258
+yep	1259
 needed	1257
 d	1255
 evidence	1253
@@ -719,8 +720,8 @@ sir	1102
 short	1101
 considering	1100
 land	1100
+nope	1099
 named	1099
-nope	1098
 near	1096
 modern	1095
 special	1089
@@ -743,8 +744,8 @@ write	1066
 hands	1066
 assume	1064
 several	1061
+enjoy	1059
 fast	1058
-enjoy	1058
 killing	1056
 popular	1056
 bring	1055
@@ -776,7 +777,7 @@ form	1013
 recently	1012
 higher	1012
 allowed	1010
-plus	1006
+plus	1007
 drug	1004
 indeed	1004
 places	1002
@@ -795,8 +796,8 @@ turned	984
 blood	984
 drugs	983
 ya	983
+related	981
 jobs	981
-related	980
 claim	979
 interested	977
 gone	976
@@ -806,12 +807,12 @@ speak	973
 stories	967
 player	963
 force	963
-e	956
 taste	954
 hold	951
 race	949
 respect	949
 gives	947
+e	947
 forgot	945
 felt	944
 room	943
@@ -838,14 +839,13 @@ month	921
 telling	921
 political	920
 situation	917
-crime	915
+crime	913
 town	911
 murder	910
 research	909
 bitch	904
 c	902
 weeks	899
-\	899
 piece	899
 inside	897
 laugh	895
@@ -862,10 +862,10 @@ brother	889
 exact	888
 crap	886
 figure	886
-o	885
+o	882
 save	881
+proof	879
 count	878
-proof	877
 break	872
 usa	872
 expensive	871
@@ -891,18 +891,18 @@ pick	857
 record	856
 football	855
 parts	855
+;)	855
 rock	854
 tax	854
 met	854
-;)	854
 eyes	852
-t	852
 none	851
 calling	851
 missed	851
 street	850
 blue	850
 cheap	849
+t	849
 religious	848
 double	847
 possibly	846
@@ -944,9 +944,9 @@ actor	807
 somehow	807
 plenty	807
 generally	807
+yup	804
 quality	802
 simple	802
-yup	801
 somebody	801
 phone	799
 universe	798
@@ -956,7 +956,7 @@ gas	796
 moon	796
 kept	795
 effect	795
-b	795
+b	794
 ground	793
 brain	792
 sentence	792
@@ -991,8 +991,8 @@ send	774
 church	773
 they'd	772
 curious	770
-ha	770
 dollars	769
+ha	768
 downvoted	768
 truth	766
 reminds	765
@@ -1036,6 +1036,7 @@ court	735
 east	734
 depends	733
 #	731
+\	730
 accurate	730
 who's	729
 companies	728
@@ -1066,10 +1067,10 @@ names	703
 standard	702
 shoot	702
 fit	702
+nah	701
 dr	701
 giant	701
 walk	700
-nah	700
 everybody	700
 jewish	700
 stopped	700
@@ -1112,12 +1113,12 @@ grew	682
 paper	681
 taught	680
 drinking	679
-speaking	678
+speaking	677
 sources	677
 asking	676
 teams	674
 lower	674
-_	673
+_	672
 miles	672
 suicide	671
 code	671
@@ -1430,9 +1431,9 @@ event	512
 topic	511
 required	511
 al	511
-la	511
 zero	511
 cheaper	510
+la	510
 wild	510
 risk	510
 upvotes	508
@@ -1453,11 +1454,11 @@ cities	503
 batman	503
 ignorant	503
 growing	502
-:/	502
 invented	502
 penis	502
 meet	502
 diet	502
+:/	501
 training	500
 program	500
 willing	500
@@ -1549,8 +1550,8 @@ smoke	466
 hoping	465
 chris	465
 appreciate	464
-california	464
 hollywood	463
+california	463
 effective	463
 pop	463
 fox	462
@@ -1597,7 +1598,6 @@ useful	448
 channel	448
 access	448
 attempt	447
-|	446
 larger	446
 hopefully	446
 powerful	445
@@ -1623,6 +1623,7 @@ london	440
 safety	440
 boys	439
 childhood	439
+|	439
 official	439
 n	439
 ignore	439
@@ -1689,9 +1690,9 @@ younger	422
 performance	422
 violence	422
 groups	422
+iron	422
 phrase	421
 card	421
-iron	421
 boring	420
 pepsi	420
 peace	420
@@ -1888,8 +1889,8 @@ fired	364
 people's	364
 tons	364
 bruce	364
-lions	364
 favourite	363
+lions	363
 leaving	362
 repost	362
 heads	362
@@ -1921,13 +1922,13 @@ dropped	356
 fruit	356
 russians	356
 beef	356
-’	356
 cry	356
 jim	355
 tank	355
 familiar	355
 weed	355
 dammit	355
+’	355
 types	354
 bullet	354
 property	354
@@ -1950,11 +1951,11 @@ bread	352
 excited	351
 debate	351
 african	351
+whoa	350
 iceland	350
 jones	350
 pants	350
 bears	350
-whoa	349
 via	349
 sexual	349
 draw	349
@@ -2014,16 +2015,15 @@ constitution	339
 disgusting	339
 defend	339
 clever	338
+lies	338
 refer	338
 absolute	338
 terrorist	338
 golden	337
-lies	337
 um	337
 talks	337
 largest	337
 treat	337
-honor	337
 cameron	336
 aids	336
 eastern	336
@@ -2031,6 +2031,7 @@ commercial	336
 physical	336
 lying	336
 mix	336
+honor	336
 standing	335
 arms	335
 tour	335
@@ -2118,6 +2119,7 @@ vietnam	322
 upset	322
 crash	321
 girlfriend	321
+confirmed	321
 circlejerk	321
 lawyer	321
 developed	320
@@ -2125,7 +2127,6 @@ alternative	320
 formula	320
 talent	320
 impression	320
-confirmed	319
 rid	319
 minimum	319
 legally	318
@@ -2167,13 +2168,13 @@ spending	312
 press	312
 relationship	312
 managed	312
-weapon	312
 mobile	312
 detroit	312
 dies	311
 station	311
 basis	311
 acid	311
+weapon	311
 sequel	311
 irrelevant	311
 fingers	311
@@ -2209,7 +2210,6 @@ threw	305
 rolling	305
 juice	305
 dew	305
-comics	304
 scientists	304
 sake	304
 greater	304
@@ -2227,12 +2227,13 @@ st	303
 weak	303
 stands	302
 ocean	302
-h	302
+comics	302
 physics	302
 cocaine	302
 teeth	302
 kevin	302
 whats	301
+h	301
 limited	301
 normally	301
 horses	301
@@ -2289,12 +2290,12 @@ causes	293
 blind	293
 efficient	293
 flavor	293
+eu	293
 thoughts	292
 novel	292
 burning	292
 ignorance	292
 bacon	292
-eu	292
 camps	292
 ships	291
 nowadays	291
@@ -2317,7 +2318,6 @@ switch	289
 husband	289
 falling	288
 machines	288
-warning	288
 coast	288
 logical	288
 dear	288
@@ -2328,6 +2328,7 @@ remembered	287
 ron	287
 snow	287
 soldier	287
+warning	287
 legs	287
 mistaken	287
 subway	287
@@ -2482,7 +2483,6 @@ engineering	263
 referred	263
 studio	263
 harry	263
-gif	263
 heaven	263
 trial	263
 mcdonald's	263
@@ -2491,12 +2491,13 @@ gates	263
 motherfucker	262
 chances	262
 global	262
-basketball	262
+gif	262
 bridge	262
 plants	261
 backwards	261
 degrees	261
 letting	261
+basketball	261
 refused	261
 implying	261
 beans	261
@@ -2653,6 +2654,7 @@ aid	242
 world's	241
 represent	241
 listed	241
+ftfy	241
 scumbag	241
 sue	241
 whiskey	240
@@ -2665,6 +2667,7 @@ arguments	240
 sale	239
 exception	239
 attractive	239
+pic	239
 complaining	239
 chuck	239
 apples	239
@@ -2677,7 +2680,6 @@ wealthy	238
 financial	238
 feature	238
 practically	238
-pic	238
 religions	238
 tradition	238
 coin	238
@@ -2695,7 +2697,6 @@ supporting	236
 rage	236
 net	236
 pope	236
-ftfy	236
 chest	236
 dudes	236
 hockey	236
@@ -2755,6 +2756,7 @@ kim	230
 nancy	229
 dave	229
 conditions	229
+pics	229
 bastards	229
 parent	229
 justify	229
@@ -2763,7 +2765,6 @@ tyson	228
 scott	228
 adams	228
 cia	228
-pics	228
 drivers	228
 entertainment	228
 forgotten	228
@@ -2845,12 +2846,12 @@ translation	221
 garbage	220
 prize	220
 constant	220
+nsfw	220
 castle	220
 consent	220
 thin	220
 inspired	219
 carbon	219
-nsfw	219
 tries	219
 duty	219
 poorly	219
@@ -3133,6 +3134,7 @@ odds	195
 stronger	194
 ultimate	194
 adults	194
+oops	194
 object	194
 indians	194
 bathroom	194
@@ -3143,7 +3145,6 @@ novelty	194
 scientist	194
 creative	194
 racial	194
-oops	193
 orders	193
 max	193
 lifetime	193
@@ -3266,7 +3267,6 @@ apologies	185
 rocket	185
 manage	185
 virginia	185
-sets	185
 develop	185
 dealing	185
 crystal	185
@@ -3290,6 +3290,7 @@ lunch	183
 aww	183
 cleveland	183
 qi	183
+sets	183
 email	183
 concentration	183
 manager	183
@@ -3564,7 +3565,6 @@ faces	165
 items	165
 homeless	165
 scored	164
-@	164
 titanic	164
 aged	164
 steak	164
@@ -3692,7 +3692,6 @@ affected	157
 inches	157
 delivery	157
 cooking	157
-£	157
 raw	157
 burns	157
 mothers	157
@@ -3717,6 +3716,7 @@ carl	156
 aw	156
 stranger	156
 rob	156
+£	156
 louis	156
 ian	156
 wheel	156
@@ -3880,6 +3880,7 @@ hip	148
 hop	148
 breed	148
 halen	148
+@	147
 appearance	147
 string	147
 frozen	147
@@ -3945,6 +3946,7 @@ natives	145
 syria	145
 blades	145
 hint	144
+mirror	144
 village	144
 wizard	144
 bow	144
@@ -3972,7 +3974,6 @@ strip	143
 xkcd	143
 pathetic	143
 crush	143
-mirror	143
 larry	143
 cite	143
 valley	143
@@ -4008,7 +4009,6 @@ america's	142
 solely	142
 protein	142
 vegas	142
-tab	142
 ripped	142
 council	142
 saint	142
@@ -4024,6 +4024,7 @@ potter	141
 resident	141
 satellite	141
 frankly	141
+tab	141
 apology	141
 highway	141
 allied	141
@@ -4032,7 +4033,6 @@ microsoft	141
 sheep	140
 el	140
 fields	140
-astronaut	140
 tools	140
 saudi	140
 whatsoever	140
@@ -4055,6 +4055,7 @@ suffered	139
 placed	139
 doc	139
 destruction	139
+astronaut	139
 forcing	139
 staying	139
 highschool	139
@@ -4100,6 +4101,7 @@ anger	138
 approve	138
 vader	138
 gordon	138
+satan	138
 fights	138
 cups	138
 bud	138
@@ -4119,7 +4121,6 @@ boot	137
 intentional	137
 dwarf	137
 domestic	137
-satan	137
 meaningless	137
 desire	137
 roast	137
@@ -4132,6 +4133,7 @@ dozens	136
 mediocre	136
 liberals	136
 entitled	136
+ಠ_ಠ	136
 adaptation	136
 theft	136
 lethal	136
@@ -4145,7 +4147,6 @@ sudden	136
 prisons	136
 roof	136
 finest	136
-z	136
 actress	136
 scheme	136
 strongly	136
@@ -4165,7 +4166,6 @@ developing	135
 allen	135
 comparable	135
 carolina	135
-ಠ_ಠ	135
 starring	135
 chosen	135
 th	135
@@ -4175,6 +4175,7 @@ smoked	135
 hats	135
 homosexuality	135
 downtown	135
+z	135
 murderer	135
 plug	135
 removing	135
@@ -4360,6 +4361,7 @@ funnier	128
 keyboard	128
 tagged	128
 regime	128
+obligatory	127
 reduce	127
 shorter	127
 robots	127
@@ -4412,7 +4414,6 @@ activity	126
 lighter	126
 ranch	126
 steps	125
-obligatory	125
 theaters	125
 denial	125
 boo	125
@@ -4701,6 +4702,7 @@ ap	116
 afc	116
 lbs	116
 olympic	116
+improved	116
 documented	116
 psychological	116
 profitable	116
@@ -4729,7 +4731,6 @@ treaty	115
 elections	115
 yell	115
 cleaning	115
-improved	115
 immune	115
 scum	115
 temple	115
@@ -4912,6 +4913,7 @@ semantics	109
 starve	109
 agreeing	109
 sheen	109
+mt	109
 res	109
 wonka	109
 velcro	109
@@ -4942,6 +4944,7 @@ density	108
 arent	108
 repeated	108
 comedian	108
+delivered	108
 pedantic	108
 agents	108
 kraft	108
@@ -4951,7 +4954,6 @@ guessed	108
 studios	108
 realised	108
 confidence	108
-mt	108
 spartans	108
 shed	107
 walter	107
@@ -4982,7 +4984,6 @@ procedure	107
 lemon	107
 traded	107
 ginger	107
-delivered	107
 tyler	107
 protecting	107
 murphy	107
@@ -5035,7 +5036,6 @@ senate	106
 nominated	105
 mustache	105
 enforced	105
-pa	105
 accidents	105
 fitting	105
 chart	105
@@ -5146,6 +5146,7 @@ cunts	102
 fluid	102
 irl	102
 flesh	102
+pa	102
 hm	102
 hail	102
 cherry	102
@@ -5483,7 +5484,6 @@ junior	94
 spike	94
 properties	94
 ruins	94
-na	94
 buys	94
 o_o	94
 espn	94
@@ -5600,6 +5600,7 @@ y'know	91
 stoned	91
 reddit's	91
 panels	91
+na	91
 midnight	91
 con	91
 diving	91
@@ -5816,10 +5817,10 @@ thru	87
 rhyme	87
 gb	87
 sum	87
-–	87
 client	87
 prequel	87
 ducks	87
+untrue	87
 faced	87
 flu	87
 pistol	87
@@ -5889,7 +5890,6 @@ hd	86
 submarine	86
 condescending	86
 populations	86
-untrue	86
 ego	86
 nanking	86
 crows	86
@@ -5991,6 +5991,7 @@ widespread	84
 wives	84
 abilities	84
 sexually	84
+–	84
 texan	84
 jackass	84
 dairy	84
@@ -6203,7 +6204,6 @@ reproduce	80
 furniture	80
 lobby	80
 arcade	80
-prisoner	80
 happily	80
 manly	80
 assassination	80
@@ -6244,6 +6244,7 @@ resulted	79
 morals	79
 wrapped	79
 beaches	79
+ahem	79
 reader	79
 reminder	79
 bingo	79
@@ -6303,7 +6304,6 @@ boost	78
 arnold	78
 reaching	78
 sherman	78
-ahem	78
 tissue	78
 reveal	78
 annual	78
@@ -6317,6 +6317,7 @@ combo	78
 grenade	78
 aswell	78
 popped	78
+prisoner	78
 nye	78
 loses	78
 apologized	78
@@ -6550,6 +6551,7 @@ chickens	74
 rod	74
 jean	74
 relax	74
+ame	74
 motherfuckers	74
 meets	74
 sexuality	74
@@ -6584,7 +6586,6 @@ bench	73
 threats	73
 ranking	73
 gum	73
-illinois	73
 godfather	73
 radical	73
 burst	73
@@ -6653,6 +6654,7 @@ woody	72
 makers	72
 exhaust	72
 preference	72
+illinois	72
 guts	72
 printed	72
 greed	72
@@ -6673,7 +6675,6 @@ goodbye	72
 que	72
 weighs	72
 flavors	72
-ame	72
 avoiding	72
 genesis	72
 chaos	72
@@ -6799,7 +6800,6 @@ globe	70
 trusted	70
 theist	70
 import	70
-en	70
 twelve	70
 flipped	70
 terminal	70
@@ -7021,6 +7021,7 @@ kosher	67
 donation	67
 financially	67
 meds	67
+en	67
 hyperbole	67
 rebel	67
 pg	67
@@ -7178,7 +7179,6 @@ ndp	65
 conscious	65
 carlin	65
 dwarves	65
-firearms	65
 spying	65
 reservations	65
 newborn	65
@@ -7266,6 +7266,7 @@ gesture	64
 wyoming	64
 donating	64
 buscemi	64
+firearms	64
 shelter	64
 westboro	64
 disk	64
@@ -7732,7 +7733,6 @@ pitchfork	59
 gonzales	59
 scouts	59
 ipa	59
-fa	58
 succeeded	58
 bent	58
 subscribe	58
@@ -7783,7 +7783,6 @@ consequence	58
 committee	58
 alongside	58
 gag	58
-aaa	58
 lizard	58
 strain	58
 popping	58
@@ -7822,6 +7821,7 @@ quantity	58
 cakes	58
 richest	58
 compiler	58
+fa	57
 penguin	57
 testicle	57
 alice	57
@@ -7846,7 +7846,6 @@ flush	57
 banking	57
 lasers	57
 cables	57
-highlights	57
 ambulance	57
 barrier	57
 emissions	57
@@ -7886,6 +7885,7 @@ embarrassment	57
 pows	57
 airbender	57
 prints	57
+aaa	57
 hoover	57
 headphones	57
 whistle	57
@@ -7945,6 +7945,7 @@ fooled	56
 businessman	56
 deity	56
 noises	56
+highlights	56
 exaggerated	56
 completed	56
 hamster	56
@@ -7981,7 +7982,6 @@ opium	56
 moot	56
 shaven	56
 fetch	56
-ph	56
 philosophical	56
 earning	56
 functioning	56
@@ -8067,6 +8067,7 @@ gritty	55
 ewoks	55
 mccartney	55
 hybrid	55
+ph	55
 gypsies	55
 dependent	55
 somalia	55
@@ -9001,7 +9002,6 @@ mates	46
 flowing	46
 yikes	46
 exotic	46
-ira	46
 shrimp	46
 newfoundland	46
 guitarist	46
@@ -9129,6 +9129,7 @@ nerf	45
 lovers	45
 dubbed	45
 annoy	45
+ira	45
 lobsters	45
 bait	45
 lamb	45
@@ -9217,7 +9218,6 @@ digits	45
 productivity	45
 butterfly	45
 cliche	45
-instrumental	45
 inquisition	45
 binding	45
 munich	45
@@ -9357,6 +9357,7 @@ underage	44
 mps	44
 distracted	44
 mathematical	44
+instrumental	44
 walgreens	44
 diets	44
 franchises	44
@@ -9715,13 +9716,13 @@ ludicrous	41
 addressing	41
 factions	41
 starters	41
-derogatory	41
 sheltered	41
 graduation	41
 fosters	41
 clan	41
 scariest	41
 forgets	41
+feynman	41
 behold	41
 nudity	41
 bumper	41
@@ -9866,12 +9867,12 @@ molecules	40
 jack's	40
 appropriately	40
 stevie	40
+derogatory	40
 sailors	40
 token	40
 bathtub	40
 colin	40
 swede	40
-feynman	40
 manually	40
 casually	40
 replay	40
@@ -10012,7 +10013,6 @@ lifting	39
 economical	39
 banner	39
 contracted	39
-bb	39
 hicks	39
 motive	39
 contradict	39
@@ -10171,6 +10171,7 @@ grease	38
 meg	38
 heinlein	38
 advancement	38
+bb	38
 derivative	38
 delivering	38
 nerdy	38
@@ -10309,7 +10310,6 @@ variables	37
 trades	37
 submissions	37
 iowa	37
-cg	37
 russel	37
 mormonism	37
 researcher	37
@@ -10469,6 +10469,7 @@ gallery	36
 quotation	36
 almighty	36
 balcony	36
+cg	36
 knighted	36
 prairie	36
 kaufman	36
@@ -10697,7 +10698,6 @@ calculus	35
 kinky	35
 jerseys	35
 worms	35
-cocktail	35
 rug	35
 cavalry	35
 satisfy	35
@@ -10910,6 +10910,7 @@ coral	34
 prevention	34
 wil	34
 everclear	34
+cocktail	34
 revolver	34
 whedon	34
 beam	34
@@ -11055,6 +11056,7 @@ aaaand	33
 elitist	33
 negligible	33
 archive	33
+relevent	33
 colleagues	33
 displayed	33
 hangs	33
@@ -11200,6 +11202,7 @@ stool	33
 tetris	33
 velma	33
 val	33
+vsauce	33
 hof	33
 mystique	33
 stanhope	33
@@ -11216,7 +11219,6 @@ redeeming	32
 shook	32
 amish	32
 sync	32
-spacecraft	32
 fanbase	32
 spree	32
 strapped	32
@@ -11429,7 +11431,6 @@ discriminatory	32
 audi	32
 krusty	32
 bitcoin	32
-vsauce	32
 rover	32
 bluetooth	32
 baptism	32
@@ -11445,6 +11446,8 @@ vcr	31
 wander	31
 definately	31
 desired	31
+spacecraft	31
+awwww	31
 roam	31
 sg	31
 breeze	31
@@ -11488,7 +11491,6 @@ scissors	31
 sriracha	31
 ratios	31
 pillow	31
-relevent	31
 abe	31
 romanian	31
 amazes	31
@@ -11712,6 +11714,7 @@ justifies	30
 springfield	30
 rainy	30
 sliced	30
+psst	30
 finite	30
 delivers	30
 playground	30
@@ -12011,7 +12014,6 @@ wires	29
 comcast	29
 weasel	29
 smuggler	29
-psst	29
 homemade	29
 dept	29
 guidance	29
@@ -12088,7 +12090,6 @@ winnings	29
 nutty	29
 disputes	29
 genders	29
-rust	29
 chanel	29
 alton	29
 referee	29
@@ -12367,6 +12368,7 @@ wmds	28
 romania	28
 anesthesia	28
 herp	28
+rust	28
 prep	28
 skittles	28
 staple	28
@@ -12402,7 +12404,6 @@ arriving	28
 bp	28
 jails	28
 segregated	28
-detention	28
 straightforward	28
 saskatchewan	28
 baseless	28
@@ -12640,6 +12641,7 @@ inconceivable	27
 choir	27
 warp	27
 assaulted	27
+detention	27
 convict	27
 hughes	27
 roasts	27
@@ -12783,6 +12785,7 @@ delight	26
 skies	26
 compounds	26
 frying	26
+mmmmm	26
 discourse	26
 cylinder	26
 ™	26
@@ -12815,7 +12818,6 @@ mona	26
 wakes	26
 tacoma	26
 vat	26
-lovecraft	26
 vowel	26
 husband's	26
 vector	26
@@ -13084,7 +13086,6 @@ gospel	25
 lamp	25
 initialism	25
 saturated	25
-mmmmm	25
 farce	25
 extending	25
 coated	25
@@ -13129,6 +13130,7 @@ filipino	25
 defeats	25
 dod	25
 webster	25
+lovecraft	25
 endorsed	25
 phillips	25
 shrapnel	25
@@ -13275,7 +13277,6 @@ contagious	25
 peer-reviewed	25
 supplier	25
 enthusiasts	25
-teapot	25
 graveyard	25
 baldwin	25
 ballsy	25
@@ -13596,6 +13597,7 @@ baller	24
 mosquitoes	24
 drawer	24
 bolts	24
+teapot	24
 hyper	24
 shutting	24
 wishful	24
@@ -13618,7 +13620,6 @@ reprehensible	24
 misspelling	24
 colder	24
 matthews	24
-wo	24
 thinner	24
 swallowing	24
 fad	24
@@ -13804,7 +13805,6 @@ pricks	23
 astrophysics	23
 unseen	23
 probable	23
-ke	23
 cooperation	23
 jong-il	23
 hump	23
@@ -13954,6 +13954,7 @@ jaded	23
 carp	23
 hyped	23
 marge	23
+wo	23
 litter	23
 mastermind	23
 induction	23
@@ -14098,7 +14099,6 @@ dividing	22
 sauces	22
 ridicule	22
 illustrated	22
-geometry	22
 bryant	22
 modem	22
 partying	22
@@ -14171,6 +14171,7 @@ greenhouse	22
 trent	22
 diminish	22
 earns	22
+ke	22
 toured	22
 badgers	22
 marion	22
@@ -14469,6 +14470,7 @@ cruising	21
 kits	21
 kat	21
 kampf	21
+geometry	21
 adopting	21
 landscape	21
 pseudoscience	21
@@ -14913,7 +14915,6 @@ ffl	20
 lasseter	20
 nimoy	20
 cynicism	20
-jpg	20
 macaroni	20
 laundering	20
 dictatorships	20
@@ -14937,7 +14938,6 @@ trainspotting	20
 hayden	20
 stressed	20
 operational	20
-inter	20
 braun	20
 tantrum	20
 plato	20
@@ -15233,6 +15233,7 @@ thathappened	20
 mailed	20
 raspberry	20
 krispy	20
+non-mobile	20
 butterflies	20
 admired	20
 plagiarized	20
@@ -15382,6 +15383,7 @@ ndt	19
 culprit	19
 eradicate	19
 battleships	19
+inter	19
 registers	19
 inadequate	19
 deniability	19
@@ -15506,6 +15508,7 @@ cavity	19
 carnival	19
 python's	19
 flushing	19
+whimsical	19
 elmer	19
 gon	19
 lumped	19
@@ -15728,7 +15731,6 @@ omitted	19
 bbb	19
 monarchs	19
 archers	19
-non-mobile	19
 re-watched	19
 midas	19
 full-time	19
@@ -15901,6 +15903,7 @@ playlist	18
 knob	18
 topping	18
 anarchists	18
+counterpoint	18
 blooded	18
 jaime	18
 av	18
@@ -15991,7 +15994,6 @@ witnessing	18
 knuckle	18
 internally	18
 dalek	18
-whimsical	18
 ment	18
 pianist	18
 samoa	18
@@ -16212,7 +16214,6 @@ supes	18
 nottheonion	18
 prism	18
 taunting	18
-po	18
 nikola	18
 egotistical	18
 orioles	18
@@ -16415,7 +16416,6 @@ maze	17
 migrated	17
 bashed	17
 squat	17
-counterpoint	17
 douchebaggery	17
 subjected	17
 behaved	17
@@ -17489,6 +17489,7 @@ tnt	16
 doped	16
 kal	16
 chocolates	16
+po	16
 rookies	16
 wdw	16
 projectiles	16
@@ -17652,6 +17653,7 @@ patrols	15
 cockroaches	15
 housed	15
 inquiry	15
+jpg	15
 nip	15
 importing	15
 partake	15
@@ -17729,7 +17731,6 @@ terminally	15
 administrator	15
 afterall	15
 autopsy	15
-ee	15
 leaky	15
 lang	15
 excellence	15
@@ -17903,7 +17904,6 @@ connery's	15
 prerequisite	15
 madame	15
 alfie	15
-http	15
 develops	15
 pea	15
 whammy	15
@@ -18690,6 +18690,7 @@ rallying	14
 grammy	14
 temperate	14
 bottoms	14
+ee	14
 jax	14
 dylan's	14
 obstacles	14
@@ -19403,6 +19404,7 @@ doubted	13
 grieve	13
 yields	13
 theon	13
+http	13
 poppins	13
 kafka	13
 snoopy	13
@@ -19473,6 +19475,7 @@ nationally	13
 gully	13
 insinuate	13
 rapids	13
+awwwww	13
 hardships	13
 profiles	13
 pup	13
@@ -21591,7 +21594,6 @@ ruskies	11
 veil	11
 quip	11
 gouda	11
-‎	11
 aqua	11
 theodore	11
 peruvian	11
@@ -22953,7 +22955,6 @@ wordstar	10
 lathe	10
 dunkirk	10
 tex	10
-slo	10
 yawned	10
 perverts	10
 adviser	10
@@ -23483,7 +23484,6 @@ dehumanizing	9
 vag	9
 mao's	9
 vilified	9
-webcomic	9
 garde	9
 avionics	9
 dissidents	9
@@ -23719,7 +23719,6 @@ alles	9
 getcha	9
 slump	9
 teal'c	9
-educator	9
 proletariat	9
 cross-country	9
 ponds	9
@@ -24212,6 +24211,7 @@ pinkman	9
 idgaf	9
 purgatory	9
 unparalleled	9
+cri	9
 truther	9
 deceive	9
 fuses	9
@@ -24363,6 +24363,7 @@ bumfuck	9
 redefine	9
 distinctions	9
 dodging	9
+slo	9
 remus	9
 cadel	9
 maxima	9
@@ -24504,7 +24505,6 @@ jurisprudence	9
 uconn	9
 hydrated	9
 tenacious	9
-subculture	9
 zz	9
 metaphysical	9
 centauri	9
@@ -24984,6 +24984,7 @@ bataan	8
 durden	8
 issuing	8
 cheerful	8
+webcomic	8
 manchuria	8
 unbroken	8
 ied	8
@@ -25065,6 +25066,7 @@ wailing	8
 diddly	8
 recalling	8
 larch	8
+uploads	8
 castellaneta	8
 tumble	8
 homeowner	8
@@ -25257,6 +25259,7 @@ kari	8
 jaffa	8
 trekkies	8
 juggle	8
+educator	8
 mckenna	8
 appetizing	8
 poached	8
@@ -25416,7 +25419,6 @@ geoff	8
 stallman	8
 souvenir	8
 frighteningly	8
-kno	8
 crackhead	8
 epiphany	8
 rube	8
@@ -25447,6 +25449,7 @@ rollin	8
 frigging	8
 katzenberg	8
 atrophy	8
+awwwwww	8
 nytimes	8
 paltry	8
 beth	8
@@ -25491,6 +25494,7 @@ messengers	8
 iddqd	8
 sicken	8
 eyewitness	8
+sn	8
 reina	8
 socialize	8
 shawcross	8
@@ -25909,7 +25913,6 @@ buggery	8
 evenings	8
 custodian	8
 klink	8
-wooooo	8
 ☜	8
 messier	8
 synthesis	8
@@ -25966,7 +25969,6 @@ boycotts	8
 roids	8
 optimus	8
 chilly	8
-entrepreneur	8
 seamen	8
 retconning	8
 vimy	8
@@ -26200,6 +26202,7 @@ vad	8
 streetview	8
 pitchers	8
 brides	8
+subculture	8
 identifiable	8
 nightshade	8
 redness	8
@@ -26859,7 +26862,6 @@ saplings	7
 deux	7
 sucka	7
 sunblock	7
-uploads	7
 predicts	7
 wadlow	7
 cleanliness	7
@@ -26994,6 +26996,7 @@ haff	7
 qaida	7
 cia's	7
 precede	7
+hovercraft	7
 escobars	7
 homeworld	7
 repealing	7
@@ -27364,7 +27367,6 @@ maradona	7
 baroque	7
 zoroastrianism	7
 codified	7
-sn	7
 hadith	7
 mahdi	7
 hypnotoad	7
@@ -27688,7 +27690,6 @@ caverns	7
 ting	7
 whit	7
 disposed	7
-d'a	7
 commander-in-chief	7
 valentina	7
 belting	7
@@ -27717,7 +27718,6 @@ regained	7
 off-putting	7
 chung	7
 mentos	7
-cri	7
 microsoft's	7
 tepco	7
 buzzing	7
@@ -27874,7 +27874,6 @@ shitposting	7
 first-person	7
 kaiju	7
 shitredditsays	7
-sha	7
 identically	7
 fleeting	7
 colostomy	7
@@ -27888,6 +27887,7 @@ rephrased	7
 sos	7
 renovation	7
 assembling	7
+entrepreneur	7
 wrestled	7
 gaiman	7
 lynched	7
@@ -28005,6 +28005,7 @@ remastered	7
 gathers	7
 panzers	7
 pawns	7
+wooooo	7
 incapacitated	7
 dorco	7
 sampler	7
@@ -28483,7 +28484,6 @@ leo's	6
 fables	6
 joos	6
 ragequit	6
-cho	6
 sprees	6
 pts	6
 olympian	6
@@ -29127,7 +29127,6 @@ unsurprised	6
 germania	6
 lolololol	6
 medalist	6
-golfer	6
 doves	6
 assasination	6
 transgression	6
@@ -29150,7 +29149,6 @@ mutilate	6
 executor	6
 amenable	6
 obeying	6
-hovercraft	6
 logistically	6
 eldest	6
 bastard's	6
@@ -29465,6 +29463,7 @@ deltron	6
 mista	6
 nominees	6
 importation	6
+kno	6
 waldo	6
 musta	6
 baggins	6
@@ -29744,7 +29743,6 @@ pittsburgh's	6
 speedboat	6
 sheriff's	6
 berth	6
-cryptography	6
 yugoslavian	6
 shelbyville	6
 rickon	6
@@ -29870,6 +29868,7 @@ presided	6
 unplugging	6
 doak	6
 strafing	6
+ewwww	6
 encoded	6
 perlman	6
 testifying	6
@@ -30132,7 +30131,6 @@ straighten	6
 cannes	6
 patio	6
 rakes	6
-cla	6
 excused	6
 opting	6
 anti-government	6
@@ -30211,7 +30209,6 @@ fuq	6
 lemony	6
 gina	6
 negroes	6
-aaaa	6
 respiratory	6
 cupcake	6
 wiggles	6
@@ -30221,7 +30218,6 @@ picasso's	6
 penetrated	6
 narwhal	6
 fawlty	6
-svg	6
 ebonics	6
 nana	6
 calmer	6
@@ -30285,6 +30281,7 @@ iraqi's	6
 saud	6
 bloodsport	6
 farcry	6
+sha	6
 tint	6
 horseman	6
 malay	6
@@ -30885,7 +30882,6 @@ chronically	6
 hemingway's	6
 ricer	6
 continence	6
-.   .	6
 bowties	6
 optimize	6
 meteorites	6
@@ -31103,6 +31099,7 @@ mewes	5
 qtip	5
 flys	5
 fps's	5
+cho	5
 annals	5
 constructs	5
 fuelled	5
@@ -31708,7 +31705,6 @@ newspeak	5
 longing	5
 lofty	5
 loveable	5
-daaa	5
 multimillion	5
 latrine	5
 avenged	5
@@ -32591,6 +32587,7 @@ kary	5
 mullis	5
 abramovic	5
 all-caps	5
+hth	5
 annum	5
 switchblades	5
 goodall	5
@@ -32659,6 +32656,7 @@ leviathan	5
 d'ya	5
 logistic	5
 deflector	5
+‎	5
 ug	5
 abramovich	5
 liverpool's	5
@@ -33148,6 +33146,7 @@ transcribing	5
 fanciful	5
 hag	5
 ets	5
+cryptography	5
 unhinged	5
 klansman	5
 vigilantism	5
@@ -33163,6 +33162,7 @@ dente	5
 lash	5
 sensations	5
 zimmerman's	5
+svg	5
 tosses	5
 metricconversionbot	5
 curios	5
@@ -33586,6 +33586,7 @@ waived	5
 authoritarians	5
 hoorah	5
 thiefs	5
+golfer	5
 plotlines	5
 bleaching	5
 extinctions	5
@@ -34234,6 +34235,7 @@ mocha	5
 squabble	5
 logan's	5
 semmelweis	5
+cla	5
 ragging	5
 mco	5
 sophistication	5
@@ -34939,7 +34941,6 @@ cosmologist	4
 cosmetologist	4
 humorously	4
 the're	4
-glo	4
 monotone	4
 cardigan	4
 khrushchev	4
@@ -35211,6 +35212,7 @@ competitively	4
 romantically	4
 mech	4
 hemorrhoids	4
+daaa	4
 kneeling	4
 spurred	4
 pre-draft	4
@@ -35806,7 +35808,6 @@ testa	4
 ammount	4
 recited	4
 enchanting	4
-doooo	4
 cker	4
 acadian	4
 auto-correct	4
@@ -35818,7 +35819,6 @@ muahaha	4
 jahre	4
 masturbator	4
 idiot's	4
-cvn	4
 ούτε	4
 της	4
 trinidadian	4
@@ -36317,7 +36317,6 @@ regal	4
 augusta	4
 cringes	4
 tivo	4
-hth	4
 ornament	4
 uppercase	4
 eliza	4
@@ -37732,7 +37731,6 @@ carlisle	4
 low-paid	4
 spoilt	4
 de-escalated	4
-URL	4
 goog	4
 doodles	4
 disapointed	4
@@ -39975,7 +39973,6 @@ roseanne's	3
 winkle	3
 bacons	3
 misbehave	3
-eeeee	3
 ratifying	3
 boisterous	3
 y'see	3
@@ -39992,6 +39989,7 @@ exe	3
 retrovirus	3
 pixelated	3
 vestigial	3
+glo	3
 nincompoop	3
 anyting	3
 hmmph	3
@@ -40278,6 +40276,7 @@ pegging	3
 confidant	3
 hedberg's	3
 dissapointing	3
+awwwwwww	3
 mlg	3
 yaaay	3
 nephew's	3
@@ -40669,6 +40668,7 @@ sinn	3
 superstore	3
 co-incidence	3
 fozzie	3
+okay.jpg	3
 adversely	3
 three's	3
 domed	3
@@ -41076,6 +41076,7 @@ agm	3
 subsidise	3
 laureates	3
 calculates	3
+doooo	3
 acadiana	3
 shamanism	3
 verrrrry	3
@@ -41099,6 +41100,7 @@ rivets	3
 ορκίζομαι	3
 gravitas	3
 nary	3
+cvn	3
 μου	3
 την	3
 το	3
@@ -41260,7 +41262,6 @@ dextrocardia	3
 alamos	3
 pfizer's	3
 unwavering	3
-recap	3
 btc	3
 boney	3
 druggies	3
@@ -42326,6 +42327,7 @@ alexander's	3
 authorizes	3
 mongoloid	3
 vehement	3
+d'awwwww	3
 striked	3
 attu	3
 deez	3
@@ -42615,7 +42617,6 @@ re-enlist	3
 amid	3
 throng	3
 infallibility	3
-#history	3
 waxing	3
 aramco	3
 portlandia	3
@@ -43929,6 +43930,7 @@ mitigating	3
 meatbag	3
 starz	3
 taliban's	3
+amages	3
 freeland	3
 octavius	3
 bitte	3
@@ -44578,6 +44580,7 @@ greyjoys	3
 trafalgar	3
 superboy	3
 morgen	3
+simular	3
 germane	3
 stay-at-home	3
 mopeds	3
@@ -44654,6 +44657,7 @@ nerded	3
 narrowing	3
 bestbuy	3
 sienfeld	3
+nawwwww	3
 polyphasic	3
 intollerant	3
 entry-level	3
@@ -45700,6 +45704,7 @@ bango	3
 pike's	3
 recheck	3
 aldosterone	3
+aaaa	3
 scuffed	3
 unkempt	3
 allons-y	3
@@ -45869,6 +45874,7 @@ logger	3
 coped	3
 sorrows	3
 compiègne	3
+owwww	3
 ostfront	3
 exemple	3
 carmelized	3
@@ -45882,8 +45888,6 @@ aldi's	3
 tock	3
 desegregated	3
 multi-billionaire	3
-star_trek	3
-_enterprise	3
 delimit	3
 melancholia	3
 pitch-black	3
@@ -47202,6 +47206,7 @@ robit	2
 wackiest	2
 geniunely	2
 detractor	2
+www.reddit.com/r/topgear	2
 timeshares	2
 sonuva	2
 taal	2
@@ -47238,7 +47243,6 @@ ughhhhh	2
 sarc	2
 rockettes	2
 physic	2
-дмитрий	2
 виктор	2
 purrrrfect	2
 yeager	2
@@ -48861,7 +48865,6 @@ féin	2
 femal	2
 dankest	2
 reformulated	2
-okay.jpg	2
 machiavellian	2
 repopulating	2
 profundity	2
@@ -48981,11 +48984,10 @@ ramblers	2
 mamar	2
 muffy	2
 gyroscopes	2
+awwwwwwwwww	2
 uralic	2
 ural	2
 da-da	2
-_bagh	2
-_massacre	2
 gorn	2
 bogarts	2
 mechanic's	2
@@ -49074,7 +49076,6 @@ hassen	2
 cusick	2
 knoxx	2
 lib-dems	2
-photostream	2
 rollen	2
 entrepreneurs	2
 wibbly-wobbly	2
@@ -49110,6 +49111,7 @@ lightsabre	2
 distillers	2
 lolbobs	2
 re-edit	2
+nowwww	2
 ura	2
 annoyances	2
 gcn	2
@@ -49704,6 +49706,7 @@ a-a-r-d-v-a-r-k	2
 tuva	2
 evergreening	2
 uncap	2
+recap	2
 sudafed	2
 amlodipine	2
 stereoisomers	2
@@ -50186,6 +50189,7 @@ acheron	2
 gnawed	2
 corpse's	2
 pop.density	2
+not_sell_beef_to_costco_because_costco	2
 young'ns	2
 cadbury's	2
 veggi	2
@@ -51613,6 +51617,7 @@ snippy	2
 apostacy	2
 brctl	2
 verboten	2
+www.example.com	2
 konigsberg	2
 killall	2
 spitballs	2
@@ -51924,6 +51929,7 @@ borrowings	2
 consequential	2
 réard	2
 enh	2
+kachoo	2
 pssssh	2
 tenderized	2
 backtrack	2
@@ -53025,6 +53031,7 @@ lti	2
 ricci	2
 _love_	2
 what-for	2
+d'awwww	2
 fuckn	2
 wrap-around	2
 rethought	2
@@ -53913,7 +53920,6 @@ skillet	2
 chromecast	2
 oneday	2
 tgtdaebb	2
-saa	2
 vnc	2
 armholes	2
 belted	2
@@ -55338,7 +55344,6 @@ wassermelone	2
 satelites	2
 dejavu	2
 over-exaggerated	2
-simular	2
 russkies	2
 backbench	2
 pounced	2
@@ -56041,6 +56046,7 @@ carolines	2
 doens't	2
 hoose	2
 earhart	2
+eeeee	2
 vlog	2
 rised	2
 bumhole	2
@@ -56883,6 +56889,7 @@ frustrate	2
 libary	2
 marina's	2
 tomatoe	2
+experi	2
 ament	2
 bioengineering	2
 meritocratic	2
@@ -57066,7 +57073,6 @@ fsb	2
 lifesaving	2
 pharmacologist	2
 moonshiners	2
-eeeeeeeeeeeeeeeeee	2
 cumbria	2
 toxication	2
 god-sent	2
@@ -58295,7 +58301,6 @@ fermentable	2
 dipa	2
 comedown	2
 sturdiest	2
-nsf	2
 pumking	2
 saar	2
 compiegne	2
@@ -58690,6 +58695,7 @@ drydock	2
 proglide	2
 irritations	2
 razor-sharp	2
+www.dorcousa.com	2
 kittery	2
 rayovac	2
 procter	2
@@ -59132,6 +59138,7 @@ maddison	2
 vacated	2
 five-game	2
 pornopoly	2
+www.tblop.com	2
 well-designed	2
 stubly	2
 intricately	2
@@ -60387,7 +60394,6 @@ hirabe	2
 splendidly	2
 bish	2
 lactase	2
-raa	2
 warm-up	2
 wankdorf	2
 dive-y	2
@@ -60851,6 +60857,7 @@ missinformation	2
 emirati	2
 eisley	2
 jumpstreet	2
+not-eat-his-cereal-is-basically-the-best-thing	2
 mary-ann	2
 scottsdale	2
 s'klallam	2
@@ -61322,7 +61329,6 @@ realign	2
 hapley	2
 pedanticman	2
 grands	2
-brrr	2
 backpedaling	2
 enormousness	2
 offensiveness	2
@@ -61502,6 +61508,7 @@ shako	2
 trichotillomania	2
 mething	2
 wowe	2
+are-goddamn-right-gif.gif	2
 tressless	2
 hairloss	2
 brynner	2
@@ -61897,6 +61904,7 @@ canopic	2
 airfoil	2
 thekid_frankie	2
 bwomp	2
+chlorofluorocarbons	2
 firechef	2
 firechief	2
 yugi's	2
@@ -62632,7 +62640,7 @@ bollus	1
 biolomagist	1
 averagehero	1
 novices	1
-poooo	1
+poooowwwweeerrrrrrrrrr	1
 punnnnccchhh	1
 twingo	1
 already-departed	1
@@ -62722,6 +62730,7 @@ lupich	1
 misspeller	1
 up-oat	1
 titusville	1
+дмитрий	1
 как	1
 дела	1
 тайные	1
@@ -63931,6 +63940,9 @@ haircare	1
 faaablous	1
 off-and-on	1
 pooed	1
+am.com/squidbillies/i	1
+am-a-si	1
+ample-man.html	1
 verry	1
 ejemplo	1
 djent	1
@@ -64209,6 +64221,7 @@ dextromethorphan	1
 ponit	1
 imei	1
 leages	1
+eewwwwwww	1
 modernst	1
 gaisciúil	1
 cáisciúil	1
@@ -64354,6 +64367,7 @@ pidgin	1
 intereste	1
 replayment	1
 prizz-ih-biss	1
+eeeeewwww	1
 olololololol	1
 incentive-based	1
 carruthers	1
@@ -64411,7 +64425,6 @@ churrascaria	1
 checksums	1
 jiujitsu	1
 crypto-fascism	1
-#sequel	1
 bessarabian	1
 dniester	1
 ressurected	1
@@ -64984,6 +64997,7 @@ bluelegs	1
 suscribed	1
 kigali	1
 jetson	1
+www.google.com	1
 merilu	1
 wiess	1
 self-referential	1
@@ -65377,7 +65391,6 @@ burgulary	1
 twotenpenny	1
 non-trans	1
 x-segregation	1
-james_bond	1
 srlp's	1
 igneous	1
 movie--sounds	1
@@ -65719,6 +65732,7 @@ snugs	1
 aero-plane	1
 geck	1
 pural	1
+awwwwwwww	1
 yeaahhhhhhhhh	1
 batley	1
 monximus	1
@@ -65969,7 +65983,7 @@ tu-tu	1
 flyfisherman	1
 raz	1
 jubair	1
-mutim	1
+muti	1
 wjc	1
 jubayr's	1
 work-study	1
@@ -65998,6 +66012,7 @@ tablecloth	1
 brules	1
 governers	1
 swri	1
+helllloooo	1
 micro-camera	1
 pre-bedtime	1
 howabout	1
@@ -66776,6 +66791,7 @@ houser	1
 bowflex	1
 confirmable	1
 placates	1
+nothaggi_desalination_plant	1
 electrode	1
 nodotindrpepper	1
 problrm	1
@@ -67124,6 +67140,7 @@ food-grade	1
 unscented	1
 jesus-toting	1
 partiipate	1
+am-not-crying	1
 hbos	1
 orangatans	1
 unfuckingbelievable	1
@@ -67357,8 +67374,6 @@ tty's	1
 videophones	1
 gand	1
 andi	1
-ager	1
-#aftermath	1
 failpacalipse	1
 e-mazing	1
 fo'c'sle	1
@@ -67768,6 +67783,7 @@ oldtimer	1
 dressman	1
 shootingstar	1
 pay-per-click	1
+www.ddg.gg	1
 dorne	1
 hellcat	1
 llv	1
@@ -68103,6 +68119,7 @@ churros	1
 feingold	1
 consdiering	1
 gravels	1
+#etymology	1
 stephanopoulos	1
 library.nu	1
 guestimate	1
@@ -68110,6 +68127,7 @@ aaaaaaaaaaaaaaahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh	1
 actualize	1
 viccy	1
 moh's	1
+www.maxkeiser.com	1
 diewhitegirls	1
 libertarian-leaning	1
 daikatana	1
@@ -68561,6 +68579,7 @@ kirkpatrick	1
 nsync	1
 stralias	1
 sketchiest	1
+www.youtube.com/watch?v=wlejmrlbsmc	1
 mardson	1
 resetter	1
 farnsworth's	1
@@ -68701,6 +68720,7 @@ unitless	1
 cremerie	1
 forumla	1
 signifer	1
+http:www.isthatcherdeadyet.co.uk	1
 _charmed_	1
 _attention	1
 _differentiating_	1
@@ -68782,6 +68802,7 @@ castiel	1
 balthazar	1
 gyrocompass	1
 cjgibson	1
+irawwwr	1
 bbcs	1
 seawise	1
 christenings	1
@@ -69018,7 +69039,7 @@ rule-book	1
 remf	1
 gaaaayyyy	1
 sangreal	1
-tebo	1
+tebowwwwwwwwwwwwwwwwww	1
 bullet-walking	1
 walken-hopper	1
 nfl-ignoramus	1
@@ -69555,6 +69576,7 @@ bone-zone	1
 enbrel	1
 viagra.boner	1
 ibooks	1
+are-joking-mr	1
 avanafil	1
 vivus	1
 besylate	1
@@ -69995,6 +70017,7 @@ virage	1
 numéro	1
 jamaïque	1
 sotto	1
+aaawwwwwww	1
 yeeeeeaaaaa	1
 huckabees	1
 pensé	1
@@ -70159,6 +70182,7 @@ zorotheism	1
 yusufali	1
 pickthal	1
 shakir	1
+are-trolling-or-just-really-stupid	1
 textexpander	1
 smight	1
 crazy-ass-christian-americans	1
@@ -71439,7 +71463,6 @@ ohhhhnnnnnn	1
 rifle's	1
 cliiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiip	1
 presidentender	1
-#the_poltergeist_curse	1
 hk's	1
 pappalardo	1
 midges	1
@@ -71602,7 +71625,6 @@ shawnb	1
 overly-paranoid	1
 freeotfe	1
 truecrypt's	1
-#safeguarding_of_sources	1
 constrictors	1
 sunlamps	1
 grep	1
@@ -71688,7 +71710,6 @@ _up_	1
 lemo	1
 sump	1
 persue	1
-#glendale_community_college_in_popular_culture	1
 derpedy	1
 regularily	1
 sitll	1
@@ -71763,7 +71784,6 @@ wymerica	1
 burden's	1
 non-disclosure	1
 seedbed	1
-performance_piece	1
 outracing	1
 miracle's	1
 makhani	1
@@ -71781,8 +71801,10 @@ ralston-style	1
 readky	1
 kytescall's	1
 reaction_on_my_nub	1
+are-happy-and-you-know-it	1
 tippett	1
 electro-acoustic	1
+wwwwwwhhhhaaaaaaaaaaat	1
 bathory	1
 wine-filled	1
 wine-infused	1
@@ -71816,7 +71838,7 @@ tetrachlorohydrex	1
 gly	1
 chlorohydr	1
 hyperhydrosis	1
-meo	1
+meowwww	1
 moorhead	1
 right-left	1
 coagulant	1
@@ -72547,6 +72569,7 @@ chuggy	1
 roly-polies	1
 tube-meats	1
 peru's	1
+dowwwwwwn	1
 perú	1
 double-jointed	1
 cecotropes	1
@@ -72629,6 +72652,7 @@ anti-ice	1
 sitch	1
 d'alene	1
 bitumen	1
+www.butlr.com	1
 juus	1
 moyen	1
 visiter	1
@@ -72990,6 +73014,7 @@ pestilence	1
 cylcled	1
 interted	1
 unfocused	1
+www.emulatemii.com	1
 liero	1
 donky	1
 nottingham's	1
@@ -73095,7 +73120,6 @@ throwbookatface	1
 acheivment	1
 ascared	1
 struwwelpeter	1
-fairy_tale	1
 decompress	1
 _too_	1
 lovebirds	1
@@ -73421,7 +73445,7 @@ iclip	1
 _sean	1
 roomate's	1
 sinegal	1
-mmmeeeeeeeeeeeeeooooooooooo	1
+mmmeeeeeeeeeeeeeooooooooooowwwwwwwwwww	1
 correction-the	1
 endermen	1
 caterwaul	1
@@ -73504,6 +73528,7 @@ orientem	1
 flag-speak	1
 phynneaus	1
 orientieren	1
+www.survivalshirt.com	1
 ναυτίλος	1
 nautilidae	1
 t-o	1
@@ -73709,8 +73734,6 @@ elba's	1
 henríquez	1
 dark-featured	1
 levantines	1
-#thor	1
-_the_mighty_avenger	1
 vex	1
 hiemdall	1
 misplacing	1
@@ -74296,6 +74319,7 @@ gettings	1
 shitfucks	1
 fizzle	1
 cuelgan	1
+fawwwwkkkk	1
 nci	1
 pensioner	1
 law-abiders	1
@@ -74901,7 +74925,6 @@ sistermoo's	1
 s'cool	1
 one-man-invade	1
 turk's	1
-#magazine_disconnects	1
 mariniere	1
 semi-atomic	1
 ballsiest	1
@@ -74924,6 +74947,7 @@ unorignal	1
 order.lets	1
 singlehanded	1
 ead	1
+www.link.com	1
 angelo's	1
 mini-star	1
 historicy	1
@@ -75290,7 +75314,7 @@ redeye	1
 biwincesting	1
 grey-eyed	1
 hekka	1
-kabla	1
+kablawwww	1
 not-bald	1
 chimpancy	1
 frizbee's	1
@@ -75376,7 +75400,6 @@ muzlim	1
 towel-heads	1
 newcular	1
 openbsd's	1
-...   .	1
 rianz	1
 page-and-a-half-long	1
 foreign-registered	1
@@ -75829,7 +75852,7 @@ tear-jerkingly	1
 chocktaw	1
 hunger-relief	1
 homoxsexuality	1
-yaaa	1
+yaaawwwseeeeaaaaaahhhhh	1
 expalin	1
 postion	1
 under-using	1
@@ -75968,6 +75991,7 @@ trackball	1
 ahhaha	1
 wheeeeeeee	1
 #clint	1
+#history	1
 #clistory	1
 glass-steagal	1
 aow	1
@@ -76062,6 +76086,7 @@ rasshole	1
 bhusd	1
 gadzooks	1
 common-sense	1
+www.unity.edu	1
 detonates	1
 dick-waving	1
 burritobazooka	1
@@ -76094,11 +76119,11 @@ i_am_actually_a_duck	1
 zachs	1
 frontierland	1
 imaginers	1
+clawwwwwwwwwww	1
 anny	1
 think's	1
 m'y	1
 aarp	1
-#smart_ship_testbed	1
 off-seasons	1
 fireone	1
 jimmie	1
@@ -76288,7 +76313,7 @@ lurves	1
 outlasting	1
 book-learning	1
 trina	1
-creeeeewwkcre	1
+creeeeewwkcrewwwwwwweeweewweeeek	1
 goolge	1
 heetler	1
 remimder	1
@@ -76685,6 +76710,7 @@ bennys	1
 moorestown	1
 paperboy	1
 recolouring	1
+www.somethingawful.com	1
 onone's	1
 scred	1
 kyanka	1
@@ -76755,6 +76781,7 @@ bessarion	1
 algonquinn	1
 submissiveness	1
 starling	1
+are-hard	1
 riel	1
 snicker-snack	1
 alcoa	1
@@ -77102,6 +77129,7 @@ deuteronomy	1
 achievment	1
 rockafeller	1
 butt-buddy	1
+aaaawwwwwww	1
 yeeeeeeeeaaaaaaaaah	1
 acquisitions	1
 ahvatar	1
@@ -77156,6 +77184,7 @@ flibbity	1
 gibboty	1
 gloomiest	1
 smartassness	1
+wooooowwwwwww	1
 paticipatin	1
 desagan	1
 copypasta'd	1
@@ -77278,6 +77307,7 @@ stitcher	1
 carjackers	1
 palaeontology	1
 fawx	1
+www.dancarlin.com/disp.php/hharchive	1
 ögedei	1
 world-population-wipeouts	1
 smat	1
@@ -77567,6 +77597,7 @@ funtimes	1
 pro-probably	1
 shaws	1
 free-ride	1
+www.integrationacres.com	1
 mengle	1
 mechanistic	1
 germanyhitlerjewsgenocideconcentrationcampsgermsmyhitlergermanygermanysomething	1
@@ -78265,6 +78296,7 @@ saopaulo	1
 sponsor's	1
 trampus	1
 kinnick	1
+www.watchop.com	1
 jeld-wen	1
 _poverty_	1
 _official_	1
@@ -78319,7 +78351,6 @@ turbo-prop	1
 influxes	1
 eft	1
 dalnet	1
-tv_series	1
 alegre	1
 down.true	1
 coby	1
@@ -79018,6 +79049,7 @@ shotput	1
 brodwell	1
 deformation	1
 lessening	1
+is-an-impostor-the-navy-says-about-capn-crunch	1
 mountbatten	1
 penciled	1
 stormborn	1
@@ -80045,6 +80077,7 @@ counterarguments	1
 conolonialism	1
 villify	1
 non-islander	1
+www.m.wikipedia.org	1
 avings	1
 auto-changing	1
 hmmmmmmmmmmm	1
@@ -80851,6 +80884,7 @@ raysing	1
 minutzzzzzzz	1
 dianne	1
 optima	1
+wwwhoooshh	1
 rubber-stamp	1
 sulton	1
 griswold	1
@@ -82248,7 +82282,6 @@ tomaso	1
 tittin	1
 icepick	1
 then-president	1
-.   ...	1
 ooooohhh	1
 half-hours	1
 aite	1
@@ -82272,7 +82305,7 @@ fedayeen	1
 extortions	1
 tri-hulled	1
 dibber	1
-bluee	1
+blueewwwwwww	1
 dmitry	1
 golubovskiy	1
 impractically	1
@@ -82676,6 +82709,7 @@ missileer	1
 tackiest	1
 supportability	1
 mini-steam	1
+saa	1
 handlebars	1
 brickass	1
 eye-spy	1
@@ -82943,6 +82977,7 @@ max-power	1
 whoopsey	1
 thhe	1
 gghf	1
+sorryyyy	1
 super-villainy	1
 jana	1
 pawla	1
@@ -82954,6 +82989,7 @@ yikes_itsme	1
 meteoroids	1
 pro-stock	1
 camero	1
+interwwweb	1
 dethrone	1
 gamerankings	1
 oooooooooooooooh	1
@@ -83176,7 +83212,7 @@ exo	1
 cassini	1
 huygens	1
 titanian	1
-crooooo	1
+crooooowwww	1
 knowyourmeme	1
 mr.dr.prof	1
 mechjeb	1
@@ -83484,6 +83520,7 @@ heyaah	1
 boxofficemojo	1
 jimmys	1
 euro-designed	1
+awwwwright	1
 geely	1
 notve	1
 chronosynclastic	1
@@ -83906,6 +83943,7 @@ mooseg	1
 q-ships	1
 hypotenoose	1
 ygr	1
+are-goddamn-right.gif	1
 ruoruni	1
 moooooose	1
 non-combat	1
@@ -83978,7 +84016,6 @@ floodlight	1
 ahab	1
 al-shabaab	1
 deterministic	1
-satelita	1
 uncaring	1
 oba	1
 potatochops	1
@@ -84393,6 +84430,7 @@ dermal	1
 nrk	1
 karen's	1
 whaaallleeee	1
+www.theexplodingwhale.com	1
 mutant-aids	1
 secretchimp's	1
 clickrandomonwikipediaandtodayilearned	1
@@ -84946,6 +84984,9 @@ ex-heroin	1
 notifies	1
 tafkap	1
 resubmitting	1
+www.yahoo.com	1
+www.ask.com	1
+www.bing.com	1
 internalize	1
 mansiere	1
 conversationalist	1
@@ -85314,7 +85355,6 @@ unlawfully	1
 non-condom	1
 daquiris	1
 pokers	1
-game_show	1
 weened	1
 pleeease	1
 nuthouse	1
@@ -85618,6 +85658,7 @@ heiki	1
 gingahh	1
 edamame	1
 wikipedia-imf	1
+www.bighotgaywill.ie	1
 delici	1
 flaaj	1
 fnhklelelejr	1
@@ -85919,7 +85960,6 @@ electrónico	1
 drumkit	1
 section'-y	1
 wave-particle	1
-particle_duality	1
 call-sign	1
 super-man	1
 co-emperor	1
@@ -86271,6 +86311,7 @@ cadena	1
 roadie	1
 vel	1
 stapp	1
+www.chick.com	1
 hamburger's	1
 self-shaming	1
 thrashin	1
@@ -88492,6 +88533,7 @@ flying-through-space-and-time	1
 anomalous	1
 paddler	1
 tardis-like	1
+www.regularguys.com	1
 tig	1
 bitties	1
 sellable	1
@@ -89042,7 +89084,9 @@ brickie	1
 stretty	1
 deigo	1
 pre-frosh	1
+pawwwwwl	1
 auburns	1
+pawwwl	1
 home-and-away	1
 boilermakers	1
 all-rookie	1
@@ -90697,6 +90741,7 @@ doubledown	1
 jill-jet	1
 pro-human	1
 ⌣	1
+is-married-action-hero-actor-dolph-lundgren.html	1
 fermilab	1
 hyoid	1
 titally	1
@@ -90778,6 +90823,7 @@ affirmed	1
 israel-palestine	1
 oppositer	1
 counter-attacking	1
+ewwwwwwwwwwwwwwww	1
 pudong	1
 vaina	1
 fatsos	1
@@ -91493,6 +91539,7 @@ assenting	1
 repairable	1
 stymie	1
 civilian-adapted	1
+www.nallsaviation.com	1
 cynacism	1
 guvnor	1
 pochahontas_spaceman	1
@@ -92200,6 +92247,7 @@ dagmer	1
 dormer	1
 arakh	1
 squirrel_in_ur_head	1
+►	1
 stachybotrys	1
 aspergillis	1
 self-confident	1
@@ -92280,7 +92328,6 @@ bonnnnng	1
 pétomane	1
 menz	1
 rec-league	1
-doctor_who	1
 amidoinitrite	1
 nappin	1
 leuven	1
@@ -93698,6 +93745,7 @@ spine-tingly-dingely	1
 axel's	1
 bestofworldstar	1
 wshh	1
+pawwwnch	1
 econo-lawyer	1
 wak	1
 aldin	1
@@ -94163,7 +94211,6 @@ audio-recognition	1
 hard-pressed	1
 clothespin	1
 smithist	1
-experi	1
 brutalism	1
 preciado	1
 radiative	1
@@ -94322,7 +94369,6 @@ yeaaaaaaaaaaaaaaaaaaaaah	1
 quota-slot	1
 impairments	1
 epilepsy-vision	1
-...   ...	1
 microscopy	1
 limbaughs	1
 manically	1
@@ -94958,6 +95004,7 @@ deew	1
 veggietales	1
 resynthesise	1
 slushie	1
+eeeeeeeeeeeeeeeeeewwww	1
 fussier	1
 jamedu	1
 over-hydration	1
@@ -95012,6 +95059,7 @@ slothrop	1
 misspellings	1
 röyksopp	1
 must-listen	1
+www.frenchkissfm.com	1
 double-cross	1
 innthe	1
 xocalat	1
@@ -95392,6 +95440,7 @@ scowls	1
 quasar	1
 cgis	1
 non-predetermined	1
+www.kfc.is	1
 hafnarfjörður	1
 hinderance	1
 pre-revised	1
@@ -95711,7 +95760,6 @@ original's	1
 idea's	1
 ampersands	1
 i---who	1
-short_story	1
 freemark	1
 trottier's	1
 screenwriter's	1
@@ -95741,6 +95789,7 @@ sinceriod	1
 soldeirs	1
 murder's	1
 ginko	1
+www.redcrossblood.org/learn-about-blood/blood-types	1
 seigfreid	1
 greenstrong's	1
 tunnelling	1
@@ -95845,6 +95894,7 @@ jet-pack	1
 free-to-play	1
 state-banning	1
 playtest	1
+www.gog.com	1
 didyouknowgaming	1
 simple-minded	1
 starsiege	1
@@ -96236,6 +96286,11 @@ dennoch	1
 klasse	1
 drauf	1
 bist	1
+amg.fotocommunity.com/	1
+amente	1
+optische-taeuschungen	1
+kli	1
+amawandel-oder-personen-i	1
 aggree	1
 verwendet	1
 nen	1
@@ -96431,6 +96486,7 @@ proberbly	1
 isent	1
 ethnohistory	1
 wikiquotes	1
+bbwwwaaahahahahaha	1
 prostatic	1
 prostatice	1
 truncating	1
@@ -96827,6 +96883,8 @@ trippel	1
 cellarmaster	1
 unsexily	1
 homebrewer's	1
+www.annapolishomebrew.com	1
+www.howtobrew.com	1
 overnothings	1
 overmanhairs	1
 harrellson's	1
@@ -97083,6 +97141,7 @@ wordpress	1
 collaborates	1
 extortionist	1
 ex-yakuza	1
+www.humantrafficking.org/countries/japan	1
 fufilling	1
 anybody'd	1
 imembarrasedididntalreadyknowthis	1
@@ -97424,6 +97483,7 @@ bimmer_m	1
 perma-fucked	1
 senti	1
 at-risk	1
+wowwww	1
 cenematic	1
 walkthrough	1
 talirico	1
@@ -97482,6 +97542,8 @@ chancellory	1
 zitler	1
 führerbunker	1
 realt	1
+www.copart.com	1
+www.iaai.com	1
 quatre-vingt-un	1
 ubered	1
 world-travelling	1
@@ -97627,6 +97689,7 @@ faceplate	1
 faber	1
 monix	1
 comprehended	1
+ewwwww	1
 wall-papering	1
 reconfiguring	1
 swordsmanship	1
@@ -98163,7 +98226,6 @@ zaabit	1
 سمعتش	1
 كلمة	1
 حضرة	1
-#enzo	1
 arabophobia	1
 thieve's	1
 sccurate	1
@@ -98364,7 +98426,7 @@ carvallo	1
 samuel_cat	1
 goanna	1
 under-roasting	1
-paaa	1
+paaawwwttts	1
 frummme	1
 proplus	1
 senseo	1
@@ -98416,7 +98478,6 @@ harrar	1
 batak	1
 odorous	1
 choco-latte	1
-herve	1
 beh	1
 beepers	1
 a-levels	1
@@ -98647,6 +98708,7 @@ qm	1
 estrus	1
 swellings	1
 confusedly	1
+powwwwwwerrrrrrrrrr	1
 thaaaaaaaank	1
 yooooooou	1
 truck-aircraft	1
@@ -100355,6 +100417,7 @@ polititians	1
 should-probably-just-retire-already	1
 tiwanaku	1
 karmafarming	1
+nsf	1
 immort	1
 hairy-assed	1
 lamberts	1
@@ -100369,6 +100432,7 @@ this.parent	1
 comment.upvote	1
 comment.parent	1
 printf	1
+wwww	1
 cycloethane	1
 non-feynman	1
 hoppes	1
@@ -100554,7 +100618,6 @@ magnetomount	1
 darlan	1
 pickaxes	1
 accep-ted	1
-mahoning_open_pit_iron_mine	1
 wizna	1
 scaffolders	1
 mystically	1
@@ -101293,6 +101356,7 @@ slovenly	1
 now-canceled	1
 berstein's	1
 fartin	1
+knowwwwww	1
 anamorphic	1
 knowww	1
 old-anakin's	1
@@ -101734,6 +101798,7 @@ smut_addict	1
 putrescence	1
 clublife	1
 newscientist.com	1
+saawwwyyy	1
 pittsburgher	1
 reearchers	1
 low-frequency	1
@@ -102460,6 +102525,7 @@ khilji's	1
 cabling	1
 zeppelin-like	1
 kaeding	1
+www.harrys.com	1
 hattiesburg	1
 that'sthejoke	1
 stavromula	1
@@ -102651,7 +102717,6 @@ overun	1
 gorillian	1
 bush'sgrandfather	1
 shizo	1
-fashion_designer	1
 countermand	1
 explicity	1
 druish	1
@@ -102680,6 +102745,7 @@ deer-rifle	1
 ammends	1
 staline's	1
 mussolinni's	1
+www.astralquest.com	1
 guards'll	1
 rock-ola	1
 memoranda	1
@@ -103073,6 +103139,7 @@ mccuistion	1
 continuations	1
 birch's	1
 psuedo-sequel	1
+www.piratebay.sx	1
 bball-ref	1
 mongul	1
 dickshittiness	1
@@ -103318,6 +103385,7 @@ dwarft	1
 front-door	1
 tgfwf	1
 catania	1
+awwwwwwwshit	1
 hornss	1
 warhoard	1
 qwayzar-dealer	1
@@ -104374,6 +104442,7 @@ kashering	1
 quechua-speaking	1
 aliens--i	1
 alders	1
+lawwwnnn	1
 sprouting	1
 drunk's	1
 schmoocon	1
@@ -104694,6 +104763,7 @@ unnerve	1
 greeeaaat	1
 porn-industrial	1
 tubekitty	1
+www.girlfriendfilms.com	1
 luxxxottica	1
 ravenhaired	1
 half-wondered	1
@@ -104811,6 +104881,7 @@ maggette	1
 far-future	1
 skerritt	1
 footstools	1
+www.stjohn.org.nz	1
 hospitallers	1
 guytm	1
 clip-show	1
@@ -104963,6 +105034,8 @@ ruthevilles	1
 trever	1
 orosco	1
 hawwy	1
+hawwwy	1
+hawwwwy	1
 a-rich-dud	1
 voyance	1
 smalltime	1
@@ -105096,6 +105169,7 @@ omgeeeeeeeeeeeee	1
 naturalpathic	1
 homepathic	1
 duckburg	1
+www.monoprice.com	1
 leggies	1
 accenting	1
 woooaaaahhhh	1
@@ -105133,7 +105207,6 @@ supermanning	1
 goof-off	1
 nazzys	1
 nonrecognition	1
-#second_coming_and_death	1
 sabretooth's	1
 graydon	1
 sabretooth	1
@@ -105266,6 +105339,7 @@ aaaaaannnd	1
 niggar	1
 tv-rights	1
 scrounging	1
+www.colorofcrime.com	1
 pursuers	1
 then-unknown	1
 monad	1
@@ -105409,6 +105483,7 @@ campigian	1
 blow-hole	1
 pride-obliterating	1
 bitch-slap	1
+www.findagrave.com	1
 arse-licking	1
 balls's	1
 longhoers	1
@@ -105917,6 +105992,7 @@ a-peel-ed	1
 upshaw	1
 sandwitch	1
 boric	1
+www.incompetech.com	1
 incompetech.com	1
 raninabow	1
 jerkies	1
@@ -106041,7 +106117,6 @@ near-immortality	1
 nopa	1
 dangerous-era	1
 lipsynched	1
-#menu	1
 lipsynced	1
 wbss	1
 ball-park	1
@@ -106105,6 +106180,7 @@ ishment	1
 featherstone-haugh	1
 fanshaw	1
 lexical	1
+www.worldtourismfoundation.org	1
 la-eye-ve	1
 liivv	1
 patrice	1
@@ -106817,6 +106893,7 @@ tackless	1
 reflextion	1
 ringooo	1
 loews	1
+www.eveandersson.com/photos/netherlands/amsterdam-centrum-homomonument-large.jpg	1
 netherland	1
 out-act	1
 camphor	1
@@ -106936,11 +107013,6 @@ jupmed	1
 drafty	1
 yaetes	1
 garderobe	1
-_of	1
-_ch	1
-_gaillard	1
-#the	1
-_siege	1
 sheez	1
 baily	1
 a-a-a-a-a-alcohol	1
@@ -106974,6 +107046,7 @@ bigup	1
 weak-stomached	1
 frontal-brain	1
 conceits	1
+shawwwww	1
 quadric	1
 stll	1
 fabulists	1
@@ -107411,6 +107484,7 @@ driscoll	1
 unlikley	1
 chainlink	1
 tropped	1
+www.eia.gov	1
 contruction	1
 alumuinum	1
 myesss	1
@@ -107713,6 +107787,7 @@ crime-rate	1
 rukass	1
 revillaligo	1
 predominance	1
+www.reddit.com/r/fifthworldproblems	1
 linkmaking	1
 tottaly	1
 predetetmined	1
@@ -107789,11 +107864,11 @@ viscusi	1
 vetinari	1
 non-basketball	1
 four-headed	1
+is.html	1
 saltpeter	1
 gaahl	1
 infernus	1
 quadruple-doubles	1
-#champion_again	1
 spiezio	1
 telsa	1
 bation	1
@@ -108030,6 +108105,7 @@ sydeny	1
 pentridge	1
 dunnnnn	1
 goiiiinnnn	1
+doooowwwnnn	1
 galatic	1
 ploughshears	1
 whitefella	1
@@ -108076,6 +108152,7 @@ so-crates	1
 kow	1
 mrspad	1
 cloudkicker	1
+dowwwwwn	1
 pryin	1
 irish-australian	1
 iron-man	1
@@ -108258,6 +108335,7 @@ itrolowelo's	1
 sit-ins	1
 onein	1
 sanderson's	1
+www.tommyleejonesismelting.com	1
 kesy	1
 kaiser's	1
 anti-kjv	1
@@ -108452,6 +108530,7 @@ seussey	1
 scientific-sounding	1
 judenhass	1
 jewhatred	1
+aaaawwwwww	1
 alterac	1
 zaki	1
 pasidg	1
@@ -108640,7 +108719,6 @@ spinless	1
 gender-bent-kevin-smoth	1
 hyperreal	1
 camara	1
-#production	1
 mcvie	1
 elland	1
 parmalat	1
@@ -109383,6 +109461,7 @@ jahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh	1
 mind.setstate	1
 tannon	1
 meshing	1
+chowwwwwwder	1
 percolate	1
 you.fuck	1
 陰陽	1
@@ -109395,6 +109474,7 @@ space-ist	1
 captainpoopoo	1
 warvan	1
 ewokese	1
+am-gandalf-and-magneto	1
 figure's	1
 g-g-g-g-g-gh-ghost	1
 retconn-ing	1
@@ -109461,7 +109541,6 @@ chewie's	1
 nerd-herder-alderannian	1
 dromand	1
 kaas	1
-s_too_short	1
 endorian	1
 aborealists	1
 emperials	1
@@ -109731,6 +109810,7 @@ munition	1
 ggobl	1
 font-blindness	1
 ubiqutious	1
+am-comic-sans-asshole	1
 homboys	1
 anti-punk	1
 bmps	1
@@ -110204,6 +110284,7 @@ exasperates	1
 somewhat-intelligent	1
 mothersbaugh	1
 exsperminate	1
+eeeeeeeeeeeeeeeeee	1
 tenancy	1
 zbb	1
 deconstructing	1
@@ -110496,8 +110577,10 @@ franciscans	1
 wololooooo	1
 borgias	1
 niwdog's	1
+aaaawwww	1
 exterminatus	1
 groupstages	1
+slowwwlyyyyy	1
 troled	1
 kiffing	1
 arrivals	1
@@ -110691,6 +110774,7 @@ behavioural	1
 ricola's	1
 brusso	1
 mccaffery	1
+www.youtube.com/watch?v=cysnhhvaokq	1
 dwb	1
 auto-tuney	1
 implicitness	1
@@ -110867,6 +110951,7 @@ husar	1
 включаешь	1
 paranoidparrot.jpg	1
 humanzee	1
+www.wikipedia.org/wiki/spice_trade	1
 buidness	1
 orgazations	1
 truereddit	1
@@ -110959,7 +111044,7 @@ oam	1
 re-directs	1
 starwarseu	1
 baileys	1
-raaaa	1
+raaaawwwwwwwwwwwwwwwwrrrr	1
 smuggles	1
 kja	1
 twicrazy	1
@@ -111024,6 +111109,7 @@ derpbop	1
 somewhat-increasingly-popular	1
 non-perishable	1
 brorilla	1
+www.lifegem.com	1
 knowill	1
 plety	1
 romulous	1
@@ -111095,6 +111181,7 @@ stand-ups	1
 not-yet-used	1
 whuduryoodoinurr	1
 physorg	1
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwe	1
 yuu	1
 werr	1
 deaaad	1
@@ -111414,6 +111501,7 @@ humus	1
 humanus	1
 mediterrian	1
 godrod	1
+awwwyeauh	1
 krogans	1
 daywear	1
 deorbit	1
@@ -111490,6 +111578,7 @@ frack's	1
 malcs	1
 handsfree	1
 dobbed	1
+not-cost-you-a-secret-agents-salary	1
 semi-formal	1
 fourget	1
 wrist-watch	1
@@ -111695,6 +111784,7 @@ unfortuantely	1
 whiped	1
 swarming	1
 suzumebashi	1
+www.leawo.com	1
 show'd	1
 beween	1
 safae	1
@@ -111745,6 +111835,7 @@ desperatly	1
 milwaukee's	1
 americ	1
 kripsy	1
+www.com	1
 mfh	1
 degaben	1
 toph	1
@@ -111904,6 +111995,7 @@ darija	1
 bengali	1
 ramadi	1
 antagony	1
+www.rim.jobs	1
 lithography	1
 tossin	1
 fredom	1
@@ -111912,6 +112004,7 @@ memers	1
 hypnotist	1
 hurt-y	1
 hangnail	1
+raa	1
 timmes	1
 non-intelligent	1
 rionoko	1
@@ -111922,6 +112015,7 @@ afghani's	1
 ub	1
 roastery	1
 rehbein	1
+to-free-the-shit-out-of-you.jpg	1
 locally-owned	1
 winchell's	1
 penningtons	1
@@ -112265,7 +112359,6 @@ huerta	1
 streamallthis.com	1
 bienvenido	1
 trobed	1
-kachoo	1
 re-watches	1
 actually_doesnt_care	1
 convo's	1
@@ -112281,7 +112374,6 @@ moths	1
 funnelled	1
 excecuted	1
 atoricities	1
-#laugh_track	1
 rotarytiger's	1
 speaking--sadly--that	1
 poppler	1
@@ -112571,6 +112663,7 @@ dagman	1
 saratoga	1
 cliiiiiiiiiiip	1
 sinatra-film	1
+not-believe-fooled-world.html	1
 inuktitut	1
 syllabics	1
 disbarring	1
@@ -112661,6 +112754,7 @@ anti-baltimore	1
 road-trip	1
 multiplex	1
 soooooooooooooooooooooulllllllllll	1
+glowwwwwwwwwwwwwwwwwwwwwwww	1
 roswellite	1
 münchen	1
 baltimore-based	1
@@ -113711,7 +113805,7 @@ mixer's	1
 instructive	1
 barbarically	1
 was.going	1
-dunuh-dun-dun-dunuh-dun-dunuh-dunuh-dun-dun-dunuh-do	1
+dunuh-dun-dun-dunuh-dun-dunuh-dunuh-dun-dun-dunuh-dowwwww	1
 schoolbooks	1
 raaaain	1
 horizion	1
@@ -113721,6 +113815,7 @@ ghandi's	1
 liquidy	1
 ya's	1
 dunny	1
+www.wikipedia.org/wiki/marathon	1
 modality	1
 externalization	1
 baclava	1
@@ -114368,7 +114463,6 @@ uranium's	1
 cattermole	1
 renationalized	1
 re-combine	1
-#tycho_brahe	1
 washable	1
 indelible	1
 clabo	1
@@ -114833,6 +114927,7 @@ aspirine	1
 adminstered	1
 evn	1
 stephs	1
+raawwwrrr	1
 gigabit	1
 l'aide	1
 runneth	1
@@ -115119,7 +115214,7 @@ potbelly's	1
 leavened	1
 macnamara	1
 wellll	1
-y'kno	1
+y'knowwww	1
 mcnamera	1
 ragu	1
 _some_	1
@@ -115193,7 +115288,6 @@ man-who-narrates-football-games	1
 manwich	1
 canoodling	1
 vpee	1
-#gemini_flights	1
 non-actors	1
 telenovelas	1
 unfilmed	1
@@ -115452,6 +115546,7 @@ raziel	1
 kiiiing	1
 aaaaafricaaa	1
 mrcloudies	1
+www.thundervalley.org	1
 kokomoian	1
 poorest---went	1
 yeet	1
@@ -116214,7 +116309,6 @@ recchi	1
 barasso	1
 nola's	1
 niedermayer	1
-#ammunition	1
 mckutchen	1
 tarnstrom	1
 rensselaer	1
@@ -116448,6 +116542,7 @@ lurred	1
 peltier	1
 alloyed	1
 bearsgonewild	1
+www.reddit.com/r/suicidewatch	1
 re-established	1
 draft-able	1
 bearsdoinghumanthings	1
@@ -116578,6 +116673,7 @@ scanline	1
 ceramics	1
 groznyj	1
 shunted	1
+www.examine.com	1
 of.upscaling	1
 waukesha	1
 smk	1
@@ -116615,6 +116711,7 @@ young'un	1
 kidz	1
 blury	1
 niacinamide	1
+lantchips-orig.jpg	1
 lhx	1
 satellaview	1
 fuckijg	1
@@ -116705,6 +116802,7 @@ ichneumonidae	1
 shuddered	1
 aldis	1
 chordal	1
+www.lds.org	1
 leaders--past	1
 higgs-boson	1
 knobheads	1
@@ -116855,6 +116953,7 @@ levelred	1
 beryll	1
 extupenditious	1
 peasant's	1
+bwwwwwaaaahaahhhhhhhhhhh	1
 grass's	1
 voegelin	1
 bad-neighbor-behavior-management	1
@@ -117119,6 +117218,7 @@ applebys	1
 querying	1
 overcompensate	1
 fopas	1
+am-vegan-can-i-drink-beer-and-wine.htm	1
 vegan-friendly	1
 thenumber	1
 thenewovermind	1
@@ -117390,7 +117490,6 @@ adressing	1
 jewey-o's	1
 pro-craig	1
 amgur	1
-amages	1
 mesoplanets	1
 fsync	1
 chain.we	1
@@ -117772,6 +117871,7 @@ palmas	1
 ramon	1
 arellano	1
 drivable	1
+www.here-comes-democracy-motherfucker.gov	1
 mini-governments	1
 zetillas	1
 dgo	1
@@ -118043,6 +118143,7 @@ sount	1
 artemide	1
 disingenious	1
 islamd	1
+swwwwwweeeeeeeeeeeeeet	1
 throne's	1
 silver-nosed	1
 ballou	1
@@ -118998,6 +119099,7 @@ adjetives	1
 origanal	1
 harward	1
 chaebols	1
+powwwweeeeerrrr	1
 anti-dd	1
 anti-children-drinking	1
 adr	1
@@ -119092,6 +119194,7 @@ eco-energy	1
 unadjusted	1
 shlock	1
 bjjjwooosh	1
+phwwwooooommm	1
 treeline	1
 muthafucking	1
 unambitious	1
@@ -119110,6 +119213,7 @@ fricks	1
 me'sa	1
 besta	1
 xpln	1
+daaawwwwww	1
 worf's	1
 burtonland	1
 cockuccino	1
@@ -119163,6 +119267,7 @@ parley	1
 well-dressed	1
 tosche	1
 kshhhh	1
+brrrwwwww	1
 extraordinnaire	1
 kisskiss	1
 wholly-owned	1
@@ -119749,6 +119854,7 @@ mybadalternate	1
 non-people	1
 pulsers	1
 card's	1
+www.hatrack.com	1
 disprovable	1
 sensiblemadness	1
 microscale	1
@@ -120145,6 +120251,7 @@ ueno	1
 dpatt	1
 caramelizes	1
 turians	1
+www.hiddensandiego.net	1
 suppurating	1
 vitiate	1
 daughters-in-law	1
@@ -120211,6 +120318,7 @@ laddie	1
 culs	1
 thise	1
 benzo's	1
+ewwwwww	1
 flowes	1
 gentlewoman	1
 buang	1
@@ -120408,6 +120516,7 @@ bcg	1
 frc	1
 tickilish	1
 defunded	1
+www.nsa-prisim.gov	1
 guillebeau	1
 pastel	1
 tepes	1
@@ -120526,6 +120635,7 @@ slants	1
 bauval	1
 hydroponicaly	1
 outlier's	1
+nowwwww	1
 stencils	1
 pryors	1
 ferrari-ferrum	1
@@ -120653,7 +120763,6 @@ hardiness	1
 shangri	1
 zuckoff	1
 stob	1
-czech_republic	1
 scot-irish	1
 thwow	1
 dinnertime	1
@@ -121096,6 +121205,7 @@ territory-conquering	1
 enemies-defeating	1
 trunkhouse	1
 fancysack	1
+awwwe	1
 pro-ewing	1
 pecka	1
 soccer-playing	1
@@ -121109,6 +121219,7 @@ fjax	1
 misusage	1
 tandf	1
 confederacy's	1
+www.penisland.com	1
 wielder's	1
 americunt	1
 pro-mexico	1
@@ -121238,7 +121349,7 @@ non-cgi	1
 character-heavy	1
 arni	1
 laaaaaaw	1
-lllllllaaaaaaaa	1
+lllllllaaaaaaaawwwww	1
 iyym-nlwww	1
 nado	1
 vags	1
@@ -121690,6 +121801,7 @@ assures	1
 jerkers	1
 downlink	1
 moonverizon	1
+not-believe-actually-happened.html	1
 round-trip	1
 hadokens	1
 tendinitis	1
@@ -121866,6 +121978,7 @@ junglers	1
 exterminieren	1
 ryze	1
 fistman	1
+www.conservapedia.com	1
 amum	1
 gank	1
 non-conservatives	1
@@ -121977,6 +122090,7 @@ duh-duh-duh-dum	1
 haydn	1
 whereupon	1
 sgt.pepper	1
+www.arkanemusic.com	1
 octoupus's	1
 pinewood	1
 octupi	1
@@ -121984,6 +122098,7 @@ grondahl's	1
 cramer	1
 oriole	1
 paytons	1
+knowwwwwsssss	1
 whem	1
 wonderwall	1
 me-ee-ee	1
@@ -122353,6 +122468,7 @@ shitty-ass	1
 midge-midge	1
 mermaid's	1
 pound-for-pound	1
+www.peopleofwalmart.com	1
 cookware	1
 whattttt	1
 carotid	1
@@ -122381,6 +122497,7 @@ terribilis	1
 grlrooooiiiiiiiiouioiuoooooo	1
 nudibranch	1
 manifests	1
+brrr	1
 peasoup	1
 dumbos	1
 superdragon	1
@@ -122940,6 +123057,8 @@ lookit	1
 illuminatry	1
 sloganeer	1
 edgified	1
+www.wonga.com	1
+www.quickquid.co.uk/	1
 amiritye	1
 geoeye	1
 punk-ass	1
@@ -123052,8 +123171,6 @@ síminn	1
 fjallakofinn	1
 imobi.is	1
 glasglow	1
-detailspage	1
-opendocument	1
 moonie	1
 someting	1
 highly-represented	1
@@ -123099,6 +123216,7 @@ yoitube	1
 daily-allocated	1
 þorrablót	1
 arason	1
+www.sealandgov.org	1
 ofbthe	1
 forbyour	1
 asblegit	1
@@ -123481,6 +123599,7 @@ oohhhhhhhhh	1
 pay-bills	1
 pele's	1
 cuttery	1
+www.worldvision.com	1
 agonized	1
 vulture's	1
 facists	1
@@ -123637,6 +123756,7 @@ artemisia	1
 capillaris	1
 giffy	1
 talib's	1
+www.wwwdotcom.com	1
 peeta	1
 promise.that	1
 sweatsuit	1
@@ -123899,6 +124019,7 @@ iminent	1
 rice-eating	1
 einsatzgruppen-type	1
 havr	1
+rwwwwwaaaaa	1
 pinstriped	1
 fedora's	1
 grave--like	1
@@ -123923,6 +124044,7 @@ bible-ization	1
 past-times	1
 seussical	1
 arted	1
+to-hate-eagle.jpg	1
 legend's	1
 peniseses	1
 mcawesomepants	1
@@ -124343,6 +124465,7 @@ esthetic	1
 solis	1
 ahuh	1
 houseguests	1
+d'awwwwwwwww	1
 starvations	1
 bigotries	1
 kalkaska	1
@@ -124409,6 +124532,7 @@ shitty_boat_mods	1
 fenders	1
 spr's	1
 d-deck	1
+amedia.org/wikipedia/commons/a/ad/hognose_playing_dead.webm	1
 prow	1
 shannara	1
 fabrizio's	1
@@ -124598,6 +124722,7 @@ home-and-home	1
 auto-win	1
 nfceast	1
 radjack	1
+kewwwl	1
 brit-bashing	1
 może	1
 bym	1
@@ -124673,6 +124798,7 @@ buckaw	1
 bal-cin-ind-pit	1
 iifc	1
 stff	1
+d'awwwwwwww	1
 all-texas	1
 stygian	1
 polamalus	1
@@ -125259,7 +125385,6 @@ vault-tec	1
 zexal	1
 arc-v	1
 anemos	1
-chlorofluorocarbons	1
 curse-avoidance	1
 hydrochlorofluorocarbons	1
 blurp	1
@@ -125463,6 +125588,7 @@ cat-ii	1
 cat-iii	1
 miev	1
 oxford's	1
+www.youtube.com/watch?v=okookcranse	1
 suetone	1
 caius	1
 julio-claudian	1
@@ -125621,8 +125747,6 @@ cluing	1
 sh-sh-shaw	1
 roadworthy	1
 cclothes	1
-one_million	1
-oldid	1
 tenor's	1
 urqel	1
 fashionably	1
@@ -125720,7 +125844,6 @@ wheras	1
 bazooper	1
 voiceas	1
 veeger	1
-#development_and_initial_entries	1
 rofit	1
 ever-loving	1
 offrg	1
@@ -125855,6 +125978,7 @@ bang-for-your-buck	1
 shitpounded	1
 somolia	1
 transisthmian	1
+ames.com/uponsun/maynard_james_keenan/	1
 super-low	1
 manifestering	1
 gunsite	1
@@ -126107,6 +126231,7 @@ disney-universe	1
 taler	1
 marksthaler	1
 spodikaust	1
+www.kelloggs.com	1
 grrrrrrreat	1
 jáchymov	1
 pro-bowler	1
@@ -126387,6 +126512,7 @@ metv	1
 anz	1
 postcode	1
 padre	1
+www.the-breaks.com	1
 heyyyyyyyy	1
 tourniquet	1
 moneylenders	1
@@ -127075,7 +127201,6 @@ cassini-huygens	1
 horribles	1
 dw-i	1
 am-here	1
-#liquids	1
 too-the	1
 caltrans	1
 hyper-density	1
@@ -127645,7 +127770,7 @@ mangey	1
 avrakotos	1
 benejesuit	1
 necessariliy	1
-tomorrooooo	1
+tomorrooooowwwwwww	1
 . . ..	1
 betthesda	1
 commodor	1
