@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=5
 
 python train_seq2seq_model.py \
     --path_conversations_responses_pair /home/taoqing/Research/DSTC7/DSTC7-End-to-End-Conversation-Modeling/data/conversations_responses.pair.txt \
@@ -8,14 +8,14 @@ python train_seq2seq_model.py \
     --dialogue_encoder_embedding_size 300 \
     --dialogue_encoder_hidden_size 512 \
     --dialogue_encoder_num_layers 2 \
-    --dialogue_encoder_rnn_type GRU \
+    --dialogue_encoder_rnn_type LSTM \
     --dialogue_encoder_dropout_probability 0.8 \
     --dialogue_encoder_max_length 35 \
     --dialogue_encoder_bidirectional \
     --dialogue_decoder_embedding_size 300 \
     --dialogue_decoder_hidden_size 512 \
     --dialogue_decoder_num_layers 2 \
-    --dialogue_decoder_rnn_type GRU \
+    --dialogue_decoder_rnn_type LSTM \
     --dialogue_decoder_dropout_probability 0.8 \
     --dialogue_decoder_max_length 35 \
     --dialogue_decoder_attention_type general \
