@@ -215,7 +215,7 @@ class DecoderBase(nn.Module):
 
         # Run the forward pass of the RNN.
         decoder_final, decoder_output, attns = self._run_forward_pass(
-            inputs, encoder_outputs, decoder_state, encoder_inputs_length=encoder_inputs_length)
+            inputs, encoder_outputs, decoder_state, encoder_inputs_length)
 
         # Update the decoder_state with the result.
         final_output = decoder_output[-1]
@@ -286,13 +286,14 @@ class StdRNNDecoder(DecoderBase):
         # Calculate the attention.
         if self.attn_type is not None:
             # attention forward
-            print('attn_type: {}'.format(self.attn_type))
             #  decoder_output, p_attn = self.attn(
-                #  decoder_output.transpose(decoder_output, 1),
-                #  encoder_outputs.transpose(decoder_output, 1))
+                #  decoder_output.transpose(0, 1),
+                #  encoder_outputs.transpose(0, 1))
             # decoder_output -> [1, batch_size, hidden_size], encoder_outputs ->
             # [1, batch_size, hidden_sizes] -> [batch_size, 1, hidden_size]
-            decoder_output, p_attn = self.attn(decoder_output.transpose(0, 1), encoder_outputs.transpose[0, 1])
+            decoder_output, p_attn = self.attn(decoder_output.transpose(0, 1),
+                                               encoder_outputs.transpose(0, 1),
+                                               encoder_inputs_length)
             attns["std"] = p_attn
         else:
             decoder_output = decoder_output
