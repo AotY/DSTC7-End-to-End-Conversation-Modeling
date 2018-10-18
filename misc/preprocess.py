@@ -38,6 +38,7 @@ Read convos file.
 def read_convos(convos_file_path, logger=None):
     with open(convos_file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
+
     conversations = []
     responses = []
 
@@ -68,8 +69,7 @@ def read_convos(convos_file_path, logger=None):
         n += 1
 
         if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' %
-                        (n / 1e6, len(lines) / 1e6))
+            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
 
         sub = line.split('\t')
 
@@ -100,9 +100,7 @@ def read_convos(convos_file_path, logger=None):
         if conversation_length <=1 or response_length <= 1:
             continue
 
-        # abnormal lengths: < 7
         if response_length <= 7:
-            # save_abnormal_response(response_tokens)
             abnormal_responses.append(response_tokens)
 
         response_max_length = max(response_max_length, response_length)
@@ -235,8 +233,7 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
-        sorted_freq_list = [
-            item for item in sorted_freq_list if item[1] >= min_count]
+        sorted_freq_list = [item for item in sorted_freq_list if item[1] >= min_count]
 
     if max_vocab_size > 0 and len(sorted_freq_list) >= max_vocab_size:
         logger.info('Clip tokens by max_vocab_size')
@@ -400,8 +397,7 @@ if __name__ == '__main__':
         responses_length_distribution, response_max_length, \
         conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids, \
         response_scores, dialogue_turns, conversation_response_nums, \
-        abnormal_conversations, abnormal_responses = read_convos(
-            opt.convos_file_path, logger)
+        abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger)
 
     logger.info('conversation_max_length: %d ' %
                 conversation_max_length)  # 2429
@@ -422,6 +418,13 @@ if __name__ == '__main__':
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
     save_data_to_pair(opt, conversations, responses, conversation_hash_values,
                       filename='conversations_responses.pair.txt')
+
+    save_distribution(conversations_length_distribution, 'conversations')
+    save_distribution(responses_length_distribution, 'responses')
+
+    stat_frequency(conversations, ['conversations'], 0, 0, logger)
+    stat_frequency(responses, ['responses'], 0, 0, logger)
+
 
     # share a vocab
     if model_name == 'seq2seq':
@@ -458,11 +461,6 @@ if __name__ == '__main__':
         datas = conversations + responses + facts
         datas_name = ['conversations', 'responses', 'facts']
 
-    save_distribution(conversations_length_distribution, 'conversations')
-    save_distribution(responses_length_distribution, 'responses')
-    stat_frequency(conversations, ['conversations'], 0, 0, logger)
-    stat_frequency(responses, ['responses'], 0, 0, logger)
-
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
@@ -496,18 +494,11 @@ if __name__ == '__main__':
     """
 
     # fastText
-    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(
-        None,
-        vocab,
-        opt.fasttext_vec_file,
-        opt.fasttext_vec_dim,
-        None,
-        os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
+    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None, vocab, opt.fasttext_vec_file, opt.fasttext_vec_dim,
+        None, os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
 
-    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.npy' % (model_name, vocab_size, opt.google_vec_dim)),
-            vocab_embedding)
-    logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' %
-                out_of_vocab_count)  #
+    np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.npy' % (model_name, vocab_size, opt.google_vec_dim)), vocab_embedding)
+    logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     # save out of vocab words
     save_out_of_vocab_words(
@@ -540,6 +531,7 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
+    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -556,5 +548,6 @@ if __name__ == '__main__':
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
+    """
 
     logger.info('Preprocess finished.')
