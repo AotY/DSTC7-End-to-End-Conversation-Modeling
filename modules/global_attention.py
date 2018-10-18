@@ -154,7 +154,7 @@ class GlobalAttention(nn.Module):
         """
 
         # one step decoder_output
-        if decoder_output.hidden_size() == 2:
+        if decoder_output.dim == 2:
             one_step = True
             # insert one dimension
             decoder_output = decoder_output.unsqueeze(1)
@@ -177,17 +177,16 @@ class GlobalAttention(nn.Module):
             mask = mask.to(device=encoder_outputs.device)
 
             mask = mask.unsqueeze(1)  # Make it broadcastable.
-            print('mask shape: {}'.format(shape))
 
             # Fills elements of self tensor with value where mask is one. masked_fill_(mask, value)
             align.data.masked_fill_(1 - mask, -float('inf'))
 
         # Softmax to normalize attention weights
-        align_vectors = self.softmax(align) # 
+        align_vectors = self.softmax(align) #
 
         # each context vector c_t is the weighted average
         # over all the source hidden states
-        context_vecotr = torch.bmm(align_vectors, memory_bank) #[batch_size, t_len , hidden_size]
+        context_vecotr = torch.bmm(align_vectors, encoder_outputs) #[batch_size, t_len , hidden_size]
 
         # concatenate
         concated_cv = torch.cat((context_vecotr, decoder_output), dim=2) #[batch_size, t_len, 2*hidden_size]
