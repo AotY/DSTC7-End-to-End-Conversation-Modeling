@@ -61,11 +61,9 @@ class Seq2seqDataSet:
             with open(path_conversations_responses_pair, 'r', encoding='utf-8') as f:
                 for line in f:
                     conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
+
                     if not bool(conversation) or not bool(response):
                         continue
-                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split(' '))
-                    if len(response_ids) <= 3:
-                            continue
 
                     # conversation split by EOS, START
                     if conversation.startswith('start eos'):
@@ -83,12 +81,20 @@ class Seq2seqDataSet:
                     if history_dialogues is None:
                         continue
 
-                    conversation_context = ' '.join(history_dialogues)
-                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context.split(' '))
+                    #  conversation_context = ' '.join(history_dialogues)
+                    conversation = history_dialogues[0]
+                    response = history_dialogues[1]
+
+                    conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation.split(' '))
                     if len(conversation_ids) <= 3:
                             continue
 
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
+
+                    response_ids = self.dialogue_decoder_vocab.words_to_id(response.split(' '))
+                    if len(response_ids) <= 3:
+                            continue
+
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids))
@@ -121,7 +127,7 @@ class Seq2seqDataSet:
         history_dialogues = conversation.split('eos')
         history_dialogues = [history_dialogue for history_dialogue in history_dialogues if len(history_dialogue.split()) > 3]
 
-        if len(history_dialogues) == 0:
+        if len(history_dialogues) < dialogue_turn_num:
             return None
 
         history_dialogues = history_dialogues[-min(dialogue_turn_num, len(history_dialogues)): ]
@@ -170,6 +176,7 @@ class Seq2seqDataSet:
             # ids to word
             conversation_text = ' '.join(self.dialogue_encoder_vocab.ids_to_word(conversation_ids))
             response_text = ' '.join(self.dialogue_decoder_vocab.ids_to_word(response_ids))
+
             conversation_texts.append(conversation_text)
             response_texts.append(response_text)
 

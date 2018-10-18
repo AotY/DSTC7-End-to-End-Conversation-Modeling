@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=5
 
 python train_seq2seq_model.py \
     --path_conversations_responses_pair data/conversations_responses.pair.txt \
@@ -22,7 +22,7 @@ python train_seq2seq_model.py \
     --dialogue_decoder_max_length 35 \
     --dialogue_decoder_attention_type dot \
 	--dialogue_decode_type greedy \
-    --dialogue_turn_num 1 \
+    --dialogue_turn_num 2 \
     --beam_width 10 \
     --topk 2 \
     --lr 0.001 \
