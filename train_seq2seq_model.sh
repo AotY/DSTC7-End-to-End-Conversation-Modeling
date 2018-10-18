@@ -27,7 +27,7 @@ python train_seq2seq_model.py \
     --max_norm 100.0 \
     --epochs 5 \
     --batch_size 64 \
-    --teacher_forcing_ratio 0.7 \
+    --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
     --log_interval 20 \

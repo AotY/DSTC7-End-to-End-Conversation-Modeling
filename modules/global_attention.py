@@ -154,7 +154,7 @@ class GlobalAttention(nn.Module):
         """
 
         # one step decoder_output
-        if decoder_output.hidden_size() == 2:
+        if decoder_output.dim() == 2:
             one_step = True
             # insert one dimension
             decoder_output = decoder_output.unsqueeze(1)
