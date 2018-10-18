@@ -145,7 +145,7 @@ class GlobalAttention(nn.Module):
         Args:
           decoder_output (`FloatTensor`): query vectors `[batch_sizse x tgt_len x hidden_size]`
           memory_bank (`FloatTensor`): source vectors `[batch_sizse x src_len x hidden_size]`
-          encoder_inputs_length (`LongTensor`): the source context lengths `[batch_sizse]`
+          encoder_inputs_length (`LongTensor`): the source context lengths `[batch_size]`
         Returns:
           (`FloatTensor`, `FloatTensor`):
           * Computed vector `[tgt_len x batch_sizse x hidden_size]`
@@ -222,3 +222,4 @@ class GlobalAttention(nn.Module):
             aeq(sourceL, sourceL_)
 
         return attn_h, align_vectors
+
