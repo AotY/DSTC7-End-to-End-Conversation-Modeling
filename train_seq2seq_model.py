@@ -62,7 +62,6 @@ def train_epochs(model=None,
     start = time.time()
     max_load = int(np.ceil(dataset.n_train / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
-        logger.info('------------------- epoch: %d ----------------------------' % epoch)
         dataset.reset_data('train')
         log_loss_total = 0  # Reset every logger.info_every
         log_accuracy_total = 0
@@ -93,9 +92,9 @@ def train_epochs(model=None,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
-                logger_str = '\ntrain -------------------------------> %s (%d %d%%) %.4f %.4f' % (timeSince(start, load / max_load),
-                                                                                             load, load / max_load * 100,
-                                                                                             log_loss_avg, log_accuracy_avg)
+                logger_str = '\ntrain ------------> epoch: %d %s (%d %d%%) %.4f %.4f' % (epoch, timeSince(start, load / max_load), 
+                                                                                         load, load / max_load * 100, log_loss_avg, 
+                                                                                         log_accuracy_avg)
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
@@ -220,6 +219,7 @@ def evaluate(model=None,
     # Turn on evaluation mode which disables dropout.
     model.eval()
     loss_total = 0
+    accuracy_total = 0
     max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
     dataset.reset_data('eval')
     with torch.no_grad():
@@ -232,8 +232,7 @@ def evaluate(model=None,
 
             # train and get cur loss
             (dialogue_encoder_final_state, dialogue_encoder_memory_bank), \
-                (dialogue_decoder_final_state, dialogue_decoder_outputs,
-                 dialogue_decoder_attns) = model.evaluate(
+                (dialogue_decoder_final_state, dialogue_decoder_outputs, dialogue_decoder_attns) = model.evaluate(
                 dialogue_encoder_inputs=dialogue_encoder_inputs,  # LongTensor
                 dialogue_encoder_inputs_length=dialogue_encoder_inputs_length,
                 batch_size=opt.batch_size)
