@@ -64,7 +64,7 @@ class MeanEncoder(EncoderBase):
         self._check_args(inputs, lengths, encoder_state)
 
         embedded = self.embedding(inputs)
-        s_len, batch, emb_dim = embedded.siz()
+        s_len, batch, emb_dim = embedded.size()
         # calculating the embedding mean according to lengths
         if lengths is not None:
             lengths_exp = lengths.expand(emb_dim, batch).transpose(0, 1)

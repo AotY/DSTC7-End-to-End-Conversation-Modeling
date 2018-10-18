@@ -105,7 +105,6 @@ class Seq2SeqModel(nn.Module):
             num_layers=self.dialogue_decoder_num_layers,
             hidden_size=self.dialogue_decoder_hidden_size,
             dropout=self.dialogue_decoder_dropout_probability,
-            # maybe replace by dialogue_decoder_embedding
             embedding=dialogue_decoder_embedding,
             attn_type=self.dialogue_decoder_attention_type)
 
@@ -173,8 +172,8 @@ class Seq2SeqModel(nn.Module):
                         memory_bank=dialogue_encoder_memory_bank,
                         state=dialogue_decoder_state,
                         memory_lengths=dialogue_encoder_inputs_length)
-                dialogue_decoder_outputs[di] = dialogue_decoder_output.squeeze(0)
-                dialogue_decoder_attns_std[di] = dialogue_decoder_attn['std'].squeeze(0)
+                dialogue_decoder_outputs[di] = dialogue_decoder_output
+                dialogue_decoder_attns_std[di] = dialogue_decoder_attn['std']
         else:
             # Without teacher forcing: use its own predictions as the next input
             if self.dialogue_decode_type == 'greedy':
