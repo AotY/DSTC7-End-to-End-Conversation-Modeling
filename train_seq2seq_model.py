@@ -242,8 +242,7 @@ def evaluate(model=None,
             accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
             #  Compute loss
-            dialogue_decoder_outputs = dialogue_decoder_outputs.view(
-                -1, dialogue_decoder_outputs.shape[-1])
+            dialogue_decoder_outputs = dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
             dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
 
             loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
@@ -345,9 +344,8 @@ def build_model(opt, dialogue_encoder_vocab, dialogue_decoder_vocab):
         logger.info("Load pre-trained word embeddig: %s ." %
                     opt.dialogue_decoder_pretrained_embedding_path)
 
-        dialogue_encoder_pretrained_embedding_weight = np.load(
-            opt.dialogue_decoder_pretrained_embedding_path)
-        dialogue_decoder_pretrained_embedding_weight = dialogue_encoder_pretrained_embedding_weight
+        dialogue_encoder_pretrained_embedding_weight = np.load(opt.dialogue_encoder_pretrained_embedding_path)
+        dialogue_decoder_pretrained_embedding_weight = np.load(opt.dialogue_decoder_pretrained_embedding_path)
 
         # pretrained_weight is a numpy matrix of shape (num_embedding, embedding_dim)
         dialogue_encoder_embedding.set_pretrained_embedding(
