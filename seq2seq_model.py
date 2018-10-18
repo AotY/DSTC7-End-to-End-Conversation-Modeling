@@ -157,7 +157,7 @@ class Seq2SeqModel(nn.Module):
                                                batch_size, self.dialogue_decoder_hidden_size),
                                               device=self.device) * self.dialogue_decoder_pad_id
 
-        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length, batch_size, self.dialogue_decoder_max_length),
+        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length, batch_size, self.dialogue_decoder_max_length-1),
                                                  device=self.device,
                                                  dtype=torch.float)
 
@@ -215,7 +215,7 @@ class Seq2SeqModel(nn.Module):
                                                batch_size, self.dialogue_decoder_hidden_size),
                                               device=self.device) * self.dialogue_decoder_pad_id
 
-        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length, batch_size, self.dialogue_decoder_max_length),
+        dialogue_decoder_attns_std = torch.zeros((self.dialogue_decoder_max_length, batch_size, self.dialogue_decoder_max_length-1),
                                                  device=self.device)
 
         if self.dialogue_decode_type == 'greedy':
