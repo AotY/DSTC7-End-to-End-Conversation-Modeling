@@ -17,6 +17,6 @@ python preprocess.py \
     --alpha 0.025 \
     --negative 7 \
     --epochs 7 \
-    --model_name knowledge_grounded
+    --model_name seq2seq
 
 /
