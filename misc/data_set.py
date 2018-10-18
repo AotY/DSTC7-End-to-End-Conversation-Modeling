@@ -85,6 +85,9 @@ class Seq2seqDataSet:
 
                     conversation_context = ' '.join(history_dialogues)
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation_context.split(' '))
+                    if len(conversation_ids) <= 3:
+                            continue
+
                     conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length, len(conversation_ids)):]
                     response_ids = response_ids[-min(self.dialogue_decoder_max_length - 1, len(response_ids)):]
 

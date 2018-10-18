@@ -51,8 +51,6 @@ def use_gpu(opt):
 
 def sequence_mask(lengths, max_len=None):
     """
-
-from modules.utils import init_lstm_orth, init_gru_orth
     Creates a boolean mask from sequence lengths.
     """
     batch_size = lengths.numel()
