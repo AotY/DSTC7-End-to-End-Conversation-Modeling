@@ -314,7 +314,7 @@ class Seq2SeqModel(nn.Module):
             dialogue_decoder_outputs[di] = dialogue_decoder_output
             if dialogue_decoder_attns_std is not None:
                 dialogue_decoder_attns_std[di] = dialogue_decoder_attn['std']
-            dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2)
+            dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach()
 
             if dialogue_decoder_input[0][0].item() == self.dialogue_decoder_eos_id:
                 break
@@ -338,8 +338,7 @@ class Seq2SeqModel(nn.Module):
         batch_utterances = []
         for bi in range(batch_size):
             if isinstance(dialogue_encoder_state, tuple):  # LSTM
-                dialogue_decoder_hidden_bi = tuple(
-                    [item[:, bi, :].unsqueeze(1) for item in dialogue_encoder_state[bi]])
+                dialogue_decoder_hidden_bi = tuple([item[:, bi, :].unsqueeze(1) for item in dialogue_encoder_state[bi]])
             else:
                 dialogue_decoder_hidden_bi = dialogue_encoder_state[:, bi, :].unsqueeze(1)
 
