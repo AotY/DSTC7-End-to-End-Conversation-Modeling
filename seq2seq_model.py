@@ -144,15 +144,14 @@ class Seq2SeqModel(nn.Module):
         dialogue_encoder_state = self.dialogue_encoder.init_hidden(batch_size)
 
         '''dialogue_encoder forward'''
-        dialogue_encoder_state, dialogue_encoder_memory_bank = self.dialogue_encoder(
+        dialogue_encoder_state, dialogue_encoder_outputs = self.dialogue_encoder(
             inputs=dialogue_encoder_inputs,
             lengths=dialogue_encoder_inputs_length,
             encoder_state=dialogue_encoder_state)
 
         '''dialogue_decoder forward'''
-        # tgt, memory_bank, state, memory_lengths=None
-        dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(
-            encoder_final=dialogue_encoder_state)
+        # inputs, encoder_outputs, state, encoder_inputs_length=None
+        dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(encoder_final=dialogue_encoder_state)
 
         dialogue_decoder_outputs = torch.ones((self.dialogue_decoder_max_length,
                                                batch_size, self.dialogue_decoder_hidden_size),
@@ -168,10 +167,10 @@ class Seq2SeqModel(nn.Module):
             for di in range(self.dialogue_decoder_max_length):
                 dialogue_decoder_state, dialogue_decoder_output, \
                     dialogue_decoder_attn = self.dialogue_decoder(
-                        tgt=dialogue_decoder_inputs[di].view(1, -1),
-                        memory_bank=dialogue_encoder_memory_bank,
-                        state=dialogue_decoder_state,
-                        memory_lengths=dialogue_encoder_inputs_length)
+                        inputs=dialogue_decoder_inputs[di].view(1, -1),
+                        encoder_outputs=dialogue_encoder_outputs,
+                        decoder_state=dialogue_decoder_state,
+                        encoder_inputs_length=dialogue_encoder_inputs_length)
                 dialogue_decoder_outputs[di] = dialogue_decoder_output
                 dialogue_decoder_attns_std[di] = dialogue_decoder_attn['std']
         else:
@@ -179,7 +178,7 @@ class Seq2SeqModel(nn.Module):
             if self.dialogue_decode_type == 'greedy':
                 dialogue_decoder_input = torch.ones(
                     (1, batch_size), dtype=torch.long, device=self.device) * self.dialogue_decoder_sos_id
-                dialogue_decoder_outputs, dialogue_decoder_attns_std = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_memory_bank,
+                dialogue_decoder_outputs, dialogue_decoder_attns_std = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_outputs,
                                                                                           dialogue_decoder_state, dialogue_encoder_inputs_length,
                                                                                           dialogue_decoder_outputs, dialogue_decoder_attns_std)
             elif self.dialogue_decode_type == 'beam_search':
@@ -194,7 +193,7 @@ class Seq2SeqModel(nn.Module):
         # log softmax
         dialogue_decoder_outputs = self.dialogue_decoder_softmax(dialogue_decoder_outputs)
 
-        return ((dialogue_encoder_state, dialogue_encoder_memory_bank),
+        return ((dialogue_encoder_state, dialogue_encoder_outputs),
                 (dialogue_decoder_state, dialogue_decoder_outputs, dialogue_decoder_attns_std))
 
     def evaluate(self,
@@ -205,8 +204,8 @@ class Seq2SeqModel(nn.Module):
         dialogue_encoder_state = self.dialogue_encoder.init_hidden(batch_size)
 
         '''dialogue_encoder forward'''
-        dialogue_encoder_state, dialogue_encoder_memory_bank = self.dialogue_encoder(
-            src=dialogue_encoder_inputs,
+        dialogue_encoder_state, dialogue_encoder_outputs = self.dialogue_encoder(
+            inputs=dialogue_encoder_inputs,
             lengths=dialogue_encoder_inputs_length,
             encoder_state=dialogue_encoder_state)
 
@@ -222,7 +221,7 @@ class Seq2SeqModel(nn.Module):
         if self.dialogue_decode_type == 'greedy':
             dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(encoder_final=dialogue_encoder_state)
             dialogue_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * self.dialogue_decoder_sos_id
-            dialogue_decoder_outputs, dialogue_decoder_attns_std = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_memory_bank,
+            dialogue_decoder_outputs, dialogue_decoder_attns_std = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_outputs,
                                                                                       dialogue_decoder_state, dialogue_encoder_inputs_length,
                                                                                       dialogue_decoder_outputs, dialogue_decoder_attns_std)
         elif self.dialogue_decode_type == 'beam_search':
@@ -239,7 +238,7 @@ class Seq2SeqModel(nn.Module):
         dialogue_decoder_outputs = self.dialogue_decoder_softmax(
             dialogue_decoder_outputs)
 
-        return ((dialogue_encoder_state, dialogue_encoder_memory_bank),
+        return ((dialogue_encoder_state, dialogue_encoder_outputs),
                 (dialogue_decoder_state, dialogue_decoder_outputs, dialogue_decoder_attns_std))
 
     """return sentence"""
@@ -254,8 +253,8 @@ class Seq2SeqModel(nn.Module):
         dialogue_encoder_state = self.dialogue_encoder.init_hidden(batch_size)
 
         '''dialogue_encoder forward'''
-        dialogue_encoder_state, dialogue_encoder_memory_bank = self.dialogue_encoder(
-            src=dialogue_encoder_inputs,
+        dialogue_encoder_state, dialogue_encoder_outputs = self.dialogue_encoder(
+            inputs=dialogue_encoder_inputs,
             lengths=dialogue_encoder_inputs_length,
             encoder_state=dialogue_encoder_state)
 
@@ -268,7 +267,7 @@ class Seq2SeqModel(nn.Module):
         if self.dialogue_decode_type == 'greedy':
             dialogue_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * self.dialogue_decoder_sos_id
             dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(encoder_final=dialogue_encoder_state)
-            dialogue_decoder_outputs, _ = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_memory_bank,
+            dialogue_decoder_outputs, _ = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_outputs,
                                                              dialogue_decoder_state, dialogue_encoder_inputs_length,
                                                              dialogue_decoder_outputs, None)
             # beam search  dialogue_decoder_outputs -> [tgt_len x batch x hidden]
@@ -285,7 +284,7 @@ class Seq2SeqModel(nn.Module):
             # [max_length, batch_size] -> [batch_size, max_length]
             return dialogue_decoder_outputs_argmax.transpose(0, 1).detach().cpu().numpy()
         elif self.dialogue_decode_type == 'beam_search':
-            batch_utterances = self.beam_search_decode(dialogue_encoder_memory_bank,
+            batch_utterances = self.beam_search_decode(dialogue_encoder_outputs,
                                                        dialogue_encoder_state,
                                                        dialogue_encoder_inputs_length,
                                                        batch_size,
@@ -296,21 +295,21 @@ class Seq2SeqModel(nn.Module):
             raise ValueError(
                 'invalid decoder type: %s, greedy or beam_search' % self.dialogue_decode_type)
 
-    def greedy_decode(self, dialogue_decoder_input, dialogue_encoder_memory_bank,
+    def greedy_decode(self, dialogue_decoder_input, dialogue_encoder_outputs,
                       dialogue_decoder_state, dialogue_encoder_inputs_length,
                       dialogue_decoder_outputs, dialogue_decoder_attns_std=None):
         """
-        dialogue_encoder_memory_bank: [max_length, batch_size, hidden_size]
+        dialogue_encoder_outputs: [max_length, batch_size, hidden_size]
         dialogue_decoder_state:
         dialogue_encoder_inputs_length: [batch_size]
         dialogue_decoder_outputs: [max_length, batch_size, hidden]
         """
         for di in range(self.dialogue_decoder_max_length):
             dialogue_decoder_state, dialogue_decoder_output, \
-                dialogue_decoder_attn = self.dialogue_decoder(tgt=dialogue_decoder_input,
-                                                              memory_bank=dialogue_encoder_memory_bank,
-                                                              state=dialogue_decoder_state,
-                                                              memory_lengths=dialogue_encoder_inputs_length)
+                dialogue_decoder_attn = self.dialogue_decoder(inputs=dialogue_decoder_input,
+                                                              encoder_outputs=dialogue_encoder_outputs,
+                                                              decoder_state=dialogue_decoder_state,
+                                                              encoder_inputs_length=dialogue_encoder_inputs_length)
 
             dialogue_decoder_outputs[di] = dialogue_decoder_output
             if dialogue_decoder_attns_std is not None:
@@ -322,11 +321,11 @@ class Seq2SeqModel(nn.Module):
 
         return dialogue_decoder_outputs, dialogue_decoder_attns_std
 
-    def beam_search_decode(self, dialogue_encoder_memory_bank,
+    def beam_search_decode(self, dialogue_encoder_outputs,
                            dialogue_encoder_state, dialogue_encoder_inputs_length,
                            batch_size, beam_width=10, topk=1):
         """
-        dialogue_encoder_memory_bank: [max_length, batch_size, hidden_size]
+        dialogue_encoder_outputs: [max_length, batch_size, hidden_size]
         dialogue_encoder_state: [num_layers* \
             num_directions, batch_size, hidden_size // 2]
         dialogue_encoder_inputs_length: [batch_size]
@@ -342,16 +341,14 @@ class Seq2SeqModel(nn.Module):
                 dialogue_decoder_hidden_bi = tuple(
                     [item[:, bi, :].unsqueeze(1) for item in dialogue_encoder_state[bi]])
             else:
-                dialogue_decoder_hidden_bi = dialogue_encoder_state[:, bi, :].unsqueeze(
-                    1)
+                dialogue_decoder_hidden_bi = dialogue_encoder_state[:, bi, :].unsqueeze(1)
 
             # dialogue_decoder_hidden_bi: [num_layers*num_directions, 1,
             # hidden_size // 2]  ->  [num_layers, 1, hidden_size]
             dialogue_decoder_state_bi = self.dialogue_decoder.init_decoder_state(
                 dialogue_decoder_hidden_bi)
 
-            dialogue_encoder_memory_bank_bi = dialogue_encoder_memory_bank[:, bi, :].unsqueeze(
-                1)  # [max_length, 1, hidden_size]
+            dialogue_encoder_outputs_bi = dialogue_encoder_outputs[:, bi, :].unsqueeze(1)  # [max_length, 1, hidden_size]
             dialogue_encoder_inputs_length_bi = dialogue_encoder_inputs_length[bi]
 
             dialogue_decoder_input = torch.LongTensor(
@@ -399,10 +396,10 @@ class Seq2SeqModel(nn.Module):
 
                 # decode for one step using decoder
                 dialogue_decoder_state_bi, decoder_output_bi, _ = self.dialogue_decoder(
-                    tgt=cur_dialogue_decoder_input,
-                    memory_bank=dialogue_encoder_memory_bank_bi,
+                    inputs=cur_dialogue_decoder_input,
+                    encoder_outputs=dialogue_encoder_outputs_bi,
                     state=cur_dialogue_decoder_state_bi,
-                    memory_lengths=dialogue_encoder_inputs_length_bi)
+                    encoder_inputs_length=dialogue_encoder_inputs_length_bi)
 
                 # decoder_output_bi: [1, 1, hidden_size]
                 # put here real beam search of top
@@ -474,17 +471,17 @@ class BeamsearchNode(object):
 
 
 # beam search  tensor.numpy()
-def beam_search_decoder(memory_bank, beam_size):
+def beam_search_decoder(encoder_outputs, beam_size):
 
-    if isinstance(memory_bank, torch.Tensor):
-        # memory_bank = memory_bank.numpy()
-        if memory_bank.is_cuda:
-            memory_bank = memory_bank.cpu()
-        memory_bank = memory_bank.detach().numpy()
+    if isinstance(encoder_outputs, torch.Tensor):
+        # encoder_outputs = encoder_outputs.numpy()
+        if encoder_outputs.is_cuda:
+            encoder_outputs = encoder_outputs.cpu()
+        encoder_outputs = encoder_outputs.detach().numpy()
 
     sequences = [[list(), 1.0]]
     # walk over each step in sequence
-    for row in memory_bank:
+    for row in encoder_outputs:
         all_candidates = list()
         # expand each current candidate
         for i in range(len(sequences)):
