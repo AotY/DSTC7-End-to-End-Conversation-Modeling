@@ -105,7 +105,7 @@ class DecoderBase(nn.Module):
           G[Decoder decoder_state]
           H[Decoder decoder_state]
           I[Outputs]
-          F[Memory_Bank]
+          F[encoder_outputs]
           A--embedded-->C
           A--embedded-->D
           A--embedded-->E
@@ -162,7 +162,7 @@ class DecoderBase(nn.Module):
             self.attn = GlobalAttention(self.hidden_size, attn_type=self.attn_type)
 
     def init_decoder_state(self, encoder_final):
-        # def init_decoder_state(self, src, memory_bank, encoder_final):
+        # def init_decoder_state(self, src, encoder_outputs, encoder_final):
         def _fix_enc_hidden(h):
             # The encoder hidden is  (layers*directions) x batch x dim.
             # We need to convert it to layers x batch x (directions*dim).
@@ -183,22 +183,22 @@ class DecoderBase(nn.Module):
         """
         return self.embedding.embedding_size
 
-    def _check_args(self, inputs, memory_bank, decoder_state):
+    def _check_args(self, inputs, encoder_outputs, decoder_state):
         assert isinstance(decoder_state, RNNDecoderState)
         inputs_len, tgt_batch = inputs.size()
-        _, memory_batch, _ = memory_bank.size()
+        _, memory_batch, _ = encoder_outputs.size()
         aeq(tgt_batch, memory_batch)
 
-    def forward(self, inputs, memory_bank, decoder_state, memory_lengths=None):
+    def forward(self, inputs, encoder_outputs, decoder_state, encoder_inputs_length=None):
         """
         Args:
             inputs (`LongTensor`): sequences of padded tokens
                                 `[inputs_len x batch]`.
-            memory_bank (`FloatTensor`): vectors from the encoder
+            encoder_outputs (`FloatTensor`): vectors from the encoder
                  `[src_len x batch x hidden]`.
             decoder_state (:obj:`DecoderState`):
                  decoder decoder_state object to initialize the decoder
-            memory_lengths (`LongTensor`): the padded source lengths
+            encoder_inputs_length (`LongTensor`): the padded source lengths
                 `[batch]`.
         Returns:
             (`FloatTensor`,:obj:`onmt.Models.DecoderState`,`FloatTensor`):
@@ -211,11 +211,11 @@ class DecoderBase(nn.Module):
         """
 
         # Check
-        self._check_args(inputs, memory_bank, decoder_state)
+        self._check_args(inputs, encoder_outputs, decoder_state)
 
         # Run the forward pass of the RNN.
         decoder_final, decoder_output, attns = self._run_forward_pass(
-            inputs, memory_bank, decoder_state, memory_lengths=memory_lengths)
+            inputs, encoder_outputs, decoder_state, encoder_inputs_length=encoder_inputs_length)
 
         # Update the decoder_state with the result.
         final_output = decoder_output[-1]
@@ -243,18 +243,18 @@ class StdRNNDecoder(DecoderBase):
         """
         return self.embedding.embedding_size
 
-    def _run_forward_pass(self, inputs, memory_bank, decoder_state, memory_lengths=None):
+    def _run_forward_pass(self, inputs, encoder_outputs, decoder_state, encoder_inputs_length=None):
         """
         Private helper for running the specific RNN forward pass.
         Must be overrided by all subclasses.
         Args:
             inputs (LongTensor): a sequence of input tokens tensors
                                  [inputs_len x batch].
-            memory_bank (FloatTensor): output(tensor sequence) from the encoder
+            encoder_outputs (FloatTensor): output(tensor sequence) from the encoder
                         RNN of size (src_len x batch x hidden_size).
             decoder_state (FloatTensor): hidden decoder_state from the encoder RNN for
                                  initializing the decoder.
-            memory_lengths (LongTensor): the source memory_bank lengths.
+            encoder_inputs_length (LongTensor): the source encoder_outputs lengths.
         Returns:
             decoder_final (Variable): final hidden decoder_state from the decoder.
             decoder_outputs ([FloatTensor]): an array of output of every time
@@ -289,10 +289,10 @@ class StdRNNDecoder(DecoderBase):
             print('attn_type: {}'.format(self.attn_type))
             #  decoder_output, p_attn = self.attn(
                 #  decoder_output.transpose(decoder_output, 1),
-                #  memory_bank.transpose(decoder_output, 1))
-            # decoder_output -> [1, batch_size, hidden_size], memory_bank ->
+                #  encoder_outputs.transpose(decoder_output, 1))
+            # decoder_output -> [1, batch_size, hidden_size], encoder_outputs ->
             # [1, batch_size, hidden_sizes] -> [batch_size, 1, hidden_size]
-            decoder_output, p_attn = self.attn(decoder_output.transpose(0, 1), memory_bank.transpose[0, 1])
+            decoder_output, p_attn = self.attn(decoder_output.transpose(0, 1), encoder_outputs.transpose[0, 1])
             attns["std"] = p_attn
         else:
             decoder_output = decoder_output
@@ -319,7 +319,7 @@ class InputFeedRNNDecoder(DecoderBase):
             E --> F
           end
           G[Encoder]
-          H[Memory_Bank n-1]
+          H[encoder_outputs n-1]
           A --> E
           AB --> F
           E --> H
@@ -333,7 +333,7 @@ class InputFeedRNNDecoder(DecoderBase):
         """
         return self.embedding.embedding_size + self.hidden_size
 
-    def _run_forward_pass(self, inputs, memory_bank, decoder_state, memory_lengths=None):
+    def _run_forward_pass(self, inputs, encoder_outputs, decoder_state, encoder_inputs_length=None):
         """
         See StdRNNDecoder._run_forward_pass() for description
         of arguments and return values.
@@ -349,13 +349,13 @@ class InputFeedRNNDecoder(DecoderBase):
         hidden = decoder_state.hidden
         # Input feed concatenates hidden decoder_state with
         # input at every time step.
-        memory_bank_t = memory_bank.transpose(0, 1)
+        memory_bank_t = encoder_outputs.transpose(0, 1)
 
         for i, embedded_t in enumerate(embedded.split(1)):
             embedded_t = embedded_t.squeeze(0)
             decoder_input = torch.cat((embedded_t, input_feed), dim=1)
             decoder_output, hidden, p_attn, input_feed = self._run_forward_one(
-                decoder_input, memory_bank_t, hidden, memory_lengths=memory_lengths)
+                decoder_input, memory_bank_t, hidden, encoder_inputs_length=encoder_inputs_length)
             # input_feed = decoder_output
             decoder_outputs += [decoder_output]
             if p_attn is not None:
@@ -363,12 +363,12 @@ class InputFeedRNNDecoder(DecoderBase):
         # Return result.
         return hidden, decoder_outputs, attns
 
-    def _run_forward_one(self, decoder_input, memory_bank_t, hidden, memory_lengths=None):
+    def _run_forward_one(self, decoder_input, memory_bank_t, hidden, encoder_inputs_length=None):
         decoder_output, hidden = self.rnn(decoder_input, hidden)
         if self.attn_type is not None:
             decoder_output, p_attn = self.attn(
                 decoder_output,
-                memory_bank_t, memory_lengths=memory_lengths)
+                memory_bank_t, encoder_inputs_length=encoder_inputs_length)
         else:
             decoder_output, p_attn = (decoder_output, None)
 
