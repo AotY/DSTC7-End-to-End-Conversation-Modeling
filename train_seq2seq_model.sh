@@ -6,6 +6,7 @@ python train_seq2seq_model.py \
     --save_path data/ \
     --vocab_save_path data/vocab_word2idx_seq2seq.dict \
     --dialogue_encoder_embedding_size 300 \
+    --dialogue_encoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     --dialogue_encoder_hidden_size 512 \
     --dialogue_encoder_num_layers 2 \
     --dialogue_encoder_rnn_type LSTM \
@@ -13,7 +14,7 @@ python train_seq2seq_model.py \
     --dialogue_encoder_max_length 35 \
     --dialogue_encoder_bidirectional \
     --dialogue_decoder_embedding_size 300 \
-    --dialogue_encoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
+    --dialogue_decoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     --dialogue_decoder_hidden_size 512 \
     --dialogue_decoder_num_layers 2 \
     --dialogue_decoder_rnn_type LSTM \
