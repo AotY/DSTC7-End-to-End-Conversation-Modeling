@@ -168,7 +168,7 @@ class DecoderBase(nn.Module):
             # We need to convert it to layers x batch x (directions*dim).
             if self.bidirectional_encoder:
                 #  h = torch.cat([h[decoder_output:h.size(decoder_output):2], h[1:h.size(decoder_output):2]], 2)
-                h = torch.cat((h[: h.shape[0]/2], h[h.shape[0]/2: ]), dim=2) # [num_layers, batch_size, hidden_size]
+                h = torch.cat((h[: h.shape[0]//2], h[h.shape[0]//2: ]), dim=2) # [num_layers, batch_size, hidden_size]
             return h
 
         if isinstance(encoder_final, tuple):  # LSTM

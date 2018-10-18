@@ -184,7 +184,6 @@ class Seq2SeqModel(nn.Module):
                                                                                           dialogue_decoder_outputs, dialogue_decoder_attns_std)
             elif self.dialogue_decode_type == 'beam_search':
                 pass
-                #  dialogue_decoder_outputs = self.beam_search_decoder()
             else:
                 raise ValueError(
                     'invalid decoder type: %s, greedy or beam_search' % self.dialogue_decode_type)
@@ -221,10 +220,8 @@ class Seq2SeqModel(nn.Module):
                                                  device=self.device)
 
         if self.dialogue_decode_type == 'greedy':
-            dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(
-                encoder_final=dialogue_encoder_state)
-            dialogue_decoder_input = torch.ones(
-                (1, batch_size), dtype=torch.long, device=self.device) * self.dialogue_decoder_sos_id
+            dialogue_decoder_state = self.dialogue_decoder.init_decoder_state(encoder_final=dialogue_encoder_state)
+            dialogue_decoder_input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * self.dialogue_decoder_sos_id
             dialogue_decoder_outputs, dialogue_decoder_attns_std = self.greedy_decode(dialogue_decoder_input, dialogue_encoder_memory_bank,
                                                                                       dialogue_decoder_state, dialogue_encoder_inputs_length,
                                                                                       dialogue_decoder_outputs, dialogue_decoder_attns_std)
