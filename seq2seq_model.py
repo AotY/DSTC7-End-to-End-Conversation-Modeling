@@ -81,8 +81,8 @@ class Seq2SeqModel(nn.Module):
             word embedding.
         '''
 
-        init_wt_normal(self.dialogue_encoder_embedding.embedding.weight)
-        init_wt_normal(self.dialogue_decoder_embedding.embedding.weight)
+        init_wt_normal(dialogue_encoder_embedding.embedding.weight)
+        init_wt_normal(dialogue_decoder_embedding.embedding.weight)
 
         # Dialog Encoder
         self.dialogue_encoder = RNNEncoder(
@@ -135,7 +135,7 @@ class Seq2SeqModel(nn.Module):
                     'When using the tied flag, hidden_size must be equal to embedding_size.')
             print('using tied..................')
             self.dialogue_decoder_linear.weight = dialogue_decoder_embedding.get_embedding_weight()
-    
+
         # here , dim=2
         self.dialogue_decoder_softmax = nn.LogSoftmax(dim=2)
 
@@ -179,7 +179,7 @@ class Seq2SeqModel(nn.Module):
                         encoder_inputs_length=dialogue_encoder_inputs_length)
                 dialogue_decoder_outputs.append(dialogue_decoder_output)
                 dialogue_decoder_attns_std.append(dialogue_decoder_attn['std'])
-        
+
         else:
             # Without teacher forcing: use its own predictions as the next input
             if self.dialogue_decode_type == 'greedy':
@@ -199,7 +199,7 @@ class Seq2SeqModel(nn.Module):
         print('dialogue_decoder_outputs cat shape: {}'.format(dialogue_decoder_outputs.shape))
 
         #  dialogue_decoder_outputs -> [tgt_len x batch x hidden] -> [tgt_len,
-        #  batch_size, vocab_size], 
+        #  batch_size, vocab_size],
         dialogue_decoder_outputs = self.dialogue_decoder_linear(dialogue_decoder_outputs)
 
         # log softmax
@@ -321,6 +321,7 @@ class Seq2SeqModel(nn.Module):
             dialogue_decoder_outputs.append(dialogue_decoder_output)
             if dialogue_decoder_attns_std is not None:
                 dialogue_decoder_attns_std.append(dialogue_decoder_attn['std'])
+            # add log max
             dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach()
 
             if dialogue_decoder_input[0][0].item() == self.dialogue_decoder_eos_id:

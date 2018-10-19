@@ -159,6 +159,7 @@ def train(model,
 
     # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
     dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
+    # [max_length, batch_size]
     accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
     print('loss dialogue_decoder_outputs shape: {}'.format(dialogue_decoder_outputs.shape))
