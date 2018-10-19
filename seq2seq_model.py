@@ -11,6 +11,7 @@ import torch.nn as nn
 from modules.encoder import RNNEncoder
 from modules.decoder import StdRNNDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
+from modules.utils import init_lstm_wt, init_linear_wt, init_wt_normal, init_wt_unif
 
 
 class Seq2SeqModel(nn.Module):
@@ -80,6 +81,8 @@ class Seq2SeqModel(nn.Module):
             word embedding.
         '''
 
+        init_wt_normal(self.dialogue_encoder_embedding.weight)
+        init_wt_normal(self.dialogue_decoder_embedding.weight)
         # Dialog Encoder
         self.dialogue_encoder = RNNEncoder(
             rnn_type=self.dialogue_encoder_rnn_type,
@@ -89,14 +92,6 @@ class Seq2SeqModel(nn.Module):
             dropout=self.dialogue_encoder_dropout_probability,
             embedding=dialogue_encoder_embedding,
             device=device)
-
-        # get the recommended gain value for the given nonlinearity function.
-        gain = nn.init.calculate_gain('sigmoid')
-
-        if self.dialogue_encoder_rnn_type == 'LSTM':
-            init_lstm_orth(self.dialogue_encoder.rnn, gain)
-        elif self.dialogue_encoder_rnn_type == 'GRU':
-            init_gru_orth(self.dialogue_encoder.rnn, gain)
 
         # Dialog Decoder with Attention
         self.dialogue_decoder = StdRNNDecoder(
@@ -108,12 +103,25 @@ class Seq2SeqModel(nn.Module):
             embedding=dialogue_decoder_embedding,
             attn_type=self.dialogue_decoder_attention_type)
 
+        init_lstm_wt(self.dialogue_encoder.rnn)
+        init_lstm_wt(self.dialogue_decoder.rnn)
+        """
+        # get the recommended gain value for the given nonlinearity function.
+        gain = nn.init.calculate_gain('sigmoid')
+        if self.dialogue_encoder_rnn_type == 'LSTM':
+            init_lstm_orth(self.dialogue_encoder.rnn, gain)
+        elif self.dialogue_encoder_rnn_type == 'GRU':
+            init_gru_orth(self.dialogue_encoder.rnn, gain)
+
         if self.dialogue_decoder == 'LSTM':
             init_lstm_orth(self.dialogue_decoder.rnn, gain)
         elif self.dialogue_encoder_rnn_type == 'GRU':
             init_gru_orth(self.dialogue_decoder.rnn, gain)
 
+        """
+
         self.dialogue_decoder_linear = nn.Linear(self.dialogue_decoder_hidden_size, self.dialogue_decoder_vocab_size)
+        init_linear_wt(self.dialogue_decoder_linear)
         # Optionally tie weights as in:
         # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
         # https://arxiv.org/abs/1608.05859

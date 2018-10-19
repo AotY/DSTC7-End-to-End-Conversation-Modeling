@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train_seq2seq_model.py \
     --path_conversations_responses_pair data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_save_path data/vocab_word2idx_seq2seq.dict \
     --dialogue_encoder_embedding_size 300 \
-    --dialogue_encoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.70004.300d.npy \
     --dialogue_encoder_hidden_size 512 \
     --dialogue_encoder_num_layers 2 \
     --dialogue_encoder_rnn_type LSTM \
@@ -14,7 +13,6 @@ python train_seq2seq_model.py \
     --dialogue_encoder_max_length 35 \
     --dialogue_encoder_bidirectional \
     --dialogue_decoder_embedding_size 300 \
-    --dialogue_decoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.70004.300d.npy \
     --dialogue_decoder_hidden_size 512 \
     --dialogue_decoder_num_layers 2 \
     --dialogue_decoder_rnn_type LSTM \
@@ -40,5 +38,7 @@ python train_seq2seq_model.py \
     --start_epoch 1 \
     --train_or_eval train \
     # --checkpoint ./models/checkpoint.epoch-5_seq2seq.pth \
+    # --dialogue_encoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.70004.300d.npy \
+    # --dialogue_decoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.70004.300d.npy \
 
     /
