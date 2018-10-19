@@ -81,8 +81,8 @@ class Seq2SeqModel(nn.Module):
             word embedding.
         '''
 
-        init_wt_normal(self.dialogue_encoder_embedding.weight)
-        init_wt_normal(self.dialogue_decoder_embedding.weight)
+        init_wt_normal(self.dialogue_encoder_embedding.embedding.weight)
+        init_wt_normal(self.dialogue_decoder_embedding.embedding.weight)
 
         # Dialog Encoder
         self.dialogue_encoder = RNNEncoder(
