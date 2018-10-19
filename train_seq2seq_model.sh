@@ -26,7 +26,7 @@ python train_seq2seq_model.py \
     --lr 0.001 \
     --max_norm 100.0 \
     --epochs 5 \
-    --teacher_forcing_ratio 0.5 \
+    --teacher_forcing_ratio 1.0 \
     --batch_size 128 \
     --seed 7 \
     --device cuda \

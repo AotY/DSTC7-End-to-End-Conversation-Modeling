@@ -89,7 +89,7 @@ class Seq2seqDataSet:
                     if len(conversation_ids) <= 3:
                             continue
 
-                    conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length - 1, len(conversation_ids)):]
+                    conversation_ids = conversation_ids[-min(self.dialogue_encoder_max_length, len(conversation_ids)):]
 
                     response_ids = self.dialogue_decoder_vocab.words_to_id(response.split(' '))
                     if len(response_ids) <= 3:
@@ -183,7 +183,7 @@ class Seq2seqDataSet:
             # encoder_inputs
             for c, token_id in enumerate(conversation_ids):
                 encoder_inputs[c, i] = token_id
-            encoder_inputs[len(conversation_ids), i] = self.dialogue_encoder_vocab.eosid
+            #  encoder_inputs[len(conversation_ids), i] = self.dialogue_encoder_vocab.eosid
 
             # decoder_inputs
             decoder_inputs[0, i] = self.dialogue_decoder_vocab.sosid

@@ -159,10 +159,9 @@ def train(model,
 
     # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
     dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
-    accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
+    accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_inputs, dialogue_decoder_targets)
 
     print('loss dialogue_decoder_outputs shape: {}'.format(dialogue_decoder_outputs.shape))
-    print('loss dialogue_decoder_targets shape: {}'.format(dialogue_decoder_targets.shape))
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     dialogue_decoder_outputs = dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
 
@@ -181,13 +180,16 @@ def train(model,
     return loss.item(), accuracy
 
 
-def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
+def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_inputs, dialogue_decoder_targets):
     """
     dialogue_decoder_targets: [seq_len, batch_size]
     """
-    #  print('---------------------->\n')
-    #  print(dialogue_decoder_outputs_argmax)
-    #  print(dialogue_decoder_targets)
+    print('---------------------->\n')
+    print(dialogue_decoder_outputs_argmax)
+    print(dialogue_decoder_inputs)
+    print(dialogue_decoder_targets)
+    #  print(dialogue_decoder_outputs_argmax.shape)
+    #  print(dialogue_decoder_targets.shape)
 
     match_tensor = (dialogue_decoder_outputs_argmax == dialogue_decoder_targets).long()
     dialogue_decoder_mask = (dialogue_decoder_targets != 0).long()
@@ -241,7 +243,7 @@ def evaluate(model=None,
 
             # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
             dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
-            accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
+            accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_inputs, dialogue_decoder_targets)
 
             #  Compute loss
             dialogue_decoder_outputs = dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
@@ -319,7 +321,8 @@ def build_optim(model, opt):
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
     #  ignore_index=padid,
-    criterion = nn.NLLLoss(reduction='elementwise_mean')
+    criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
+    #  criterion = nn.NLLLoss(reduction='elementwise_mean')
 
     return criterion
 
