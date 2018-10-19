@@ -316,9 +316,8 @@ def build_optim(model, opt):
 
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss(
-        ignore_index=padid,
-        reduction='elementwise_mean')
+    #  ignore_index=padid,
+    criterion = nn.NLLLoss(reduction='elementwise_mean')
 
     return criterion
 
