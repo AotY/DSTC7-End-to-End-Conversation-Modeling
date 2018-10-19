@@ -81,8 +81,8 @@ class Seq2SeqModel(nn.Module):
             word embedding.
         '''
 
-        init_wt_normal(self.dialogue_encoder_embedding.weight)
-        init_wt_normal(self.dialogue_decoder_embedding.weight)
+        #  init_wt_normal(dialogue_encoder_embedding.embedding.weight)
+        #  init_wt_normal(dialogue_decoder_embedding.embedding.weight)
         # Dialog Encoder
         self.dialogue_encoder = RNNEncoder(
             rnn_type=self.dialogue_encoder_rnn_type,
@@ -103,8 +103,8 @@ class Seq2SeqModel(nn.Module):
             embedding=dialogue_decoder_embedding,
             attn_type=self.dialogue_decoder_attention_type)
 
-        init_lstm_wt(self.dialogue_encoder.rnn)
-        init_lstm_wt(self.dialogue_decoder.rnn)
+        #  init_lstm_wt(self.dialogue_encoder.rnn)
+        #  init_lstm_wt(self.dialogue_decoder.rnn)
         """
         # get the recommended gain value for the given nonlinearity function.
         gain = nn.init.calculate_gain('sigmoid')
@@ -121,7 +121,7 @@ class Seq2SeqModel(nn.Module):
         """
 
         self.dialogue_decoder_linear = nn.Linear(self.dialogue_decoder_hidden_size, self.dialogue_decoder_vocab_size)
-        init_linear_wt(self.dialogue_decoder_linear)
+        #  init_linear_wt(self.dialogue_decoder_linear)
         # Optionally tie weights as in:
         # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
         # https://arxiv.org/abs/1608.05859
