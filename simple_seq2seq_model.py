@@ -85,8 +85,8 @@ class Encoder(nn.Module):
     def init_hidden(self, batch_size, device):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
-        initial_state1 = torch.rand((self.num_layers, batch_size, self.hidden_size), device=device)
-        initial_state2 = torch.rand((self.num_layers, batch_size, self.hidden_size), device=device)
+        initial_state1 = torch.rand((1, batch_size, self.hidden_size), device=device)
+        initial_state2 = torch.rand((1, batch_size, self.hidden_size), device=device)
 
         nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
         nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
@@ -98,7 +98,6 @@ class Decoder(nn.Module):
                  vocab_size,
                  embedding_size,
                  hidden_size,
-                 num_layers,
                  dropout_ratio,
                  padding_idx):
 
@@ -204,7 +203,7 @@ class Seq2seq(nn.Module):
         decoder_hidden_state = encoder_hidden_state
         decoder_outputs = []
         for di in range(decoder_targets.shape[0]):
-            decoder_output, decoder_hidden_state, attn_weights = self.decoder(
+            decoder_output, decoder_hidden_state = self.decoder(
                 decoder_input, decoder_hidden_state, encoder_outputs)
 
             decoder_input = decoder_targets[di].view(1, -1)

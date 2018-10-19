@@ -19,7 +19,6 @@ from modules.optim import Optim
 from modules.embeddings import Embedding
 
 from misc.vocab import Vocab
-from seq2seq_model import Seq2SeqModel
 from misc.data_set import Seq2seqDataSet
 from train_evaluate_opt import data_set_opt, train_seq2seq_opt
 
@@ -135,10 +134,9 @@ def train(model,
     print('loss dialogue_decoder_outputs shape: {}'.format(decoder_outputs.shape))
     decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
 
-    # , dialogue_decoder_targets.shape[1])
-    dialogue_decoder_targets = dialogue_decoder_targets.view(-1)
+    decoder_targets = decoder_targets.view(-1)
 
-    loss = criterion(dialogue_decoder_outputs, dialogue_decoder_targets)
+    loss = criterion(decoder_outputs, decoder_targets)
 
     # backward
     loss.backward()
@@ -163,7 +161,7 @@ def compute_accuracy(decoder_outputs_argmax, decoder_inputs, decoder_targets):
 
     accuracy_tensor = match_tensor * decoder_mask
 
-    accuracy = float(torch.sum(accuracy_tensor)) / float(torch.sum(dialogue_decoder_mask))
+    accuracy = float(torch.sum(accuracy_tensor)) / float(torch.sum(decoder_mask))
 
     return accuracy
 
@@ -181,14 +179,6 @@ def build_optim(model, opt):
         opt.optim_method,
         opt.lr,
         opt.max_norm,
-        # lr_decay=opt.learning_probability_decay,
-        # start_decay_at=opt.start_decay_at,
-        # beta1=opt.adam_beta1,
-        # beta2=opt.adam_beta2,
-        # adagrad_accum=opt.adagrad_accumulator_init,
-        # decay_method=opt.decay_method,
-        # warmup_steps=opt.warmup_steps,
-        # model_size=opt.rnn_size
     )
 
     optim.set_parameters(model.parameters())
