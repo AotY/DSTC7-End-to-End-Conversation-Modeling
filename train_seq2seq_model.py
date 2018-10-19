@@ -92,8 +92,8 @@ def train_epochs(model=None,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
-                logger_str = '\ntrain ------------> epoch: %d %s (%d %d%%) %.4f %.4f' % (epoch, timeSince(start, load / max_load), 
-                                                                                         load, load / max_load * 100, log_loss_avg, 
+                logger_str = '\ntrain ------------> epoch: %d %s (%d %d%%) %.4f %.4f' % (epoch, timeSince(start, load / max_load),
+                                                                                         load, load / max_load * 100, log_loss_avg,
                                                                                          log_accuracy_avg)
                 logger.info(logger_str)
                 save_logger(logger_str)
@@ -161,6 +161,8 @@ def train(model,
     dialogue_decoder_outputs_argmax = torch.argmax(dialogue_decoder_outputs, dim=2)
     accuracy = compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets)
 
+    print('loss dialogue_decoder_outputs shape: {}'.format(dialogue_decoder_outputs.shape))
+    print('loss dialogue_decoder_targets shape: {}'.format(dialogue_decoder_targets.shape))
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     dialogue_decoder_outputs = dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
 
