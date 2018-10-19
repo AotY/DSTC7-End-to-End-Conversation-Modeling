@@ -23,6 +23,8 @@ from seq2seq_model import Seq2SeqModel
 from misc.data_set import Seq2seqDataSet
 from train_evaluate_opt import data_set_opt, train_seq2seq_opt
 
+from simple_seq2seq_model import Seq2seq
+
 program = os.path.basename(sys.argv[0])
 logger = logging.getLogger(program)
 
