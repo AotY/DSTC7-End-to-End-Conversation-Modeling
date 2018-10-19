@@ -20,7 +20,7 @@ python train_seq2seq_model.py \
     --dialogue_decoder_max_length 35 \
     --dialogue_decoder_attention_type dot \
 	--dialogue_decode_type greedy \
-    --dialogue_turn_num 2 \
+    --dialogue_turn_num 1 \
     --beam_width 10 \
     --topk 2 \
     --lr 0.001 \

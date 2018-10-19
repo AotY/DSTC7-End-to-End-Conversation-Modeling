@@ -81,9 +81,9 @@ class Seq2seqDataSet:
                     if history_dialogues is None:
                         continue
 
-                    #  conversation_context = ' '.join(history_dialogues)
-                    conversation = history_dialogues[0]
-                    response = history_dialogues[1]
+                    conversation = ' '.join(history_dialogues)
+                    #  conversation = history_dialogues[0]
+                    #  response = history_dialogues[1]
 
                     conversation_ids = self.dialogue_encoder_vocab.words_to_id(conversation.split(' '))
                     if len(conversation_ids) <= 3:

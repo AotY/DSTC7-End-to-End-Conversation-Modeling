@@ -158,7 +158,7 @@ class KnowledgeGroundedModel(nn.Module):
     '''
 
     def forward(self,
-                dialogue_encoder_inputs,  # LongTensor
+                dialogue_encoder_inputs,
                 dialogue_encoder_inputs_length,
                 facts_inputs,
                 dialogue_decoder_inputs,

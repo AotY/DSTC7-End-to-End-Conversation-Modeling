@@ -106,6 +106,7 @@ class Seq2SeqModel(nn.Module):
 
         init_lstm_wt(self.dialogue_encoder.rnn)
         init_lstm_wt(self.dialogue_decoder.rnn)
+
         """
         # get the recommended gain value for the given nonlinearity function.
         gain = nn.init.calculate_gain('sigmoid')
@@ -118,7 +119,6 @@ class Seq2SeqModel(nn.Module):
             init_lstm_orth(self.dialogue_decoder.rnn, gain)
         elif self.dialogue_encoder_rnn_type == 'GRU':
             init_gru_orth(self.dialogue_decoder.rnn, gain)
-
         """
 
         self.dialogue_decoder_linear = nn.Linear(self.dialogue_decoder_hidden_size, self.dialogue_decoder_vocab_size)
@@ -415,8 +415,7 @@ class Seq2SeqModel(nn.Module):
 
                 next_nodes = []
                 for new_i in range(beam_width):
-                    new_decoder_input = indices[0][0][new_i].view(
-                        1, -1)  # [1, 1]
+                    new_decoder_input = indices[0][0][new_i].view(1, -1)  # [1, 1]
                     new_log_prob = log_probs[0][0][new_i].item()
 
                     new_node = BeamsearchNode(dialogue_decoder_state_bi, cur_node, new_decoder_input,
