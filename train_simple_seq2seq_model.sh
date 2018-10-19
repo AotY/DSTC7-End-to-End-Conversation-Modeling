@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=7
 
-python train_seq2seq_model.py \
+python train_simple_seq2seq_model.py \
     --path_conversations_responses_pair data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_save_path data/vocab_word2idx_seq2seq.dict \
@@ -31,14 +31,11 @@ python train_seq2seq_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 20 \
-    --log_file ./logs/train_seq2seq_model_{}.log \
+    --log_file ./logs/train_simple_seq2seq_model_{}.log \
     --model_save_path ./models \
     --eval_split 0.1 \
     --optim_method adam \
     --start_epoch 1 \
     --train_or_eval train \
-    # --checkpoint ./models/checkpoint.epoch-5_seq2seq.pth \
-    # --dialogue_encoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.70004.300d.npy \
-    # --dialogue_decoder_pretrained_embedding_path data/fasttext_vec_for_vocab_seq2seq.70004.300d.npy \
 
     /

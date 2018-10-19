@@ -159,7 +159,6 @@ class Seq2SeqModel(nn.Module):
             lengths=dialogue_encoder_inputs_length,
             encoder_state=dialogue_encoder_state)
 
-        print('dialogue_encoder_outputs shape: {}'.format(dialogue_encoder_outputs.shape))
 
         '''dialogue_decoder forward'''
         # inputs, encoder_outputs, state, encoder_inputs_length=None
@@ -196,7 +195,6 @@ class Seq2SeqModel(nn.Module):
 
         dialogue_decoder_outputs = torch.cat(dialogue_decoder_outputs, dim=0)
         dialogue_decoder_attns_std = torch.cat(dialogue_decoder_attns_std, dim=0)
-        print('dialogue_decoder_outputs cat shape: {}'.format(dialogue_decoder_outputs.shape))
 
         #  dialogue_decoder_outputs -> [tgt_len x batch x hidden] -> [tgt_len,
         #  batch_size, vocab_size],
@@ -321,11 +319,12 @@ class Seq2SeqModel(nn.Module):
             dialogue_decoder_outputs.append(dialogue_decoder_output)
             if dialogue_decoder_attns_std is not None:
                 dialogue_decoder_attns_std.append(dialogue_decoder_attn['std'])
-            # add log max
+            # linear projection
+            dialogue_decoder_output = self.dialogue_decoder_linear(dialogue_decoder_output)
             dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach()
 
-            if dialogue_decoder_input[0][0].item() == self.dialogue_decoder_eos_id:
-                break
+            #  if dialogue_decoder_input[0][0].item() == self.dialogue_decoder_eos_id:
+                #  break
 
         return dialogue_decoder_outputs, dialogue_decoder_attns_std
 
