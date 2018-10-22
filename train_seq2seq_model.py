@@ -53,16 +53,16 @@ if opt.seed:
     torch.manual_seed(opt.seed)
 
 def train_epochs(model=None,
-                 dataset=None,
+                 data_set=None,
                  optimizer=None,
                  criterion=None,
                  vocab=None,
                  opt=None):
 
     start = time.time()
-    max_load = int(np.ceil(dataset.n_train / opt.batch_size))
+    max_load = int(np.ceil(data_set.n_train / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
-        dataset.reset_data('train')
+        data_set.reset_data('train')
         log_loss_total = 0  # Reset every logger.info_every
         log_accuracy_total = 0
         for load in range(1, max_load + 1):
@@ -73,7 +73,7 @@ def train_epochs(model=None,
             # load data
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
-                conversation_texts, response_texts = dataset.load_data(
+                conversation_texts, response_texts = data_set.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
@@ -102,7 +102,7 @@ def train_epochs(model=None,
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
-                                                    dataset=dataset,
+                                                    data_set=data_set,
                                                     criterion=criterion,
                                                     opt=opt)
 
@@ -111,7 +111,7 @@ def train_epochs(model=None,
         save_logger(logger_str)
 
         # generate sentence
-        generate(model, dataset, opt)
+        generate(model, data_set, opt)
 
         # save model of each epoch
         save_state = {
@@ -212,7 +212,7 @@ evaluate model.
 
 
 def evaluate(model=None,
-             dataset=None,
+             data_set=None,
              criterion=None,
              opt=None):
 
@@ -220,14 +220,14 @@ def evaluate(model=None,
     model.eval()
     loss_total = 0
     accuracy_total = 0
-    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
-    dataset.reset_data('eval')
+    max_load = int(np.ceil(data_set.n_eval / opt.batch_size))
+    data_set.reset_data('eval')
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
-                conversation_texts, response_texts = dataset.load_data(
+                conversation_texts, response_texts = data_set.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
@@ -253,18 +253,18 @@ def evaluate(model=None,
     return loss_total / max_load, accuracy_total / max_load
 
 
-def generate(model, dataset, opt):
+def generate(model, data_set, opt):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     loss_total = 0
-    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
-    dataset.reset_data('eval')
+    max_load = int(np.ceil(data_set.n_eval / opt.batch_size))
+    data_set.reset_data('eval')
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
-                conversation_texts, response_texts = dataset.load_data(
+                conversation_texts, response_texts = data_set.load_data(
                     'eval', opt.batch_size)
 
             # train and get cur loss
@@ -279,12 +279,12 @@ def generate(model, dataset, opt):
 
             # generate sentence, and save to file
             # [max_length, batch_size]
-            batch_texts = dataset.generating_texts(batch_utterances,
+            batch_texts = data_set.generating_texts(batch_utterances,
                                                        opt.batch_size,
                                                        opt.dialogue_decode_type)
 
             # save sentences
-            dataset.save_generated_texts(conversation_texts,
+            data_set.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
                                          os.path.join(opt.save_path, 'seq2seq_generated_texts_%s_%s.txt' % (opt.dialogue_decode_type, time_str)),
@@ -431,7 +431,7 @@ if __name__ == '__main__':
     vocab_size = vocab.get_vocab_size()
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
-    dataset = Seq2seqDataSet(
+    data_set = Seq2seqDataSet(
         path_conversations_responses_pair=opt.path_conversations_responses_pair,
         dialogue_encoder_max_length=opt.dialogue_encoder_max_length,
         dialogue_encoder_vocab=vocab,
@@ -461,7 +461,7 @@ if __name__ == '__main__':
 
     if opt.train_or_eval == 'train':
         train_epochs(model=model,
-                     dataset=dataset,
+                     data_set=data_set,
                      optimizer=optimizer,
                      criterion=criterion,
                      vocab=vocab,
@@ -469,7 +469,7 @@ if __name__ == '__main__':
     elif opt.train_or_eval == 'eval':
         evaluate(
             model=model,
-            dataset=dataset,
+            data_set=data_set,
             criterion=criterion,
             opt=opt)
     else:

@@ -95,8 +95,7 @@ class KGModel(nn.Module):
             decoder_inputs: [max_len, batch_size], first step: [sos * batch_size]
             dialogue_decoder_targets: [max_len, batch_size]
 
-            fact_inputs
-            fact_inputs_length
+            fact_inputs: [batch_size, max_len, topk]
         '''
         # dialogue encoder
         dialogue_encoder_hidden_state = self.dialogue_encoder.init_hidden(batch_size, self.device)
@@ -163,12 +162,18 @@ class KGModel(nn.Module):
                                                                                         dialogue_encoder_inputs_length,
                                                                                         dialogue_encoder_hidden_state)
 
-        # decoder
         #  dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
         dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
 
-        dialogue_decoder_outputs = []
+        # fact encoder
+        if self.model_type == 'kg':
+            dialogue_decoder_hidden_state = self.fact_forward(facts_inputs,
+                                                                dialogue_decoder_hidden_state,
+                                                                batch_size)
 
+
+        # decoder
+        dialogue_decoder_outputs = []
         for i in range(max_len):
             dialogue_decoder_output, dialogue_decoder_hidden_state, attn_weights = self.decoder(dialogue_decoder_input,
                                                                                                 dialogue_decoder_hidden_state,
@@ -206,10 +211,16 @@ class KGModel(nn.Module):
                                                                                         dialogue_encoder_inputs_length,
                                                                                         dialogue_encoder_hidden_state)
 
-        # decoder
         #  dialogue_decoder_hidden_state = tuple([item[:1, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
         dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
 
+        # fact encoder
+        if self.model_type == 'kg':
+            dialogue_decoder_hidden_state = self.fact_forward(facts_inputs,
+                                                                dialogue_decoder_hidden_state,
+                                                                batch_size)
+
+        # dialogue decoder
         if decode_type == 'greedy':
             dialogue_decode_outputs = []
             for i in range(max_len):
@@ -257,19 +268,16 @@ class KGModel(nn.Module):
         # hidden_tuple is a tuple object
         new_hidden_list = []
         for cur_hidden_state in hidden_state:
-            new_hidden_state = torch.zeros((self.dialogue_decoder_num_layers, batch_size, self.dialogue_decoder_hidden_size),
-                                           device=self.device)
-            for i in range(self.num_layers):
-                u = cur_hidden_state[i]  # [batch_size, hidden_size]
-                # batch product
-                tmpP = torch.bmm(facts_inputs, u.unsqueeze(2))  # [batch_size, top_k, 1]
-                P = F.softmax(tmpP.squeeze(2), dim=1)  # [batch_size, top_k]
-                # [batch_size, hidden_size, 1]
-                o = torch.bmm(facts_inputs.transpose(1, 2), P.unsqueeze(2))
-                u_ = o.squeeze(2) + u  # [batch_size, hidden_size]
-                new_hidden_state[i] = u_
-                # new_hidden_state -> [num_layers, batch_size, hidden_size]
-            new_hidden_list.append(new_hidden_state)
+            # cur_hidden_state: [num_layers, batch_size, hidden_size]
+            cur_hidden_state.transpose_(0, 1) # [batch_size, num_layers, hidden_size]
+            tmpP = torch.bmm(cur_hidden_state, fact_M.transpose(1, 2)) # [batch_size, num_layers, topk]
+            P = F.softmax(tmpP, dim=2)
+
+            o = torch.bmm(P, fact_C) # [batch_size, num_layers, hidden_size]
+            u_ = o + cur_hidden_state
+            u_.transpose_(0, 1) # [num_layers, batch_size, hidden_size]
+
+            new_hidden_list.append(u_)
 
         new_hidden_state = tuple(new_hidden_list)
         return new_hidden_state
