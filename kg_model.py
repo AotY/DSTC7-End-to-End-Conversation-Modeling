@@ -3,7 +3,7 @@
 import random
 import torch
 import torch.nn as nn
-import torch.nn.functional as f
+import torch.nn.functional as F
 
 from modules.encoder import Encoder
 from modules.decoder import Decoder
@@ -20,7 +20,7 @@ KGModel
 
 """
 
-class KGModel(nn.module):
+class KGModel(nn.Module):
     '''
     conditoning responses on both conversation history and external "facts", allowing the model
     to be versatile and applicable in an open-domain setting.
@@ -49,11 +49,9 @@ class KGModel(nn.module):
                                         embedding_size,
                                         hidden_size,
                                         num_layers,
-
                                         bidirectional,
                                         dropout,
-                                        padding_idx,
-                                        device)
+                                        padding_idx)
 
         # fact encoder
         if model_type == 'kg':
@@ -108,7 +106,7 @@ class KGModel(nn.module):
         # dialogue decoder
         # dialogue_encoder_hidden_state -> [num_layers * num_directions, batch, hidden_size]
         #  dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
-        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
+        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state, batch_size)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
@@ -121,7 +119,7 @@ class KGModel(nn.module):
                                                                                                     dialogue_decoder_hidden_state,
                                                                                                     dialogue_encoder_max_output,
                                                                                                     dialogue_encoder_outputs)
-                dialogue_decoder_outputs.append(dialogue_encoder_output)
+                dialogue_decoder_outputs.append(dialogue_decoder_output)
                 dialogue_decoder_input = dialogue_decoder_inputs[i].view(1, -1)
         else:
             # Without teacher forcing: use its own predictions as the next input
@@ -143,7 +141,7 @@ class KGModel(nn.module):
                  dialogue_encoder_inputs,
                  dialogue_encoder_inputs_length,
                  dialogue_decoder_input,
-                 facts_inputs, 
+                 facts_inputs,
                  max_len,
                  batch_size):
         '''
@@ -182,7 +180,7 @@ class KGModel(nn.module):
                  dialogue_encoder_inputs_length,
                  dialogue_decoder_input,
                  facts_inputs,
-                 decode_type='greedy', # or beam search
+                 decode_type,
                  max_len,
                  eosid,
                  batch_size,
@@ -199,7 +197,8 @@ class KGModel(nn.module):
                                                                                         dialogue_encoder_hidden_state)
 
         # decoder
-        dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
+        #  dialogue_decoder_hidden_state = tuple([item[:1, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
+        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
 
         if decode_type == 'greedy':
             dialogue_decode_outputs = []
@@ -209,13 +208,13 @@ class KGModel(nn.module):
                                                                                                     dialogue_encoder_outputs)
 
                 dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach() #[1, batch_size]
-                dialogue_decoder_outputs.append(dialogue_decoder_input)
+                dialogue_decode_outputs.append(dialogue_decoder_input)
 
                 ni = dialogue_decoder_input[0][0].item()
                 if ni == eosid:
                     break
 
-            # [len, batch_size]
+            # [len, batch_size]  -> [batch_size, len]
             dialogue_decode_outputs = torch.cat(dialogue_decode_outputs, dim=0)
             dialogue_decode_outputs.transpose_(0, 1)
         elif decode_type == 'beam_search':

@@ -19,7 +19,7 @@ class Encoder(nn.Module):
                  embedding_size,
                  hidden_size,
                  num_layers=1,
-                 bidirectional=False,
+                 bidirectional=True,
                  dropout=0.0,
                  padding_idx=0):
 
@@ -30,6 +30,7 @@ class Encoder(nn.Module):
         self.hidden_size = hidden_size
         self.padding_idx = padding_idx
         self.bidirection_num = 2 if bidirectional else 1
+        self.num_layers = num_layers
 
         # embedding
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, self.padding_idx)
@@ -86,7 +87,8 @@ class Encoder(nn.Module):
         hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
 
         print('encoder outputs shape: {}'.format(outputs.shape))
-        max_output, _ = outputs.max(dim=0).unsqueeze(0) #[1, batch_size, hidden_size * 2]
+        max_output, _ = outputs.max(dim=0)
+        max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
         print('max_output shape: {}'.format(max_output.shape))
 
         # dropout
@@ -96,8 +98,8 @@ class Encoder(nn.Module):
     def init_hidden(self, batch_size, device):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
-        initial_state1 = torch.rand((1, batch_size, self.hidden_size), device=device)
-        initial_state2 = torch.rand((1, batch_size, self.hidden_size), device=device)
+        initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
+        initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
 
         nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
         nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
