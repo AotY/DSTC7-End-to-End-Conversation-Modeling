@@ -11,7 +11,7 @@
 import torch
 import torch.nn as nn
 
-from modules.utils import init_lstm_wt
+from modules.utils import init_lstm_wt, init_linear_wt
 from modules.global_attn import GlobalAttn
 
 
@@ -57,8 +57,11 @@ class LuongAttnDecoder(nn.Module):
                             dropout=dropout_ratio)
         init_lstm_wt(self.lstm)
 
+        self.reduce_linear = nn.Linear(hidden_size * 2, hidden_size)
+        init_linear_wt(self.reduce_linear)
+
         # concat linear
-        self.concat_linear = nn.Linear(hidden_size * 3, hidden_size)
+        self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
 
         # linear
         self.linear = nn.Linear(hidden_size, vocab_size)
@@ -87,12 +90,15 @@ class LuongAttnDecoder(nn.Module):
         # output: [1, batch_size, hidden_size]
         output, hidden_state = self.lstm(encoder_concat, hidden_state)
 
+        # hidden_size * 2 -> hidden_size
+        reduced_encoder_outputs = self.reduce_linear(encoder_outputs)
+
         # Calculate attention from current RNN state and all encoder outputs;
         # apply to encoder outputs to get weighted average<Paste>
-        attn_weights = self.attn(output.squeeze(0), encoder_outputs)  # [batch_size, max_len]
+        attn_weights = self.attn(output.squeeze(0), reduced_encoder_outputs)  # [batch_size, max_len]
         attn_weights = attn_weights.unsqueeze(1)  # [batch_size, 1, max_len]
         # [batch_size, 1, hidden_size]
-        context = attn_weights.bmm(encoder_outputs.transpose(0, 1))
+        context = attn_weights.bmm(reduced_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1)  # [1, batch_size, hidden_size]
 
         # Attentional vector using the RNN hidden state and context vector
