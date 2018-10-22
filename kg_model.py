@@ -157,7 +157,8 @@ class KGModel(nn.module):
                                                                                         dialogue_encoder_hidden_state)
 
         # decoder
-        dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
+        #  dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
+        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
 
         dialogue_decoder_outputs = []
 
