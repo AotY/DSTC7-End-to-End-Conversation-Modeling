@@ -18,7 +18,7 @@ import torch.optim as optim
 
 from misc.vocab import Vocab
 from kg_model import KGModel
-from misc.data_set import DataSet
+from misc.data_set import Dataset
 from train_evaluate_opt import data_set_opt, model_opt, train_opt
 
 program = os.path.basename(sys.argv[0])
@@ -397,7 +397,7 @@ if __name__ == '__main__':
     vocab_size=vocab.get_vocab_size()
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
-    data_set=DataSet(
+    data_set=Dataset(
                     opt.model_type,
                     opt.pair_path,
                     opt.max_len,

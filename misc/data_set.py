@@ -14,7 +14,7 @@ from embedding.embedding_score import get_topk_facts
 from misc.url_tags_weight import tags_weight_dict
 
 
-class DataSet:
+class Dataset:
     """
         assumptions of the data files
         * SOS and EOS are top 2 tokens
