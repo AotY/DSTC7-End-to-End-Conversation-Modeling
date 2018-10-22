@@ -55,7 +55,7 @@ class Vocab(object):
         words = [word for word in words if word != self.unk]
         return words
 
-    def build_for_frequency(self, freq_list):
+    def build_from_freq(self, freq_list):
         cur_id = 4  # because of the unk, pad, sos, and eos tokens.
         for word, _ in freq_list:
             self.word2idx[word] = cur_id
@@ -68,7 +68,7 @@ class Vocab(object):
 
     def save(self, path='vocab_idx2word.dict'):
         if len(self.idx2word) == 0:
-            raise RuntimeError("Save vocab after call build_for_frequency()")
+            raise RuntimeError("Save vocab after call build_from_freq()")
 
         pickle.dump(self.word2idx, open(path, 'wb'))
         # pickle.dump(self.idx2word, open('./vocab_idx2word.dict', 'wb'))
@@ -133,7 +133,11 @@ class Vocab(object):
         """
         return EOS
 
-    def get_pad_unk_sos_eos(self):
-        return [self.pad, self.unk, self.sos, self.eos]
+    def ids_to_text(self, ids):
+        words = self.ids_to_word(ids)
+        # remove pad, sos, eos, unk
+        words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos]]
+        text = ' '.join(words)
+        return text
 
 

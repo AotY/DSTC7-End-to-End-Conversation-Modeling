@@ -63,21 +63,6 @@ def init_wt_normal(wt):
 def init_wt_unif(wt):
     wt.data.uniform_(-config.rand_unif_init_mag, config.rand_unif_init_mag)
 
-def aeq(*args):
-    """
-    Assert all arguments have the same value
-    """
-    arguments = (arg for arg in args)
-    first = next(arguments)
-    assert all(arg == first for arg in arguments), \
-        "Not all arguments have the same value: " + str(args)
-
-
-def use_gpu(opt):
-    return (hasattr(opt, 'gpuid') and len(opt.gpuid) > 0) or \
-           (hasattr(opt, 'gpu') and opt.gpu > -1)
-
-
 def sequence_mask(lengths, max_len=None):
     """
     Creates a boolean mask from sequence lengths.
