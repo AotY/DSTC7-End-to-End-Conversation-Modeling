@@ -256,7 +256,7 @@ build vocab
 
 def build_vocab(freq_list):
     vocab = Vocab()
-    vocab.build_for_frequency(freq_list)
+    vocab.build_from_freq(freq_list)
     opt.vocab_save_path = opt.vocab_save_path.format(opt.model_name)
     vocab.save(opt.vocab_save_path)
     return vocab
