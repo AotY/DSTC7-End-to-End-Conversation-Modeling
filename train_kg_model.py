@@ -194,7 +194,7 @@ def evaluate(model,
             # load data
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
-                conversation_texts, response_texts \
+                conversation_texts, response_texts, \
                 facts_inputs, facts_texts = data_set.load_data('eval', opt.batch_size)
 
             # train and get cur loss
