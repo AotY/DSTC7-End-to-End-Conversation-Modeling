@@ -89,10 +89,8 @@ class Encoder(nn.Module):
         outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
         hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
 
-        print('encoder outputs shape: {}'.format(outputs.shape))
         max_output, _ = outputs.max(dim=0)
         max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
-        print('max_output shape: {}'.format(max_output.shape))
 
         # dropout
         # outputs = self.dropout(outputs)
