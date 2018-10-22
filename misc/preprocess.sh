@@ -17,6 +17,6 @@ python preprocess.py \
     --alpha 0.025 \
     --negative 7 \
     --epochs 7 \
-    --model_name seq2seq
+    --model_name kg
 
 /
