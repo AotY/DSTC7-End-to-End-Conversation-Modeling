@@ -3,14 +3,15 @@
 import random
 import torch
 import torch.nn as nn
-import torch.nn.functional as f
+import torch.nn.functional as F
 
 from modules.encoder import Encoder
-from modules.decoder import Decoder
+#  from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
-from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
+#  from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
+from modules.utils import init_linear_wt
 
 """
 KGModel
@@ -20,7 +21,7 @@ KGModel
 
 """
 
-class KGModel(nn.module):
+class KGModel(nn.Module):
     '''
     conditoning responses on both conversation history and external "facts", allowing the model
     to be versatile and applicable in an open-domain setting.
@@ -38,7 +39,6 @@ class KGModel(nn.module):
                  padding_idx,
                  tied,
                  device):
-
         super(KGModel, self).__init__()
 
         self.model_type = model_type
@@ -49,16 +49,21 @@ class KGModel(nn.module):
                                         embedding_size,
                                         hidden_size,
                                         num_layers,
-
                                         bidirectional,
                                         dropout,
-                                        padding_idx,
-                                        device)
+                                        padding_idx)
 
         # fact encoder
         if model_type == 'kg':
-            self.fact_encoder = None
+            # mi = A * ri    fact_linearA(300, 512)
+            self.fact_linearA = nn.Linear(hidden_size, hidden_size)
+            init_linear_wt(self.fact_linearA)
+            # ci = C * ri
+            self.fact_linearC = nn.Linear(hidden_size, hidden_size)
+            init_linear_wt(self.fact_linearC)
 
+            self.fact_linear = nn.Linear(embedding_size, hidden_size)
+            init_linear_wt(self.fact_linear)
 
 
         # encoder hidden_state -> decoder hidden_state
@@ -79,7 +84,7 @@ class KGModel(nn.module):
                 dialogue_encoder_inputs,
                 dialogue_encoder_inputs_length,
                 dialogue_decoder_inputs,
-                fact_inputs,
+                facts_inputs,
                 batch_size,
                 max_len,
                 teacher_forcing_ratio):
@@ -100,16 +105,18 @@ class KGModel(nn.module):
         dialogue_encoder_max_output = self.dialogue_encoder(dialogue_encoder_inputs,
                                                             dialogue_encoder_inputs_length,
                                                             dialogue_encoder_hidden_state)
-        # fact encoder
-        if self.model_type == 'kg':
-            pass
 
-
-        # dialogue decoder
         # dialogue_encoder_hidden_state -> [num_layers * num_directions, batch, hidden_size]
         #  dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
-        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
+        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state, batch_size)
 
+        # fact encoder
+        if self.model_type == 'kg':
+            dialogue_decoder_hidden_state = self.fact_forward(facts_inputs,
+                                                                dialogue_decoder_hidden_state,
+                                                                batch_size)
+
+        # dialogue decoder
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         dialogue_decoder_outputs = []
@@ -121,7 +128,7 @@ class KGModel(nn.module):
                                                                                                     dialogue_decoder_hidden_state,
                                                                                                     dialogue_encoder_max_output,
                                                                                                     dialogue_encoder_outputs)
-                dialogue_decoder_outputs.append(dialogue_encoder_output)
+                dialogue_decoder_outputs.append(dialogue_decoder_output)
                 dialogue_decoder_input = dialogue_decoder_inputs[i].view(1, -1)
         else:
             # Without teacher forcing: use its own predictions as the next input
@@ -143,7 +150,7 @@ class KGModel(nn.module):
                  dialogue_encoder_inputs,
                  dialogue_encoder_inputs_length,
                  dialogue_decoder_input,
-                 facts_inputs, 
+                 facts_inputs,
                  max_len,
                  batch_size):
         '''
@@ -183,7 +190,7 @@ class KGModel(nn.module):
                  dialogue_encoder_inputs_length,
                  dialogue_decoder_input,
                  facts_inputs,
-                 decode_type='greedy', # or beam search
+                 decode_type,
                  max_len,
                  eosid,
                  batch_size,
@@ -200,7 +207,8 @@ class KGModel(nn.module):
                                                                                         dialogue_encoder_hidden_state)
 
         # decoder
-        dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
+        #  dialogue_decoder_hidden_state = tuple([item[:1, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
+        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
 
         if decode_type == 'greedy':
             dialogue_decode_outputs = []
@@ -210,13 +218,13 @@ class KGModel(nn.module):
                                                                                                     dialogue_encoder_outputs)
 
                 dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach() #[1, batch_size]
-                dialogue_decoder_outputs.append(dialogue_decoder_input)
+                dialogue_decode_outputs.append(dialogue_decoder_input)
 
                 ni = dialogue_decoder_input[0][0].item()
                 if ni == eosid:
                     break
 
-            # [len, batch_size]
+            # [len, batch_size]  -> [batch_size, len]
             dialogue_decode_outputs = torch.cat(dialogue_decode_outputs, dim=0)
             dialogue_decode_outputs.transpose_(0, 1)
         elif decode_type == 'beam_search':
@@ -224,4 +232,45 @@ class KGModel(nn.module):
 
         return dialogue_decode_outputs
 
+
+
+    def fact_forward(self,
+                     facts_inputs,
+                     hidden_state,
+                     batch_size):
+        """
+        Args:
+            - facts_inputs: [batch_size, top_k, embedding_size]
+            - dialogue_decoder_hidden_state
+            - batch_size
+        """
+        # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
+        if self.embedding_size != self.hidden_size:
+            facts_inputs = self.fact_linear(facts_inputs)
+
+        # M [batch_size, topk, hidden_size]
+        fact_M = self.fact_linearA(facts_inputs)
+
+        # C [batch_size, topk, hidden_size]
+        fact_C = self.fact_linearC(facts_inputs)
+
+        # hidden_tuple is a tuple object
+        new_hidden_list = []
+        for cur_hidden_state in hidden_state:
+            new_hidden_state = torch.zeros((self.dialogue_decoder_num_layers, batch_size, self.dialogue_decoder_hidden_size),
+                                           device=self.device)
+            for i in range(self.num_layers):
+                u = cur_hidden_state[i]  # [batch_size, hidden_size]
+                # batch product
+                tmpP = torch.bmm(facts_inputs, u.unsqueeze(2))  # [batch_size, top_k, 1]
+                P = F.softmax(tmpP.squeeze(2), dim=1)  # [batch_size, top_k]
+                # [batch_size, hidden_size, 1]
+                o = torch.bmm(facts_inputs.transpose(1, 2), P.unsqueeze(2))
+                u_ = o.squeeze(2) + u  # [batch_size, hidden_size]
+                new_hidden_state[i] = u_
+                # new_hidden_state -> [num_layers, batch_size, hidden_size]
+            new_hidden_list.append(new_hidden_state)
+
+        new_hidden_state = tuple(new_hidden_list)
+        return new_hidden_state
 

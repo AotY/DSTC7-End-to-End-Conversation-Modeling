@@ -8,10 +8,10 @@
 BahdanauAttnDecoder
 """
 import torch
-import troch.nn as nn
+import torch.nn as nn
 import torch.nn.functional as F
 
-from global_attn import GlobalAttn
+from modules.global_attn import GlobalAttn
 
 class BahdanauAttnDecoder(nn.Module):
     def __init__(self,
