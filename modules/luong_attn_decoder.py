@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from global_attn import GlobalAttn
+from modules.global_attn import GlobalAttn
 
 
 
@@ -57,19 +57,18 @@ class LuongAttnDecoder(nn.Module):
                             dropout=dropout_ratio)
 
         # concat linear
-        self.concat_linear = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        self.concat_linear = nn.Linear(hidden_size * 3, hidden_size)
 
         # linear
-        self.linear = nn.Linear(self.hidden_size,
-                                self.vocab_size)
+        self.linear = nn.Linear(hidden_size, vocab_size)
 
-        if tied:
+        if tied and embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, input, hidden_state, encoder_outputs, encoder_max_output):
+    def forward(self, input, hidden_state, encoder_max_output, encoder_outputs):
         '''
         input: [1, batch_size]  LongTensor
         hidden_state: [num_layers, batch_size, hidden_size]
@@ -99,8 +98,9 @@ class LuongAttnDecoder(nn.Module):
         # concatenated together (Luong eq. 5)
         # [1, batch_size, hidden_size * 2]
         concat_input = torch.cat((context, output), dim=2)
+
         # [1, batch_size, hidden_size]
-        concat_output = F.tanh(self.concat_linear(concat_input))
+        concat_output = torch.tanh(self.concat_linear(concat_input))
 
         # linear
         output = self.linear(concat_output)

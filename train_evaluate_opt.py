@@ -43,13 +43,13 @@ def model_opt(parser):
 
     group = parser.add_argument_group('model opt.')
 
-    ''' encoder, decoder ''''
+    ''' encoder, decoder '''
     group.add_argument('--embedding_size',
                        type=int,
                        default=300,
                        help='embedding size for dialog encoder.')
 
-    group.add_argument('--pre_trained_word_embedded',
+    group.add_argument('--pre_trained_word_embedding',
                        type=str,
                        help='pre trained word embedded.')
 
@@ -166,6 +166,6 @@ def train_opt(parser):
                        type=str,
                        help='run for training, eval, or generation.')
 
-    group.add__argument('--model_type',
+    group.add_argument('--model_type',
                         type=str,
                         help='seq2seq or kg model.')

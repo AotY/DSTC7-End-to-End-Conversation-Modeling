@@ -12,6 +12,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from modules.utils import init_linear_wt
+
 
 '''
 GlobalAttn
@@ -30,6 +32,9 @@ class GlobalAttn(nn.Module):
         self.hidden_size = hidden_size
         self.device = device
 
+        self.reduce_linear = nn.Linear(hidden_size * 2, hidden_size)
+        init_linear_wt(self.reduce_linear)
+
         if self.attn_method == 'general':
             self.attn_linear = nn.Linear(self.hidden_size, self.hidden_size)
         elif self.attn_method == 'concat':
@@ -38,17 +43,20 @@ class GlobalAttn(nn.Module):
             self.v = nn.Parameter(torch.FloatTensor(1, self.hidden_size, device=device))
 
     def forward(self, hidden_state, encoder_outputs):
-        max_len, batch_size = encoder_outputs.shape[:2]
+        """
+        hidden_state: [batch_size, hidden_size]
+        encoder_outputs: [max_len, batch_size, hidden_size * 2]
+        """
+        max_len, batch_size, _ = encoder_outputs.shape
 
-        #  encoder_outputs = encoder_outputs.transpose(0, 1) # [batch_size, seq_len, hidden_size]
-
+        reduced_encoder_outputs = self.reduce_linear(encoder_outputs)
         attn_weights = torch.zeros((batch_size, max_len), device=self.device)  # [batch_size, max_len]
 
         # For each batch of encoder outputs
         for batch_index in range(batch_size):
             #  weight for each encoder_output
             for len_index in range(max_len):
-                one_encoder_output = encoder_outputs[len_index, batch_index].unsqueeze(0)  # [1, hidden_size]
+                one_encoder_output = reduced_encoder_outputs[len_index, batch_index].unsqueeze(0)  # [1, hidden_size]
                 one_hidden_state = hidden_state[batch_index, :].unsqueeze(0)  # [1, hidden_size]
 
                 attn_weights[batch_index, len_index] = self.score(one_hidden_state,

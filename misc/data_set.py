@@ -6,6 +6,7 @@ import pickle
 
 import torch
 import numpy as np
+from bs4 import BeautifulSoup
 
 from misc import es_helper
 from embedding.embedding_score import get_topk_facts
@@ -39,6 +40,7 @@ class DataSet:
         self.fact_topk = fact_topk
         self.vocab = vocab
         self.vocab_size = vocab.get_vocab_size()
+        self.turn_num = turn_num
 
         self.device = device
         self.logger = logger
@@ -51,10 +53,9 @@ class DataSet:
 
         self.read_txt(save_path,
                       pair_path,
-                      turn_num,
                       eval_split)
 
-    def read_txt(self, save_path, pair_path, turn_num, eval_split):
+    def read_txt(self, save_path, pair_path, eval_split):
         _data_dict_path = os.path.join(save_path, '{}_data_dict.pkl')
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
@@ -72,37 +73,34 @@ class DataSet:
                         # conversation
                         conversation = conversation[10:]
                         history_dialogues = self.parser_dialogues(
-                            conversation, turn_num, 'conversation')
+                            conversation, 'conversation')
                     elif conversation.startswith('eos'):
                         # EOS: special symbol indicating a turn transition
                         conversation = conversation[4:]
                         history_dialogues = self.parser_dialogues(
-                            conversation, turn_num, 'turn')
+                            conversation, 'turn')
                     else:
                         history_dialogues = self.parser_dialogues(
-                            conversation, turn_num, 'other')
+                            conversation, 'other')
 
                     if history_dialogues is None:
                         continue
 
-                    #  conversation_context = ' '.join(history_dialogues)
-                    conversation = history_dialogues[0]
-                    response = history_dialogues[1]
+                    conversation = ' '.join(history_dialogues)
+                    #  conversation = history_dialogues[0]
+                    #  response = history_dialogues[1]
 
-                    conversation_ids = self.vocab.words_to_id(
-                        conversation.split(' '))
+                    conversation_ids = self.vocab.words_to_id(conversation.split(' '))
                     if len(conversation_ids) <= 3:
                             continue
 
-                    conversation_ids = conversation_ids[-min(
-                        self.max_len - 1, len(conversation_ids)):]
+                    conversation_ids = conversation_ids[-min(self.max_len - 1, len(conversation_ids)):]
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
                     if len(response_ids) <= 3:
                             continue
 
-                    response_ids = response_ids[-min(
-                        self.max_len - 1, len(response_ids)):]
+                    response_ids = response_ids[-min(self.max_len - 1, len(response_ids)):]
 
                     datas.append((conversation_ids, response_ids, hash_value))
 
@@ -118,7 +116,7 @@ class DataSet:
 
             pickle.dump(self._data_dict, open(_data_dict_path, 'wb'))
         else:
-            self._data_dict = pickle.load(_data_dict_path, 'rb'))
+            self._data_dict = pickle.load(open(_data_dict_path, 'rb'))
             self.n_train=len(self._data_dict['train'])
             self.n_eval=len(self._data_dict['eval'])
 
@@ -127,7 +125,7 @@ class DataSet:
             'eval': 0
         }
 
-    def parser_dialogues(self, conversation, turn_num=1, symbol='conversation'):
+    def parser_dialogues(self, conversation, symbol='conversation'):
         """
         parser conversation context by dialogue turn (default 1)
         """
@@ -135,11 +133,10 @@ class DataSet:
         history_dialogues = [history_dialogue for history_dialogue in history_dialogues if len(
             history_dialogue.split()) > 3]
 
-        if len(history_dialogues) < turn_num:
+        if len(history_dialogues) < self.turn_num:
             return None
 
-        history_dialogues = history_dialogues[-min(
-            turn_num, len(history_dialogues)):]
+        history_dialogues = history_dialogues[-min(self.turn_num, len(history_dialogues)):]
 
         return history_dialogues
 
@@ -202,7 +199,7 @@ class DataSet:
             decoder_targets[len(response_ids), i]=self.vocab.eosid
 
             if self.model_type == 'kg':
-                topk_facts_embedded, topk_facts=self.assembel_facts(hash_value)
+                topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
                 facts_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
 
@@ -216,7 +213,7 @@ class DataSet:
 
         return encoder_inputs, encoder_inputs_length, \
             decoder_inputs, decoder_targets, \
-            conversation_texts, response_texts \
+            conversation_texts, response_texts, \
             facts_inputs, facts_texts
 
 
@@ -259,7 +256,7 @@ class DataSet:
 
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
-                        facts, facts_weight = get_facts_weight(facts)
+                        facts, facts_weight = self.get_facts_weight(facts)
 
                         facts_ids = [self.vocab.words_to_id(fact.split(' ')) for fact in facts]
                         if len(facts_ids) == 0:
@@ -270,13 +267,13 @@ class DataSet:
                         facts_ids = [fact_ids[-min(self.fact_max_len, len(facts_ids)): ] for fact_ids in facts_ids]
 
                         # score top_k_facts_embedded -> [top_k, embedding_size]
-                        topk_facts_embedded, topk_indexes = get_topk_facts(embedding_size, 
+                        topk_facts_embedded, topk_indexes = get_topk_facts(embedding_size,
                                                                             embedding,
                                                                             conversation_ids,
                                                                             facts_ids,
                                                                             topk,
                                                                             facts_weight,
-                                                                            device)
+                                                                            self.device)
                         topk_indexes_list = topk_indexes.tolist()
                         topk_facts_text = [facts[topi] for topi in topk_indexes_list]
 
@@ -288,7 +285,7 @@ class DataSet:
 
     def get_facts_weight(facts):
         """ facts: [[w_n] * size]"""
-        facts_wight = []
+        facts_weight = []
         new_facts = []
         for fact in facts:
             new_fact = ''
@@ -305,7 +302,7 @@ class DataSet:
                     fact = fact.replace(str(tag), '')
 
             new_facts.append(new_fact)
-            facts_wight.append(fact_weight)
+            facts_weight.append(fact_weight)
 
         return new_facts,  facts_weight
 
