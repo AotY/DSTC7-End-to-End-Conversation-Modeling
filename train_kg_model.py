@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import division
 from __future__ import print_function
 
@@ -18,9 +17,9 @@ import torch.nn as nn
 import torch.optim as optim
 
 from misc.vocab import Vocab
-from seq2seq_model import KGModel
-from misc.data_set import data_set
-from opt import data_set_opt, model_opt, train_opt
+from kg_model import KGModel
+from misc.data_set import DataSet
+from train_evaluate_opt import data_set_opt, model_opt, train_opt
 
 program = os.path.basename(sys.argv[0])
 logger = logging.getLogger(program)
@@ -250,7 +249,7 @@ def generate(model, data_set, vocab):
                 facts_inputs,
                 opt.decode_type,
                 opt.max_len,
-                eosid,
+                vocab.eosid,
                 opt.batch_size,
                 opt.beam_width,
                 opt.best_n)
@@ -358,11 +357,11 @@ def load_pre_trained_embedding(vocab_size, padid, fixed=True):
 
     ''' load pretrained_weight'''
     if opt.pre_trained_embedding:
-        pre_trained_embedding = pre_trained_embedding.format(opt.model_type)
+        pre_trained_embedding = opt.pre_trained_embedding.format(opt.model_type)
         pre_trained_weight = np.load(pre_trained_embedding)
         embedding.weight.data.copy_(pre_trained_weight)
         if fixed:
-            self.embedding.weight.requires_grad = False
+            embedding.weight.requires_grad = False
 
     embedding.to(device=device)
     return embedding
@@ -394,11 +393,11 @@ if __name__ == '__main__':
         checkpoint=None
 
     vocab=Vocab()
-    vocab.load(opt.vocab_path)
+    vocab.load(opt.vocab_path.format(opt.model_type))
     vocab_size=vocab.get_vocab_size()
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
-    data_set=data_set(
+    data_set=DataSet(
                     opt.model_type,
                     opt.pair_path,
                     opt.max_len,
