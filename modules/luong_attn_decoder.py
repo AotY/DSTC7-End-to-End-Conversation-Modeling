@@ -22,7 +22,7 @@ class LuongAttnDecoder(nn.Module):
                  embedding_size,
                  hidden_size,
                  num_layers,
-                 dropout_ratio,
+                 dropout,
                  padding_idx,
                  tied,
                  attn_type,
@@ -42,7 +42,7 @@ class LuongAttnDecoder(nn.Module):
             self.vocab_size, self.embedding_size, self.padding_idx)
 
         # dropout
-        self.dropout = nn.Dropout(dropout_ratio)
+        self.dropout = nn.Dropout(dropout)
 
         # attn
         self.attn = GlobalAttn(self.attn_type, self.hidden_size, device)
@@ -54,7 +54,7 @@ class LuongAttnDecoder(nn.Module):
         self.lstm = nn.LSTM(self.embedding_size,
                             self.hidden_size,
                             self.num_layers,
-                            dropout=dropout_ratio)
+                            dropout=dropout)
         init_lstm_wt(self.lstm)
 
         self.reduce_linear = nn.Linear(hidden_size * 2, hidden_size)

@@ -70,6 +70,7 @@ class KGModel(nn.Module):
         self.reduce_state = ReduceState(hidden_size)
 
         # dialogue_decoder
+        """
         self.dialogue_decoder = LuongAttnDecoder(vocab_size,
                                                embedding_size,
                                                hidden_size,
@@ -79,6 +80,16 @@ class KGModel(nn.Module):
                                                tied,
                                                attn_type,
                                                device)
+        """
+        self.dialogue_decoder = Decoder(
+            vocab_size,
+            embedding_size,
+            hidden_size,
+            num_layers,
+            dropout,
+            padding_idx,
+            tied
+        )
 
     def forward(self,
                 dialogue_encoder_inputs,
@@ -106,8 +117,8 @@ class KGModel(nn.Module):
                                                             dialogue_encoder_hidden_state)
 
         # dialogue_encoder_hidden_state -> [num_layers * num_directions, batch, hidden_size]
-        #  dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
         dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state, batch_size)
+        #  dialogue_decoder_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in dialogue_encoder_hidden_state])
 
         # fact encoder
         if self.model_type == 'kg':

@@ -200,6 +200,7 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
+                tpok_facts_embedded = topk_facts_embedded.to(device)
                 facts_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
 
