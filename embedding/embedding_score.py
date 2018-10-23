@@ -31,11 +31,9 @@ def get_topk_facts(embedding_size,
     facts_embedded_mean = []
     topk_facts_embedded = torch.zeros((topk, embedding_size), device=device)
     for fi, fact_ids in enumerate(facts_ids):
-        print(fact_ids)
         fact_ids = torch.tensor(fact_ids, dtype=torch.long, device=device)
         fact_embedded = embedding(fact_ids)
         fact_embedded_mean = fact_embedded.mean(dim=0).unsqueeze(0)  # [1, embedding_size]
-        print(fact_embedded_mean.shape)
         facts_embedded_mean.append(fact_embedded_mean)
     if len(facts_embedded_mean) == 0:
         return topk_facts_embedded
@@ -66,7 +64,7 @@ def get_topk_facts(embedding_size,
     del conversation_ids
     del cosine_scores
 
-    return topk_facts_embedded.detach(), topk_indexes.detach()
+    return topk_facts_embedded.detach().cpu(), topk_indexes.detach().cpu()
 
 
 '''

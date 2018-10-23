@@ -19,7 +19,7 @@ class BahdanauAttnDecoder(nn.Module):
                  embedding_size,
                  hidden_size,
                  num_layers,
-                 dropout_ratio,
+                 dropout,
                  padding_idx,
                  tied,
                  attn_type='concat',
@@ -38,7 +38,7 @@ class BahdanauAttnDecoder(nn.Module):
             self.vocab_size, self.embedding_size, self.padding_idx)
 
         # dropout
-        self.dropout = nn.Dropout(dropout_ratio)
+        self.dropout = nn.Dropout(dropout)
 
         # attn
         self.attn = GlobalAttn(attn_type, self.hidden_size, device)
@@ -51,7 +51,7 @@ class BahdanauAttnDecoder(nn.Module):
         self.lstm = nn.LSTM(self.embedding_size * 2,
                             self.hidden_size,
                             self.num_layers,
-                            dropout=dropout_ratio)
+                            dropout=dropout)
         # linear
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
