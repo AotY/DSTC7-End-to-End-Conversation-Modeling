@@ -240,7 +240,7 @@ def generate(model, data_set, vocab):
 
             # train and get cur loss
             # greedy: [batch_size, max_len]
-            # beam_search: [batch_sizes, topk, len]
+            # beam_search: [batch_sizes, best_n, len]
             dialogue_decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             batch_utterances=model.generate(
                 dialogue_encoder_inputs,  # LongTensor
@@ -358,7 +358,7 @@ def load_pre_trained_embedding(vocab_size, padid, fixed=True):
     ''' load pretrained_weight'''
     if opt.pre_trained_embedding:
         pre_trained_embedding = opt.pre_trained_embedding.format(opt.model_type)
-        pre_trained_weight = np.load(pre_trained_embedding)
+        pre_trained_weight = torch.from_numpy(np.load(pre_trained_embedding))
         embedding.weight.data.copy_(pre_trained_weight)
         if fixed:
             embedding.weight.requires_grad = False
@@ -416,7 +416,7 @@ if __name__ == '__main__':
         filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
         data_set.computing_similarity_facts_offline(opt.embedding_size,
                                                     embedding,
-                                                    opt.topk,
+                                                    opt.fact_topk,
                                                     filename)
     model=build_model(vocab_size, vocab.padid)
 

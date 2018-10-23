@@ -41,7 +41,7 @@ class Vocab(object):
 
     def words_to_id(self, words):
         word_ids = [self.word_to_id(cur_word) for cur_word in words]
-        word_ids = [id for id in word_ids if id != self.unkid]
+        #  word_ids = [id for id in word_ids if id != self.unkid]
         return word_ids
 
     '''id to  word'''

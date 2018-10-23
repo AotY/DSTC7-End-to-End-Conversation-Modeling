@@ -6,12 +6,12 @@ import pickle
 
 import torch
 import numpy as np
-from bs4 import BeautifulSoup
 
 from misc import es_helper
 from embedding.embedding_score import get_topk_facts
 
-from misc.url_tags_weight import tags_weight_dict
+from misc.url_tags_weight import tag_weight_dict
+from misc.url_tags_weight import default_weight
 
 
 class Dataset:
@@ -56,7 +56,7 @@ class Dataset:
                       eval_split)
 
     def read_txt(self, save_path, pair_path, eval_split):
-        _data_dict_path = os.path.join(save_path, '{}_data_dict.pkl')
+        _data_dict_path = os.path.join(save_path, '%s_data_dict.pkl' % self.model_type)
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
             datas = []
@@ -256,9 +256,12 @@ class Dataset:
 
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
-                        facts, facts_weight = self.get_facts_weight(facts)
+                        facts_text, facts_weight = self.get_facts_weight(facts)
+                        if len(facts_text) == 0:
+                            continue
 
-                        facts_ids = [self.vocab.words_to_id(fact.split(' ')) for fact in facts]
+                        print(facts_text)
+                        facts_ids = [self.vocab.words_to_id(fact.split(' ')) for fact in facts_text]
                         if len(facts_ids) == 0:
                             continue
 
@@ -275,7 +278,7 @@ class Dataset:
                                                                             facts_weight,
                                                                             self.device)
                         topk_indexes_list = topk_indexes.tolist()
-                        topk_facts_text = [facts[topi] for topi in topk_indexes_list]
+                        topk_facts_text = [facts_text[topi] for topi in topk_indexes_list]
 
                         topk_facts_embedded_dict[hash_value] = (topk_facts_embedded, topk_facts_text)
 
@@ -283,26 +286,24 @@ class Dataset:
             pickle.dump(topk_facts_embedded_dict, open(filename, 'wb'))
             self.topk_facts_embedded_dict = topk_facts_embedded_dict
 
-    def get_facts_weight(facts):
+    def get_facts_weight(self, facts):
         """ facts: [[w_n] * size]"""
         facts_weight = []
         new_facts = []
         for fact in facts:
-            new_fact = ''
-            fact_weight = tags_weight_dict['default']
-            fact = ' '.join(fact)
-            for tag, weight in tags_weight_dict.items():
-                if not bool(fact):
-                    break
-                soup =  BeautifulSoup(fact, 'lxml')
-                tag = soup.find(tag)
-                if tag is not None:
-                    new_fact += tag.text
+            if len(fact) <= 3:
+                continue
+            fact_str = " ".join(fact)
+            fact_weight = default_weight
+            for tag, weight in tag_weight_dict.items():
+                if fact_str.find(tag) != -1:
                     fact_weight = max(fact_weight, weight)
-                    fact = fact.replace(str(tag), '')
+                    fact_str = fact_str.replace(tag, '')
+                    fact_str = fact_str.replace(tag[0] + '/' + tag[1:], '')
 
-            new_facts.append(new_fact)
-            facts_weight.append(fact_weight)
+            if len(fact_str.split(" ")) >= 3:
+                new_facts.append(fact_str)
+                facts_weight.append(fact_weight)
 
         return new_facts,  facts_weight
 

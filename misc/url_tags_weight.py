@@ -10,7 +10,9 @@ defined manually
 """
 
 
-tags_weight_dict = {
+default_weight = 0.1
+
+tag_weight_dict = {
     '<title>': 1.0,
     '<h1>': 1.0,
     '<h2>': 0.8,
@@ -19,7 +21,6 @@ tags_weight_dict = {
     '<h5>': 0.3,
     '<h6>': 0.2,
     '<p>': 0.2,
-    'default': 0.1
 }
 
 

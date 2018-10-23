@@ -7,7 +7,7 @@ python train_kg_model.py \
     --vocab_path data/vocab_word2idx_{}.dict \
     --turn_num 1 \
     --embedding_size 300 \
-    --pre_trained_word_embedding data/fasttext_vec_for_vocab_{}.70004.300d.npy \
+    --pre_trained_embedding data/fasttext_vec_for_vocab_{}.70004.300d.npy \
     --hidden_size 512 \
     --num_layers 2 \
     --dropout 0.5 \

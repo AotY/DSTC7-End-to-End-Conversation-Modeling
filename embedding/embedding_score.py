@@ -28,18 +28,23 @@ def get_topk_facts(embedding_size,
     conversation_embedded = embedding(conversation_ids)
     conversation_embedded_mean = conversation_embedded.mean(dim=0).unsqueeze(0)  # [1, embedding_size]
 
-    #  facts_embedded_mean = torch.zeros((len(facts_ids), embedding_size), device=device)
     facts_embedded_mean = []
+    topk_facts_embedded = torch.zeros((topk, embedding_size), device=device)
     for fi, fact_ids in enumerate(facts_ids):
+        print(fact_ids)
         fact_ids = torch.tensor(fact_ids, dtype=torch.long, device=device)
-        fact_embedded = fact_embedding(fact_ids)
+        fact_embedded = embedding(fact_ids)
         fact_embedded_mean = fact_embedded.mean(dim=0).unsqueeze(0)  # [1, embedding_size]
-        #  facts_embedded_mean[fi] = fact_embedded_mean
+        print(fact_embedded_mean.shape)
         facts_embedded_mean.append(fact_embedded_mean)
+    if len(facts_embedded_mean) == 0:
+        return topk_facts_embedded
 
     facts_embedded_mean = torch.cat(facts_embedded_mean, dim=0) # [len(facts_ids), embedding_size]
 
     # get topk
+    #  print(facts_embedded_mean.shape)
+    #  print(conversation_embedded_mean.shape)
     cosine_scores = F.cosine_similarity(facts_embedded_mean, conversation_embedded_mean)  # [len(facts_ids)]
 
     # * tag_weight
@@ -51,7 +56,9 @@ def get_topk_facts(embedding_size,
     topk_indexes = sorted_indices[:topk]
     # [topk, embedding_size]
 
-    topk_facts_embedded = torch.index_select(facts_embedded_mean, 0, topk_indexes)
+    #  topk_facts_embedded = torch.index_select(facts_embedded_mean, 0, topk_indexes)
+    for i in topk_indexes:
+        topk_facts_embedded[i] = facts_embedded_mean[i]
 
     del facts_embedded_mean
     del conversation_embedded_mean
@@ -64,7 +71,7 @@ def get_topk_facts(embedding_size,
 
 '''
 Extreme:
-Achieve an utterance representation by taking the 
+Achieve an utterance representation by taking the
 largest extreme values among the embedding vectors of all the words it contains
 '''
 
@@ -122,7 +129,7 @@ def get_extreme_embedding_score(vocab, gensim_model, input_str, candidate_replie
 
 '''
 Greedy:
-Greedily match words in two given utterances based on the cosine similarities of their embeddings, 
+Greedily match words in two given utterances based on the cosine similarities of their embeddings,
 and to average the obtained scores
 '''
 
