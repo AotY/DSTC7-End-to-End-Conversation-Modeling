@@ -57,13 +57,13 @@ class KGModel(nn.Module):
         self.device = device
 		if turn_num > 1:
 			# history_encoder
-			self.history_encoder = SimpleEncoder(vocab_size,
-												embedding_size,
-												hidden_size,
-												num_layers,
-												bidirectional,
-												dropout,
-												padding_idx)
+            self.history_encoder = SimpleEncoder(vocab_size,
+                                                 embedding_size,
+                                                 hidden_size,
+                                                 num_layers,
+                                                 bidirectional,
+                                                 dropout,
+                                                 padding_idx)
 
         # dialogue_encoder
         self.dialogue_encoder = Encoder(vocab_size,
@@ -133,10 +133,12 @@ class KGModel(nn.Module):
 		history_encoder_outputs = None
 		history_encoder_hidden_state = None
 		if self.turn_num > 1:
-			history_encoder_outputs, history_encoder_hidden_state = self.history_forward(hisotry_encoder_inputs, batch_size)
+			history_encoder_outputs, history_encoder_hidden_state = self.history_forward(
+			    hisotry_encoder_inputs, batch_size)
 
         # dialogue encoder
-        dialogue_encoder_hidden_state = self.dialogue_encoder.init_hidden(batch_size, self.device)
+        dialogue_encoder_hidden_state = self.dialogue_encoder.init_hidden(
+            batch_size, self.device)
         dialogue_encoder_outputs,  \
             dialogue_encoder_hidden_state, \
             dialogue_encoder_max_output = self.dialogue_encoder(dialogue_encoder_inputs,
@@ -146,7 +148,8 @@ class KGModel(nn.Module):
         # [num_layers * num_directions, batch, hidden_size] -> [num_layers, batch, hidden_size]
 		if history_encoder_hidden_state is not None:
 			dialogue_encoder_hidden_state += history_encoder_hidden_state
-        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state, batch_size)
+        dialogue_decoder_hidden_state = self.reduce_state(
+            dialogue_encoder_hidden_state, batch_size)
 
         # fact encoder
         if self.model_type == 'kg':
@@ -158,7 +161,8 @@ class KGModel(nn.Module):
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         dialogue_decoder_outputs = []
-        dialogue_decoder_input = dialogue_decoder_inputs[0].view(1, -1)  # sos [1, batch_size]
+        dialogue_decoder_input = dialogue_decoder_inputs[0].view(
+            1, -1)  # sos [1, batch_size]
         if use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
             for i in range(max_len):
@@ -168,7 +172,8 @@ class KGModel(nn.Module):
                                                                                                              dialogue_encoder_outputs,
 																											 history_encoder_outputs)
                 dialogue_decoder_outputs.append(dialogue_decoder_output)
-                dialogue_decoder_input = dialogue_decoder_inputs[i].view(1, -1).contiguous()
+                dialogue_decoder_input = dialogue_decoder_inputs[i].view(
+                    1, -1).contiguous()
         else:
             # Without teacher forcing: use its own predictions as the next input
             for i in range(max_len):
@@ -179,7 +184,8 @@ class KGModel(nn.Module):
 																											 history_encoder_outputs)
 
                 dialogue_decoder_outputs.append(dialogue_decoder_output)
-                dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach().view(1, -1).contiguous()
+                dialogue_decoder_input = torch.argmax(
+                    dialogue_decoder_output, dim=2).detach().view(1, -1).contiguous()
 
         dialogue_decoder_outputs = torch.cat(dialogue_decoder_outputs, dim=0)
 
@@ -202,10 +208,12 @@ class KGModel(nn.Module):
 		history_encoder_outputs = None
 		history_encoder_hidden_state = None
 		if self.turn_num > 1:
-			history_encoder_outputs, history_encoder_hidden_state = self.history_forward(hisotry_encoder_inputs, batch_size)
+			history_encoder_outputs, history_encoder_hidden_state = self.history_forward(
+			    hisotry_encoder_inputs, batch_size)
 
         # encoder
-        dialogue_encoder_hidden_state = self.dialogue_encoder.init_hidden(batch_size, self.device)
+        dialogue_encoder_hidden_state = self.dialogue_encoder.init_hidden(
+            batch_size, self.device)
         dialogue_encoder_outputs,  \
             dialogue_encoder_hidden_state, \
             dialogue_encoder_max_output = self.dialogue_encoder(dialogue_encoder_inputs,
@@ -214,7 +222,8 @@ class KGModel(nn.Module):
 
 		if history_encoder_hidden_state is not None:
 			dialogue_encoder_hidden_state += history_encoder_hidden_state
-        dialogue_decoder_hidden_state = self.reduce_state(dialogue_encoder_hidden_state)
+        dialogue_decoder_hidden_state = self.reduce_state(
+            dialogue_encoder_hidden_state)
 
         # fact encoder
         if self.model_type == 'kg':
@@ -231,13 +240,13 @@ class KGModel(nn.Module):
                                                                                                          dialogue_encoder_outputs,
 																										 history_encoder_outputs)
 
-            dialogue_decoder_input = torch.argmax(dialogue_decoder_output, dim=2).detach()  # [1, batch_size]
+            dialogue_decoder_input = torch.argmax(
+                dialogue_decoder_output, dim=2).detach()  # [1, batch_size]
             dialogue_decoder_outputs.append(dialogue_decoder_output)
 
         dialogue_decoder_outputs = torch.cat(dialogue_decoder_outputs, dim=0)
 
         return dialogue_decoder_outputs
-
 
     '''decode'''
 
@@ -257,7 +266,8 @@ class KGModel(nn.Module):
 		history_encoder_outputs = None
 		history_encoder_hidden_state = None
 		if self.turn_num > 1:
-			history_encoder_outputs, history_encoder_hidden_state = self.history_forward(hisotry_encoder_inputs, batch_size)
+			history_encoder_outputs, history_encoder_hidden_state = self.history_forward(
+			    hisotry_encoder_inputs, batch_size)
 
         '''
         dialogue_encoder_inputs: [seq_len, batch_size], maybe [max_len, 1]
