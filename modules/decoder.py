@@ -47,8 +47,8 @@ class Decoder(nn.Module):
         # dropout
         self.dropout = nn.Dropout(dropout)
 
-        # encoder_max_output + embedded ->  
-        self.context_linear = nn.Linear(hidden_size * 2 + embedding_size, embedding_size)
+        # encoder_max_output + embedded ->
+        #  self.context_linear = nn.Linear(hidden_size * 2 + embedding_size, embedding_size)
 
         # LSTM
         self.lstm = nn.LSTM(self.embedding_size, self.hidden_size, self.num_layers)
@@ -62,12 +62,12 @@ class Decoder(nn.Module):
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, input, hidden_state, encoder_outputs, encoder_max_output):
+    def forward(self, input, hidden_state, encoder_max_output=None, encoder_outputs=None):
         '''
         input: [1, batch_size]  LongTensor
         hidden_state: [num_layers, batch_size, hidden_size]
-        encoder_max_output: [max_len, batch_size, hidden_size * 2]
-        encoder_max_output: [1, batch_size, hidden_size]
+        encoder_max_output: [1, batch_size, hidden_size * 2]
+        encoder_outputs: [max_len, batch_size, hidden_size * 2]
 
         output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
         hidden_state: (h_n, c_n)
@@ -76,7 +76,7 @@ class Decoder(nn.Module):
         embedded = self.embedding(input) #[1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
 
-        context = self.context_linear(torch.cat((encoder_max_output, embedded), dim=2))
+        #  embedded = self.context_linear(torch.cat((encoder_max_output, embedded), dim=2))
 
         # lstm
         output, hidden_state = self.lstm(embedded, hidden_state)
