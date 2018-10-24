@@ -200,7 +200,7 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
-                tpok_facts_embedded = topk_facts_embedded.to(device)
+                topk_facts_embedded = topk_facts_embedded.to(self.device)
                 facts_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
 
@@ -210,7 +210,8 @@ class Dataset:
         self._indicator_dict[task]=cur_indicator
 
         if self.model_type == 'kg':
-            facts_inputs = torch.cat(facts_inputs, dim=0)
+            #  facts_inputs = torch.cat(facts_inputs, dim=0)
+            facts_inputs = torch.stack(facts_inputs, dim=0)
 
         return encoder_inputs, encoder_inputs_length, \
             decoder_inputs, decoder_targets, \
@@ -247,7 +248,6 @@ class Dataset:
                 """ computing similarity between conversation and facts, then saving to dict"""
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-
                     for conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
@@ -261,7 +261,7 @@ class Dataset:
                         if len(facts_text) == 0:
                             continue
 
-                        print(facts_text)
+                        #  print(facts_text)
                         facts_ids = [self.vocab.words_to_id(fact.split(' ')) for fact in facts_text]
                         if len(facts_ids) == 0:
                             continue
@@ -335,7 +335,7 @@ class Dataset:
                 f.write('---------------------------------\n')
 
 
-    def assemble_texts(self, batch_utterances, batch_size, decode_type='greedy'):
+    def generating_texts(self, batch_utterances, batch_size, decode_type='greedy'):
         """
         decode_type == greedy:
             batch_utterances: [batch_size, max_length]
@@ -348,14 +348,14 @@ class Dataset:
         batch_generated_texts = []
         if decode_type == 'greedy':
             for bi in range(batch_size):
-                text = self.ids_to_text(batch_utterances[bi].tolist())
+                text = self.vocab.ids_to_text(batch_utterances[bi].tolist())
                 batch_generated_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
                 topk_text_ids = batch_utterances[bi]
                 topk_texts = []
                 for ids in topk_text_ids:
-                    text = self.ids_to_text(ids)
+                    text = self.vocab.ids_to_text(ids)
                     topk_texts.append(text)
                 batch_generated_texts.append(topk_texts)
 
