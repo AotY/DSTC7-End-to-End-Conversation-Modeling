@@ -104,7 +104,7 @@ def model_opt(parser):
     ''' decode '''
     group.add_argument('--decode_type',
                        type=str,
-                       help='dialog decoder attention type. "dot", "general", or "mlp" ')
+                       help='greedy | beam_search')
 
     group.add_argument('--decoder_type',
                        type=str,

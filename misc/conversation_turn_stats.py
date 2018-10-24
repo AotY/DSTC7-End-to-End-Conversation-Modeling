@@ -28,6 +28,7 @@ def turn_stats(pair_path, logger=None):
             conversation_turns = conversation.split('eos')
             turn_num = len(conversation_turns)
             turn_dict[turn_num] = turn_dict.get(turn_num, 0) + 1
+    return turn_dict
 
 
 def save_distribution(distribution, name, key=None):
