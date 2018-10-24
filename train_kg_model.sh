@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_{}.dict \
-    --turn_num 2 \
+    --turn_num 1 \
+    --turn_type concat \
     --embedding_size 300 \
     --pre_trained_embedding data/fasttext_vec_for_vocab_{}.70004.300d.npy \
     --hidden_size 512 \
-    --num_layers 2 \
+    --num_layers 1 \
     --dropout 0.5 \
     --max_len 35 \
     --min_len 3 \
     --bidirectional \
     --tied \
+	--decoder_type normal \
     --decode_type greedy \
     --beam_width 10 \
     --best_n 5 \
@@ -34,7 +36,7 @@ python train_kg_model.py \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type kg
+    --model_type seq2seq
     # --checkpoint ./models/checkpoint.epoch-4.pth
 
 /

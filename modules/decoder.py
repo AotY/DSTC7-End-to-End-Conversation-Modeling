@@ -62,7 +62,7 @@ class Decoder(nn.Module):
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, input, hidden_state, encoder_max_output=None, encoder_outputs=None):
+    def forward(self, input, hidden_state, encoder_max_output=None, encoder_outputs=None, history_encoder_outpus=None):
         '''
         input: [1, batch_size]  LongTensor
         hidden_state: [num_layers, batch_size, hidden_size]
