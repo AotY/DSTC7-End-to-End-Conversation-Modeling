@@ -50,10 +50,9 @@ class KGModel(nn.Module):
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-		self.turn_num = turn_num
-		self.turn_type = turn_type
-		self.decoder_type = decoder_type
-
+        self.turn_num = turn_num
+        self.turn_type = turn_type
+        self.decoder_type = decoder_type
         self.device = device
 		if turn_num > 1:
 			# history_encoder
