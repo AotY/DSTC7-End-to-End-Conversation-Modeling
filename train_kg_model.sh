@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
+<<<<<<< HEAD
 export CUDA_VISIBLE_DEVICES=6
+=======
+export CUDA_VISIBLE_DEVICES=5
+>>>>>>> 35d104adc028831f2d75cf38bdeec8eb80e68934
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
