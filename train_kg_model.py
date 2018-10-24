@@ -106,7 +106,7 @@ def train_epochs(model,
         save_logger(logger_str)
 
         # generate sentence
-        generate(model, data_set, vocab)
+        decode(model, data_set, vocab)
 
         # save model of each epoch
         save_state = {
@@ -224,10 +224,9 @@ def evaluate(model,
     return loss_total / max_load, accuracy_total / max_load
 
 
-def generate(model, data_set, vocab):
+def decode(model, data_set, vocab):
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    loss_total=0
     max_load=int(np.ceil(data_set.n_eval / opt.batch_size))
     data_set.reset_data('eval')
     with torch.no_grad():
@@ -242,7 +241,7 @@ def generate(model, data_set, vocab):
             # greedy: [batch_size, max_len]
             # beam_search: [batch_sizes, best_n, len]
             dialogue_decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            batch_utterances=model.generate(
+            batch_utterances=model.decode(
                 dialogue_encoder_inputs,  # LongTensor
                 dialogue_encoder_inputs_length,
                 dialogue_decoder_input,
@@ -258,7 +257,7 @@ def generate(model, data_set, vocab):
             # [max_length, batch_size]
             batch_texts=data_set.generating_texts(batch_utterances,
                                                    opt.batch_size,
-                                                   opt.dialogue_decode_type)
+                                                   opt.decode_type)
 
             # save sentences
             data_set.save_generated_texts(conversation_texts,
@@ -268,7 +267,6 @@ def generate(model, data_set, vocab):
                                              opt.model_type, opt.dialogue_decode_type, time_str)),
                                          opt.dialogue_decode_type)
 
-    return loss_total / max_load
 
 
 def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
@@ -444,7 +442,7 @@ if __name__ == '__main__':
                 data_set,
                 criterion)
     elif opt.task == 'generate':
-        generate(model, data_set, vocab)
+        decode(model, data_set, vocab)
     else:
         raise ValueError(
             "task must be train or eval, no %s " % opt.task)

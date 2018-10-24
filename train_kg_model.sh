@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=6
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -34,7 +34,7 @@ python train_kg_model.py \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type kg
+    --model_type seq2seq
     # --checkpoint ./models/checkpoint.epoch-4.pth
 
 /
