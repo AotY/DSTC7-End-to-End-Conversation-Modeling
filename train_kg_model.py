@@ -106,7 +106,7 @@ def train_epochs(model,
         save_logger(logger_str)
 
         # generate sentence
-        generate(model, data_set)
+        generate(model, data_set, vocab)
 
         # save model of each epoch
         save_state = {
@@ -264,8 +264,8 @@ def generate(model, data_set, vocab):
             data_set.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
-                                         os.path.join(opt.save_path, 'seq2seq_generated_texts_%s_%s.txt' % (
-                                             opt.dialogue_decode_type, time_str)),
+                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s.txt' % (
+                                             opt.model_type, opt.dialogue_decode_type, time_str)),
                                          opt.dialogue_decode_type)
 
     return loss_total / max_load
@@ -275,9 +275,9 @@ def compute_accuracy(dialogue_decoder_outputs_argmax, dialogue_decoder_targets):
     """
     dialogue_decoder_targets: [seq_len, batch_size]
     """
-    print('---------------------->\n')
-    print(dialogue_decoder_outputs_argmax)
-    print(dialogue_decoder_targets)
+    #  print('---------------------->\n')
+    #  print(dialogue_decoder_outputs_argmax)
+    #  print(dialogue_decoder_targets)
 
     match_tensor=(dialogue_decoder_outputs_argmax == dialogue_decoder_targets).long()
     dialogue_decoder_mask=(dialogue_decoder_targets != 0).long()
@@ -444,7 +444,7 @@ if __name__ == '__main__':
                 data_set,
                 criterion)
     elif opt.task == 'generate':
-        generate(model, data_set)
+        generate(model, data_set, vocab)
     else:
         raise ValueError(
             "task must be train or eval, no %s " % opt.task)
