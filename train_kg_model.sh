@@ -5,7 +5,7 @@ python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_{}.dict \
-    --turn_num 1 \
+    --turn_num 2 \
     --embedding_size 300 \
     --pre_trained_embedding data/fasttext_vec_for_vocab_{}.70004.300d.npy \
     --hidden_size 512 \
