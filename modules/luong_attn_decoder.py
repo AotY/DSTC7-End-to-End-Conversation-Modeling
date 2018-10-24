@@ -47,6 +47,9 @@ class LuongAttnDecoder(nn.Module):
         # attn
         self.attn = GlobalAttn(self.attn_type, self.hidden_size, device)
 
+		# history attn
+		self.history_attn = GlobalAttn(self.attn_type, self.hidden_size, device)
+
         # encoder_max_output + embedded ->
         self.encoder_concat_linear = nn.Linear(hidden_size * 2 + embedding_size, embedding_size)
 
@@ -57,11 +60,12 @@ class LuongAttnDecoder(nn.Module):
                             dropout=dropout)
         init_lstm_wt(self.lstm)
 
-        self.reduce_linear = nn.Linear(hidden_size * 2, hidden_size)
-        init_linear_wt(self.reduce_linear)
+        #  self.reduce_linear = nn.Linear(hidden_size * 2, hidden_size)
+        #  init_linear_wt(self.reduce_linear)
 
         # concat linear
-        self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
+		self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
+		self.concat_linear_history = nn.Linear(hidden_size * 3, hidden_size)
 
         # linear
         self.linear = nn.Linear(hidden_size, vocab_size)
@@ -72,42 +76,54 @@ class LuongAttnDecoder(nn.Module):
         # log softmax
         self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, input, hidden_state, encoder_max_output, encoder_outputs):
+    def forward(self, input, hidden_state, encoder_max_output, encoder_outputs, history_encoder_outputs=None):
         '''
-        input: [1, batch_size]  LongTensor
-        hidden_state: [num_layers, batch_size, hidden_size]
-        output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
-        hidden_state: (h_n, c_n)
+		Args:
+			input: [1, batch_size]  LongTensor
+			hidden_state: [num_layers, batch_size, hidden_size]
+			encoder_outputs: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
+			history_encoder_outputs: [len, batch_size, hidden_size]
+			hidden_state: (h_n, c_n)
         '''
 
         # embedded
         embedded = self.embedding(input)  # [1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
 
-        encoder_concat = self.encoder_concat_linear(torch.cat((encoder_max_output, embedded), dim=2))
+        #  encoder_concat = self.encoder_concat_linear(torch.cat((encoder_max_output, embedded), dim=2))
 
         # Get current hidden state from input word and last hidden state
         # output: [1, batch_size, hidden_size]
-        output, hidden_state = self.lstm(encoder_concat, hidden_state)
+        output, hidden_state = self.lstm(embedded, hidden_state)
 
         # hidden_size * 2 -> hidden_size
-        reduced_encoder_outputs = self.reduce_linear(encoder_outputs)
+        #  reduced_encoder_outputs = self.reduce_linear(encoder_outputs)
 
         # Calculate attention from current RNN state and all encoder outputs;
         # apply to encoder outputs to get weighted average<Paste>
-        attn_weights = self.attn(output.squeeze(0), reduced_encoder_outputs)  # [batch_size, max_len]
+        attn_weights = self.attn(output.squeeze(0), encoder_outputs)  # [batch_size, max_len]
         attn_weights = attn_weights.unsqueeze(1)  # [batch_size, 1, max_len]
+
         # [batch_size, 1, hidden_size]
-        context = attn_weights.bmm(reduced_encoder_outputs.transpose(0, 1))
+        context = torch.bmm(attn_weights, encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1)  # [1, batch_size, hidden_size]
 
-        # Attentional vector using the RNN hidden state and context vector
-        # concatenated together (Luong eq. 5)
-        # [1, batch_size, hidden_size * 2]
-        concat_input = torch.cat((context, output), dim=2)
+		if history_encoder_outputs is not None:
+			attn_weights_history = self.attn(output.squeeze(0), history_encoder_outputs)  # [batch_size, max_len]
+			attn_weights_history = attn_weights.unsqueeze(1)  # [batch_size, 1, max_len]
+			context_history = torch.bmm(attn_weights, encoder_outputs.transpose(0, 1))
+			context_history = context.transpose(0, 1)  # [1, batch_size, hidden_size]
 
-        # [1, batch_size, hidden_size]
-        concat_output = torch.tanh(self.concat_linear(concat_input))
+			concat_input = torch.cat((context, context_history, output), dim=2)
+			concat_output = torch.tanh(self.concat_linear_history(concat_input))
+
+		else:
+
+			# [1, batch_size, hidden_size * 2]
+			concat_input = torch.cat((context, output), dim=2)
+
+			# [1, batch_size, hidden_size]
+			concat_output = torch.tanh(self.concat_linear(concat_input))
 
         # linear
         output = self.linear(concat_output)

@@ -33,6 +33,11 @@ def data_set_opt(parser):
                        type=int,
                        default=1,
                        help='input of the model including how many turn dialogue.')
+    
+    group.add_argument('--turn_type',
+                       type=str,
+                       default='concat',
+                       help='how to process conversation historys. concat | rnn | hierarchy | attention | other')
 
     group.add_argument('--eval_split',
                        type=float,
@@ -100,6 +105,10 @@ def model_opt(parser):
     group.add_argument('--decode_type',
                        type=str,
                        help='dialog decoder attention type. "dot", "general", or "mlp" ')
+
+    group.add_argument('--decoder_type',
+                       type=str,
+                       help='normal | bahdanau | luong')
 
     group.add_argument('--beam_width',
                        type=int,

@@ -15,7 +15,7 @@ import torch.nn as nn
 
 from modules.utils import init_lstm_wt
 
-class Encoder(nn.Module):
+class SimpleEncoder(nn.Module):
     def __init__(self,
                  vocab_size,
                  embedding_size,
@@ -25,7 +25,7 @@ class Encoder(nn.Module):
                  dropout=0.0,
                  padding_idx=0):
 
-        super(Encoder, self).__init__()
+        super(SimpleEncoder, self).__init__()
 
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
@@ -44,7 +44,7 @@ class Encoder(nn.Module):
         self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers, bidirectional=bidirectional)
         init_lstm_wt(self.lstm)
 
-    def forward(self, inputs, inputs_length, hidden_state):
+    def forward(self, inputs, hidden_state):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -55,46 +55,17 @@ class Encoder(nn.Module):
             hidden_state: (h_n, c_n)
         '''
         # embedded
-        # Note: we run this all at once (over multiple batches of multiple sequences)
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
-        # [batch_size, seq_len, embedding_size]
-        embedded = embedded.transpose(0, 1)
-
-        # sort lengths
-        _, sorted_indexes = torch.sort(inputs_length, dim=0, descending=True)
-        new_inputs_length = inputs_length[sorted_indexes]
-
-        # restore to original indexes
-        _, restore_indexes = torch.sort(sorted_indexes, dim=0)
-
-        # new embedded
-        embedded = embedded[sorted_indexes].transpose(0, 1)  # [seq_len, batch_size, embedding_size]
-
-        # pack
-        packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, new_inputs_length)
-
-        # [batch_size, hidden_size]
-        outputs, hidden_state = self.lstm(packed_embedded, hidden_state)
-
-        # unpack
-        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
 
         if self.bidirection_num == 2:
             #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
             outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
 
-        # to original sequence
-        outputs = outputs.contiguous()
-        outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-        hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
+        # [batch_size, hidden_size]
+        outputs, hidden_state = self.lstm(embedded, hidden_state)
 
-        max_output, _ = outputs.max(dim=0)
-        max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
-
-        # dropout
-        # outputs = self.dropout(outputs)
-        return outputs, hidden_state, max_output
+        return outputs, hidden_state
 
     def init_hidden(self, batch_size, device):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)

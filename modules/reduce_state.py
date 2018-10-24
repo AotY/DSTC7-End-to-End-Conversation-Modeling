@@ -22,20 +22,25 @@ class ReduceState(nn.Module):
 
         self.hidden_size = hidden_size
 
+        """
         self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
         init_linear_wt(self.reduce_h)
 
         self.reduce_c = nn.Linear(hidden_size * 2, hidden_size)
         init_linear_wt(self.reduce_c)
+        """
 
     def forward(self, hidden_state, batch_size):
         h, c = hidden_state  # h, c  [num_layers * bidirection_num, batch_size, hidden_size]
         #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))
         #  hidden_reduced_c = F.relu(self.reduce_c(c.view(-1, hidden_size * 2)))
         #  return (hidden_reduced_h.unsqueeze(0), hidden_reduced_c.unsqueeze(0)) # h, c dim = 1 x b x hidden_size
+        """
         hidden_reduce_h = F.relu(self.reduce_h(h.view(-1, batch_size, self.hidden_size * 2))) # [num_layers, batch_size, hidden_size]
         hidden_reduce_c = F.relu(self.reduce_c(c.view(-1, batch_size, self.hidden_size * 2)))
+        new_hidden_state = (hidden_reduce_h, hidden_reduce_c)
+        """
+        new_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in hidden_state])
 
-        return (hidden_reduce_h, hidden_reduce_c)
-
+        return new_hidden_state
 

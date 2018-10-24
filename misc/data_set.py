@@ -25,6 +25,7 @@ class Dataset:
                  model_type,
                  pair_path,
                  max_len,
+                 min_len,
                  fact_max_len,
                  fact_topk,
                  vocab,
@@ -36,11 +37,13 @@ class Dataset:
 
         self.model_type = model_type
         self.max_len = max_len
+        self.min_len = min_len
         self.fact_max_len = fact_max_len
         self.fact_topk = fact_topk
         self.vocab = vocab
         self.vocab_size = vocab.get_vocab_size()
         self.turn_num = turn_num
+        self.turn_type = turn_type
 
         self.device = device
         self.logger = logger
@@ -56,7 +59,7 @@ class Dataset:
                       eval_split)
 
     def read_txt(self, save_path, pair_path, eval_split):
-        _data_dict_path = os.path.join(save_path, '%s_data_dict.pkl' % self.model_type)
+        _data_dict_path = os.path.join(save_path, '_data_dict.pkl')
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
             datas = []
@@ -72,37 +75,38 @@ class Dataset:
                         # START: special symbol indicating the start of the
                         # conversation
                         conversation = conversation[10:]
-                        history_dialogues = self.parser_dialogues(
+                        history_conversations = self.parser_conversations(
                             conversation, 'conversation')
                     elif conversation.startswith('eos'):
                         # EOS: special symbol indicating a turn transition
                         conversation = conversation[4:]
-                        history_dialogues = self.parser_dialogues(
+                        history_conversations = self.parser_conversations(
                             conversation, 'turn')
                     else:
-                        history_dialogues = self.parser_dialogues(
+                        history_conversations = self.parser_conversations(
                             conversation, 'other')
 
-                    if history_dialogues is None:
+                    if history_conversations is None:
                         continue
 
-                    conversation = ' '.join(history_dialogues)
-                    #  conversation = history_dialogues[0]
-                    #  response = history_dialogues[1]
+                    # len(history_conversations) <= self.turn_num
+                    if self.turn_type == 'concat':
+                        conversation = ' '.join(history_conversations)
+                        history_conversations = []
+                    else:
+                        conversation = history_conversations[-1]
+                        history_conversations = history_conversations[:-1]
 
-                    conversation_ids = self.vocab.words_to_id(conversation.split(' '))
-                    if len(conversation_ids) <= 3:
-                            continue
-
-                    conversation_ids = conversation_ids[-min(self.max_len - 1, len(conversation_ids)):]
+                    conversation_ids = self.vocab.words_to_id(conversation.split(' ')
+					conversation_ids = conversation_ids[-min(self.max_len - 1, len(conversation_ids)):]
+                    history_conversations_ids = [self.vocab.words_to_id(item.split(' ')) for item in history_conversations]
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) <= 3:
+                    if len(response_ids) < self.min_len:
                             continue
-
                     response_ids = response_ids[-min(self.max_len - 1, len(response_ids)):]
 
-                    datas.append((conversation_ids, response_ids, hash_value))
+                    datas.append((history_conversations_ids, conversation_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -125,26 +129,34 @@ class Dataset:
             'eval': 0
         }
 
-    def parser_dialogues(self, conversation, symbol='conversation'):
+    def parser_conversations(self, conversation, symbol='conversation'):
         """
         parser conversation context by dialogue turn (default 1)
         """
-        history_dialogues = conversation.split('eos')
-        history_dialogues = [history_dialogue for history_dialogue in history_dialogues if len(
-            history_dialogue.split()) > 3]
+        history_conversations = conversation.split('eos')
+        history_conversations = [history_dialogue for history_dialogue in history_conversations if len(
+            history_dialogue.split()) >= self.min_len]
 
-        if len(history_dialogues) < self.turn_num:
+        if len(history_conversations) < self.turn_num:
             return None
 
-        history_dialogues = history_dialogues[-min(self.turn_num, len(history_dialogues)):]
+        history_conversations = history_conversations[-min(self.turn_num, len(history_conversations)):]
 
-        return history_dialogues
+        return history_conversations
 
     def reset_data(self, task):
+		""""
+		reset data
+		task: train | eval
+		""""
         np.random.shuffle(self._data_dict[task])
         self._indicator_dict[task] = 0
 
     def load_data(self, task, batch_size):
+		"""
+		task: train | eavl
+		batch_size:
+		"""
         task_len = len(self._data_dict[task])
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
@@ -154,8 +166,9 @@ class Dataset:
             self.reset_data(task)
             cur_indicator = batch_size
 
+        history_inputs = []
         encoder_inputs = torch.zeros((self.max_len, batch_size),
-                                    dtype = torch.long,
+                                     dtype = torch.long,
                                      device = self.device)
         encoder_inputs_length=[]
 
@@ -167,7 +180,7 @@ class Dataset:
                                       dtype = torch.long,
                                       device = self.device)
 
-        conversation_texts=[]
+        conversations_texts=[]
         response_texts=[]
 
         # facts
@@ -175,7 +188,7 @@ class Dataset:
         facts_texts=[]
 
         batch_data=self._data_dict[task][self._indicator_dict[task]: cur_indicator]
-        for i, (conversation_ids, response_ids, hash_value) in enumerate(batch_data):
+        for i, (history_conversations_ids, conversations_ids, response_ids, hash_value) in enumerate(batch_data):
             # append length
             encoder_inputs_length.append(len(conversation_ids))
 
@@ -185,6 +198,14 @@ class Dataset:
 
             conversation_texts.append(conversation_text)
             response_texts.append(response_text)
+
+			# history inputs
+            if len(history_conversations_ids) > 0:
+                history_input = []
+                for ids in history_conversations_ids:
+                    ids = torch.LongTensor(ids, device=self.device)
+                    history_input.append(ids)
+                history_inputs.append(history_input)
 
             # encoder_inputs
             for c, token_id in enumerate(conversation_ids):
@@ -205,7 +226,7 @@ class Dataset:
                 facts_texts.append(topk_facts_text)
 
         # To long tensor
-        encoder_inputs_length = torch.tensor(encoder_inputs_length, dtype = torch.long, device =self.device)
+        encoder_inputs_length = torch.LongTensor(encoder_inputs_length, device =self.device)
         # update _indicator_dict[task]
         self._indicator_dict[task]=cur_indicator
 
@@ -216,7 +237,7 @@ class Dataset:
         return encoder_inputs, encoder_inputs_length, \
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            facts_inputs, facts_texts
+            facts_inputs, facts_texts, history_inputs
 
 
     def assembel_facts(self, hash_value):
@@ -292,7 +313,7 @@ class Dataset:
         facts_weight = []
         new_facts = []
         for fact in facts:
-            if len(fact) <= 3:
+            if len(fact) < self.min_len:
                 continue
             fact_str = " ".join(fact)
             fact_weight = default_weight
@@ -302,7 +323,7 @@ class Dataset:
                     fact_str = fact_str.replace(tag, '')
                     fact_str = fact_str.replace(tag[0] + '/' + tag[1:], '')
 
-            if len(fact_str.split(" ")) >= 3:
+            if len(fact_str.split(" ")) >= self.min_len:
                 new_facts.append(fact_str)
                 facts_weight.append(fact_weight)
 

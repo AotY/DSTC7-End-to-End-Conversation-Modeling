@@ -69,10 +69,11 @@ def train_epochs(model,
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
                 conversation_texts, response_texts, \
-                facts_inputs, facts_texts = data_set.load_data('train', opt.batch_size)
+                facts_inputs, facts_texts, history_inputs = data_set.load_data('train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
+                                   history_inputs,
                                    dialogue_encoder_inputs,
                                    dialogue_encoder_inputs_length,
                                    dialogue_decoder_inputs,
@@ -95,6 +96,20 @@ def train_epochs(model,
                 log_loss_total = 0
                 log_accuracy_total = 0
 
+        # save model of each epoch
+        save_state = {
+            'loss': log_loss_avg,
+            'epoch': epoch,
+            'state_dict': model.state_dict(),
+            'optimizer': optimizer.optimizer.state_dict()
+        }
+
+        # save checkpoint, including epoch, seq2seq_mode.state_dict() and
+        # optimizer.state_dict()
+        save_checkpoint(state=save_state,
+                        is_best=False,
+                        filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d_{}.pth' % (epoch, opt.model_type)))
+
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
                                                     data_set=data_set,
@@ -107,26 +122,11 @@ def train_epochs(model,
 
         # generate sentence
         generate(model, data_set, vocab)
-
-        # save model of each epoch
-        save_state = {
-            'loss': evaluate_loss,
-            'epoch': epoch,
-            'state_dict': model.state_dict(),
-            'optimizer': optimizer.optimizer.state_dict()
-        }
-
-        # save checkpoint, including epoch, seq2seq_mode.state_dict() and
-        # optimizer.state_dict()
-        save_checkpoint(state=save_state,
-                        is_best=False,
-                        filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d_{}.pth' % (epoch, opt.model_type)))
-
-
 ''' start traing '''
 
 
 def train(model,
+          history_inputs,
           dialogue_encoder_inputs,
           dialogue_encoder_inputs_length,
           dialogue_decoder_inputs,
@@ -140,13 +140,16 @@ def train(model,
     model.train()
 
     # [max_len, batch_size, vocab_size]
-    dialogue_decoder_outputs = model(dialogue_encoder_inputs,
-                                     dialogue_encoder_inputs_length,
-                                     dialogue_decoder_inputs,
-                                     facts_inputs,
-                                     opt.batch_size,
-                                     opt.max_len,
-                                     opt.teacher_forcing_ratio)
+    dialogue_decoder_outputs = model(
+        history_inputs,
+        dialogue_encoder_inputs,
+        dialogue_encoder_inputs_length,
+        dialogue_decoder_inputs,
+        facts_inputs,
+        opt.batch_size,
+        opt.max_len,
+        opt.teacher_forcing_ratio
+    )
 
     optimizer.zero_grad()
 
@@ -194,11 +197,12 @@ def evaluate(model,
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
                 conversation_texts, response_texts, \
-                facts_inputs, facts_texts = data_set.load_data('eval', opt.batch_size)
+                facts_inputs, facts_texts, history_inputs = data_set.load_data('eval', opt.batch_size)
 
             # train and get cur loss
             dialogue_decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             dialogue_decoder_outputs=model.evaluate(
+                history_inputs,
                 dialogue_encoder_inputs,
                 dialogue_encoder_inputs_length,
                 dialogue_decoder_input,
@@ -236,13 +240,14 @@ def generate(model, data_set, vocab):
             dialogue_encoder_inputs, dialogue_encoder_inputs_length, \
                 dialogue_decoder_inputs, dialogue_decoder_targets, \
                 conversation_texts, response_texts, \
-                facts_inputs, facts_texts = data_set.load_data('eval', opt.batch_size)
+                facts_inputs, facts_texts, history_inputs = data_set.load_data('eval', opt.batch_size)
 
             # train and get cur loss
             # greedy: [batch_size, max_len]
             # beam_search: [batch_sizes, best_n, len]
             dialogue_decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             batch_utterances=model.generate(
+                history_inputs,
                 dialogue_encoder_inputs,  # LongTensor
                 dialogue_encoder_inputs_length,
                 dialogue_decoder_input,
@@ -264,8 +269,7 @@ def generate(model, data_set, vocab):
             data_set.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
-                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s.txt' % (
-                                             opt.model_type, opt.dialogue_decode_type, time_str)),
+                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s.txt' % (opt.model_type, opt.dialogue_decode_type, time_str)),
                                          opt.dialogue_decode_type)
 
     return loss_total / max_load
@@ -323,6 +327,9 @@ def build_model(vocab_size, padid):
                 opt.hidden_size,
                 opt.num_layers,
                 opt.bidirectional,
+				opt.turn_num,
+				opt.turn_type,
+				decoder_type,
                 opt.attn_type,
                 opt.dropout,
                 padid,
@@ -401,11 +408,13 @@ if __name__ == '__main__':
                     opt.model_type,
                     opt.pair_path,
                     opt.max_len,
+                    opt.min_len,
                     opt.fact_max_len,
                     opt.fact_topk,
                     vocab,
                     opt.save_path,
                     opt.turn_num,
+                    opt.turn_type,
                     opt.eval_split,  # how many hold out as eval data
                     device,
                     logger)
