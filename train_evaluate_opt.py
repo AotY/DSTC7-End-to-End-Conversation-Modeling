@@ -29,15 +29,32 @@ def data_set_opt(parser):
                        type=int,
                        help='clip fact by max_len.')
 
+    group.add_argument('--h_max_len',
+                       type=int,
+                       help="history conversation max len.")
+
+    group.add_argument('--c_max_len',
+                       type=int,
+                       help="cur conversation max len.")
+
+    group.add_argument('--r_max_len',
+                       type=int,
+                       help='response max len.')
+
     group.add_argument('--turn_num',
                        type=int,
                        default=1,
                        help='input of the model including how many turn dialogue.')
-    
+
     group.add_argument('--turn_type',
                        type=str,
                        default='concat',
-                       help='how to process conversation historys. concat | rnn | hierarchy | attention | other')
+                       help='''how to process conversation historys.
+                       concat | dcgm1 | dcgm2 : https://arxiv.org/abs/1506.06714
+                       hred: https://arxiv.org/abs/1507.04808
+                       attention: 
+                       other:
+                       ''')
 
     group.add_argument('--eval_split',
                        type=float,
