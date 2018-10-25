@@ -25,18 +25,25 @@ class Dataset:
                  model_type,
                  pair_path,
                  max_len,
+                 h_max_len,
+                 c_max_len,
+                 r_max_len,
                  min_len,
                  fact_max_len,
                  fact_topk,
                  vocab,
                  save_path,
                  turn_num,
+                 turn_type,
                  eval_split,  # how many hold out as eval data
                  device,
                  logger):
 
         self.model_type = model_type
         self.max_len = max_len
+        self.h_max_len = h_max_len
+        self.c_max_len = c_max_len
+        self.r_max_len = r_max_len
         self.min_len = min_len
         self.fact_max_len = fact_max_len
         self.fact_topk = fact_topk
@@ -70,6 +77,11 @@ class Dataset:
                     if not bool(conversation) or not bool(response):
                         continue
 
+                    response_ids = self.vocab.words_to_id(response.split(' '))
+                    if len(response_ids) < self.min_len:
+                            continue
+                    response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
+
                     # conversation split by EOS, START
                     if conversation.startswith('start eos'):
                         # START: special symbol indicating the start of the
@@ -90,44 +102,46 @@ class Dataset:
                         continue
 
                     # len(history_conversations) <= self.turn_num
-                    if self.turn_type == 'concat':
+                    if self.turn_type == 'concat' or self.turn_type == 'dcgm1':
                         conversation = ' '.join(history_conversations)
                         history_conversations = []
-                    else:
+                    elif self.turn_type == 'dcgm2':
+                        conversation = history_conversations[-1]
+                        history_conversations = [' '.join(history_conversations[:-1])]
+                    elif self.turn_type == 'hred':
                         conversation = history_conversations[-1]
                         history_conversations = history_conversations[:-1]
+                    else:
+                        pass
 
-                    conversation_ids = self.vocab.words_to_id(conversation.split(' ')
-					conversation_ids=conversation_ids[-min(self.max_len - 1, len(conversation_ids)):]
-                    history_conversations_ids=[self.vocab.words_to_id(
-                        item.split(' ')) for item in history_conversations]
+                    conversation_ids = self.vocab.words_to_id(conversation.split(' '))
+                    conversation_ids = conversation_ids[-min(self.c_max_len, len(conversation_ids)):]
 
-                    response_ids=self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) < self.min_len:
-                            continue
-                    response_ids=response_ids[-min(self.max_len - 1,
-                                                   len(response_ids)):]
+                    history_conversations_ids = []
+                    for item in history_conversations:
+                        item_ids = self.vocab.words_to_id(item.split(' '))
+                        item_ids = items[-min(self.h_max_len, len(item_ids))]
+                        history_conversations_ids.append(item_ids)
 
-                    datas.append((history_conversations_ids,
-                                 conversation_ids, response_ids, hash_value))
+                    datas.append((history_conversations_ids, conversation_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
-            self.n_train=int(len(datas) * (1. - eval_split))
-            self.n_eval=len(datas) - self.n_train
+            self.n_train = int(len(datas) * (1. - eval_split))
+            self.n_eval = len(datas) - self.n_train
 
-            self._data_dict={
+            self._data_dict = {
                 'train': datas[0: self.n_train],
                 'eval': datas[self.n_train:]
             }
 
             pickle.dump(self._data_dict, open(_data_dict_path, 'wb'))
         else:
-            self._data_dict=pickle.load(open(_data_dict_path, 'rb'))
-            self.n_train=len(self._data_dict['train'])
-            self.n_eval=len(self._data_dict['eval'])
+            self._data_dict = pickle.load(open(_data_dict_path, 'rb'))
+            self.n_train = len(self._data_dict['train'])
+            self.n_eval = len(self._data_dict['eval'])
 
-        self._indicator_dict={
+        self._indicator_dict = {
             'train': 0,
             'eval': 0
         }
@@ -136,25 +150,21 @@ class Dataset:
         """
         parser conversation context by dialogue turn (default 1)
         """
-        history_conversations=conversation.split('eos')
-        history_conversations=[history_dialogue for history_dialogue in history_conversations if len(
+        history_conversations = conversation.split('eos')
+        history_conversations = [history_dialogue for history_dialogue in history_conversations if len(
             history_dialogue.split()) >= self.min_len]
 
         if len(history_conversations) < self.turn_num:
             return None
 
-        history_conversations=history_conversations[-min(
+        history_conversations = history_conversations[-min(
             self.turn_num, len(history_conversations)):]
 
         return history_conversations
 
     def reset_data(self, task):
-		""""
-		reset data
-		task: train | eval
-		""""
         np.random.shuffle(self._data_dict[task])
-        self._indicator_dict[task]=0
+        self._indicator_dict[task] = 0
 
     def load_data(self, task, batch_size):
 		"""
@@ -170,38 +180,36 @@ class Dataset:
             self.reset_data(task)
             cur_indicator=batch_size
 
-        history_inputs=[]
-        encoder_inputs=torch.zeros((self.max_len, batch_size),
+        h_encoder_inputs=[]
+
+        c_encoder_inputs=torch.zeros((self.c_max_len, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
-        encoder_inputs_length=[]
+        c_encoder_inputs_lengths=[]
 
-        decoder_inputs=torch.zeros((self.max_len, batch_size),
+        decoder_inputs=torch.zeros((self.r_max_len, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
 
-        decoder_targets=torch.zeros((self.max_len, batch_size),
+        decoder_targets=torch.zeros((self.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
 
-        conversations_texts=[]
+        conversation_texts=[]
         response_texts=[]
 
         # facts
-        facts_inputs=[]
+        f_encoder_inputs=[]
         facts_texts=[]
 
-        batch_data=self._data_dict[task][self._indicator_dict[task]
-            : cur_indicator]
-        for i, (history_conversations_ids, conversations_ids, response_ids, hash_value) in enumerate(batch_data):
+        batch_data=self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        for i, (history_conversations_ids, conversation_ids, response_ids, hash_value) in enumerate(batch_data):
             # append length
-            encoder_inputs_length.append(len(conversation_ids))
+            c_encoder_inputs_lengths.append(len(conversation_ids))
 
             # ids to word
-            conversation_text=' '.join(
-                self.vocab.ids_to_word(conversation_ids))
-            response_text=' '.join(self.vocab.ids_to_word(response_ids))
-
+            conversation_text = ' '.join(self.vocab.ids_to_word(conversation_ids))
+            response_text = ' '.join(self.vocab.ids_to_word(response_ids))
             conversation_texts.append(conversation_text)
             response_texts.append(response_text)
 
@@ -209,14 +217,15 @@ class Dataset:
             if len(history_conversations_ids) > 0:
                 history_input=[]
                 for ids in history_conversations_ids:
-                    ids=torch.LongTensor(ids, device=self.device)
+                    ids = torch.LongTensor(ids, device=self.device)
                     history_input.append(ids)
-                history_inputs.append(history_input)
+                history_input = torch.stack(history_input, dim=0) #[num, ids]
+                h_encoder_inputs.append(history_input)
 
-            # encoder_inputs
+            # c_encoder_inputs
             for c, token_id in enumerate(conversation_ids):
-                encoder_inputs[c, i]=token_id
-            encoder_inputs[len(conversation_ids), i]=self.vocab.eosid
+                c_encoder_inputs[c, i] = token_id
+            #  c_encoder_inputs[len(conversation_ids), i]=self.vocab.eosid
 
             # decoder_inputs
             decoder_inputs[0, i]=self.vocab.sosid
@@ -226,30 +235,28 @@ class Dataset:
             decoder_targets[len(response_ids), i]=self.vocab.eosid
 
             if self.model_type == 'kg':
-                topk_facts_embedded, topk_facts_text=self.assembel_facts(
-                    hash_value)
-                topk_facts_embedded=topk_facts_embedded.to(self.device)
-                facts_inputs.append(topk_facts_embedded)
+                topk_facts_embedded, topk_facts_text=self.assembel_facts(hash_value)
+                topk_facts_embedded = topk_facts_embedded.to(self.device)
+                f_encoder_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
 
         # To long tensor
-        encoder_inputs_length=torch.LongTensor(
-            encoder_inputs_length, device=self.device)
+        c_encoder_inputs_lengths=torch.LongTensor(
+            c_encoder_inputs_lengths, device=self.device)
         # update _indicator_dict[task]
-        self._indicator_dict[task]=cur_indicator
+        self._indicator_dict[task] = cur_indicator
 
         if self.model_type == 'kg':
-            #  facts_inputs = torch.cat(facts_inputs, dim=0)
-            facts_inputs=torch.stack(facts_inputs, dim=0)
+            #  f_encoder_inputs = torch.cat(f_encoder_inputs, dim=0)
+            f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0)
 
-        return encoder_inputs, encoder_inputs_length, \
+        return c_encoder_inputs, c_encoder_inputs_lengths, \
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            facts_inputs, facts_texts, history_inputs
+            f_encoder_inputs, facts_texts, h_encoder_inputs
 
 
     def assembel_facts(self, hash_value):
-
         # load top_k facts
         topk_facts_embedded, topk_facts=self.topk_facts_embedded_dict.get(hash_value,
                                                                              (None, None))
@@ -282,8 +289,7 @@ class Dataset:
                             continue
 
                         # search facts ?
-                        hit_count, facts=es_helper.search_facts(
-                            self.es, hash_value)
+                        hit_count, facts=es_helper.search_facts(self.es, hash_value)
 
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
@@ -292,16 +298,14 @@ class Dataset:
                             continue
 
                         #  print(facts_text)
-                        facts_ids=[self.vocab.words_to_id(
-                            fact.split(' ')) for fact in facts_text]
+                        facts_ids=[self.vocab.words_to_id(fact.split(' ')) for fact in facts_text]
                         if len(facts_ids) == 0:
                             continue
 
                         facts_weight=torch.tensor(
                             facts_weight, dtype=torch.float, device=self.device)
 
-                        facts_ids=[
-                            fact_ids[-min(self.fact_max_len, len(facts_ids)):] for fact_ids in facts_ids]
+                        facts_ids=[fact_ids[-min(self.fact_max_len, len(facts_ids)):] for fact_ids in facts_ids]
 
                         # score top_k_facts_embedded -> [top_k, embedding_size]
                         topk_facts_embedded, topk_indexes=get_topk_facts(embedding_size,
