@@ -268,8 +268,8 @@ def decode(model, data_set, vocab):
             data_set.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
-                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s.txt' % (opt.model_type, opt.dialogue_decode_type, time_str)),
-                                         opt.dialogue_decode_type)
+                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, time_str, opt.turn_num, opt.turn_type)),
+                                         opt.decode_type)
 
 
 
@@ -434,10 +434,11 @@ if __name__ == '__main__':
     '''if load checkpoint'''
     if checkpoint:
         model.load_state_dict(checkpoint['state_dict'])
-        optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
-        opt.start_epoch=checkpoint['epoch'] + 1
-        loss=checkpoint['loss']
-        logger_str='\nevaluate ---------------------------------> %.4f' % loss
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        opt.start_epoch = checkpoint['epoch'] + 1
+        loss = checkpoint['loss']
+        logger_str = '\nevaluate ---------------------------------> %.4f' % loss
+        logger.info(logger_str)
 
     if opt.task == 'train':
         train_epochs(model=model,
@@ -449,7 +450,7 @@ if __name__ == '__main__':
         evaluate(model,
                 data_set,
                 criterion)
-    elif opt.task == 'generate':
+    elif opt.task == 'decode':
         decode(model, data_set, vocab)
     else:
         raise ValueError(
