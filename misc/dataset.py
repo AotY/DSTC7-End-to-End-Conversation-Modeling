@@ -30,7 +30,7 @@ class Dataset:
                  r_max_len,
                  min_len,
                  fact_max_len,
-                 fact_topk,
+                 f_topk,
                  vocab,
                  save_path,
                  turn_num,
@@ -46,7 +46,7 @@ class Dataset:
         self.r_max_len = r_max_len
         self.min_len = min_len
         self.fact_max_len = fact_max_len
-        self.fact_topk = fact_topk
+        self.f_topk = f_topk
         self.vocab = vocab
         self.vocab_size = vocab.get_vocab_size()
         self.turn_num = turn_num
@@ -261,7 +261,7 @@ class Dataset:
         topk_facts_embedded, topk_facts=self.topk_facts_embedded_dict.get(hash_value,
                                                                              (None, None))
         if topk_facts_embedded is None:
-            return (torch.zeros((self.fact_topk, self.embedding_size), device=self.device), [])
+            return (torch.zeros((self.f_topk, self.embedding_size), device=self.device), [])
 
         return topk_facts_embedded, topk_facts
 
@@ -293,7 +293,7 @@ class Dataset:
 
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
-                        facts_text, facts_weight=self.get_facts_weight(facts)
+                        facts_text, facts_weight = self.get_facts_weight(facts)
                         if len(facts_text) == 0:
                             continue
 
@@ -302,8 +302,7 @@ class Dataset:
                         if len(facts_ids) == 0:
                             continue
 
-                        facts_weight=torch.tensor(
-                            facts_weight, dtype=torch.float, device=self.device)
+                        facts_weight=torch.tensor(facts_weight, dtype=torch.float, device=self.device)
 
                         facts_ids=[fact_ids[-min(self.fact_max_len, len(facts_ids)):] for fact_ids in facts_ids]
 

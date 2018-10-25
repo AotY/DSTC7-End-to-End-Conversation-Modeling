@@ -25,7 +25,7 @@ def data_set_opt(parser):
                        type=int,
                        help="Ignores all words with total frequency lower than this.")
 
-    group.add_argument('--fact_max_len',
+    group.add_argument('--f_max_len',
                        type=int,
                        help='clip fact by max_len.')
 
@@ -113,7 +113,7 @@ def model_opt(parser):
 
     '''fact parameters'''
 
-    group.add_argument('--fact_topk',
+    group.add_argument('--f_topk',
                        default=20,
                        type=int,
                        help='select top k by cosine similarity.')

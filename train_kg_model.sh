@@ -24,8 +24,8 @@ python train_kg_model.py \
     --beam_width 10 \
     --best_n 5 \
     --attn_type general \
-    --fact_max_len 50 \
-    --fact_topk 20 \
+    --f_max_len 50 \
+    --f_topk 10 \
     --lr 0.001 \
     --max_norm 100.0 \
     --epochs 5 \
@@ -39,7 +39,7 @@ python train_kg_model.py \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type seq2seq
-    # --checkpoint ./models/checkpoint.epoch-4.pth
+    --model_type seq2seq \
+    --checkpoint ./models/checkpoint.epoch-1_seq2seq_3_concat.pth
 
 /

@@ -16,9 +16,10 @@ from modules.utils import init_linear_wt
 
 """
 KGModel
-1. dialogue_encoder
-2. facts_encoder
-3. dialogue_decoder
+1. h_encoder (history_conversations)
+2. c_encoder  (conversation)
+3. fact_encoder (facts)
+4. decoder
 
 """
 
@@ -237,7 +238,7 @@ class KGModel(nn.Module):
                                                                                                          dialogue_decoder_hidden_state,
                                                                                                          dialogue_encoder_max_output,
                                                                                                          dialogue_encoder_outputs,
-																										 history_encoder_outputs)
+                                                                                                         history_encoder_outputs)
 
             dialogue_decoder_input = torch.argmax(
                 dialogue_decoder_output, dim=2).detach()  # [1, batch_size]

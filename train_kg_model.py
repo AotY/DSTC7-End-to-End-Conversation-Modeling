@@ -151,7 +151,7 @@ def train(model,
     model.train()
 
     # [max_len, batch_size, vocab_size]
-    dialogue_decoder_outputs = model(
+    decoder_outputs = model(
         h_encoder_inputs,
         c_encoder_inputs,
         c_encoder_inputs_length,
@@ -166,18 +166,18 @@ def train(model,
 
     loss=0
 
-    # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-    decoder_outputs_argmax=torch.argmax(dialogue_decoder_outputs, dim=2)
+    # decoder_outputs -> [max_length, batch_size, vocab_sizes]
+    decoder_outputs_argmax=torch.argmax(decoder_outputs, dim=2)
     accuracy=compute_accuracy(decoder_outputs_argmax, decoder_targets)
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
-    dialogue_decoder_outputs = dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
+    decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
 
     # , decoder_targets.shape[1])
     decoder_targets=decoder_targets.view(-1)
 
     # compute loss
-    loss=criterion(dialogue_decoder_outputs, decoder_targets)
+    loss=criterion(decoder_outputs, decoder_targets)
 
     # backward
     loss.backward()
@@ -212,7 +212,7 @@ def evaluate(model,
 
             # train and get cur loss
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            dialogue_decoder_outputs=model.evaluate(
+            decoder_outputs=model.evaluate(
                 h_encoder_inputs,
                 c_encoder_inputs,
                 c_encoder_inputs_length,
@@ -222,15 +222,15 @@ def evaluate(model,
                 opt.batch_size
             )
 
-            # dialogue_decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            decoder_outputs_argmax=torch.argmax(dialogue_decoder_outputs, dim=2)
+            # decoder_outputs -> [max_length, batch_size, vocab_sizes]
+            decoder_outputs_argmax=torch.argmax(decoder_outputs, dim=2)
             accuracy=compute_accuracy(decoder_outputs_argmax, decoder_targets)
 
             #  Compute loss
-            dialogue_decoder_outputs=dialogue_decoder_outputs.view(-1, dialogue_decoder_outputs.shape[-1])
+            decoder_outputs=decoder_outputs.view(-1, decoder_outputs.shape[-1])
             decoder_targets=decoder_targets.view(-1)
 
-            loss=criterion(dialogue_decoder_outputs,
+            loss=criterion(decoder_outputs,
                              decoder_targets)
 
             loss_total += loss.item()
@@ -279,8 +279,8 @@ def decode(model, dataset, vocab):
             dataset.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
-                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s.txt' % (opt.model_type, opt.dialogue_decode_type, time_str)),
-                                         opt.dialogue_decode_type)
+                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, time_str, opt.turn_num, opt.turn_type)),
+                                         opt.decode_type)
 
 
 
@@ -293,12 +293,11 @@ def compute_accuracy(decoder_outputs_argmax, decoder_targets):
     #  print(decoder_targets)
 
     match_tensor = (decoder_outputs_argmax == decoder_targets).long()
-    dialogue_decoder_mask=(decoder_targets != 0).long()
+    decoder_mask=(decoder_targets != 0).long()
 
-    accuracy_tensor=match_tensor * dialogue_decoder_mask
+    accuracy_tensor=match_tensor * decoder_mask
 
-    accuracy=float(torch.sum(accuracy_tensor)) / \
-        float(torch.sum(dialogue_decoder_mask))
+    accuracy = float(torch.sum(accuracy_tensor)) / float(torch.sum(decoder_mask))
 
     return accuracy
 
@@ -360,8 +359,8 @@ def build_dataset(vocab):
                 opt.c_max_len,
                 opt.r_max_len,
                 opt.min_len,
-                opt.fact_max_len,
-                opt.fact_topk,
+                opt.f_max_len,
+                opt.f_topk,
                 vocab,
                 opt.save_path,
                 opt.turn_num,
@@ -440,7 +439,7 @@ if __name__ == '__main__':
         filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
         dataset.computing_similarity_facts_offline(opt.embedding_size,
                                                     embedding,
-                                                    opt.fact_topk,
+                                                    opt.f_topk,
                                                     filename)
     model=build_model(vocab_size, vocab.padid)
 
@@ -452,10 +451,11 @@ if __name__ == '__main__':
     '''if load checkpoint'''
     if checkpoint:
         model.load_state_dict(checkpoint['state_dict'])
-        optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
-        opt.start_epoch=checkpoint['epoch'] + 1
-        loss=checkpoint['loss']
-        logger_str='\nevaluate ---------------------------------> %.4f' % loss
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        opt.start_epoch = checkpoint['epoch'] + 1
+        loss = checkpoint['loss']
+        logger_str = '\nevaluate ---------------------------------> %.4f' % loss
+        logger.info(logger_str)
 
     if opt.task == 'train':
         train_epochs(model=model,
@@ -467,8 +467,8 @@ if __name__ == '__main__':
         evaluate(model,
                 dataset,
                 criterion)
-    elif opt.task == 'generate':
-        decode(model, dataset, vocab)
+    elif opt.task == 'decode':
+        decode(model, data_set, vocab)
     else:
         raise ValueError(
             "task must be train or eval, no %s " % opt.task)
