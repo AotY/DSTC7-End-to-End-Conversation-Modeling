@@ -19,11 +19,12 @@ class Tokenizer:
 
         self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
         self.R = tokenizer.RedditTokenizer(preserve_case=False,
-                                           preserve_handles=True, 
-                                           preserve_hashes=True, 
-                                           regularize=True, 
-                                           preserve_emoji=True, 
-                                           preserve_url=True)
+                                           preserve_handles=True,
+                                           preserve_hashes=False,
+                                           regularize=True,
+                                           preserve_emoji=False,
+                                           preserve_url=False)
+
         self.split_hyphen_str = r"([-|_|]+)"
         self.split_hyphen_re = re.compile(split_hyphen_str, re.VERBOSE | re.IGNORECASE)
 
@@ -41,7 +42,7 @@ class Tokenizer:
             splits = set(self.split_hyphen_re.findall(token))
             if len(splits) > 0:
                 for split in splits:
-                    new_tokens += [item for item in token.split(split) if len(item) > 0]
+                    new_tokens += [item.rstrip() for item in token.split(split) if len(item.rstrip()) > 0]
             else:
                 new_tokens.append(token)
         return new_tokens
@@ -52,6 +53,10 @@ class Tokenizer:
             if token.find("'") != -1:
                 splits = token.split(r"'")
                 for i, split in enumerate(splits):
+                    split = split.rstrip()
+                    if bool(split):
+                        continue
+
                     if i != 0:
                         new_tokens.append("'" + split)
                     else:
@@ -62,12 +67,12 @@ class Tokenizer:
 
     def tokenize(self, text):
         tokens = self.R.tokenize(text)
-        tokens = self.replace_url(tokens)
+        #  tokens = self.replace_url(tokens)
         tokens = self.replace_number(tokens)
         tokens = self.split_hyphen(tokens)
         tokens = self.split_quotation(tokens)
         # remove by max len
-        tokens = [token for token in tokens if len(token) <= 20]
+        tokens = [token for token in tokens if len(token) <= 15]
         return tokens
 
 

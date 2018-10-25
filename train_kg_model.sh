@@ -9,6 +9,7 @@ python train_kg_model.py \
     --turn_type concat \
     --embedding_size 300 \
     --pre_trained_embedding data/fasttext_vec_for_vocab_{}.70004.300d.npy \
+    --rnn_type GRU \
     --hidden_size 512 \
     --num_layers 1 \
     --dropout 0.5 \

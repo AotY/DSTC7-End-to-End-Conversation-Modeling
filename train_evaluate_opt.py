@@ -75,6 +75,10 @@ def model_opt(parser):
                        type=str,
                        help='pre trained word embedded.')
 
+    group.add_argument('--rnn_type',
+                       type=str,
+                       help='LSTM | GRU')
+
     group.add_argument('--hidden_size',
                        type=int,
                        default=300,
