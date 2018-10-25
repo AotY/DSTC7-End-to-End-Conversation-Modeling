@@ -238,7 +238,7 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
             f.write('%s\t%d\n' % (item[0], item[1]))
 
     sorted_len_list = sorted(token_len_dict.items(), key=lambda d: d[1], reverse=True)
-    token_len_path = '_'.join(datas_name) + 'token_len.freq.txt'
+    token_len_path = '_'.join(datas_name) + '_token_len.freq.txt'
     with open(token_len_path, 'w', encoding='utf-8') as f:
         for item in sorted_len_list:
             f.write('%d\t%d\n' % (item[0], item[1]))
@@ -429,7 +429,6 @@ if __name__ == '__main__':
 
     stat_frequency(conversations, ['conversations'], 0, 0, logger)
     stat_frequency(responses, ['responses'], 0, 0, logger)
-
 
     # share a vocab
     if model_name == 'seq2seq':

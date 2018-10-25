@@ -46,8 +46,6 @@ logging.info("device: %s" % device)
 
 logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
 
-logger.info(opt.max_len)
-
 if opt.seed:
     torch.manual_seed(opt.seed)
 
@@ -158,7 +156,7 @@ def train(model,
         decoder_inputs,
         f_encoder_inputs,
         opt.batch_size,
-        opt.max_len,
+        opt.r_max_len,
         opt.teacher_forcing_ratio
     )
 
@@ -218,7 +216,7 @@ def evaluate(model,
                 c_encoder_inputs_length,
                 decoder_input,
                 f_encoder_inputs,
-                opt.max_len,
+                opt.r_max_len,
                 opt.batch_size
             )
 
@@ -253,7 +251,7 @@ def decode(model, dataset, vocab):
                 f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('eval', opt.batch_size)
 
             # train and get cur loss
-            # greedy: [batch_size, max_len]
+            # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             batch_utterances=model.decode(
@@ -263,7 +261,7 @@ def decode(model, dataset, vocab):
                 decoder_input,
                 f_encoder_inputs,
                 opt.decode_type,
-                opt.max_len,
+                opt.r_max_len,
                 vocab.eosid,
                 opt.batch_size,
                 opt.beam_width,
@@ -332,6 +330,7 @@ def build_model(vocab_size, padid):
                 opt.model_type,
                 vocab_size,
                 opt.embedding_size,
+                opt.rnn_type,
                 opt.hidden_size,
                 opt.num_layers,
                 opt.bidirectional,
