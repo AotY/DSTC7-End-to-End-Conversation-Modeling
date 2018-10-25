@@ -17,10 +17,12 @@ num_layers, batch_size, hidden_size
 """
 
 class ReduceState(nn.Module):
-    def __init__(self, hidden_size):
+    def __init__(self, hidden_size, num_layers, bidirection_num):
         super(ReduceState, self).__init__()
 
         self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.bidirection_num = bidirection_num
 
         """
         self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
@@ -31,7 +33,7 @@ class ReduceState(nn.Module):
         """
 
     def forward(self, hidden_state, batch_size):
-        h, c = hidden_state  # h, c  [num_layers * bidirection_num, batch_size, hidden_size]
+        #  h, c = hidden_state  # h, c  [num_layers * bidirection_num, batch_size, hidden_size]
         #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))
         #  hidden_reduced_c = F.relu(self.reduce_c(c.view(-1, hidden_size * 2)))
         #  return (hidden_reduced_h.unsqueeze(0), hidden_reduced_c.unsqueeze(0)) # h, c dim = 1 x b x hidden_size
@@ -40,7 +42,10 @@ class ReduceState(nn.Module):
         hidden_reduce_c = F.relu(self.reduce_c(c.view(-1, batch_size, self.hidden_size * 2)))
         new_hidden_state = (hidden_reduce_h, hidden_reduce_c)
         """
-        new_hidden_state = tuple([item[:2, :, :] + item[2:, :, :] for item in hidden_state])
+        if self.bidirection_num == 2:
+            new_hidden_state = tuple([item[item.shape[0] // 2, :, :] + item[item.shape[0] // 2:, :, :] for item in hidden_state])
+        else:
+            new_hidden_state = hidden_state
 
         return new_hidden_state
 

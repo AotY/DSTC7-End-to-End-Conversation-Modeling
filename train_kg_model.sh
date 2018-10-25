@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
-<<<<<<< HEAD
-export CUDA_VISIBLE_DEVICES=6
-=======
-export CUDA_VISIBLE_DEVICES=5
->>>>>>> 35d104adc028831f2d75cf38bdeec8eb80e68934
+export CUDA_VISIBLE_DEVICES=7
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_{}.dict \
-    --turn_num 1 \
+    --turn_num 3 \
     --turn_type concat \
     --embedding_size 300 \
     --pre_trained_embedding data/fasttext_vec_for_vocab_{}.70004.300d.npy \
@@ -35,7 +31,7 @@ python train_kg_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 50 \
-    --log_path ./logs/train_{}_model_{}.log \
+    --log_path ./logs/train_{}_model_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.1 \
     --start_epoch 1 \
