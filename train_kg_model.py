@@ -38,7 +38,7 @@ opt = parser.parse_args()
 
 # logger file
 time_str = time.strftime('%Y-%m-%d_%H:%M')
-opt.log_path = opt.log_path.format(opt.model_type, time_str)
+opt.log_path = opt.log_path.format(opt.model_type, time_str, opt.turn_num, opt.turn_type)
 logger.info('log_path: {}'.format(opt.log_path))
 
 device = torch.device(opt.device)
@@ -101,14 +101,14 @@ def train_epochs(model,
             'loss': log_loss_avg,
             'epoch': epoch,
             'state_dict': model.state_dict(),
-            'optimizer': optimizer.optimizer.state_dict()
+            'optimizer': optimizer.state_dict()
         }
 
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         # optimizer.state_dict()
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_save_path, 'checkpoint.epoch-%d_{}.pth' % (epoch, opt.model_type)))
+                        filename=os.path.join(opt.model_path, 'checkpoint.epoch-%d_%s_%d_%s.pth' % (epoch, opt.model_type, opt.turn_num, opt.turn_type)))
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
@@ -349,10 +349,9 @@ def save_checkpoint(state, is_best, filename):
     :param filename: save filename.
     :return:
     '''
-    save_path=os.path.join(opt.model_save_path, filename)
     torch.save(state, filename)
     if is_best:
-        shutil.copy(filename, 'model_best_{}.pth' % opt.model_type)
+        shutil.copy(filename, 'model_best_%s.pth' % opt.model_type)
 
 def load_pre_trained_embedding(vocab_size, padid, fixed=True):
     ''' embedding for encoder and decoder '''
