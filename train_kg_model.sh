@@ -36,7 +36,7 @@ python train_kg_model.py \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type seq2seq
-    # --checkpoint ./models/checkpoint.epoch-4.pth
+    --model_type seq2seq \
+    --checkpoint ./models/checkpoint.epoch-1_seq2seq_3_concat.pth
 
 /
