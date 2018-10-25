@@ -24,6 +24,8 @@ class Tokenizer:
                                            regularize=True, 
                                            preserve_emoji=True, 
                                            preserve_url=True)
+        self.split_hyphen_str = r"([-|_|]+)"
+        self.split_hyphen_re = re.compile(split_hyphen_str, re.VERBOSE | re.IGNORECASE)
 
     ''' replace url by URL_TAG'''
     def replace_url(self, tokens):
@@ -33,10 +35,39 @@ class Tokenizer:
     def replace_number(self, tokens):
         return ['NUMBER' if self.number_re.search(token) else token for token in tokens]
 
+    def split_hyphen(tokens):
+        new_tokens = []
+        for token in tokens:
+            splits = set(self.split_hyphen_re.findall(token))
+            if len(splits) > 0:
+                for split in splits:
+                    new_tokens += [item for item in token.split(split) if len(item) > 0]
+            else:
+                new_tokens.append(token)
+        return new_tokens
+
+    def split_quotation(tokens):
+        new_tokens = []
+        for token in tokens:
+            if token.find("'") != -1:
+                splits = token.split(r"'")
+                for i, split in enumerate(splits):
+                    if i != 0:
+                        new_tokens.append("'" + split)
+                    else:
+                        new_tokens.append(split)
+            else:
+                new_tokens.append(token)
+
+
     def tokenize(self, text):
         tokens = self.R.tokenize(text)
         tokens = self.replace_url(tokens)
         tokens = self.replace_number(tokens)
+        tokens = self.split_hyphen(tokens)
+        tokens = self.split_quotation(tokens)
+        # remove by max len
+        tokens = [token for token in tokens if len(token) <= 20]
         return tokens
 
 

@@ -221,15 +221,27 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
     freq_dict = {}
     max_vocab_size = int(max_vocab_size)
     total_token_nums = 0
+    token_len_dict = {}
     for data in datas:
         total_token_nums += len(data)
         for token in data:
             freq_dict.setdefault(token, 0)
             freq_dict[token] += 1
+            token_len_dict[len(token)] = token_len_dict.get(len(token), 0) + 1
 
     total_type_nums = len(freq_dict)
 
     sorted_freq_list = sorted(freq_dict.items(), key=lambda d: d[1], reverse=True)
+    freq_path = '_'.join(datas_name) + '.freq.txt'
+    with open(freq_path, 'w', encoding='utf-8') as f:
+        for item in sorted_freq_list:
+            f.write('%s\t%d\n' % (item[0], item[1]))
+
+    sorted_len_list = sorted(token_len_dict.items(), key=lambda d: d[1], reverse=True)
+    token_len_path = '_'.join(datas_name) + 'token_len.freq.txt'
+    with open(token_len_path, 'w', encoding='utf-8') as f:
+        for item in sorted_len_list:
+            f.write('%d\t%d\n' % (item[0], item[1]))
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
@@ -238,12 +250,6 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
     if max_vocab_size > 0 and len(sorted_freq_list) >= max_vocab_size:
         logger.info('Clip tokens by max_vocab_size')
         sorted_freq_list = sorted_freq_list[:max_vocab_size]
-
-    freq_save_path = '_'.join(datas_name) + '.freq.txt'
-
-    with open(freq_save_path, 'w', encoding='utf-8') as f:
-        for item in sorted_freq_list:
-            f.write('%s\t%d\n' % (item[0], item[1]))
 
     print('token size: %d' % len(sorted_freq_list))
     return sorted_freq_list, total_token_nums, total_type_nums
@@ -404,8 +410,7 @@ if __name__ == '__main__':
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
     # save conversation response nums
-    save_conversation_response_facts_nums(
-        conversation_response_nums, 'conversation_response_nums.txt')
+    save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
     # save raw pair
     save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
@@ -493,6 +498,7 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
+    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None, vocab, opt.fasttext_vec_file, opt.fasttext_vec_dim,
         None, os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
@@ -503,6 +509,7 @@ if __name__ == '__main__':
     # save out of vocab words
     save_out_of_vocab_words(
         out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
+    """
 
     """
     # training own word embedding.
@@ -531,6 +538,7 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
+    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -547,5 +555,5 @@ if __name__ == '__main__':
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
-
+    """
     logger.info('Preprocess finished.')
