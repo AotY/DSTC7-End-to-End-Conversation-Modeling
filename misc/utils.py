@@ -19,14 +19,15 @@ class Tokenizer:
 
         self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
         self.R = tokenizer.RedditTokenizer(preserve_case=False,
-                                           preserve_handles=True,
+                                           preserve_handles=False,
                                            preserve_hashes=False,
                                            regularize=True,
                                            preserve_emoji=False,
                                            preserve_url=False)
 
         self.split_hyphen_str = r"([-|_|]+)"
-        self.split_hyphen_re = re.compile(split_hyphen_str, re.VERBOSE | re.IGNORECASE)
+
+        self.split_hyphen_re = re.compile(self.split_hyphen_str, re.VERBOSE | re.IGNORECASE)
 
     ''' replace url by URL_TAG'''
     def replace_url(self, tokens):
@@ -36,18 +37,19 @@ class Tokenizer:
     def replace_number(self, tokens):
         return ['NUMBER' if self.number_re.search(token) else token for token in tokens]
 
-    def split_hyphen(tokens):
+    def split_hyphen(self, tokens):
         new_tokens = []
         for token in tokens:
             splits = set(self.split_hyphen_re.findall(token))
             if len(splits) > 0:
                 for split in splits:
-                    new_tokens += [item.rstrip() for item in token.split(split) if len(item.rstrip()) > 0]
+                    split_tokens += [item.rstrip() for item in token.split(split) if len(item.rstrip()) > 0]
+                    new_tokens.extend(split_tokens)
             else:
                 new_tokens.append(token)
         return new_tokens
 
-    def split_quotation(tokens):
+    def split_quotation(self, tokens):
         new_tokens = []
         for token in tokens:
             if token.find("'") != -1:
@@ -56,13 +58,13 @@ class Tokenizer:
                     split = split.rstrip()
                     if bool(split):
                         continue
-
                     if i != 0:
                         new_tokens.append("'" + split)
                     else:
                         new_tokens.append(split)
             else:
                 new_tokens.append(token)
+        return new_tokens
 
 
     def tokenize(self, text):
@@ -81,7 +83,7 @@ if __name__ == '__main__':
     tokenize = Tokenizer()
     print(tokenize.preprocess(sequence, lowercase=True))
     # ['RT', '@marcobonzanini', ':', 'just', 'an', 'example', '!', ':D', 'http://example.com', '#NLP']
-    
+
 
 """
     emoticons_str = r'''
@@ -98,7 +100,7 @@ if __name__ == '__main__':
         r"(?:\#+[\w_]+[\w\'_\-]*[\w_]+)",  # hash-tags
         # URLs
         r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+',
-        
+
         r'(?:(?:\d+,?)+(?:\.?\d+)?)',  # numbers
         r"(?:[a-z][a-z'\-_]+[a-z])",  # words with - and '
         r'(?:[\w_]+)',  # other words
@@ -123,7 +125,7 @@ if __name__ == '__main__':
             else:
                 new_tokens.append(token)
 
-        return new_tokens 
+        return new_tokens
 
     ''' remove by length '''
     def remove_by_len(self, tokens, max_len=15):
