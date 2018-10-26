@@ -238,11 +238,14 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
         for item in sorted_freq_list:
             f.write('%s\t%d\n' % (item[0], item[1]))
 
-    sorted_len_list = sorted(token_len_dict.items(), key=lambda d: d[0], reverse=True)
+    sorted_len_list = sorted(token_len_dict.items(), key=lambda d: d[0], reverse=False)
     token_len_path = '_'.join(datas_name) + '_token_len.freq.txt'
     with open(token_len_path, 'w', encoding='utf-8') as f:
         for item in sorted_len_list:
             f.write('%d\t%d\n' % (item[0], item[1]))
+
+    # clip max len of token
+    sorted_freq_list = [item for item in sorted_freq_list if len(item[0]) <= 15]
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
@@ -498,7 +501,6 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
-    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None, vocab, opt.fasttext_vec_file, opt.fasttext_vec_dim,
         None, os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
@@ -509,7 +511,6 @@ if __name__ == '__main__':
     # save out of vocab words
     save_out_of_vocab_words(
         out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
-    """
 
     """
     # training own word embedding.
@@ -538,7 +539,6 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
-    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -555,5 +555,4 @@ if __name__ == '__main__':
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
-    """
     logger.info('Preprocess finished.')
