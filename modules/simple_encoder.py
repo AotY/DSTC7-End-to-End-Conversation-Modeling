@@ -83,4 +83,5 @@ class SimpleEncoder(nn.Module):
             initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
             nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
             return (initial_state1, initial_state2)
-        return initial_state1
+        else:
+            return initial_state1
