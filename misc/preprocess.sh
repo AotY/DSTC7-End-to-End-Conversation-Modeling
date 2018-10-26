@@ -5,8 +5,8 @@ python preprocess.py \
     --facts_file_path ./../data/train.facts.txt \
     --save_path ./../data \
     --vocab_save_path ./../data/vocab_word2idx_{}.dict \
-    --min_count 3 \
-    --max_vocab_size 7e4 \
+    --min_count 4 \
+    --max_vocab_size 9e4 \
     --word_embedding_model_name v1.0_word_embedding \
     --google_vec_file /home/taoqing/Research/data/GoogleNews-vectors-negative300.bin \
     --google_vec_dim 300 \
