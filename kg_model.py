@@ -59,8 +59,8 @@ class KGModel(nn.Module):
         self.device = device
 
         if turn_num > 1 and turn_type != 'concat':
-                        # history_encoder
-            self.history_encoder = SimpleEncoder(vocab_size,
+                        # h_encoder
+            self.h_encoder = SimpleEncoder(vocab_size,
                                                  embedding_size,
                                                  rnn_type,
                                                  hidden_size,
@@ -92,8 +92,10 @@ class KGModel(nn.Module):
             init_linear_wt(self.fact_linear)
 
         # encoder hidden_state -> decoder hidden_state
-        self.reduce_state = ReduceState(
-            hidden_size, num_layers, self.c_encoder.bidirection_num)
+        self.reduce_state = ReduceState(rnn_type,
+                                        hidden_size,
+                                        num_layers,
+                                        self.c_encoder.bidirection_num)
 
         # decoder
         if decoder_type == 'luong':
@@ -116,7 +118,8 @@ class KGModel(nn.Module):
                 num_layers,
                 dropout,
                 padding_idx,
-                tied)
+                tied
+            )
 
     def forward(self,
                 h_encoder_inputs,
@@ -140,12 +143,10 @@ class KGModel(nn.Module):
         # h encoder
         h_encoder_outputs = None
         h_encoder_hidden_state = None
-        if self.turn_num > 1 and len(h_encoder_inputs) > 0:
-            h_encoder_outputs, h_encoder_hidden_state = self.h_forward(h_encoder_inputs, batch_size)
+        h_encoder_outputs, h_encoder_hidden_state = self.h_forward(h_encoder_inputs, batch_size)
 
         # dialogue encoder
-        c_encoder_hidden_state = self.c_encoder.init_hidden(
-            batch_size, self.device)
+        c_encoder_hidden_state = self.c_encoder.init_hidden(batch_size, self.device)
         c_encoder_outputs, c_encoder_hidden_state, c_encoder_max_output = self.c_encoder(c_encoder_inputs,
                                                                                          c_encoder_inputs_length,
                                                                                          c_encoder_hidden_state)
@@ -154,8 +155,7 @@ class KGModel(nn.Module):
         if h_encoder_hidden_state is not None:
             c_encoder_hidden_state += h_encoder_hidden_state
 
-        decoder_hidden_state = self.reduce_state(
-            c_encoder_hidden_state, batch_size)
+        decoder_hidden_state = self.reduce_state(c_encoder_hidden_state, batch_size)
 
         # fact encoder
         if self.model_type == 'kg':
@@ -211,11 +211,10 @@ class KGModel(nn.Module):
         c_encoder_inputs: [seq_len, batch_size], maybe [r_max_len, 1]
         decoder_input: [1, batch_size], maybe: [sos * 1]
         '''
+        # h encoder
         h_encoder_outputs = None
         h_encoder_hidden_state = None
-        if self.turn_num > 1 and len(h_encoder_inputs) > 0:
-            h_encoder_outputs, h_encoder_hidden_state = self.h_forward(
-                h_encoder_inputs, batch_size)
+        h_encoder_outputs, h_encoder_hidden_state = self.h_forward(h_encoder_inputs, batch_size)
 
         # encoder
         c_encoder_hidden_state = self.c_encoder.init_hidden(batch_size, self.device)
@@ -265,11 +264,10 @@ class KGModel(nn.Module):
                beam_width,
                best_n):
 
+        # h encoder
         h_encoder_outputs = None
         h_encoder_hidden_state = None
-        if self.turn_num > 1 and len(h_encoder_inputs) > 0:
-            h_encoder_outputs, h_encoder_hidden_state = self.h_forward(
-                h_encoder_inputs, batch_size)
+        h_encoder_outputs, h_encoder_hidden_state = self.h_forward(h_encoder_inputs, batch_size)
 
         '''
         c_encoder_inputs: [seq_len, batch_size], maybe [r_max_len, 1]
@@ -278,16 +276,14 @@ class KGModel(nn.Module):
         # encoder
         c_encoder_hidden_state = self.c_encoder.init_hidden(
             batch_size, self.device)
-        c_encoder_outputs,  \
-            c_encoder_hidden_state, \
-            c_encoder_max_output = self.c_encoder(c_encoder_inputs,
-                                                  c_encoder_inputs_length,
-                                                  c_encoder_hidden_state)
+        c_encoder_outputs,  c_encoder_hidden_state, c_encoder_max_output = self.c_encoder(c_encoder_inputs,
+                                                                                          c_encoder_inputs_length,
+                                                                                          c_encoder_hidden_state)
 
         if h_encoder_hidden_state is not None:
             c_encoder_hidden_state += h_encoder_hidden_state
-        decoder_hidden_state = self.reduce_state(
-            c_encoder_hidden_state, batch_size)
+
+        decoder_hidden_state = self.reduce_state(c_encoder_hidden_state, batch_size)
 
         # fact encoder
         if self.model_type == 'kg':
@@ -309,7 +305,7 @@ class KGModel(nn.Module):
                     dialogue_decoder_output, dim=2).detach()  # [1, batch_size]
                 dialogue_decode_outputs.append(decoder_input)
 
-                ni = decoder_input[0][0].item()
+                ni = decoder_input[0][0].h()
                 if ni == eosid:
                     break
 
@@ -327,36 +323,51 @@ class KGModel(nn.Module):
             h_encoder_inputs: [tensor_ids, ...]
         turn_type:
             concat
-            dcgm1
-            dcgm2
+            dcgm
+            attention
             hred
         """
         h_encoder_outputs = []
         h_encoder_hidden_state = []
-        for history_input in h_encoder_inputs:
-            final_outputs = torch.zeros(
-                (self.turn_num - 1, self.hidden_size), device=self.device)
-            final_hidden_states = []
-            for i, item in enumerate(history_input):
-                # item: [id, ...] is a tensor object
-                # [num_layers * bidirection_num, 1, hidden_size]
-                hidden_state = self.hisotry_encoder.init_hidden()
-                outputs, hidden_state = self.history_encoder(
-                    item.view(-1, 1), hidden_state)
-                # outputs: [len, 1, hidden_size]
-                fianl_outputs[i] = outputs[-1]  # [1, hidden_size]
-                final_hidden_states.append(hidden_state)
-            h_encoder_outputs.append(fianl_outputs)
-            h_encoder_hidden_state.append(
-                torch.stack(final_hidden_states, dim=0).mean(0))
-        # [batch_size, turn_num - 1, hidden_size]
-        h_encoder_outputs = torch.stack(h_encoder_outputs, dim=0)
-        # [turn_num - 1, batch_size, hidden_size]
-        h_encoder_outputs.transpose_(0, 1)
-        # [num_layers * bidirection_num, batch_size, hidden_size]
-        h_encoder_hidden_state = torch.cat(h_encoder_hidden_state, dim=1)
+        if self.turn_type == 'concat':
+            pass
+        elif self.turn_type == 'dcgm':
+            # [[h], [h]....]
+            h_hidden_states = []
+            for h_encoder_input in h_encoder_outputs:
+                # h_encoder_input: [h]
+                h_hidden_state = self.h_encoder.init_hidden()
+                _, h_hidden_state = self.h_encoder(h_encoder_input[0].view(-1, 1), h_hidden_state)
+                # h_hidden_state: [num_layers * bidirection_num, 1, hidden_size]
+                h_hidden_states.append(h_hidden_state)
+            h_hidden_states = torch.cat(h_hidden_states, dim=1) # [num_layers * bidirection_num, batch_size, hidden_size]
+            return None, h_hidden_states
+        elif self.turn_type == 'attention':
+            h_hidden_states = [] # [batch_size, hidden_size]
+            for h_encoder_input in h_encoder_inputs:
+                h_attn_hidden_states = []
+                for i, h in enumerate(h_encoder_input):
+                    # h: h is a tensor object
+                    h_hidden_state = self.h_encoder.init_hidden()
+                    _, h_hidden_state = self.h_encoder(h.view(-1, 1), h_hidden_state)
+                    h_hidden_states.append(hidden_state.squeeze(1))
+                h_attn_hidden_states = torch.stack(h_attn_hidden_states, dim=0) #[num, num_layers * bidirection_num, hidden_size]
+                h_attn_weights = torch.bmm(h_attn_hidden_states, c_hidden_state.transpose(1, 2)) # [num, num_layers * bidirection_num, 1, 1]
 
-        return h_encoder_outputs, h_encoder_hidden_state
+                h_encoder_hidden_state.append(torch.stack(h_hidden_states, dim=0).mean(0))
+            # [batch_size, turn_num - 1, hidden_size]
+            h_encoder_outputs = torch.stack(h_encoder_outputs, dim=0)
+            # [turn_num - 1, batch_size, hidden_size]
+            h_encoder_outputs.transpose_(0, 1)
+            # [num_layers * bidirection_num, batch_size, hidden_size]
+            h_encoder_hidden_state = torch.cat(h_encoder_hidden_state, dim=1)
+
+            return None, h_encoder_hidden_state
+        elif self.turn_type == 'hred':
+            pass
+
+        return None, None
+
 
     def fact_forward(self,
                      f_encoder_inputs,

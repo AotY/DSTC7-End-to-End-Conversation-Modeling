@@ -51,15 +51,16 @@ if opt.seed:
 
 # update max_len
 if opt.turn_num > 1:
-    if opt.turn_type == 'concat' or opt.turn_type == 'dcgm1':
+    if opt.turn_type == 'concat':
         opt.h_max_len = opt.h_max_len * opt.turn_num
         opt.c_max_len = opt.h_max_len + opt.c_max_len
-    elif opt.turn_type == 'dcgm2':
+    elif opt.turn_type == 'dcgm':
         opt.h_max_len = opt.h_max_len * (opt.turn_num - 1)
     elif opt.turn_type == 'hred':
         pass
-    else:
-        pass
+
+logger.info('h_max_len: ', opt.h_max_len)
+logger.info('c_max_len: ', opt.c_max_len)
 
 def train_epochs(model,
                  dataset,
@@ -124,8 +125,7 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '\nevaluate -------------> %.4f %.4f' % (
-            evaluate_loss, evaluate_accuracy)
+        logger_str = '\nevaluate -------------> %.4f %.4f' % (evaluate_loss, evaluate_accuracy)
         logger.info(logger_str)
         save_logger(logger_str)
 
@@ -426,7 +426,8 @@ if __name__ == '__main__':
         checkpoint=None
 
     vocab=Vocab()
-    vocab.load(opt.vocab_path.format(opt.model_type))
+    #  vocab.load(opt.vocab_path.format(opt.model_type))
+    vocab.load(opt.vocab_path)
     vocab_size=vocab.get_vocab_size()
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
