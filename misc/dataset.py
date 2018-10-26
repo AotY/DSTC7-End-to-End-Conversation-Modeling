@@ -66,7 +66,7 @@ class Dataset:
                       eval_split)
 
     def read_txt(self, save_path, pair_path, eval_split):
-        _data_dict_path = os.path.join(save_path, '_data_dict.pkl')
+        _data_dict_path = os.path.join(save_path, '_data_dict_%s.pkl' % self.turn_type)
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
             datas = []
