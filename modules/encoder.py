@@ -49,7 +49,7 @@ class Encoder(nn.Module):
             input_size=embedding_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
-            bidirectioal=bidirectional,
+            bidirectional=bidirectional,
             dropout=dropout
         )
         #  init_lstm_wt(self.lstm)
@@ -85,7 +85,7 @@ class Encoder(nn.Module):
         packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, new_inputs_length)
 
         # [batch_size, hidden_size]
-        outputs, hidden_state = self.lstm(packed_embedded, hidden_state)
+        outputs, hidden_state = self.rnn(packed_embedded, hidden_state)
 
         # unpack
         outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
@@ -97,7 +97,10 @@ class Encoder(nn.Module):
         # to original sequence
         outputs = outputs.contiguous()
         outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-        hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
+        if self.rnn_type == 'LSTM':
+            hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
+        else:
+            hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         max_output, _ = outputs.max(dim=0)
         max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
@@ -115,4 +118,5 @@ class Encoder(nn.Module):
             initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
             nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
             return (initial_state1, initial_state2)
-        return initial_state1
+        else:
+            return initial_state1
