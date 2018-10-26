@@ -120,7 +120,7 @@ class Dataset:
                     history_conversations_ids = []
                     for history in history_conversations:
                         history_ids = self.vocab.words_to_id(history.split(' '))
-                        history_ids = items[-min(self.h_max_len, len(history_ids))]
+                        history_ids = history_ids[-min(self.h_max_len, len(history_ids))]
                         history_conversations_ids.append(history_ids)
 
                     datas.append((history_conversations_ids, conversation_ids, response_ids, hash_value))
@@ -167,10 +167,6 @@ class Dataset:
         self._indicator_dict[task] = 0
 
     def load_data(self, task, batch_size):
-		"""
-		task: train | eavl
-		batch_size:
-		"""
         task_len=len(self._data_dict[task])
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
