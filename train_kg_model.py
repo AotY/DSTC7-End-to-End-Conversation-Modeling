@@ -59,8 +59,8 @@ if opt.turn_num > 1:
     elif opt.turn_type == 'hred':
         pass
 
-logger.info('h_max_len: ', opt.h_max_len)
-logger.info('c_max_len: ', opt.c_max_len)
+logger.info('h_max_len: %d' % opt.h_max_len)
+logger.info('c_max_len: %d' % opt.c_max_len)
 
 def train_epochs(model,
                  dataset,
@@ -468,7 +468,7 @@ if __name__ == '__main__':
                 dataset,
                 criterion)
     elif opt.task == 'decode':
-        decode(model, data_set, vocab)
+        decode(model, dataset, vocab)
     else:
         raise ValueError(
             "task must be train or eval, no %s " % opt.task)
