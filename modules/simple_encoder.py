@@ -40,9 +40,16 @@ class SimpleEncoder(nn.Module):
         # dropout
         self.dropout = nn.Dropout(dropout)
 
-        # LSTM
-        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers, bidirectional=bidirectional)
-        init_lstm_wt(self.lstm)
+        # rnn
+        self.rnn = rnn_factory(
+            rnn_type,
+            input_size=embedding_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            bidirectioal=bidirectional,
+            dropout=dropout
+        )
+        #  init_lstm_wt(self.lstm)
 
     def forward(self, inputs, hidden_state):
         '''
@@ -58,12 +65,12 @@ class SimpleEncoder(nn.Module):
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
 
-        if self.bidirection_num == 2:
-            #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
-            outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
+        #  if self.bidirection_num == 2:
+            #  #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
+            #  outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
 
         # [batch_size, hidden_size]
-        outputs, hidden_state = self.lstm(embedded, hidden_state)
+        outputs, hidden_state = self.rnn(embedded, hidden_state)
 
         return outputs, hidden_state
 
@@ -71,8 +78,9 @@ class SimpleEncoder(nn.Module):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-        initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-
         nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
-        nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
-        return (initial_state1, initial_state2)
+        if self.rnn_type == 'LSTM':
+            initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
+            nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
+            return (initial_state1, initial_state2)
+        return initial_state1

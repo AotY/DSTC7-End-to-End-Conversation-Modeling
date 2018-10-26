@@ -14,11 +14,13 @@ import torch
 import torch.nn as nn
 
 from modules.utils import init_lstm_wt
+from modules.utils import rnn_factory
 
 class Encoder(nn.Module):
     def __init__(self,
                  vocab_size,
                  embedding_size,
+                 rnn_type,
                  hidden_size,
                  num_layers=1,
                  bidirectional=True,
@@ -29,6 +31,7 @@ class Encoder(nn.Module):
 
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
+        self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.padding_idx = padding_idx
         self.bidirection_num = 2 if bidirectional else 1
@@ -40,9 +43,16 @@ class Encoder(nn.Module):
         # dropout
         self.dropout = nn.Dropout(dropout)
 
-        # LSTM
-        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers, bidirectional=bidirectional)
-        init_lstm_wt(self.lstm)
+        # rnn
+        self.rnn = rnn_factory(
+            rnn_type,
+            input_size=embedding_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            bidirectioal=bidirectional,
+            dropout=dropout
+        )
+        #  init_lstm_wt(self.lstm)
 
     def forward(self, inputs, inputs_length, hidden_state):
         '''
@@ -100,8 +110,9 @@ class Encoder(nn.Module):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-        initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-
         nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
-        nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
-        return (initial_state1, initial_state2)
+        if self.rnn_type == 'LSTM':
+            initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
+            nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
+            return (initial_state1, initial_state2)
+        return initial_state1

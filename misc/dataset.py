@@ -102,10 +102,10 @@ class Dataset:
                         continue
 
                     # len(history_conversations) <= self.turn_num
-                    if self.turn_type == 'concat' or self.turn_type == 'dcgm1':
+                    if self.turn_type == 'concat':
                         conversation = ' '.join(history_conversations)
                         history_conversations = []
-                    elif self.turn_type == 'dcgm2':
+                    elif self.turn_type == 'dcgm':
                         conversation = history_conversations[-1]
                         history_conversations = [' '.join(history_conversations[:-1])]
                     elif self.turn_type == 'hred':
@@ -118,10 +118,10 @@ class Dataset:
                     conversation_ids = conversation_ids[-min(self.c_max_len, len(conversation_ids)):]
 
                     history_conversations_ids = []
-                    for item in history_conversations:
-                        item_ids = self.vocab.words_to_id(item.split(' '))
-                        item_ids = items[-min(self.h_max_len, len(item_ids))]
-                        history_conversations_ids.append(item_ids)
+                    for history in history_conversations:
+                        history_ids = self.vocab.words_to_id(history.split(' '))
+                        history_ids = items[-min(self.h_max_len, len(history_ids))]
+                        history_conversations_ids.append(history_ids)
 
                     datas.append((history_conversations_ids, conversation_ids, response_ids, hash_value))
 

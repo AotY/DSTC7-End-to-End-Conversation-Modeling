@@ -13,6 +13,7 @@ import torch.nn as nn
 
 from modules.utils import init_lstm_wt, init_linear_wt
 from modules.global_attn import GlobalAttn
+from modules.utils import rnn_factory
 
 
 
@@ -20,6 +21,7 @@ class LuongAttnDecoder(nn.Module):
     def __init__(self,
                  vocab_size,
                  embedding_size,
+                 rnn_type,
                  hidden_size,
                  num_layers,
                  dropout,
@@ -32,14 +34,16 @@ class LuongAttnDecoder(nn.Module):
 
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
+        self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.padding_idx = padding_idx
         self.attn_type = attn_type
 
         # embedding
-        self.embedding = nn.Embedding(
-            self.vocab_size, self.embedding_size, self.padding_idx)
+        self.embedding = nn.Embedding(vocab_size,
+                                      embedding_size,
+                                      padding_idx)
 
         # dropout
         self.dropout = nn.Dropout(dropout)
@@ -53,12 +57,15 @@ class LuongAttnDecoder(nn.Module):
         # encoder_max_output + embedded ->
         self.encoder_concat_linear = nn.Linear(hidden_size * 2 + embedding_size, embedding_size)
 
-        # LSTM
-        self.lstm = nn.LSTM(self.embedding_size,
-                            self.hidden_size,
-                            self.num_layers,
-                            dropout=dropout)
-        init_lstm_wt(self.lstm)
+        # rnn
+        self.rnn = rnn_factory(
+            rnn_type,
+            input_size=embedding_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            dropout=dropout
+        )
+        #  init_lstm_wt(self.lstm)
 
         #  self.reduce_linear = nn.Linear(hidden_size * 2, hidden_size)
         #  init_linear_wt(self.reduce_linear)
@@ -94,7 +101,7 @@ class LuongAttnDecoder(nn.Module):
 
         # Get current hidden state from input word and last hidden state
         # output: [1, batch_size, hidden_size]
-        output, hidden_state = self.lstm(embedded, hidden_state)
+        output, hidden_state = self.rnn(embedded, hidden_state)
 
         # hidden_size * 2 -> hidden_size
         #  reduced_encoder_outputs = self.reduce_linear(encoder_outputs)
