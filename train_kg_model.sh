@@ -6,7 +6,7 @@ python train_kg_model.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.dict \
     --turn_num 3 \
-    --turn_type concat \
+    --turn_type dcgm \
     --embedding_size 300 \
     --pre_trained_embedding data/fasttext_vec_for_vocab_{}.90004.300d.npy \
     --rnn_type GRU \

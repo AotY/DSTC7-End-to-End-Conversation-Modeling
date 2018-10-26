@@ -46,7 +46,7 @@ class SimpleEncoder(nn.Module):
             input_size=embedding_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
-            bidirectioal=bidirectional,
+            bidirectional=bidirectional,
             dropout=dropout
         )
         #  init_lstm_wt(self.lstm)
