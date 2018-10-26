@@ -3,7 +3,6 @@
 ''''
 Tokenise a reddit sequence.
 '''
-
 import re
 from tokenizer import tokenizer
 
@@ -25,7 +24,7 @@ class Tokenizer:
                                            preserve_emoji=False,
                                            preserve_url=False)
 
-        self.split_hyphen_str = r"([-|_|]+)"
+        self.split_hyphen_str = r'[-|_]+'
 
         self.split_hyphen_re = re.compile(self.split_hyphen_str, re.VERBOSE | re.IGNORECASE)
 
@@ -40,11 +39,12 @@ class Tokenizer:
     def split_hyphen(self, tokens):
         new_tokens = []
         for token in tokens:
-            splits = set(self.split_hyphen_re.findall(token))
+            splits = self.split_hyphen_re.findall(token)
             if len(splits) > 0:
-                for split in splits:
-                    split_tokens += [item.rstrip() for item in token.split(split) if len(item.rstrip()) > 0]
-                    new_tokens.extend(split_tokens)
+                #  print(token)
+                split_tokens = [item.rstrip() for item in token.split(splits[0]) if len(item.split()) > 0]
+                #  print(split_tokens)
+                new_tokens.extend(split_tokens)
             else:
                 new_tokens.append(token)
         return new_tokens
@@ -73,8 +73,9 @@ class Tokenizer:
         tokens = self.replace_number(tokens)
         tokens = self.split_hyphen(tokens)
         tokens = self.split_quotation(tokens)
+        tokens = [token for token in tokens if len(token.split()) > 0]
         # remove by max len
-        tokens = [token for token in tokens if len(token) <= 15]
+        #  tokens = [token for token in tokens if len(token) <= 15]
         return tokens
 
 
