@@ -13,7 +13,8 @@ import math
 import torch
 import torch.nn as nn
 
-from modules.utils import init_lstm_wt
+from modules.utils import init_wt_normal
+from modules.utils import init_gru_orth, init_lstm_orth
 
 class SimpleEncoder(nn.Module):
     def __init__(self,
@@ -29,13 +30,14 @@ class SimpleEncoder(nn.Module):
 
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
-        self.hidden_size = hidden_size
         self.padding_idx = padding_idx
-        self.bidirection_num = 2 if bidirectional else 1
         self.num_layers = num_layers
+        self.bidirection_num = 2 if bidirectional else 1
+        self.hidden_size = hidden_size // self.bidirection_num
 
         # embedding
-        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, self.padding_idx)
+        self.embedding = nn.Embedding(vocab_size, embedding_size, padding_idx)
+        init_wt_normal(self.embedding.weight)
 
         # dropout
         self.dropout = nn.Dropout(dropout)
@@ -49,7 +51,10 @@ class SimpleEncoder(nn.Module):
             bidirectional=bidirectional,
             dropout=dropout
         )
-        #  init_lstm_wt(self.lstm)
+        if rnn_type == 'LSTM':
+            init_lstm_orth(self.rnn)
+        else:
+            init_gru_orth(self.rnn)
 
     def forward(self, inputs, hidden_state):
         '''
@@ -64,10 +69,6 @@ class SimpleEncoder(nn.Module):
         # embedded
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
-
-        #  if self.bidirection_num == 2:
-            #  #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
-            #  outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
 
         # [batch_size, hidden_size]
         outputs, hidden_state = self.rnn(embedded, hidden_state)
