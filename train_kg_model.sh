@@ -11,7 +11,7 @@ python train_kg_model.py \
     --pre_trained_embedding data/fasttext_vec_for_vocab_{}.90004.300d.npy \
     --rnn_type GRU \
     --hidden_size 512 \
-    --num_layers 1 \
+    --num_layers 2 \
     --dropout 0.5 \
     --max_len 35 \
     --h_max_len 35 \

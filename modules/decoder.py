@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 
 from modules.utils import rnn_factory
+from modules.utils import init_wt_normal, init_linear_wt, init_lstm_orth, init_gru_orth
 
 '''
 Decoder:
@@ -44,8 +45,8 @@ class Decoder(nn.Module):
         self.padding_idx = padding_idx
 
         # embedding
-        self.embedding = nn.Embedding(
-            self.vocab_size, self.embedding_size, self.padding_idx)
+        self.embedding = nn.Embedding(vocab_size, embedding_size, padding_idx)
+        init_wt_normal(self.embedding.weight)
 
         # dropout
         self.dropout = nn.Dropout(dropout)
@@ -61,9 +62,14 @@ class Decoder(nn.Module):
             num_layers=num_layers,
             dropout=dropout
         )
+        if rnn_type == 'LSTM':
+            init_lstm_orth(self.rnn)
+        else:
+            init_gru_orth(self.rnn)
 
         # linear
         self.linear = nn.Linear(self.hidden_size, self.vocab_size)
+        init_linear_wt(self.linear)
 
         if tied and hidden_size == embedding_size:
             self.linear.weight = self.embedding.weight
@@ -71,12 +77,16 @@ class Decoder(nn.Module):
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, input, hidden_state, encoder_max_output=None, encoder_outputs=None, history_encoder_outpus=None):
+    def forward(self, 
+                input,
+                hidden_state,
+                c_encoder_outputs=None,
+                h_encoder_outputs=None):
         '''
         input: [1, batch_size]  LongTensor
         hidden_state: [num_layers, batch_size, hidden_size]
-        encoder_max_output: [1, batch_size, hidden_size * 2]
-        encoder_outputs: [max_len, batch_size, hidden_size * 2]
+        c_encoder_outputs: [max_len, batch_size, hidden_size * 2]
+        h_encoder_outputs: history encoder outputs
 
         output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
         hidden_state: (h_n, c_n)
@@ -84,8 +94,6 @@ class Decoder(nn.Module):
         # embedded
         embedded = self.embedding(input) #[1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
-
-        #  embedded = self.context_linear(torch.cat((encoder_max_output, embedded), dim=2))
 
         # rnn
         output, hidden_state = self.rnn(embedded, hidden_state)
