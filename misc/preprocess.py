@@ -36,8 +36,6 @@ Read convos file.
 
 
 def read_convos(convos_file_path, logger=None):
-    with open(convos_file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
 
     conversations = []
     responses = []
@@ -65,65 +63,65 @@ def read_convos(convos_file_path, logger=None):
     abnormal_responses = []
 
     n = 0
-    for line in lines:
-        n += 1
+    with open(convos_file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            n += 1
 
-        if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' % (n / 1e6, len(lines) / 1e6))
+            if n % 1e5 == 0:
+                logger.info('checked %.2fM' % (n / 1e6))
 
-        sub = line.split('\t')
+            sub = line.split('\t')
 
-        conversation = sub[-2]
-        response = sub[-1]
+            conversation = sub[-2]
+            response = sub[-1]
 
-        # skip if source has nothing
-        if conversation == 'START' or len(conversation.rstrip()) == 0:
-            continue
+            # skip if source has nothing
+            if conversation == 'START' or len(conversation.rstrip()) == 0:
+                continue
 
-        # token
-        conversation_tokens = tokenizer.tokenize(conversation)
-        # abnormal lengths: 203, 204, 205, 206, 207
-        conversation_length = len(conversation_tokens)
+            # token
+            conversation_tokens = tokenizer.tokenize(conversation)
+            # abnormal lengths: 203, 204, 205, 206, 207
+            conversation_length = len(conversation_tokens)
 
-        if conversation_length in [203, 204, 205, 206, 207]:
-            abnormal_conversations.append(
-                conversation_tokens + [sub[1], sub[2]])
+            #  if conversation_length in [203, 204, 205, 206, 207]:
+                #  abnormal_conversations.append(
+                    #  conversation_tokens + [sub[1], sub[2]])
 
-        conversation_max_length = max(conversation_max_length, conversation_length)
+            #  conversation_max_length = max(conversation_max_length, conversation_length)
 
-        conversations_length_distribution[conversation_length] = conversations_length_distribution.get(
-            conversation_length, 0) + 1
+            #  conversations_length_distribution[conversation_length] = conversations_length_distribution.get(conversation_length, 0) + 1
 
-        response_tokens = tokenizer.tokenize(response)
-        response_length = len(response_tokens)
+            response_tokens = tokenizer.tokenize(response)
+            response_length = len(response_tokens)
 
-        if conversation_length <=1 or response_length <= 1:
-            continue
+            if conversation_length <=1 or response_length <= 1:
+                continue
 
-        if response_length <= 7:
-            abnormal_responses.append(response_tokens)
+            if response_length <= 7:
+                abnormal_responses.append(response_tokens)
 
-        response_max_length = max(response_max_length, response_length)
-        responses_length_distribution[response_length] = responses_length_distribution.get(
-            response_length, 0) + 1
+            #  response_max_length = max(response_max_length, response_length)
+            #  responses_length_distribution[response_length] = responses_length_distribution.get(
+                #  response_length, 0) + 1
 
-        # raw data
-        raw_conversations.append(conversation)
-        raw_responses.append(response)
+            # raw data
+            #  raw_conversations.append(conversation)
+            #  raw_responses.append(response)
 
-        conversations.append(conversation_tokens)
-        responses.append(response_tokens)
+            conversations.append(conversation_tokens)
+            responses.append(response_tokens)
 
-        hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
-        subreddit_names.append(sub[1])
-        conversation_ids.append(sub[2])
-        response_scores.append(sub[3])
-        dialogue_turns.append(sub[4])
+            hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
+            subreddit_names.append(sub[1])
+            conversation_ids.append(sub[2])
+            response_scores.append(sub[3])
+            dialogue_turns.append(sub[4])
 
-        # TodayILearned-f2ruz nums
-        key_value = sub[1] + '-' + sub[2]
-        conversation_response_nums[key_value] = conversation_response_nums.get(
-            key_value, 0) + 1
+            # TodayILearned-f2ruz nums
+            key_value = sub[1] + '-' + sub[2]
+            conversation_response_nums[key_value] = conversation_response_nums.get(
+                key_value, 0) + 1
 
     return raw_conversations, raw_responses, \
         conversations, responses, \
@@ -149,9 +147,6 @@ Read facts file.
 
 
 def read_facts(facts_file_path, logger):
-    with open(facts_file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-
     # 读取  facts，保存到
     facts = []
     raw_facts = []
@@ -168,42 +163,41 @@ def read_facts(facts_file_path, logger):
 
     abnormal_facts = []
     n = 0
-    for line in lines:
-        n += 1
+    with open(facts_file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            n += 1
 
-        if n % 1e5 == 0:
-            logger.info('checked %.2fM/%.2fM lines' %
-                        (n / 1e6, len(lines) / 1e6))
+            if n % 1e5 == 0:
+                logger.info('checked %.2fM lines' % (n / 1e6))
 
-        sub = line.split('\t')
+            sub = line.split('\t')
 
-        fact = sub[-1]
+            fact = sub[-1]
 
+            fact_tokens = tokenizer.tokenize(fact)
+            # skip if source has nothing
+            if len(fact_tokens) <= 1:
+                continue
 
-        fact_tokens = tokenizer.tokenize(fact)
-        # skip if source has nothing
-        if len(fact_tokens) <= 1:
-            continue
+            fact_len = len(fact_tokens)
+            #  max_len = max(max_len, fact_len)
+            #  len_distribution[fact_len] = len_distribution.get(fact_len, 0) + 1
 
-        fact_len = len(fact_tokens)
-        max_len = max(max_len, fact_len)
-        len_distribution[fact_len] = len_distribution.get(fact_len, 0) + 1
+            #  if fact_len <= 7:
+                #  abnormal_facts.append(fact_tokens)
 
-        if fact_len <= 7:
-            abnormal_facts.append(fact_tokens)
+            #  raw_facts.append(fact)
 
-        raw_facts.append(fact)
-        facts.append(fact_tokens)
+            facts.append(fact_tokens)
 
-        hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
-        subreddit_names.append(sub[1])
-        conversation_ids.append(sub[2])
-        domain_names.append(sub[3])
+            hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
+            subreddit_names.append(sub[1])
+            conversation_ids.append(sub[2])
+            domain_names.append(sub[3])
 
-        # TodayILearned-f2ruz nums
-        key_value = sub[1] + '-' + sub[2]
-        conversation_fact_nums[key_value] = conversation_fact_nums.get(
-            key_value, 0) + 1
+            # TodayILearned-f2ruz nums
+            #  key_value = sub[1] + '-' + sub[2]
+            #  conversation_fact_nums[key_value] = conversation_fact_nums.get(key_value, 0) + 1
 
     return raw_facts, facts, hash_values, subreddit_names, \
         conversation_ids, domain_names, \
@@ -409,65 +403,60 @@ if __name__ == '__main__':
         response_scores, dialogue_turns, conversation_response_nums, \
         abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger)
 
-    logger.info('conversation_max_length: %d ' %
-                conversation_max_length)  # 2429
+    logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
 
     # save conversation response nums
-    save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
+    #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
     # save raw pair
-    save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
+    #  save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
 
     # save abnormal_conversations, abnormal_responses
-    save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
-    save_abnormal_datas(abnormal_responses, 'abnormal_responses.txt')
+    #  save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
+    #  save_abnormal_datas(abnormal_responses, 'abnormal_responses.txt')
 
     # re-save conversations, responses, and facts
     # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-    save_data_to_pair(opt, conversations, responses, conversation_hash_values,
-                      filename='conversations_responses.pair.txt')
+    save_data_to_pair(opt, conversations, responses, conversation_hash_values, filename='conversations_responses.pair.txt')
 
-    save_distribution(conversations_length_distribution, 'conversations')
-    save_distribution(responses_length_distribution, 'responses')
+    #  save_distribution(conversations_length_distribution, 'conversations')
+    #  save_distribution(responses_length_distribution, 'responses')
 
-    stat_frequency(conversations, ['conversations'], 0, 0, logger)
-    stat_frequency(responses, ['responses'], 0, 0, logger)
+    #  stat_frequency(conversations, ['conversations'], 0, 0, logger)
+    #  stat_frequency(responses, ['responses'], 0, 0, logger)
 
     # share a vocab
-    if model_name == 'seq2seq':
-        datas = conversations + responses
-        datas_name = ['conversations', 'responses']
-    else:
-        # read facts
-        raw_facts, facts, facts_hash_values, \
-            facts_subreddit_names, facts_conversation_ids, \
-            domain_names, conversation_fact_nums, \
-            fact_max_length, facts_length_distribution, \
-            abnormal_facts = read_facts(opt.facts_file_path, logger)
+    datas = conversations + responses
+    datas_name = ['conversations', 'responses']
 
-        logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
+    # read facts
+    raw_facts, facts, facts_hash_values, \
+        facts_subreddit_names, facts_conversation_ids, \
+        domain_names, conversation_fact_nums, \
+        fact_max_length, facts_length_distribution, \
+        abnormal_facts = read_facts(opt.facts_file_path, logger)
 
-        # save raw facts to txt
-        save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names,
-                    os.path.join(opt.save_path, 'facts.txt'))
+    #  logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
-        # save conversations, responses and facts count
-        save_conversations_responses_facts_count(conversations, responses, facts)
+    # save raw facts to txt
+    #  save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
 
-        # save conversation fact nums
-        save_conversation_response_facts_nums(
-            conversation_fact_nums, 'conversation_fact_nums.txt')
+    # save conversations, responses and facts count
+    #  save_conversations_responses_facts_count(conversations, responses, facts)
 
-        # save abnormal_facts
-        save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
+    # save conversation fact nums
+    #  save_conversation_response_facts_nums(conversation_fact_nums, 'conversation_fact_nums.txt')
 
-        # save lens distribution
-        save_distribution(facts_length_distribution, 'facts')
-        stat_frequency(facts, ['facts'], 0, 0, logger)
+    # save abnormal_facts
+    #  save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
 
-        datas = conversations + responses + facts
-        datas_name = ['conversations', 'responses', 'facts']
+    # save lens distribution
+    #  save_distribution(facts_length_distribution, 'facts')
+    #  stat_frequency(facts, ['facts'], 0, 0, logger)
+
+    #  datas = conversations + responses + facts
+    #  datas_name = ['conversations', 'responses', 'facts']
 
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
         datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
@@ -501,6 +490,7 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
+    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None, vocab, opt.fasttext_vec_file, opt.fasttext_vec_dim,
         None, os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
@@ -511,6 +501,7 @@ if __name__ == '__main__':
     # save out of vocab words
     save_out_of_vocab_words(
         out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
+    """
 
     """
     # training own word embedding.
@@ -539,6 +530,8 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
+
+    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -555,4 +548,6 @@ if __name__ == '__main__':
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
+    """
+
     logger.info('Preprocess finished.')
