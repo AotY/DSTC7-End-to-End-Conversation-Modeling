@@ -41,8 +41,7 @@ class ReduceState(nn.Module):
             return (reduce_h, reduce_c)
         else:
             h = hidden_state
-            #  print(hidden_state)
-            reduce_h = F.relu(self.reduce_h(torch.cat((h[:h.shape[0] // 2], h[h.shape[0] // 2:]) ,dim=2))) # [num_layers, batch_size, hidden_size]
+            reduce_h = F.relu(self.reduce_h(torch.cat((h[:h.shape[0] // 2], h[h.shape[0] // 2:]), dim=2))) # [num_layers, batch_size, hidden_size]
             return reduce_h
 
         #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))

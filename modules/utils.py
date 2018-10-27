@@ -61,7 +61,6 @@ def init_linear_wt(linear):
 def init_wt_normal(wt):
     wt.data.normal_(std=trunc_norm_init_std)
 
-
 def init_wt_unif(wt):
     wt.data.uniform_(-rand_unif_init_mag, rand_unif_init_mag)
 

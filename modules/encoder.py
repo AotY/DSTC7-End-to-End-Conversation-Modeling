@@ -13,8 +13,9 @@ import math
 import torch
 import torch.nn as nn
 
-from modules.utils import init_lstm_wt
+from modules.utils import init_wt_normal
 from modules.utils import rnn_factory
+from modules.utils import init_lstm_wt, init_gru_orth
 
 class Encoder(nn.Module):
     def __init__(self,
@@ -32,13 +33,14 @@ class Encoder(nn.Module):
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
         self.rnn_type = rnn_type
-        self.hidden_size = hidden_size
         self.padding_idx = padding_idx
-        self.bidirection_num = 2 if bidirectional else 1
         self.num_layers = num_layers
+        self.bidirection_num = 2 if bidirectional else 1
+        self.hidden_size = hidden_size // self.bidirection_num
 
         # embedding
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, self.padding_idx)
+        init_wt_normal(self.embedding.weight)
 
         # dropout
         self.dropout = nn.Dropout(dropout)
@@ -47,12 +49,15 @@ class Encoder(nn.Module):
         self.rnn = rnn_factory(
             rnn_type,
             input_size=embedding_size,
-            hidden_size=hidden_size,
+            hidden_size=self.hidden_size,
             num_layers=num_layers,
             bidirectional=bidirectional,
             dropout=dropout
         )
-        #  init_lstm_wt(self.lstm)
+        if rnn_type == 'LSTM':
+            init_lstm_orth(self.rnn)
+        else:
+            init_gru_orth(self.rnn)
 
     def forward(self, inputs, inputs_length, hidden_state):
         '''
@@ -102,12 +107,10 @@ class Encoder(nn.Module):
         else:
             hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
-        max_output, _ = outputs.max(dim=0)
-        max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
+        #  max_output, _ = outputs.max(dim=0)
+        #  max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
 
-        # dropout
-        # outputs = self.dropout(outputs)
-        return outputs, hidden_state, max_output
+        return outputs, hidden_state
 
     def init_hidden(self, batch_size, device):
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
