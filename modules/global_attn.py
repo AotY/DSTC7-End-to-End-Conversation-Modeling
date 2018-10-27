@@ -33,6 +33,7 @@ class GlobalAttn(nn.Module):
         elif self.attn_method == 'concat':
             self.attn_linear = nn.Linear(hidden_size * 2, hidden_size)
             self.v = nn.Parameter(torch.FloatTensor(1, hidden_size, device=device))
+        init_linear_wt(self.attn_linear)
 
     def forward(self, hidden_state, encoder_outputs):
         """
