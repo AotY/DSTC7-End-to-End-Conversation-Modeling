@@ -213,7 +213,7 @@ class Dataset:
             if len(history_conversations_ids) > 0:
                 history_input=[]
                 for ids in history_conversations_ids:
-                    ids = torch.LongTensor(ids, device=self.device)
+                    ids = torch.tensor(ids, dtype=torch.long, device=self.device)
                     history_input.append(ids)
                 history_input = torch.stack(history_input, dim=0) #[num, ids]
                 h_encoder_inputs.append(history_input)

@@ -14,11 +14,13 @@ import torch
 import torch.nn as nn
 
 from modules.utils import init_lstm_wt
+from modules.utils import rnn_factory
 
 class SimpleEncoder(nn.Module):
     def __init__(self,
                  vocab_size,
                  embedding_size,
+                 rnn_type,
                  hidden_size,
                  num_layers=1,
                  bidirectional=True,
@@ -29,6 +31,7 @@ class SimpleEncoder(nn.Module):
 
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
+        self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.padding_idx = padding_idx
         self.bidirection_num = 2 if bidirectional else 1
