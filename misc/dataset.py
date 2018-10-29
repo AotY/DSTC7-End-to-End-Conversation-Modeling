@@ -312,6 +312,7 @@ class Dataset:
                             else:
                                 distances.append(np.inf)
 
+                        # sorted
                         sorted_indexes = np.argsort(distances)
                         topk_indexes = sorted_indexes[:topk]
 
@@ -331,7 +332,6 @@ class Dataset:
                             mean_fact_embedded = fact_embedded.mean(dim=0)
                             topk_facts_embedded.append(mean_fact_embedded)
                         topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [topk, embedding_size]
-
 
                         topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
 

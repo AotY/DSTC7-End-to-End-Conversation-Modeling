@@ -443,12 +443,13 @@ if __name__ == '__main__':
         """ computing similarity between conversation and fact """
         #  embedding = load_pre_trained_embedding(vocab_size, vocab.padid)
         filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
+        fasttext = None
         if not os.path.exists(filename):
             fasttext = load_fasttext_model(opt.fasttext_vec)
-            dataset.computing_similarity_facts_offline(fasttext,
-                                                    opt.embedding_size,
-                                                    opt.f_topk,
-                                                    filename)
+        dataset.computing_similarity_facts_offline(fasttext,
+                                                opt.embedding_size,
+                                                opt.f_topk,
+                                                filename)
     model=build_model(vocab_size, vocab.padid)
 
     # Build optimizer.
