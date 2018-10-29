@@ -20,7 +20,7 @@ python train_kg_model.py \
     --min_len 3 \
     --bidirectional \
     --tied \
-	--decoder_type normal \
+	--decoder_type luong \
     --decode_type greedy \
     --beam_width 10 \
     --best_n 5 \
@@ -31,11 +31,11 @@ python train_kg_model.py \
     --max_norm 80.0 \
     --epochs 5 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.7 \
     --seed 7 \
     --device cuda \
     --log_interval 50 \
-    --log_path ./logs/train_{}_model_{}_{}_{}.log \
+    --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.1 \
     --start_epoch 1 \

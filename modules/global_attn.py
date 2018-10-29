@@ -38,19 +38,19 @@ class GlobalAttn(nn.Module):
     def forward(self, hidden_state, encoder_outputs):
         """
         hidden_state: [batch_size, hidden_size]
-        encoder_outputs: [max_len, batch_size, hidden_size * 2]
+        encoder_outputs: [batch_size, max_len, hidden_size]
         """
-        max_len, batch_size, _ = encoder_outputs.shape
+        batch_size, max_len, _ = encoder_outputs.shape
         attn_weights = torch.zeros((batch_size, max_len), device=self.device)  # [batch_size, max_len]
 
         # For each batch of encoder outputs
-        for batch_index in range(batch_size):
+        for bi in range(batch_size):
             #  weight for each encoder_output
-            for len_index in range(max_len):
-                one_encoder_output = encoder_outputs[len_index, batch_index].unsqueeze(0)  # [1, hidden_size]
-                one_hidden_state = hidden_state[batch_index, :].unsqueeze(0)  # [1, hidden_size]
+            for li in range(max_len):
+                one_encoder_output = encoder_outputs[bi, li, :].unsqueeze(0)  # [1, hidden_size]
+                one_hidden_state = hidden_state[bi, :].unsqueeze(0)  # [1, hidden_size]
 
-                attn_weights[batch_index, len_index] = self.score(one_hidden_state, one_encoder_output)
+                attn_weights[bi, li] = self.score(one_hidden_state, one_encoder_output)
 
         # Normalize energies to weights in range 0 to 1
         attn_weights = F.softmax(attn_weights, dim=1)

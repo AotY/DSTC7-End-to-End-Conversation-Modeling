@@ -176,7 +176,8 @@ class Dataset:
             self.reset_data(task)
             cur_indicator=batch_size
 
-        h_encoder_inputs=[]
+        h_encoder_inputs = []
+        #  h_encoder_inputs_length = []
 
         c_encoder_inputs=torch.zeros((self.c_max_len, batch_size),
                                      dtype=torch.long,
@@ -212,9 +213,13 @@ class Dataset:
 			# history inputs
             if len(history_conversations_ids) > 0:
                 history_input=[]
+                #  history_input_length = []
                 for ids in history_conversations_ids:
+                    #  slot_ids = torch.zeros(self.h_max_len, dtype=torch.long, device=self.device)
+                    #  slot_ids[:len(ids)] = ids[:len(ids)]
                     ids = torch.LongTensor(ids, device=self.device)
-                    history_input.append(ids)
+                    history_input.append(slot_ids)
+                    #  history_input_length.append(len(ids))
                 history_input = torch.stack(history_input, dim=0) #[num, ids]
                 h_encoder_inputs.append(history_input)
 
@@ -235,6 +240,8 @@ class Dataset:
                 topk_facts_embedded = topk_facts_embedded.to(self.device)
                 f_encoder_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
+
+        #  h_encoder_inputs = torch.stack(h_encoder_inputs, dim=0) #[batch_size, num, len]
 
         # To long tensor
         c_encoder_inputs_lengths=torch.LongTensor(

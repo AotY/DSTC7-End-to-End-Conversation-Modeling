@@ -52,7 +52,9 @@ class LuongAttnDecoder(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         # attn
-        self.attn = GlobalAttn(self.attn_type, self.hidden_size, device)
+        self.attn = GlobalAttn(self.attn_type,
+                               self.hidden_size,
+                               device)
 
         self.rnn = rnn_factory(
             rnn_type,
@@ -115,14 +117,13 @@ class LuongAttnDecoder(nn.Module):
         if h_encoder_outputs is not None and self.turn_type == 'attention':
             attn_weights_h = self.attn_history(output.squeeze(0), h_encoder_outputs)  # [batch_size, max_len]
             attn_weights_h = attn_weights_h.unsqueeze(1)  # [batch_size, 1, max_len]
-            context_h = torch.bmm(attn_weights_h, h_encoder_outputs.transpose(0, 1))
-            context_h = context_h.transpose(0, 1)  # [1, batch_size, hidden_size]
+            context_history = torch.bmm(attn_weights_h, h_encoder_outputs.transpose(0, 1))
+            context_history = context_history.transpose(0, 1)  # [1, batch_size, hidden_size]
 
-            concat_input = torch.cat((context, context_h, output), dim=2)
+            concat_input = torch.cat((context, context_history, output), dim=2)
             concat_output = torch.tanh(self.concat_history_linear(concat_input))
 
         else:
-
             # [1, batch_size, hidden_size * 2]
             concat_input = torch.cat((context, output), dim=2)
 

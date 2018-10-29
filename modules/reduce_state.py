@@ -24,24 +24,31 @@ class ReduceState(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
 
-        self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
+        #  self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
         #  init_linear_wt(self.reduce_h)
 
-        if rnn_type == 'LSTM':
-            self.reduce_c = nn.Linear(hidden_size * 2, hidden_size)
+        #  if rnn_type == 'LSTM':
+            #  self.reduce_c = nn.Linear(hidden_size * 2, hidden_size)
             #  init_linear_wt(self.reduce_c)
 
     def forward(self, hidden_state, batch_size):
+         """ Init decoder state with last state of the encoder """
+        def _fix_enc_hidden(hidden):
+            # The encoder hidden is  (layers*directions) x batch x dim.
+            # We need to convert it to layers x batch x (directions*dim).
+            hidden = torch.cat([hidden[0:hidden.size(0):2], hidden[1:hidden.size(0):2]], 2)
+            return hidden
+
         # [num_layers * bidirection_num, batch_size, hidden_size]
         if self.rnn_type == 'LSTM':
             h, c = hidden_state
-            reduce_h = F.relu(self.reduce_h(torch.cat((h[:h.shape[0] // 2], h[h.shape[0] // 2:]) ,dim=2))) # [num_layers, batch_size, hidden_size]
-            reduce_c = F.relu(self.reduce_c(torch.cat((c[:c.shape[0] // 2], c[c.shape[0] // 2:]) ,dim=2))) # [num_layers, batch_size, hidden_size]
+            reduce_h = _fix_enc_hidden(h)
+            reduce_c = _fix_enc_hidden(c)
             #  reduce_c = F.relu(self.reduce_c(c.view(-1, batch_size, self.hidden_size * 2)))
             return (reduce_h, reduce_c)
         else:
             h = hidden_state
-            reduce_h = F.relu(self.reduce_h(torch.cat((h[:h.shape[0] // 2], h[h.shape[0] // 2:]), dim=2))) # [num_layers, batch_size, hidden_size]
+            reduce_h = _fix_enc_hidden(h)
             return reduce_h
 
         #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))
