@@ -8,7 +8,7 @@ python train_kg_model.py \
     --turn_num 3 \
     --turn_type dcgm \
     --embedding_size 300 \
-    --pre_trained_embedding data/fasttext_vec_for_vocab_{}.90004.300d.npy \
+    --pre_trained_embedding data/fasttext_vec_for_vocab_{}.50004.300d.npy \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
     --hidden_size 512 \
@@ -32,7 +32,7 @@ python train_kg_model.py \
     --max_norm 80.0 \
     --epochs 7 \
     --batch_size 128 \
-    --teacher_forcing_ratio 0.7 \
+    --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
     --log_interval 50 \
