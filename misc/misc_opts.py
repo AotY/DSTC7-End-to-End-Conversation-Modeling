@@ -37,6 +37,30 @@ def preprocess_opt(parser):
                        default=3,
                        help="Ignores all words with total frequency lower than this.")
 
+    group.add_argument('--c_max_len',
+                       type=int,
+                       help="max len of conversation(including multi-turn dialogue)")
+
+    group.add_argument('--c_min_len',
+                       type=int,
+                       help="min len of conversation(including multi-turn dialogue)")
+
+    group.add_argument('--r_max_len',
+                       type=int,
+                       help="max len of response.")
+
+    group.add_argument('--r_min_len',
+                       type=int,
+                       help="min len of response.")
+
+    group.add_argument('--f_max_len',
+                       type=int,
+                       help="max len of response.")
+
+    group.add_argument('--f_min_len',
+                       type=int,
+                       help="min len of response.")
+
     group.add_argument('--max_vocab_size',
                        default=5e4,
                        type=float,
