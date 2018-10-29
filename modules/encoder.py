@@ -49,7 +49,7 @@ class Encoder(nn.Module):
         self.rnn = rnn_factory(
             rnn_type,
             input_size=embedding_size,
-            hidden_size=hidden_size,
+            hidden_size=self.hidden_size,
             num_layers=num_layers,
             bidirectional=bidirectional,
             dropout=dropout
@@ -90,17 +90,16 @@ class Encoder(nn.Module):
         packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, new_inputs_length)
 
         # [batch_size, hidden_size]
-        outputs, hidden_state = self.rnn(packed_embedded, hidden_state)
+        outputs_packed, hidden_state = self.rnn(packed_embedded, hidden_state)
 
         # unpack
-        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
+        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs_packed)
 
-        if self.bidirection_num == 2:
+        #  if self.bidirection_num == 2:
             #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
-            outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
+            #  outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
 
         # to original sequence
-        outputs = outputs.contiguous()
         outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
         if self.rnn_type == 'LSTM':
             hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
