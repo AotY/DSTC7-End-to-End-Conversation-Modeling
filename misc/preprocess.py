@@ -527,8 +527,6 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
-
-    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -539,12 +537,15 @@ if __name__ == '__main__':
     es_helper.create_index(es, es_helper.index)
 
     # save to elasticsearch, conversaton - response
-    save_to_es(es, zip(conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids,
-                       response_scores, dialogue_turns), doc_type=es_helper.conversation_type)
+    save_to_es(es, zip(conversation_hash_values,
+                       conversation_subreddit_names,
+                       conversation_conversation_ids,
+                       response_scores,
+                       dialogue_turns),
+               doc_type=es_helper.conversation_type)
 
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
-    """
 
     logger.info('Preprocess finished.')
