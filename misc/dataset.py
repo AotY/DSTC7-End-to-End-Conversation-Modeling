@@ -7,6 +7,8 @@ import pickle
 import torch
 import numpy as np
 
+from summa import keywords # for keyword extraction
+
 from misc import es_helper
 from embedding.embedding_score import get_topk_facts
 
@@ -87,19 +89,19 @@ class Dataset:
                         # START: special symbol indicating the start of the
                         # conversation
                         conversation = conversation[10:]
-                        history_conversations = self.parser_conversations(
-                            conversation, 'conversation')
+                        history_conversations = self.parser_conversations(conversation, 'conversation')
                     elif conversation.startswith('eos'):
                         # EOS: special symbol indicating a turn transition
                         conversation = conversation[4:]
-                        history_conversations = self.parser_conversations(
-                            conversation, 'turn')
+                        history_conversations = self.parser_conversations(conversation, 'turn')
                     else:
                         history_conversations = self.parser_conversations(
                             conversation, 'other')
 
                     if history_conversations is None:
                         continue
+                    
+                    raw_conversation = conversation
 
                     # len(history_conversations) <= self.turn_num
                     if self.turn_type == 'concat':
@@ -123,7 +125,7 @@ class Dataset:
                         history_ids = history_ids[-min(self.h_max_len, len(history_ids))]
                         history_conversations_ids.append(history_ids)
 
-                    datas.append((history_conversations_ids, conversation_ids, response_ids, hash_value))
+                    datas.append((raw_conversation, history_conversations_ids, conversation_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -200,7 +202,8 @@ class Dataset:
         facts_texts=[]
 
         batch_data=self._data_dict[task][self._indicator_dict[task]: cur_indicator]
-        for i, (history_conversations_ids, conversation_ids, response_ids, hash_value) in enumerate(batch_data):
+        for i, (conversation, history_conversations_ids, conversation_ids, response_ids, hash_value) in enumerate(batch_data):
+
             # append length
             c_encoder_inputs_lengths.append(len(conversation_ids))
 
@@ -241,8 +244,6 @@ class Dataset:
                 f_encoder_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
 
-        #  h_encoder_inputs = torch.stack(h_encoder_inputs, dim=0) #[batch_size, num, len]
-
         # To long tensor
         c_encoder_inputs_lengths=torch.tensor(c_encoder_inputs_lengths, dtype=torch.long, device=self.device)
         # update _indicator_dict[task]
@@ -250,7 +251,7 @@ class Dataset:
 
         if self.model_type == 'kg':
             #  f_encoder_inputs = torch.cat(f_encoder_inputs, dim=0)
-            f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0)
+            f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0) #[batch_size, topk, embedding_size]
 
         return c_encoder_inputs, c_encoder_inputs_lengths, \
             decoder_inputs, decoder_targets, \
@@ -268,8 +269,8 @@ class Dataset:
         return topk_facts_embedded, topk_facts
 
     def computing_similarity_facts_offline(self,
+                                           fasttext,
                                            embedding_size,
-                                           embedding,
                                            topk,
                                            filename):
 
@@ -286,12 +287,12 @@ class Dataset:
                 """ computing similarity between conversation and facts, then saving to dict"""
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-                    for conversation_ids, _, hash_value in datas:
+                    for cnversation, conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
 
                         # search facts ?
-                        hit_count, facts=es_helper.search_facts(self.es, hash_value)
+                        hit_count, facts = es_helper.search_facts(self.es, hash_value)
 
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
@@ -299,29 +300,54 @@ class Dataset:
                         if len(facts_text) == 0:
                             continue
 
-                        #  print(facts_text)
-                        facts_ids=[self.vocab.words_to_id(fact.split(' ')) for fact in facts_text]
-                        if len(facts_ids) == 0:
-                            continue
+                        #  conversation keywords
+                        conversation_keywords = keywords.keywords(conversation, ratio=0.5)
 
-                        facts_weight=torch.tensor(facts_weight, dtype=torch.float, device=self.device)
+                        # extraction keywords
+                        distances = []
+                        for text, weight in zip(facts_text, facts_weight):
+                            fact_keywords = keywords.keywords(text, ratio=0.5)
+                            if len(fact_keywords) != 0:
+                                distance = fasttext.wmdistance(' '.join(conversation_keywords), ' '.join(fact_keywords))
+                                distances.append(distance / weight)
+                            else:
+                                distances.append(np.inf)
 
+                        sorted_indexes = np.argsort(distances)
+                        topk_indexes = sorted_indexes[:topk]
+
+                        topk_indexes_list = topk_indexes.tolist()
+                        topk_facts_text = [facts_text[topi] for topi in topk_indexes_list]
+
+                        topk_facts_embedded = []
+                        for text in topk_facts_text:
+                            fact_embedded = torch.zeros(embedding_size)
+                            for word in text:
+                                try:
+                                    worde_embedded = torch.tensor(fasttext.get_vector(word)).view(-1)
+                                    fact_embedded.add(worde_embedded)
+                                except KeyError:
+                                    continue
+                            fact_embedded = torch.stack(fact_embedded, dim=0)
+                            mean_fact_embedded = fact_embedded.mean(dim=0)
+                            topk_facts_embedded.append(mean_fact_embedded)
+                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [topk, embedding_size]
+
+
+                        topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
+
+                        """
+                        facts_weight = torch.tensor(facts_weight, dtype=torch.float, device=self.device)
                         facts_ids=[fact_ids[-min(self.fact_max_len, len(facts_ids)):] for fact_ids in facts_ids]
-
                         # score top_k_facts_embedded -> [top_k, embedding_size]
-                        topk_facts_embedded, topk_indexes=get_topk_facts(embedding_size,
+                        topk_facts_embedded, topk_indexes = get_topk_facts(embedding_size,
                                                                             embedding,
                                                                             conversation_ids,
                                                                             facts_ids,
                                                                             topk,
                                                                             facts_weight,
                                                                             self.device)
-                        topk_indexes_list=topk_indexes.tolist()
-                        topk_facts_text=[facts_text[topi]
-                            for topi in topk_indexes_list]
-
-                        topk_facts_embedded_dict[hash_value]=(
-                            topk_facts_embedded, topk_facts_text)
+                        """
 
             # save topk_facts_embedded_dict
             pickle.dump(topk_facts_embedded_dict, open(filename, 'wb'))
@@ -334,7 +360,7 @@ class Dataset:
         for fact in facts:
             if len(fact) < self.min_len:
                 continue
-            fact_str=" ".join(fact)
+            fact_str = " ".join(fact)
             fact_weight=default_weight
             for tag, weight in tag_weight_dict.items():
                 if fact_str.find(tag) != -1:
