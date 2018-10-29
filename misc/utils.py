@@ -4,37 +4,91 @@
 Tokenise a reddit sequence.
 '''
 import re
-from tokenizer import tokenizer
-
+from nltk.tokenize import TweetTokenizer
 
 class Tokenizer:
     def __init__(self):
         # URLs
-        url_regex_str = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+'
+        #  url_regex_str = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+'
 
         number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
-
         self.number_re = re.compile(number_regex_str, re.VERBOSE | re.IGNORECASE)
 
-        self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
-        self.R = tokenizer.RedditTokenizer(preserve_case=False,
-                                           preserve_handles=False,
-                                           preserve_hashes=False,
-                                           regularize=True,
-                                           preserve_emoji=True,
-                                           preserve_url=True)
+    ''' replace number by NUMBER_TAG'''
+    def replace_number(self, tokens):
+        return ['__number__' if self.number_re.search(token) else token for token in tokens]
 
-        self.split_hyphen_str = r'[-|_]+'
+    def tokenize(self, text):
+        #  tokens = self.R.tokenize(text)
+        #  tokens = self.replace_url(tokens)
+        tokens = self.clean_str(text).split()
+        tokens = self.replace_number(tokens)
+        #  tokens = self.split_hyphen(tokens)
+        #  tokens = self.split_quotation(tokens)
+        tokens = [token for token in tokens if len(token.split()) > 0]
+        return tokens
 
-        self.split_hyphen_re = re.compile(self.split_hyphen_str, re.VERBOSE | re.IGNORECASE)
+    def clean_str(self, text):
+        text = text.lower()
+        text = re.sub('^',' ', text)
+        text = re.sub('$',' ', text)
+
+        # url
+        words = []
+        for word in text.split():
+            i = word.find('http')
+            if i >= 0:
+                word = word[:i] + ' ' + '__url__'
+            words.append(word.strip())
+        text = ' '.join(words)
+
+        # remove markdown url
+        text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
+
+        # remove illegal char
+        text = re.sub('__url__','url',text)
+        text = re.sub(r"[^a-za-z0-9():,.!?\"\']", " ", text)
+        text = re.sub('url','__url__',text)
+
+        # contraction
+        add_space = ["'s", "'m", "'re", "n't", "'ll","'ve","'d","'em"]
+        tokenizer = TweetTokenizer(preserve_case=False)
+        text = ' ' + ' '.join(tokenizer.tokenize(text)) + ' '
+        text = text.replace(" won't ", " will n't ")
+        text = text.replace(" can't ", " can n't ")
+        for a in add_space:
+            text = text.replace(a+' ', ' '+a+' ')
+
+        text = re.sub(r'^\s+', '', text)
+        text = re.sub(r'\s+$', '', text)
+        text = re.sub(r'\s+', ' ', text) # remove extra spaces
+
+#print("out=[%s]" % text)
+        return text
+
+if __name__ == '__main__':
+    sequence = 'RT @marcobonzanini: just an example! :D http://example.com #NLP'
+    tokenize = Tokenizer()
+    print(tokenize.preprocess(sequence, lowercase=True))
+    # ['RT', '@marcobonzanini', ':', 'just', 'an', 'example', '!', ':D', 'http://example.com', '#NLP']
+
+
+"""
+    self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
+    self.R = tokenizer.RedditTokenizer(preserve_case=False,
+                                        preserve_handles=False,
+                                        preserve_hashes=False,
+                                        regularize=True,
+                                        preserve_emoji=True,
+                                        preserve_url=True)
+
+    self.split_hyphen_str = r'[-|_]+'
+
+    self.split_hyphen_re = re.compile(self.split_hyphen_str, re.VERBOSE | re.IGNORECASE)
 
     ''' replace url by URL_TAG'''
     def replace_url(self, tokens):
         return ['URL' if self.url_re.search(token) else token for token in tokens]
-
-    ''' replace number by NUMBER_TAG'''
-    def replace_number(self, tokens):
-        return ['NUMBER' if self.number_re.search(token) else token for token in tokens]
 
     def split_hyphen(self, tokens):
         new_tokens = []
@@ -65,26 +119,6 @@ class Tokenizer:
             else:
                 new_tokens.append(token)
         return new_tokens
-
-
-    def tokenize(self, text):
-        tokens = self.R.tokenize(text)
-        tokens = self.replace_url(tokens)
-        tokens = self.replace_number(tokens)
-        tokens = self.split_hyphen(tokens)
-        tokens = self.split_quotation(tokens)
-        tokens = [token for token in tokens if len(token.split()) > 0]
-        return tokens
-
-
-if __name__ == '__main__':
-    sequence = 'RT @marcobonzanini: just an example! :D http://example.com #NLP'
-    tokenize = Tokenizer()
-    print(tokenize.preprocess(sequence, lowercase=True))
-    # ['RT', '@marcobonzanini', ':', 'just', 'an', 'example', '!', ':D', 'http://example.com', '#NLP']
-
-
-"""
     emoticons_str = r'''
                 (?:
                     [:=;] # Eyes
