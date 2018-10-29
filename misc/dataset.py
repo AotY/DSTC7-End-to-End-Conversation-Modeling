@@ -217,7 +217,7 @@ class Dataset:
                 for ids in history_conversations_ids:
                     #  slot_ids = torch.zeros(self.h_max_len, dtype=torch.long, device=self.device)
                     #  slot_ids[:len(ids)] = ids[:len(ids)]
-                    ids = torch.LongTensor(ids, device=self.device)
+                    ids = torch.tensor(ids, dtype=torch.long, device=self.device)
                     history_input.append(slot_ids)
                     #  history_input_length.append(len(ids))
                 history_input = torch.stack(history_input, dim=0) #[num, ids]
@@ -367,7 +367,7 @@ class Dataset:
                     f.write('Generated: %s\n' % generated_text)
                 elif decode_type == 'beam_search':
                     for i, topk_text in enumerate(batch_generated_texts):
-                        f.write('Generated %d: %s\n' % (i, topk_text))
+                        f.write('Generated best_n: %d: %s\n' % (i, topk_text))
 
                 if topk_facts is not None:
                     for fi, fact_text in enumerate(topk_facts):
@@ -393,11 +393,11 @@ class Dataset:
                 batch_generated_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
-                topk_text_ids=batch_utterances[bi]
-                topk_texts=[]
-                for ids in topk_text_ids:
-                    text=self.vocab.ids_to_text(ids)
-                    topk_texts.append(text)
-                batch_generated_texts.append(topk_texts)
+                best_n_ids = batch_utterances[bi]
+                best_n_texts=[]
+                for ids in best_n_ids:
+                    text = self.vocab.ids_to_text(ids)
+                    best_n_texts.append(text)
+                batch_generated_texts.append(best_n_texts)
 
         return batch_generated_texts

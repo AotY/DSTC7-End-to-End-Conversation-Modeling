@@ -8,8 +8,6 @@ import argparse
 
 sys.path.append('..')
 
-import numpy as np
-
 from misc.vocab import Vocab
 from misc.utils import Tokenizer
 from misc.misc_opts import preprocess_opt
@@ -35,8 +33,7 @@ Read convos file.
 '''
 
 
-def read_convos(convos_file_path, logger=None):
-
+def read_convos(convos_file_path, logger, opt):
     conversations = []
     responses = []
 
@@ -95,7 +92,7 @@ def read_convos(convos_file_path, logger=None):
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
 
-            if conversation_length <=1 or response_length <= 1:
+            if conversation_length <= opt.c_min_len or conversation_length >= opt.c_max_len or response_length <= opt.r_min_len or response_length >= opt.r_max_len:
                 continue
 
             if response_length <= 7:
@@ -146,7 +143,7 @@ Read facts file.
 '''
 
 
-def read_facts(facts_file_path, logger):
+def read_facts(facts_file_path, logger, opt):
     # 读取  facts，保存到
     facts = []
     raw_facts = []
@@ -175,11 +172,11 @@ def read_facts(facts_file_path, logger):
             fact = sub[-1]
 
             fact_tokens = tokenizer.tokenize(fact)
+            fact_len = len(fact_tokens)
             # skip if source has nothing
-            if len(fact_tokens) <= 1:
+            if fact_len <= opt.f_min_len or fact_len >= opt.f_max_len:
                 continue
 
-            fact_len = len(fact_tokens)
             #  max_len = max(max_len, fact_len)
             #  len_distribution[fact_len] = len_distribution.get(fact_len, 0) + 1
 
@@ -401,7 +398,7 @@ if __name__ == '__main__':
         responses_length_distribution, response_max_length, \
         conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids, \
         response_scores, dialogue_turns, conversation_response_nums, \
-        abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger)
+        abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger, opt)
 
     logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
     logger.info('response_max_length: %d ' % response_max_length)  # 186
@@ -435,7 +432,7 @@ if __name__ == '__main__':
         facts_subreddit_names, facts_conversation_ids, \
         domain_names, conversation_fact_nums, \
         fact_max_length, facts_length_distribution, \
-        abnormal_facts = read_facts(opt.facts_file_path, logger)
+        abnormal_facts = read_facts(opt.facts_file_path, logger, opt)
 
     #  logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 

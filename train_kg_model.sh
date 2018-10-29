@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=7
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_kg.dict \
+    --vocab_path data/vocab_word2idx_seq2seq.dict \
     --turn_num 3 \
     --turn_type dcgm \
     --embedding_size 300 \
@@ -26,10 +26,10 @@ python train_kg_model.py \
     --best_n 5 \
     --attn_type general \
     --f_max_len 50 \
-    --f_topk 10 \
+    --f_topk 20 \
     --lr 0.001 \
     --max_norm 80.0 \
-    --epochs 5 \
+    --epochs 7 \
     --batch_size 128 \
     --teacher_forcing_ratio 0.7 \
     --seed 7 \
@@ -41,6 +41,6 @@ python train_kg_model.py \
     --start_epoch 1 \
     --task train \
     --model_type seq2seq
-    # --checkpoint ./models/checkpoint.epoch-1_seq2seq_3_concat.pth
+    # --checkpoint ./models/checkpoint.epoch-1_kg_3_dcgm.pth
 
 /

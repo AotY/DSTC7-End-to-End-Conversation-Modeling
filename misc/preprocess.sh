@@ -10,7 +10,7 @@ python preprocess.py \
     --r_max_len 50 \
     --r_min_len 3 \
     --f_max_len 220\
-    --f_min_lne 3 \
+    --f_min_len 3 \
     --min_count 4 \
     --max_vocab_size 5e4 \
     --word_embedding_model_name v1.0_word_embedding \

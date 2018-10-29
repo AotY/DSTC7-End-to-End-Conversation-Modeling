@@ -254,7 +254,7 @@ def decode(model, dataset, vocab):
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            batch_utterances=model.decode(
+            batch_utterances = model.decode(
                 h_encoder_inputs,
                 c_encoder_inputs,  # LongTensor
                 c_encoder_inputs_length,
@@ -269,7 +269,7 @@ def decode(model, dataset, vocab):
 
             # generate sentence, and save to file
             # [max_length, batch_size]
-            batch_texts=dataset.generating_texts(batch_utterances,
+            batch_texts = dataset.generating_texts(batch_utterances,
                                                    opt.batch_size,
                                                    opt.decode_type)
 
@@ -277,7 +277,7 @@ def decode(model, dataset, vocab):
             dataset.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
-                                         os.path.join(opt.save_path, '%s_generated_texts_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, time_str, opt.turn_num, opt.turn_type)),
+                                         os.path.join(opt.save_path, 'generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, time_str, opt.turn_num, opt.turn_type)),
                                          opt.decode_type)
 
 
