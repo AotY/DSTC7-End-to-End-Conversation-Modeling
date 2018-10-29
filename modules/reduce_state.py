@@ -5,7 +5,6 @@
 # Distributed under terms of the MIT license.
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from modules.utils import init_linear_wt
 
@@ -36,7 +35,7 @@ class ReduceState(nn.Module):
         def _fix_enc_hidden(hidden):
             # The encoder hidden is  (layers*directions) x batch x dim.
             # We need to convert it to layers x batch x (directions*dim).
-            hidden = torch.cat([hidden[0:hidden.size(0):2], hidden[1:hidden.size(0):2]], 2)
+            hidden = torch.cat([hidden[0:hidden.size(0):2], hidden[1:hidden.size(0):2]], dim=2)
             return hidden
 
         # [num_layers * bidirection_num, batch_size, hidden_size]
