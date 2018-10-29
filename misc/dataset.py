@@ -100,7 +100,7 @@ class Dataset:
 
                     if history_conversations is None:
                         continue
-                    
+
                     raw_conversation = conversation
 
                     # len(history_conversations) <= self.turn_num
@@ -261,8 +261,7 @@ class Dataset:
 
     def assembel_facts(self, hash_value):
         # load top_k facts
-        topk_facts_embedded, topk_facts=self.topk_facts_embedded_dict.get(hash_value,
-                                                                             (None, None))
+        topk_facts_embedded, topk_facts=self.topk_facts_embedded_dict.get(hash_value, (None, None))
         if topk_facts_embedded is None:
             return (torch.zeros((self.f_topk, self.embedding_size), device=self.device), [])
 
@@ -287,7 +286,7 @@ class Dataset:
                 """ computing similarity between conversation and facts, then saving to dict"""
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-                    for cnversation, conversation_ids, _, hash_value in datas:
+                    for conversation, _, conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
 
