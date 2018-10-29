@@ -148,8 +148,8 @@ class KGModel(nn.Module):
         # conversation encoder
         c_encoder_hidden_state = self.c_encoder.init_hidden(batch_size, self.device)
         c_encoder_outputs, c_encoder_hidden_state = self.c_encoder(c_encoder_inputs,
-                                                                    c_encoder_inputs_length,
-                                                                    c_encoder_hidden_state)
+                                                                   c_encoder_inputs_length,
+                                                                   c_encoder_hidden_state)
 
         # cat h_encoder and c_encoder, rnn -> GRU
         if h_encoder_hidden_state is not None:

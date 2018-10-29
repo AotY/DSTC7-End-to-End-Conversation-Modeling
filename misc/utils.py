@@ -4,6 +4,7 @@
 Tokenise a reddit sequence.
 '''
 import re
+#  from tokenizer import tokenizer
 from nltk.tokenize import TweetTokenizer
 
 class Tokenizer:
@@ -63,7 +64,6 @@ class Tokenizer:
         text = re.sub(r'\s+$', '', text)
         text = re.sub(r'\s+', ' ', text) # remove extra spaces
 
-#print("out=[%s]" % text)
         return text
 
 if __name__ == '__main__':

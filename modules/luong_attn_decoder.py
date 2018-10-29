@@ -63,6 +63,7 @@ class LuongAttnDecoder(nn.Module):
             num_layers=num_layers,
             dropout=dropout
         )
+
         if rnn_type == 'LSTM':
             init_lstm_orth(self.rnn)
         else:
@@ -107,10 +108,10 @@ class LuongAttnDecoder(nn.Module):
 
         # Calculate attention from current RNN state and all encoder outputs;
         # apply to encoder outputs to get weighted average<Paste>
-        attn_weights = self.attn(output.squeeze(0), c_encoder_outputs.transpose(0, 1))  # [batch_size, max_len]
+        attn_weights = self.attn(output.transpose(0, 1), c_encoder_outputs.transpose(0, 1))  # [batch_size, 1, max_len]
 
         # [batch_size, 1, hidden_size]
-        context = torch.bmm(attn_weights.unsqueeze(1), c_encoder_outputs.transpose(0, 1))
+        context = torch.bmm(attn_weights, c_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1)  # [1, batch_size, hidden_size]
 
         if h_encoder_outputs is not None and self.turn_type == 'attention':
