@@ -29,7 +29,7 @@ python train_kg_model.py \
     --f_topk 20 \
     --lr 0.001 \
     --max_norm 80.0 \
-    --epochs 5 \
+    --epochs 10 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 7 \
@@ -41,6 +41,6 @@ python train_kg_model.py \
     --start_epoch 1 \
     --task train \
     --model_type kg \
-    --checkpoint ./models/checkpoint.epoch-1_kg_3_dcgm.pth
+    --checkpoint ./models/checkpoint.epoch-4_kg_3_dcgm.pth
 
 /
