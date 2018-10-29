@@ -13,6 +13,7 @@ from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt
+from modules.beam_search import BeamSearch
 
 """
 KGModel
@@ -121,6 +122,8 @@ class KGModel(nn.Module):
                 tied
             )
 
+        self.beam_search = BeamSearch()
+
     def forward(self,
                 h_encoder_inputs,
                 c_encoder_inputs,
@@ -132,7 +135,7 @@ class KGModel(nn.Module):
                 teacher_forcing_ratio):
         '''
         input:
-            h_encoder_inputs: [[num, h_max], ...]
+            h_encoder_inputs: [[[ids], ...], ...]
             c_encoder_inputs: [seq_len, batch_size]
             c_encoder_inputs_length: [batch_size]
             decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
@@ -150,7 +153,8 @@ class KGModel(nn.Module):
 
         # cat h_encoder and c_encoder, rnn -> GRU
         if h_encoder_hidden_state is not None:
-            c_encoder_hidden_state = torch.cat((h_encoder_hidden_state, c_encoder_hidden_state), dim=2) #[num_layers * bidirection_num, batch, hidden_size]
+            #  c_encoder_hidden_state = torch.cat((h_encoder_hidden_state, c_encoder_hidden_state), dim=2) #[num_layers * bidirection_num, batch, hidden_size]
+            c_encoder_hidden_state = torch.add(h_encoder_hidden_state, c_encoder_hidden_state)
 
         decoder_hidden_state = self.reduce_state(c_encoder_hidden_state, batch_size)
 
@@ -210,12 +214,13 @@ class KGModel(nn.Module):
         # c encoder
         c_encoder_hidden_state = self.c_encoder.init_hidden(batch_size, self.device)
         c_encoder_outputs, c_encoder_hidden_state = self.c_encoder(c_encoder_inputs,
-                                                                                         c_encoder_inputs_length,
-                                                                                         c_encoder_hidden_state)
+                                                                   c_encoder_inputs_length,
+                                                                   c_encoder_hidden_state)
 
         # cat h_encoder and c_encoder, rnn -> GRU
         if h_encoder_hidden_state is not None:
-            c_encoder_hidden_state = torch.cat((h_encoder_hidden_state, c_encoder_hidden_state), dim=2) #[num_layers * bidirection_num, batch, hidden_size]
+            #  c_encoder_hidden_state = torch.cat((h_encoder_hidden_state, c_encoder_hidden_state), dim=2) #[num_layers * bidirection_num, batch, hidden_size]
+            c_encoder_hidden_state = torch.add(h_encoder_hidden_state, c_encoder_hidden_state)
 
         decoder_hidden_state = self.reduce_state(c_encoder_hidden_state, batch_size)
 
@@ -229,9 +234,9 @@ class KGModel(nn.Module):
         decoder_outputs = []
         for i in range(r_max_len):
             decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
-                                                                                       decoder_hidden_state,
-                                                                                       c_encoder_outputs,
-                                                                                       h_encoder_outputs)
+                                                                              decoder_hidden_state,
+                                                                              c_encoder_outputs,
+                                                                              h_encoder_outputs)
 
             decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
             decoder_outputs.append(decoder_output)
@@ -270,7 +275,8 @@ class KGModel(nn.Module):
                                                                     c_encoder_hidden_state)
 
         if h_encoder_hidden_state is not None:
-            c_encoder_hidden_state = torch.cat((h_encoder_hidden_state, c_encoder_hidden_state), dim=2) #[num_layers * bidirection_num, batch, hidden_size]
+            #  c_encoder_hidden_state = torch.cat((h_encoder_hidden_state, c_encoder_hidden_state), dim=2) #[num_layers * bidirection_num, batch, hidden_size]
+            c_encoder_hidden_state = torch.add(c_encoder_hidden_state, h_encoder_hidden_state)
 
         decoder_hidden_state = self.reduce_state(c_encoder_hidden_state, batch_size)
 
@@ -285,9 +291,9 @@ class KGModel(nn.Module):
             decode_outputs = []
             for i in range(r_max_len):
                 decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
-                                                                                    decoder_hidden_state,
-                                                                                    c_encoder_outputs,
-                                                                                    h_encoder_outputs)
+                                                                                  decoder_hidden_state,
+                                                                                  c_encoder_outputs,
+                                                                                  h_encoder_outputs)
 
                 decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
                 decode_outputs.append(decoder_input)
@@ -299,10 +305,24 @@ class KGModel(nn.Module):
             decode_outputs = torch.cat(decode_outputs, dim=0)
             # [len, batch_size]  -> [batch_size, len]
             decode_outputs.transpose_(0, 1)
+            return decode_outputs
         elif decode_type == 'beam_search':
-            pass
+            batch_utterances = self.beam_search(
+                c_encoder_outputs,
+                c_encoder_inputs_length,
+                h_encoder_outputs,
+                decoder_hidden_state,
+                decoder_input,
+                batch_size,
+                beam_width,
+                best_n,
+                eosid,
+                r_max_len
+            )
+            return batch_utterances
 
-        return decode_outputs
+
+
 
     def h_forward(self, h_encoder_inputs, batch_size):
         """history forward

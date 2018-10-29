@@ -15,7 +15,7 @@ import torch.nn as nn
 
 from modules.utils import init_wt_normal
 from modules.utils import rnn_factory
-from modules.utils import init_lstm_wt, init_gru_orth
+from modules.utils import init_lstm_wt, init_gru_orth, init_lstm_orth
 
 class Encoder(nn.Module):
     def __init__(self,
@@ -69,7 +69,6 @@ class Encoder(nn.Module):
             max_output: [1, batch_size, hidden_size * num_directions]
             hidden_state: (h_n, c_n)
         '''
-        # embedded
         # Note: we run this all at once (over multiple batches of multiple sequences)
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
@@ -90,17 +89,16 @@ class Encoder(nn.Module):
         packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, new_inputs_length)
 
         # [batch_size, hidden_size]
-        outputs, hidden_state = self.rnn(packed_embedded, hidden_state)
+        outputs_packed, hidden_state = self.rnn(packed_embedded, hidden_state)
 
         # unpack
-        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
+        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs_packed)
 
-        if self.bidirection_num == 2:
+        #  if self.bidirection_num == 2:
             #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
-            outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
+            #  outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
 
         # to original sequence
-        outputs = outputs.contiguous()
         outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
         if self.rnn_type == 'LSTM':
             hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])

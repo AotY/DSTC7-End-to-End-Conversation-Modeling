@@ -329,9 +329,13 @@ class Seq2SeqModel(nn.Module):
 
         return dialogue_decoder_outputs, dialogue_decoder_attns_std
 
-    def beam_search_decode(self, dialogue_encoder_outputs,
-                           dialogue_encoder_state, dialogue_encoder_inputs_length,
-                           batch_size, beam_width=10, topk=1):
+    def beam_search_decode(self, 
+                           dialogue_encoder_outputs,
+                           dialogue_encoder_state, 
+                           dialogue_encoder_inputs_length,
+                           batch_size, 
+                           beam_width=10, 
+                           topk=1):
         """
         dialogue_encoder_outputs: [max_length, batch_size, hidden_size]
         dialogue_encoder_state: [num_layers* \
