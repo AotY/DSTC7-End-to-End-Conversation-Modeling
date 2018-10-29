@@ -92,7 +92,7 @@ class LuongAttnDecoder(nn.Module):
 		Args:
 			input: [1, batch_size]  LongTensor
 			hidden_state: [num_layers, batch_size, hidden_size]
-			c_encoder_outputs: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
+			c_encoder_outputs: [seq_len, batch, hidden_size]
 			h_encoder_outputs: [len, batch_size, hidden_size]
 			hidden_state: (h_n, c_n)
         '''
