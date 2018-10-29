@@ -21,8 +21,8 @@ class Tokenizer:
                                            preserve_handles=False,
                                            preserve_hashes=False,
                                            regularize=True,
-                                           preserve_emoji=False,
-                                           preserve_url=False)
+                                           preserve_emoji=True,
+                                           preserve_url=True)
 
         self.split_hyphen_str = r'[-|_]+'
 
@@ -69,13 +69,11 @@ class Tokenizer:
 
     def tokenize(self, text):
         tokens = self.R.tokenize(text)
-        #  tokens = self.replace_url(tokens)
+        tokens = self.replace_url(tokens)
         tokens = self.replace_number(tokens)
         tokens = self.split_hyphen(tokens)
         tokens = self.split_quotation(tokens)
         tokens = [token for token in tokens if len(token.split()) > 0]
-        # remove by max len
-        #  tokens = [token for token in tokens if len(token) <= 15]
         return tokens
 
 
