@@ -34,7 +34,6 @@ Read convos file.
 
 
 def read_convos(convos_file_path, logger, opt):
-
     conversations = []
     responses = []
 
