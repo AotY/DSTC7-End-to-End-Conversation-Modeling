@@ -16,6 +16,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from gensim.models import KeyedVectors
+
 from misc.vocab import Vocab
 from kg_model import KGModel
 from misc.dataset import Dataset
@@ -399,6 +401,10 @@ def load_pre_trained_embedding(vocab_size, padid, fixed=True):
     embedding.to(device=device)
     return embedding
 
+def load_fasttext_model(vec_file):
+    fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
+    return fasttext
+
 def load_checkpoint(filename):
     checkpoint=torch.load(filename)
     return checkpoint
@@ -435,12 +441,13 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        embedding = load_pre_trained_embedding(vocab_size, vocab.padid)
+        #  embedding = load_pre_trained_embedding(vocab_size, vocab.padid)
+        fasttext = load_fasttext_model(opt.fasttext_vec)
         filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
-        dataset.computing_similarity_facts_offline(opt.embedding_size,
-                                                    embedding,
-                                                    opt.f_topk,
-                                                    filename)
+        dataset.computing_similarity_facts_offline(fasttext,
+                                                   opt.embedding_size,
+                                                   opt.f_topk,
+                                                   filename)
     model=build_model(vocab_size, vocab.padid)
 
     # Build optimizer.

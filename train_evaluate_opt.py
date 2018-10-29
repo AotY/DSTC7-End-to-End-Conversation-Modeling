@@ -52,7 +52,7 @@ def data_set_opt(parser):
                        help='''how to process conversation historys.
                        concat | dcgm1 | dcgm2 : https://arxiv.org/abs/1506.06714
                        hred: https://arxiv.org/abs/1507.04808
-                       attention: 
+                       attention:
                        other:
                        ''')
 
@@ -74,6 +74,10 @@ def model_opt(parser):
     group.add_argument('--pre_trained_embedding',
                        type=str,
                        help='pre trained word embedded.')
+
+    group.add_argument('--fasttext_vec',
+                       type=str,
+                       help='1 million word vectors trained with subword infomation on Wikipedia 2017, UMBC webbase corpus and statmt.org news dataset (16B tokens).')
 
     group.add_argument('--rnn_type',
                        type=str,
