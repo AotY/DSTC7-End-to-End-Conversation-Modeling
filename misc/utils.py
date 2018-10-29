@@ -22,51 +22,49 @@ class Tokenizer:
     def tokenize(self, text):
         #  tokens = self.R.tokenize(text)
         #  tokens = self.replace_url(tokens)
-        tokens = clean_str(text).split()
+        tokens = self.clean_str(text).split()
         tokens = self.replace_number(tokens)
         #  tokens = self.split_hyphen(tokens)
         #  tokens = self.split_quotation(tokens)
         tokens = [token for token in tokens if len(token.split()) > 0]
         return tokens
 
-	def clean_str(self, text):
-		#print("in=[%s]" % text)
-		text = text.lower()
-		text = re.sub('^',' ', text)
-		text = re.sub('$',' ', text)
+    def clean_str(self, text):
+        text = text.lower()
+        text = re.sub('^',' ', text)
+        text = re.sub('$',' ', text)
 
-		# url and tag
-		words = []
-		for word in text.split():
-			i = word.find('http')
-			if i >= 0:
-				word = word[:i] + ' ' + '__url__'
-			words.append(word.strip())
-		text = ' '.join(words)
+        # url
+        words = []
+        for word in text.split():
+            i = word.find('http')
+            if i >= 0:
+                word = word[:i] + ' ' + '__url__'
+            words.append(word.strip())
+        text = ' '.join(words)
 
-		# remove markdown url
-		text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
+        # remove markdown url
+        text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
 
-		# remove illegal char
-		text = re.sub('__url__','url',text)
-		text = re.sub(r"[^a-za-z0-9():,.!?\"\']", " ", text)
-		text = re.sub('url','__url__',text)
+        # remove illegal char
+        text = re.sub('__url__','url',text)
+        text = re.sub(r"[^a-za-z0-9():,.!?\"\']", " ", text)
+        text = re.sub('url','__url__',text)
 
-		# contraction
-		add_space = ["'s", "'m", "'re", "n't", "'ll","'ve","'d","'em"]
-		tokenizer = tweettokenizer(preserve_case=false)
-		text = ' ' + ' '.join(tokenizer.tokenize(text)) + ' '
-		text = text.replace(" won't ", " will n't ")
-		text = text.replace(" can't ", " can n't ")
-		for a in add_space:
-			text = text.replace(a+' ', ' '+a+' ')
+        # contraction
+        add_space = ["'s", "'m", "'re", "n't", "'ll","'ve","'d","'em"]
+        tokenizer = TweetTokenizer(preserve_case=False)
+        text = ' ' + ' '.join(tokenizer.tokenize(text)) + ' '
+        text = text.replace(" won't ", " will n't ")
+        text = text.replace(" can't ", " can n't ")
+        for a in add_space:
+            text = text.replace(a+' ', ' '+a+' ')
 
-		text = re.sub(r'^\s+', '', text)
-		text = re.sub(r'\s+$', '', text)
-		text = re.sub(r'\s+', ' ', text) # remove extra spaces
+        text = re.sub(r'^\s+', '', text)
+        text = re.sub(r'\s+$', '', text)
+        text = re.sub(r'\s+', ' ', text) # remove extra spaces
 
-		#print("out=[%s]" % text)
-		return text
+        return text
 
 if __name__ == '__main__':
     sequence = 'RT @marcobonzanini: just an example! :D http://example.com #NLP'
