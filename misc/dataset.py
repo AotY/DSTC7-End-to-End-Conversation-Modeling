@@ -300,12 +300,12 @@ class Dataset:
                             continue
 
                         #  conversation keywords
-                        conversation_keywords = keywords.keywords(conversation, ratio=0.5)
+                        conversation_keywords = keywords.keywords(conversation, ratio=0.5, split=True)
 
                         # extraction keywords
                         distances = []
                         for text, weight in zip(facts_text, facts_weight):
-                            fact_keywords = keywords.keywords(text, ratio=0.5)
+                            fact_keywords = keywords.keywords(text, ratio=0.5, split=True)
                             if len(fact_keywords) != 0:
                                 distance = fasttext.wmdistance(' '.join(conversation_keywords), ' '.join(fact_keywords))
                                 distances.append(distance / weight)
@@ -322,14 +322,17 @@ class Dataset:
                         topk_facts_embedded = []
                         for text in topk_facts_text:
                             fact_embedded = torch.zeros(embedding_size)
-                            for word in text:
+                            count = 0
+                            text_keywords = keywords.keywords(text, ratio=0.5, split=True)
+                            for word in ' '.join(text_keywords).split():
                                 try:
                                     worde_embedded = torch.tensor(fasttext.get_vector(word)).view(-1)
-                                    fact_embedded.add(worde_embedded)
+                                    fact_embedded.add_(worde_embedded)
+                                    count += 1
                                 except KeyError:
                                     continue
-                            fact_embedded = torch.stack(fact_embedded, dim=0)
-                            mean_fact_embedded = fact_embedded.mean(dim=0)
+                            if count != 0:
+                                mean_fact_embedded = torch.div(fact_embedded, count * 1.0)
                             topk_facts_embedded.append(mean_fact_embedded)
                         topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [topk, embedding_size]
 
