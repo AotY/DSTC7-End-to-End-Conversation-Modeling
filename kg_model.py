@@ -322,8 +322,6 @@ class KGModel(nn.Module):
             return batch_utterances
 
 
-
-
     def h_forward(self, h_encoder_inputs, batch_size):
         """history forward
         Args:
