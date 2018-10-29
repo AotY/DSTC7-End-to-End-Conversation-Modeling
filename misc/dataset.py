@@ -292,6 +292,8 @@ class Dataset:
 
                         # search facts ?
                         hit_count, facts = es_helper.search_facts(self.es, hash_value)
+                        if hit_count == 0:
+                            continue
 
                         # parser html tags, <h1-6> <title> <p> etc.
                         # facts to id
