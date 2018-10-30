@@ -39,12 +39,13 @@ class Node(object):
         score = self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward
         return score
 
+    """
     def __lt__(self, other):
         if self.length == self.length:
             return self.log_prob < other.log_prob
         else:
             return self.length < self.length
-
+    """
 
 class BeamSearch(nn.Module):
     def __init__(self, max_queue_size=2000):
@@ -121,7 +122,7 @@ class BeamSearch(nn.Module):
                 #  print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
                 #  print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
 
-                next_decoder_output, next_decoder_hidden_state, _ = decoder(
+                decoder_output, next_decoder_hidden_state, _ = decoder(
                     cur_decoder_input.contiguous(),
                     cur_decoder_hidden_state.contiguous(),
                     c_encoder_outputs_bi.contiguous(),
@@ -129,7 +130,8 @@ class BeamSearch(nn.Module):
                 )
 
                 # put here real beam search of top
-                log_probs, indices = torch.topk(next_decoder_output, beam_width, dim=2)
+                log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
+                print('decoder_output shape: {}'.format(decoder_output.shape))
 
                 for i in range(beam_width):
                     next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
