@@ -24,7 +24,7 @@ python train_kg_model.py \
 	--decoder_type bahdanau \
     --decode_type beam_search \
     --beam_width 10 \
-    --best_n 5 \
+    --best_n 2 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \

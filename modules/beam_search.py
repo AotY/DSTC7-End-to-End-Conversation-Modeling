@@ -40,7 +40,10 @@ class Node(object):
         return score
 
     def __lt__(self, other):
-        return self.log_prob < other.log_prob
+        if self.length == self.length:
+            return self.log_prob < other.log_prob
+        else:
+            return self.length < self.length
 
 
 class BeamSearch(nn.Module):
@@ -79,7 +82,6 @@ class BeamSearch(nn.Module):
 
             # Number of sentence to generate
             res_nodes = []
-            number_required = min((best_n + 1), best_n - len(res_nodes))
 
             # starting node
             init_node = Node(init_decoder_hidden_state, None, init_decoder_input, 0, 1)
@@ -87,6 +89,7 @@ class BeamSearch(nn.Module):
 
             # start the queue
             node_queue.put((-init_node.evaluate(), init_node))
+
             q_size = 1
 
             # start beam search
@@ -108,15 +111,15 @@ class BeamSearch(nn.Module):
 
                     res_nodes.append((cur_score, cur_node))
                     # if we reached maximum
-                    if len(res_nodes) >= number_required:
+                    if len(res_nodes) >= best_n:
                         break
                     else:
                         continue
 
                 # decode for one step using decoder
-                print('cur_decoder_input shape: {}'.format(cur_decoder_input.shape))
-                print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
-                print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
+                #  print('cur_decoder_input shape: {}'.format(cur_decoder_input.shape))
+                #  print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
+                #  print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
 
                 next_decoder_output, next_decoder_hidden_state, _ = decoder(
                     cur_decoder_input.contiguous(),
@@ -141,14 +144,14 @@ class BeamSearch(nn.Module):
                     )
 
                     next_score = - next_node.evaluate()
-                    print(next_node)
-                    print('next_score: ', next_score)
+                    #  print(next_node)
+                    #  print('next_score: ', next_score)
 
                     # put them into queue
                     node_queue.put((next_score, next_node))
 
                 # increase q_size
-                q_size += beam_width - 1
+                q_size += beam_width
 
             # choose n_best paths, back trace them
             if len(res_nodes) == 0:
