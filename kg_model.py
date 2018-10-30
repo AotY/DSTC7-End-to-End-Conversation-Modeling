@@ -9,7 +9,7 @@ from modules.encoder import Encoder
 from modules.simple_encoder import SimpleEncoder
 from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
-#  from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
+from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt
@@ -98,7 +98,18 @@ class KGModel(nn.Module):
                                         self.c_encoder.bidirection_num)
 
         # decoder
-        if decoder_type == 'luong':
+        if decoder_type == 'normal':
+            self.decoder = Decoder(
+                vocab_size,
+                embedding_size,
+                rnn_type,
+                hidden_size,
+                num_layers,
+                dropout,
+                padding_idx,
+                tied
+            )
+        elif decoder_type == 'luong':
             self.decoder = LuongAttnDecoder(vocab_size,
                                             embedding_size,
                                             rnn_type,
@@ -110,16 +121,15 @@ class KGModel(nn.Module):
                                             tied,
                                             attn_type,
                                             device)
-        elif decoder_type == 'normal':
-            self.decoder = Decoder(
+        else:
+            self.decoder = BahdanauAttnDecoder(
                 vocab_size,
                 embedding_size,
-                rnn_type,
                 hidden_size,
                 num_layers,
                 dropout,
                 padding_idx,
-                tied
+                tied,
             )
 
         self.beam_search = BeamSearch()

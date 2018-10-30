@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.global_attn import GlobalAttn
+from modules.utils import init_gru_orth, init_linear_wt, init_wt_normal
 
 class BahdanauAttnDecoder(nn.Module):
     def __init__(self,
@@ -23,7 +24,7 @@ class BahdanauAttnDecoder(nn.Module):
                  padding_idx,
                  tied,
                  attn_type='concat',
-                 device=None):
+                 device='cuda'):
 
         super(BahdanauAttnDecoder, self).__init__()
 
@@ -35,39 +36,44 @@ class BahdanauAttnDecoder(nn.Module):
 
         # embedding
         self.embedding = nn.Embedding(
-            self.vocab_size, self.embedding_size, self.padding_idx)
+            self.vocab_size,
+            self.embedding_size,
+            self.padding_idx
+        )
 
         # dropout
         self.dropout = nn.Dropout(dropout)
 
         # attn
-        self.attn = GlobalAttn(attn_type, self.hidden_size, device)
+        self.attn = GlobalAttn(attn_type, hidden_size)
 
-        # hidden_size -> embedding_size, for attn
-        if self.hidden_size != self.embedding_size:
-            self.hidden_embedded_linear = nn.Linear(self.hidden_size, self.embedding_size)
-
-        # LSTM, * 2 because using concat
-        self.lstm = nn.LSTM(self.embedding_size * 2,
-                            self.hidden_size,
-                            self.num_layers,
-                            dropout=dropout)
+        # rnn, * 2 because using concat
+        self.rnn = nn.GRU(
+            hidden_size + embedding_size,
+            hidden_size,
+            num_layers,
+            dropout=dropout
+        )
+        init_gru_orth(self.rnn)
         # linear
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
 
-        if tied:
+        if tied and embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, input, hidden_state, encoder_outputs):
+    def forward(self, input, hidden_state, c_encoder_outputs, h_encoder_outputs=None):
         '''
-        input: [1, batch_size]  LongTensor
-        hidden_state: [num_layers, batch_size, hidden_size]
-        output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
-        hidden_state: (h_n, c_n)
+        Args:
+            input: [1, batch_size]  LongTensor
+            hidden_state: [num_layers, batch_size, hidden_size]
+            c_encoder_outputs: [max_len, batch_size, hidden_size]
+
+        return:
+            output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
         '''
 
         # embedded
@@ -76,27 +82,17 @@ class BahdanauAttnDecoder(nn.Module):
         #  print(embedded.shape)
 
         # attn_weights
-        # Calculate attention weights and apply to encoder outputs
-        # LSTM hidden_state (h, c)
-        # hidden_state[0][-1]: [batch_size, hidden_size],
-        # encoder_outputs: [max_len, batch_size, hidden_size]
-        # [batch_size, max_len]
-        attn_weights = self.attn(hidden_state[0][-1], encoder_outputs)
-        attn_weights = attn_weights.unsqueeze(1)  # [batch_size, 1, max_len]
-        context = attn_weights.bmm(encoder_outputs.transpose(0, 1))
-        context = context.transpose(0, 1)
+        attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)
+        #  print(attn_weights.shape)
+        #  print(c_encoder_outputs.shape)
+        context = attn_weights.bmm(c_encoder_outputs.transpose(0, 1))
+        context = context.transpose(0, 1) #[1, batch_size, hidden_size]
 
         # Combine embedded input word and attened context, run through RNN
-        if self.hidden_size != self.embedding_size:
-            context = self.hidden_embedded_linear(context)
+        rnn_input = torch.cat((embedded, context), dim=2)
 
-        # [1, batch_size, embedding_size * 2]
-        input_combine = torch.cat((context, embedded), dim=2)
-
-        # lstm
-        output, hidden_state = self.lstm(input_combine, hidden_state)
-
-        # [1, batch_size, hidden_size]
+        # rnn
+        output, hidden_state = self.rnn(rnn_input, hidden_state)
 
         # linear
         output = self.linear(output)
