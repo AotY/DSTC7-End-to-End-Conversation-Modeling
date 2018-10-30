@@ -82,9 +82,7 @@ class BahdanauAttnDecoder(nn.Module):
         #  print(embedded.shape)
 
         # attn_weights
-        attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)
-        #  print(attn_weights.shape)
-        #  print(c_encoder_outputs.shape)
+        attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)  # [batch_size, 1, max_len]
         context = attn_weights.bmm(c_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1) #[1, batch_size, hidden_size]
 
