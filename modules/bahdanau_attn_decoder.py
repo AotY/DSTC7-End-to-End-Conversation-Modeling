@@ -46,7 +46,7 @@ class BahdanauAttnDecoder(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         # attn
-        self.attn = GlobalAttn(attn_type, hidden_size)
+        self.attn = GlobalAttn(attn_type, hidden_size, device)
 
         # rnn, * 2 because using concat
         self.rnn = nn.GRU(

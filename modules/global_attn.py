@@ -20,7 +20,7 @@ GlobalAttn
 
 
 class GlobalAttn(nn.Module):
-    def __init__(self, attn_method, hidden_size):
+    def __init__(self, attn_method, hidden_size, device):
 
         super(GlobalAttn, self).__init__()
 
@@ -29,7 +29,7 @@ class GlobalAttn(nn.Module):
 
         self.attn_linear = nn.Linear(self.hidden_size * 2, hidden_size)
         init_linear_wt(self.attn_linear)
-        self.v = nn.Parameter(torch.rand(hidden_size))
+        self.v = nn.Parameter(torch.rand(hidden_size, device=device))
         # init v
         stdv = 1. / math.sqrt(self.v.size(0))
         self.v.data.normal_(mean=0, std=stdv)
