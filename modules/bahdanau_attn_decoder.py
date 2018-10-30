@@ -40,6 +40,7 @@ class BahdanauAttnDecoder(nn.Module):
             self.embedding_size,
             self.padding_idx
         )
+        init_wt_normal(self.embedding.weight)
 
         # dropout
         self.dropout = nn.Dropout(dropout)
@@ -55,9 +56,11 @@ class BahdanauAttnDecoder(nn.Module):
             dropout=dropout
         )
         init_gru_orth(self.rnn)
+
         # linear
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
+        init_linear_wt(self.linear)
 
         if tied and embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight

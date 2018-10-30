@@ -30,7 +30,7 @@ class GlobalAttn(nn.Module):
         self.attn_linear = nn.Linear(self.hidden_size * 2, hidden_size)
         init_linear_wt(self.attn_linear)
         self.v = nn.Parameter(torch.rand(hidden_size))
-        # init
+        # init v
         stdv = 1. / math.sqrt(self.v.size(0))
         self.v.data.normal_(mean=0, std=stdv)
 
