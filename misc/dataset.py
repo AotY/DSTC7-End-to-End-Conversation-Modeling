@@ -240,12 +240,16 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text=self.assembel_facts(hash_value)
+                if topk_facts_embedded.size(0) != self.f_topk:
+                    tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
+                    tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
+                    topk_facts_embedded = tmp_tensor
                 topk_facts_embedded = topk_facts_embedded.to(self.device)
                 f_encoder_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
 
         # To long tensor
-        c_encoder_inputs_lengths=torch.tensor(c_encoder_inputs_lengths, dtype=torch.long, device=self.device)
+        c_encoder_inputs_lengths = torch.tensor(c_encoder_inputs_lengths, dtype=torch.long, device=self.device)
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
@@ -270,7 +274,7 @@ class Dataset:
     def computing_similarity_facts_offline(self,
                                            fasttext,
                                            embedding_size,
-                                           topk,
+                                           f_topk,
                                            filename):
 
         self.embedding_size=embedding_size
@@ -316,7 +320,7 @@ class Dataset:
 
                         # sorted
                         sorted_indexes = np.argsort(distances)
-                        topk_indexes = sorted_indexes[:topk]
+                        topk_indexes = sorted_indexes[:f_topk]
 
                         topk_indexes_list = topk_indexes.tolist()
                         topk_facts_text = [facts_text[topi] for topi in topk_indexes_list]
@@ -336,7 +340,7 @@ class Dataset:
                             if count != 0:
                                 mean_fact_embedded = torch.div(fact_embedded, count * 1.0)
                             topk_facts_embedded.append(mean_fact_embedded)
-                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [topk, embedding_size]
+                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, embedding_size]
 
                         topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
 
