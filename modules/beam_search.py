@@ -36,14 +36,15 @@ class Node(object):
     def evaluate(self, alpha=1.0):
         reward = 0
         # Add here a function for shaping a reward
-        return self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward
+        score = self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward
+        return score
 
+    def __lt__(self, other):
+        return self.log_prob < other.log_prob
 
 
 class BeamSearch(nn.Module):
-    def __init__(self,
-                 max_queue_size=2000
-                 ):
+    def __init__(self, max_queue_size=2000):
         super(BeamSearch, self).__init__()
         self.max_queue_size = max_queue_size
 
@@ -116,6 +117,7 @@ class BeamSearch(nn.Module):
                 print('cur_decoder_input shape: {}'.format(cur_decoder_input.shape))
                 print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
                 print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
+
                 next_decoder_output, next_decoder_hidden_state, _ = decoder(
                     cur_decoder_input.contiguous(),
                     cur_decoder_hidden_state.contiguous(),
@@ -128,9 +130,7 @@ class BeamSearch(nn.Module):
 
                 for i in range(beam_width):
                     next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
-                    print('next_decoder_input shape: {}'.format(next_decoder_input.shape))
                     log_prob = log_probs[0, 0, i].item()
-                    print('log_prob: ', log_prob)
 
                     next_node = Node(
                         next_decoder_hidden_state,

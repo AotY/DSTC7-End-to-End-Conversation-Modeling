@@ -109,9 +109,6 @@ def train_epochs(model,
                 log_loss_total = 0
                 log_accuracy_total = 0
 
-                # generate sentence
-                decode(model, dataset, vocab)
-
         # save model of each epoch
         save_state = {
             'loss': log_loss_avg,
