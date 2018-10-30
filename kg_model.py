@@ -173,8 +173,8 @@ class KGModel(nn.Module):
         # fact encoder
         if self.model_type == 'kg':
             decoder_hidden_state = self.f_forward(f_encoder_inputs,
-                                                     decoder_hidden_state,
-                                                     batch_size)
+                                                  decoder_hidden_state,
+                                                  batch_size)
 
         # decoder
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
@@ -394,7 +394,7 @@ class KGModel(nn.Module):
         """
         Args:
             - f_encoder_inputs: [batch_size, top_k, embedding_size]
-            - decoder_hidden_state
+            - hidden_state: [num_layers, batch_size, hidden_size]
             - batch_size
         """
         # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
@@ -407,38 +407,14 @@ class KGModel(nn.Module):
         # C [batch_size, topk, hidden_size]
         fact_C = self.fact_linearC(f_encoder_inputs)
 
-        # cur_hidden_state: [num_layers, batch_size, hidden_size]
-        # [batch_size, num_layers, hidden_size]
-        hidden_state.transpose_(0, 1)
         # [batch_size, num_layers, topk]
-        tmpP = torch.bmm(hidden_state, fact_M.transpose(1, 2))
+        tmpP = torch.bmm(hidden_state.transpose(0, 1), fact_M.transpose(1, 2))
         P = F.softmax(tmpP, dim=2)
 
         o = torch.bmm(P, fact_C)  # [batch_size, num_layers, hidden_size]
-        u_ = o + hidden_state
+        u_ = torch.add(o, hidden_state)
         # [num_layers, batch_size, hidden_size]
         u_ = u_.transpose(0, 1).contiguous()
         return u_
 
 
-
-        """
-        return new_hidden_state
-        for cur_hidden_state in hidden_state:
-            # cur_hidden_state: [num_layers, batch_size, hidden_size]
-            # [batch_size, num_layers, hidden_size]
-            cur_hidden_state.transpose_(0, 1)
-            # [batch_size, num_layers, topk]
-            tmpP = torch.bmm(cur_hidden_state, fact_M.transpose(1, 2))
-            P = F.softmax(tmpP, dim=2)
-
-            o = torch.bmm(P, fact_C)  # [batch_size, num_layers, hidden_size]
-            u_ = o + cur_hidden_state
-            # [num_layers, batch_size, hidden_size]
-            u_ = u_.transpose(0, 1).contiguous()
-
-            new_hidden_list.append(u_)
-
-        new_hidden_state = tuple(new_hidden_list)
-        return new_hidden_state
-        """
