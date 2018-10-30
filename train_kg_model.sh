@@ -22,7 +22,7 @@ python train_kg_model.py \
     --bidirectional \
     --tied \
 	--decoder_type bahdanau \
-    --decode_type greedy \
+    --decode_type beam_search \
     --beam_width 10 \
     --best_n 5 \
     --attn_type concat \
@@ -40,8 +40,8 @@ python train_kg_model.py \
     --model_path ./models \
     --eval_split 0.1 \
     --start_epoch 1 \
-    --task train \
-    --model_type kg
-    # --checkpoint ./models/checkpoint.epoch-1_kg_3_dcgm.pth
+    --task decode \
+    --model_type seq2seq \
+    --checkpoint ./models/checkpoint.epoch-3_seq2seq_3_dcgm.pth
 
 /
