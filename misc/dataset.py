@@ -10,7 +10,7 @@ import numpy as np
 from summa import keywords # for keyword extraction
 
 from misc import es_helper
-from embedding.embedding_score import get_topk_facts
+#  from embedding.embedding_score import get_topk_facts
 
 from misc.url_tags_weight import tag_weight_dict
 from misc.url_tags_weight import default_weight
@@ -240,10 +240,13 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text=self.assembel_facts(hash_value)
-                if topk_facts_embedded.size(0) != self.f_topk:
+                if topk_facts_embedded.size(0) < self.f_topk:
                     tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
                     tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
                     topk_facts_embedded = tmp_tensor
+                elif topk_facts_embedded.size(0) > self.f_topk:
+                    topk_facts_embedded = topk_facts_embedded[:self.f_topk]
+
                 topk_facts_embedded = topk_facts_embedded.to(self.device)
                 f_encoder_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)

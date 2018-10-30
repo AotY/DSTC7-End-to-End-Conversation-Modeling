@@ -45,13 +45,7 @@ class BahdanauAttnDecoder(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         # attn
-        self.attn = GlobalAttn(attn_type,
-                               hidden_size,
-                               device)
-
-        # hidden_size -> embedding_size, for attn
-        if self.hidden_size != self.embedding_size:
-            self.hidden_embedded_linear = nn.Linear(self.hidden_size, self.embedding_size)
+        self.attn = GlobalAttn(attn_type, hidden_size)
 
         # rnn, * 2 because using concat
         self.rnn = nn.GRU(
@@ -88,8 +82,7 @@ class BahdanauAttnDecoder(nn.Module):
         #  print(embedded.shape)
 
         # attn_weights
-        attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)
-        attn_weights = attn_weights.unsqueeze(1)  # [batch_size, 1, max_len]
+        attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)  # [batch_size, 1, max_len]
         context = attn_weights.bmm(c_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1) #[1, batch_size, hidden_size]
 
