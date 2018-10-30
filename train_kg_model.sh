@@ -21,11 +21,11 @@ python train_kg_model.py \
     --min_len 3 \
     --bidirectional \
     --tied \
-	--decoder_type luong \
+	--decoder_type bahdanau \
     --decode_type greedy \
     --beam_width 10 \
     --best_n 5 \
-    --attn_type dot \
+    --attn_type concat \
     --f_max_len 50 \
     --f_topk 20 \
     --lr 0.001 \
