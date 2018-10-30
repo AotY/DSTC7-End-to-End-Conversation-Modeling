@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=7
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -35,13 +35,13 @@ python train_kg_model.py \
     --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
-    --log_interval 50 \
+    --log_interval 5 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.1 \
     --start_epoch 1 \
-    --task decode \
-    --model_type seq2seq \
-    --checkpoint ./models/checkpoint.epoch-3_seq2seq_3_dcgm.pth
+    --task train \
+    --model_type seq2seq
+    # --checkpoint ./models/checkpoint.epoch-3_seq2seq_3_dcgm.pth
 
 /
