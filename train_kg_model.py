@@ -63,6 +63,7 @@ if opt.turn_num > 1:
 
 logger.info('h_max_len: %d' % opt.h_max_len)
 logger.info('c_max_len: %d' % opt.c_max_len)
+logger.info('r_max_len: %d' % opt.r_max_len)
 
 def train_epochs(model,
                  dataset,
