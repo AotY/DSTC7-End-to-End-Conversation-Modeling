@@ -58,7 +58,7 @@ class GlobalAttn(nn.Module):
         return:
             attn_weights:
         """
-        weights = F.tanh(self.attn_linear(torch.cat((H, encoder_outputs), dim=2)))
+        weights = torch.tanh(self.attn_linear(torch.cat((H, encoder_outputs), dim=2)))
         # weights: [batch_size, max_len, hidden_size]
         weights = weights.transpose(2, 1) # [batch_size, hidden_size, max_len]
         v = self.v.repeat(encoder_outputs.shape[0], 1).unsqueeze(1) # [batch_size, 1, hidden_size]
