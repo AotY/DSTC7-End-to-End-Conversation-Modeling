@@ -7,8 +7,6 @@
 """
 Beam Search
 """
-import math
-import random
 import operator
 from queue import PriorityQueue
 
@@ -52,7 +50,6 @@ class BeamSearch(nn.Module):
     def forward(self,
                 decoder,
                 c_encoder_outputs,
-                c_encoder_inputs_length,
                 h_encoder_outputs,
                 decoder_hidden_state,
                 decoder_input,
@@ -60,35 +57,31 @@ class BeamSearch(nn.Module):
                 beam_width,
                 best_n,
                 eosid,
-                max_len):
+                r_max_len):
         """
         Args:
             c_encoder_outputs: [len, batch, hidden_size]
-            c_encoder_inputs_length: [max_len, batch_size]
             decoder_hidden_state: [layers, batch, hidden_size]
             decoder_input: [1, batch_size] * sosid
         """
-
         batch_utterances = []
         for bi in range(batch_size):
-
             c_encoder_outputs_bi = c_encoder_outputs[:, bi, :].unsqueeze(1)  # [max_length, 1, hidden_size]
-            c_encoder_inputs_length_bi = c_encoder_inputs_length[:, bi] # [batch]
 
             if h_encoder_outputs is not None:
                 h_encoder_outputs_bi = h_encoder_outputs[:, bi, :].unsqueeze(1) # [num, 1, hidden_size]
             else:
                 h_encoder_outputs_bi = None
 
-            decoder_hidden_bi = decoder_hidden_state[:, bi, :].unsqueeze(1) #[layers, 1, hidden_size]
-            decoder_input_bi = decoder_input[:, bi].unsqueeze(1) #[1, 1]
+            init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1) #[layers, 1, hidden_size]
+            init_decoder_input = decoder_input[:, bi].unsqueeze(1) #[1, 1]
 
             # Number of sentence to generate
             res_nodes = []
             number_required = min((best_n + 1), best_n - len(res_nodes))
 
             # starting node
-            init_node = Node(decoder_hidden_bi, None, decoder_input_bi, 0, 1)
+            init_node = Node(init_decoder_hidden_state, None, init_decoder_input, 0, 1)
             node_queue = PriorityQueue()
 
             # start the queue
@@ -109,7 +102,7 @@ class BeamSearch(nn.Module):
 
                 # break
                 if (cur_decoder_input[0][0].item() == eosid or \
-                    cur_node.length == max_len) and \
+                    cur_node.length == r_max_len) and \
                     cur_node.previous_node != None:
 
                     res_nodes.append((cur_score, cur_node))
@@ -120,31 +113,39 @@ class BeamSearch(nn.Module):
                         continue
 
                 # decode for one step using decoder
-                decoder_output, decoder_hidden_state, _ = decoder(
-                    cur_decoder_input,
-                    cur_decoder_hidden_state,
-                    c_encoder_outputs_bi,
+                print('cur_decoder_input shape: {}'.format(cur_decoder_input.shape))
+                print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
+                print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
+                next_decoder_output, next_decoder_hidden_state, _ = decoder(
+                    cur_decoder_input.contiguous(),
+                    cur_decoder_hidden_state.contiguous(),
+                    c_encoder_outputs_bi.contiguous(),
                     h_encoder_outputs_bi
                 )
 
                 # put here real beam search of top
-                log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
+                log_probs, indices = torch.topk(next_decoder_output, beam_width, dim=2)
 
                 for i in range(beam_width):
-                    decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
-                    print('next_decoder_input shape: {}'.format(decoder_input.shape))
+                    next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
+                    print('next_decoder_input shape: {}'.format(next_decoder_input.shape))
                     log_prob = log_probs[0, 0, i].item()
                     print('log_prob: ', log_prob)
 
-                    next_node = Node(decoder_hidden_state,
-                                    cur_node,
-                                    decoder_input,
-                                    cur_node.log_prob + log_prob,
-                                    cur_node.length + 1)
+                    next_node = Node(
+                        next_decoder_hidden_state,
+                        cur_node,
+                        next_decoder_input,
+                        cur_node.log_prob + log_prob,
+                        cur_node.length + 1
+                    )
 
-                    score = - next_node.evaluate()
+                    next_score = - next_node.evaluate()
+                    print(next_node)
+                    print('next_score: ', next_score)
+
                     # put them into queue
-                    node_queue.put((score, next_node))
+                    node_queue.put((next_score, next_node))
 
                 # increase q_size
                 q_size += beam_width - 1
@@ -169,8 +170,5 @@ class BeamSearch(nn.Module):
 
             batch_utterances.append(utterances)
         return batch_utterances
-
-
-
 
 

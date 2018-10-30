@@ -130,6 +130,8 @@ class KGModel(nn.Module):
                 dropout,
                 padding_idx,
                 tied,
+                attn_type,
+                device
             )
 
         self.beam_search = BeamSearch()
@@ -318,8 +320,8 @@ class KGModel(nn.Module):
             return decode_outputs
         elif decode_type == 'beam_search':
             batch_utterances = self.beam_search(
+                self.decoder,
                 c_encoder_outputs,
-                c_encoder_inputs_length,
                 h_encoder_outputs,
                 decoder_hidden_state,
                 decoder_input,
