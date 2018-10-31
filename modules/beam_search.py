@@ -15,8 +15,8 @@ import torch.nn as nn
 
 class Node(object):
     def __init__(self,
-                 hidden_state,
                  previous_node,
+                 hidden_state,
                  decoder_input,
                  log_prob,
                  length):
@@ -27,8 +27,8 @@ class Node(object):
         length: cur decoded length
         """
 
-        self.hidden_state = hidden_state
         self.previous_node = previous_node
+        self.hidden_state = hidden_state
         self.decoder_input = decoder_input
         self.log_prob = log_prob
         self.length = length
@@ -47,12 +47,12 @@ class Node(object):
             return self.length < self.length
     """
 
-class BeamSearch(nn.Module):
+class BeamSearch():
     def __init__(self, max_queue_size=2000):
         super(BeamSearch, self).__init__()
         self.max_queue_size = max_queue_size
 
-    def forward(self,
+    def decode(self,
                 decoder,
                 c_encoder_outputs,
                 h_encoder_outputs,
@@ -85,7 +85,7 @@ class BeamSearch(nn.Module):
             res_nodes = []
 
             # starting node
-            init_node = Node(init_decoder_hidden_state, None, init_decoder_input, 0, 1)
+            init_node = Node(None, init_decoder_hidden_state, init_decoder_input, 0, 1)
             node_queue = PriorityQueue(self.max_queue_size)
 
             # start the queue
@@ -127,7 +127,6 @@ class BeamSearch(nn.Module):
 
                 # put here real beam search of top
                 log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
-                print('decoder_output shape: {}'.format(decoder_output.shape))
 
                 next_nodes = []
                 for i in range(beam_width):
@@ -135,8 +134,8 @@ class BeamSearch(nn.Module):
                     log_prob = log_probs[0, 0, i].item()
 
                     next_node = Node(
-                        next_decoder_hidden_state,
                         cur_node,
+                        next_decoder_hidden_state,
                         next_decoder_input,
                         cur_node.log_prob + log_prob,
                         cur_node.length + 1
