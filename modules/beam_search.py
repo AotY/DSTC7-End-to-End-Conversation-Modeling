@@ -96,13 +96,11 @@ class BeamSearch():
             # start beam search
             while True:
                 # give up, when decoding takes too long
-                if q_size > self.max_queue_size:
-                    print("q_size: %d , length: %d " % (q_size, node_queue.qsize()))
+                if q_size >= self.max_queue_size:
                     break
 
                 # fetch the best node
                 cur_score, cur_node = node_queue.get()
-                print('cur_score: %d ' % cur_score)
 
                 cur_decoder_input = cur_node.decoder_input
                 cur_decoder_hidden_state = cur_node.hidden_state
@@ -131,6 +129,7 @@ class BeamSearch():
                 log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
 
                 next_nodes = []
+                count = 0
                 for i in range(beam_width):
                     next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
                     log_prob = log_probs[0, 0, i].item()
@@ -145,7 +144,13 @@ class BeamSearch():
 
                     next_score = - next_node.evaluate()
                     #  next_nodes.append((next_score, next_node))
-                    node_queue.put((next_score, next_node))
+                    try:
+                        node_queue.put((next_score, next_node))
+                        count += 1
+                    except TypeError as e:
+                        print('next_score: %d' % next_score)
+                        print(next_node)
+                        continue
 
                 """
                 for i in range(len(next_nodes)):
@@ -153,7 +158,7 @@ class BeamSearch():
                     node_queue.put((score, node))
                 """
 
-                q_size += len(next_nodes)
+                q_size += count
 
             # choose n_best paths, back trace them
             if len(res_nodes) == 0:
@@ -171,10 +176,12 @@ class BeamSearch():
 
                 # reverse
                 utterance.reverse()
-                print('utterance: {}'.format(utterance))
                 utterances.append(utterance)
 
             batch_utterances.append(utterances)
+            del node_queue
+            del res_nodes
+
         return batch_utterances
 
 
