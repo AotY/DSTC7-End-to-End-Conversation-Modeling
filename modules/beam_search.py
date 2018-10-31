@@ -42,9 +42,9 @@ class BeamNode:
     """
     def __lt__(self, other):
         if self.length == self.length:
-            return self.log_prob < other.log_prob
+            return self.log_prob > other.log_prob
         else:
-            return self.length < self.length
+            return self.length > self.length
     """
 
 
@@ -108,11 +108,16 @@ def beam_search(
         # start beam search
         while True:
             # give up, when decoding takes too long
-            if q_size >= max_queue_size:
+            if q_size >= self.max_queue_size or node_queue.qsize() == 0:
                 break
 
             # fetch the best node
-            cur_score, cur_node = node_queue.get()
+            try:
+                cur_score, cur_node = node_queue.get()
+            except TypeError as e:
+                print('cur_score: %d' % cur_score)
+                print(cur_score)
+                continue
 
             cur_decoder_input = cur_node.decoder_input
             cur_decoder_hidden_state = cur_node.hidden_state
