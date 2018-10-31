@@ -13,7 +13,7 @@ from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt
-from modules.beam_search import BeamSearch
+from modules.beam_search import beam_search
 
 """
 KGModel
@@ -133,8 +133,6 @@ class KGModel(nn.Module):
                 attn_type,
                 device
             )
-
-        self.beam_search = BeamSearch()
 
     def forward(self,
                 h_encoder_inputs,
@@ -319,7 +317,7 @@ class KGModel(nn.Module):
             decode_outputs.transpose_(0, 1)
             return decode_outputs
         elif decode_type == 'beam_search':
-            batch_utterances = self.beam_search.decode(
+            batch_utterances = beam_search(
                 self.decoder,
                 c_encoder_outputs,
                 h_encoder_outputs,
