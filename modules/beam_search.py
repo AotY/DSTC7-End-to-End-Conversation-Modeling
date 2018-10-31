@@ -86,7 +86,7 @@ class BeamSearch(nn.Module):
 
             # starting node
             init_node = Node(init_decoder_hidden_state, None, init_decoder_input, 0, 1)
-            node_queue = PriorityQueue()
+            node_queue = PriorityQueue(self.max_queue_size)
 
             # start the queue
             node_queue.put((-init_node.evaluate(), init_node))
@@ -128,8 +128,8 @@ class BeamSearch(nn.Module):
 
                 # put here real beam search of top
                 log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
-                print('decoder_output shape: {}'.format(decoder_output.shape))
 
+                next_nodes = []
                 for i in range(beam_width):
                     next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
                     log_prob = log_probs[0, 0, i].item()
@@ -142,12 +142,16 @@ class BeamSearch(nn.Module):
                         cur_node.length + 1
                     )
 
-                    # put them into queue
-                    node_queue.put((-next_node.evaluate(), next_node))
+                    next_score = - next_node.evaluate()
+                    next_nodes.append((next_score, next_node))
 
-                # increase q_size
-                q_size += beam_width
-                print('q_size: %d' % q_size)
+                for i in range(len(next_nodes)):
+                    score, node = next_nodes[i]
+                    print(score)
+                    print(node)
+                    node_queue.put((score, node))
+
+                q_size += len(next_nodes)
 
             # choose n_best paths, back trace them
             if len(res_nodes) == 0:
