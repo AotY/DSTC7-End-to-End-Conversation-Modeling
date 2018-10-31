@@ -92,6 +92,14 @@ def model_opt(parser):
                        type=int,
                        help='number of layers')
 
+    group.add_argument('--encoder_num_layers',
+                       type=int,
+                       help='number of layers')
+
+    group.add_argument('--decoder_num_layers',
+                       type=int,
+                       help='number of layers')
+
     group.add_argument('--dropout',
                        type=float,
                        default=0.5,
