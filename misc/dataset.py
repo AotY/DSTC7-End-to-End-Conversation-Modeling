@@ -113,8 +113,9 @@ class Dataset:
                     elif self.turn_type == 'hred':
                         conversation = history_conversations[-1]
                         history_conversations = history_conversations[:-1]
-                    else:
-                        pass
+                    elif self.turn_type == 'none':
+                        conversation = history_conversations[-1]
+                        history_conversations = []
 
                     conversation_ids = self.vocab.words_to_id(conversation.split(' '))
                     conversation_ids = conversation_ids[-min(self.c_max_len, len(conversation_ids)):]

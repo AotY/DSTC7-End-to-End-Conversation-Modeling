@@ -7,10 +7,9 @@
 """
 Beam Search
 """
-import operator
-from queue import PriorityQueue
 import torch
-import torch.nn as nn
+
+from queue import PriorityQueue
 
 
 class BeamNode:
@@ -32,20 +31,25 @@ class BeamNode:
         self.decoder_input = decoder_input
         self.log_prob = log_prob
         self.length = length
+        self.score = 0
 
-    def evaluate(self, alpha=1.0):
-        reward = 0.0
-        # Add here a function for shaping a reward
-        score = self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward
-        return score
+    def set_score(self, score):
+        self.score = score
 
-    """
     def __lt__(self, other):
-        if self.length == self.length:
-            return self.log_prob > other.log_prob
-        else:
-            return self.length > self.length
-    """
+        return self.score < other.score
+
+    def __gt__(self, other):
+        return self.score > self.score
+
+
+def evaluate(log_prob, length, alpha=1.0):
+    score = 0.0
+    # Add here a function for shaping a reward
+    reward = 0.5
+
+    score = log_prob / float(length - 1 + 1e-6) + alpha * reward
+    return float(score)
 
 
 """
@@ -57,7 +61,7 @@ class BeamSearch():
 """
 
 
-def beam_search(
+def beam_decode(
     decoder,
     c_encoder_outputs,
     h_encoder_outputs,
@@ -68,8 +72,7 @@ def beam_search(
     best_n,
     eosid,
     r_max_len,
-    max_queue_size=1000):
-
+    max_queue_size=2048):
     """
     Args:
         c_encoder_outputs: [len, batch, hidden_size]
@@ -78,46 +81,43 @@ def beam_search(
     """
     batch_utterances = []
     for bi in range(batch_size):
-        c_encoder_outputs_bi = c_encoder_outputs[:, bi, :].unsqueeze(
-            1)  # [max_length, 1, hidden_size]
+        c_encoder_outputs_bi = c_encoder_outputs[:, bi, :].unsqueeze(1)  # [max_length, 1, hidden_size]
 
         if h_encoder_outputs is not None:
-            h_encoder_outputs_bi = h_encoder_outputs[:, bi, :].unsqueeze(
-                1)  # [num, 1, hidden_size]
+            h_encoder_outputs_bi = h_encoder_outputs[:, bi, :].unsqueeze(1)  # [num, 1, hidden_size]
         else:
             h_encoder_outputs_bi = None
 
-        init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(
-            1)  # [layers, 1, hidden_size]
+        init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1)  # [layers, 1, hidden_size]
         init_decoder_input = decoder_input[:, bi].unsqueeze(1)  # [1, 1]
 
         # Number of sentence to generate
         res_nodes = []
 
+        node_queue = PriorityQueue()
+
         # starting node
-        init_node = BeamNode(None, init_decoder_hidden_state,
+        init_node = BeamNode(None,
+                             init_decoder_hidden_state,
                              init_decoder_input, 0, 1)
 
-        node_queue = PriorityQueue(max_queue_size)
-
         # start the queue
-        node_queue.put((-init_node.evaluate(), init_node))
+        init_score = - evaluate(0, 1)
+        init_node.set_score(init_score)
+        node_queue.put(init_node)
+        #  node_queue.put(tuple([float(init_score), init_node]))
 
         q_size = 1
 
         # start beam search
         while True:
             # give up, when decoding takes too long
-            if q_size >= self.max_queue_size or node_queue.qsize() == 0:
+            if q_size >= max_queue_size or node_queue.qsize() == 0:
                 break
 
             # fetch the best node
-            try:
-                cur_score, cur_node = node_queue.get()
-            except TypeError as e:
-                print('cur_score: %d' % cur_score)
-                print(cur_score)
-                continue
+            cur_node = node_queue.get()
+            cur_score = cur_node.score
 
             cur_decoder_input = cur_node.decoder_input
             cur_decoder_hidden_state = cur_node.hidden_state
@@ -145,8 +145,8 @@ def beam_search(
             # put here real beam search of top
             log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
 
-            next_nodes = []
-            count = 0
+            #  next_nodes = []
+            #  count = 0
             for i in range(beam_width):
                 next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
                 log_prob = log_probs[0, 0, i].item()
@@ -159,30 +159,21 @@ def beam_search(
                     cur_node.length + 1
                 )
 
-                next_score = - next_node.evaluate()
-                #  next_nodes.append((next_score, next_node))
-                try:
-                    node_queue.put((next_score, next_node))
-                    count += 1
-                except TypeError as e:
-                    print('next_score: %d' % next_score)
-                    print(next_node)
-                    continue
+                next_score = - evaluate(next_node.log_prob, next_node.length)
+                next_node.set_score(next_score)
+                node_queue.put(next_node)
 
-            """
-            for i in range(len(next_nodes)):
-                score, node = next_nodes[i]
-                node_queue.put((score, node))
-            """
+                #  node_queue.put(tuple([float(next_score), next_node]))
+                #  count += 1
 
-            q_size += count
+            q_size += beam_width
 
         # choose n_best paths, back trace them
         if len(res_nodes) == 0:
-            res_nodes = [node_queue.get() for _ in range(best_n)]
+            res_nodes = [node_queue.get() for _ in range(min(best_n, len(res_nodes)))]
 
         utterances = []
-        for score, node in sorted(res_nodes, key=operator.itemgetter(0)):
+        for score, node in sorted(res_nodes, key=lambda item: item[0], reverse=True):
             utterance = []
             utterance.append(node.decoder_input.item())
 
@@ -196,7 +187,7 @@ def beam_search(
             utterances.append(utterance)
 
         batch_utterances.append(utterances)
-        del node_queue
-        del res_nodes
+        node_queue = None
+        res_nodes = None
 
     return batch_utterances

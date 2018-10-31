@@ -13,7 +13,7 @@ from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt
-from modules.beam_search import beam_search
+from modules.beam_search import beam_decode
 
 """
 KGModel
@@ -46,7 +46,8 @@ class KGModel(nn.Module):
                  dropout,
                  padding_idx,
                  tied,
-                 device):
+                 device,
+                 pre_trained_weight=None):
         super(KGModel, self).__init__()
 
         self.model_type = model_type
@@ -59,9 +60,10 @@ class KGModel(nn.Module):
         self.decoder_type = decoder_type
         self.device = device
 
-        if turn_num > 1 and turn_type != 'concat':
+        if turn_type != 'concat' or turn_type != 'none':
             self.h_encoder = SimpleEncoder(vocab_size,
                                             embedding_size,
+                                            pre_trained_weight,
                                             rnn_type,
                                             hidden_size,
                                             num_layers,
@@ -72,6 +74,7 @@ class KGModel(nn.Module):
         # c_encoder (conversation encoder)
         self.c_encoder = Encoder(vocab_size,
                                  embedding_size,
+                                 pre_trained_weight,
                                  rnn_type,
                                  hidden_size,
                                  num_layers,
@@ -317,7 +320,7 @@ class KGModel(nn.Module):
             decode_outputs.transpose_(0, 1)
             return decode_outputs
         elif decode_type == 'beam_search':
-            batch_utterances = beam_search(
+            batch_utterances = beam_decode(
                 self.decoder,
                 c_encoder_outputs,
                 h_encoder_outputs,
@@ -342,7 +345,7 @@ class KGModel(nn.Module):
             attention
             hred
         """
-        if self.turn_type == 'concat':
+        if self.turn_type == 'concat' or self.turn_type == 'none':
             return None, None
         elif self.turn_type == 'dcgm':
             # [[h], [h]....]

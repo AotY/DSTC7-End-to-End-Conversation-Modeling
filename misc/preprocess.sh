@@ -4,7 +4,7 @@ python preprocess.py \
     --convos_file_path ./../data/train.convos.txt \
     --facts_file_path ./../data/train.facts.txt \
     --save_path ./../data \
-    --vocab_save_path ./../data/vocab_word2idx_{}.dict \
+    --vocab_path ./../data/vocab_word2idx_{}.dict \
     --c_max_len 210 \
     --c_min_len 7 \
     --r_max_len 50 \
@@ -16,7 +16,7 @@ python preprocess.py \
     --word_embedding_model_name v1.0_word_embedding \
     --google_vec_file /home/taoqing/Research/data/GoogleNews-vectors-negative300.bin \
     --google_vec_dim 300 \
-    --fasttext_vec_file /home/taoqing/Research/data/crawl-300d-2M-subword.vec \
+    --fasttext_vec_file /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --fasttext_vec_dim 300 \
     --binary \
     --window 7 \

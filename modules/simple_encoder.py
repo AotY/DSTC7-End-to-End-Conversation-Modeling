@@ -22,6 +22,7 @@ class SimpleEncoder(nn.Module):
     def __init__(self,
                  vocab_size,
                  embedding_size,
+                 pre_trained_weight,
                  rnn_type,
                  hidden_size,
                  num_layers=1,
@@ -42,7 +43,10 @@ class SimpleEncoder(nn.Module):
 
         # embedding
         self.embedding = nn.Embedding(vocab_size, embedding_size, padding_idx)
-        init_wt_normal(self.embedding.weight)
+        if pre_trained_weight is not None:
+            self.embedding.weight.data.copy_(pre_trained_weight)
+        else:
+            init_wt_normal(self.embedding.weight)
 
         # dropout
         self.dropout = nn.Dropout(dropout)

@@ -82,7 +82,7 @@ def build_vocab_glove(vocab, glove_file, embedding_dim, binary,
                       pre_trained_vocab_embedding_file):
 
     vocab_size = vocab.get_vocab_size()
-    
+
     # init
     vocab_embedded = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
@@ -144,7 +144,7 @@ def build_vocab_glove(vocab, glove_file, embedding_dim, binary,
     save_f.close()
     del glove_model
 
-    return vocab_embedded, out_of_vocab_count, out_of_vocab_words 
+    return vocab_embedded, out_of_vocab_count, out_of_vocab_words
 
 
 '''
@@ -163,7 +163,7 @@ def build_vocab_fastText(fasttest_model, vocab, vec_file, embedding_dim, binary,
 
     if fasttest_model is None:
         # fasttest_model = FastText.load_fasttext_format(vec_file)
-        fasttest_model = KeyedVectors.load_word2vec_format(vec_file, binary=False)
+        fasttest_model = KeyedVectors.load_word2vec_format(vec_file, binary=True)
 
     save_f = open(save_vec_file, 'w', encoding='utf-8')
 
@@ -175,7 +175,7 @@ def build_vocab_fastText(fasttest_model, vocab, vec_file, embedding_dim, binary,
     # write header
     save_f.write(header)
 
-    for id, word in vocab.idx2word.items():
+    for id, word in sorted(vocab.idx2word.items(), key=lambda item: item[0]):
         word_embedded = None
         try:
             word_embedded = fasttest_model[word]
