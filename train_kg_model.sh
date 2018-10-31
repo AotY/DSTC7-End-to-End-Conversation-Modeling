@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -13,7 +13,9 @@ python train_kg_model.py \
     --rnn_type GRU \
     --hidden_size 512 \
     --num_layers 2 \
-    --dropout 0.5 \
+    --encoder_num_layers 2 \
+    --decoder_num_layers 4 \
+    --dropout 0.8 \
     --max_len 35 \
     --h_max_len 35 \
     --c_max_len 35 \

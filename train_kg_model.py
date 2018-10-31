@@ -352,6 +352,8 @@ def build_model(vocab_size, padid):
                 opt.rnn_type,
                 opt.hidden_size,
                 opt.num_layers,
+                opt.encoder_num_layers,
+                opt.decoder_num_lyaers,
                 opt.bidirectional,
 				opt.turn_num,
 				opt.turn_type,

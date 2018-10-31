@@ -25,6 +25,8 @@ class ReduceState(nn.Module):
 
         #  self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
         #  init_linear_wt(self.reduce_h)
+        self.boost_h = nn.Linear(hidden_size // 2, hidden_size)
+        init_linear_wt(self.boost_h)
 
         #  if rnn_type == 'LSTM':
             #  self.reduce_c = nn.Linear(hidden_size * 2, hidden_size)
@@ -46,21 +48,12 @@ class ReduceState(nn.Module):
             #  reduce_c = F.relu(self.reduce_c(c.view(-1, batch_size, self.hidden_size * 2)))
             return (reduce_h, reduce_c)
         else:
-            h = hidden_state
-            reduce_h = _fix_enc_hidden(h)
-            return reduce_h
+            #  h = hidden_state
+            #  reduce_h = _fix_enc_hidden(h)
+            #  return reduce_h
+            return torch.relu(self.boost_h(hidden_state))
 
         #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))
         #  hidden_reduced_c = F.relu(self.reduce_c(c.view(-1, hidden_size * 2)))
         #  return (hidden_reduced_h.unsqueeze(0), hidden_reduced_c.unsqueeze(0)) # h, c dim = 1 x b x hidden_size
-
-
-        """
-        if self.bidirection_num == 2:
-            new_hidden_state = tuple([item[:item.shape[0] // 2, :, :] + item[item.shape[0] // 2:, :, :] for item in hidden_state])
-        else:
-            new_hidden_state = hidden_state
-
-        return new_hidden_state
-        """
 
