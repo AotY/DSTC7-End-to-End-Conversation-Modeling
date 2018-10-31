@@ -88,7 +88,7 @@ def preprocess_opt(parser):
 
     group.add_argument('--binary', action='store_true', help='is binary format.')
 
-    group.add_argument('--vocab_save_path',
+    group.add_argument('--vocab_path',
                        type=str,
                        help='location of save vocab dict file. ')
 

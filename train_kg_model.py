@@ -109,10 +109,10 @@ def train_epochs(model,
                 log_loss_total = 0
                 log_accuracy_total = 0
 
-                logger.info('---------generate-------------')
-                # generate sentence
-                decode(model, dataset, vocab)
-                logger.info('---------generate completed--------')
+                #  logger.info('---------generate-------------')
+                #  # generate sentence
+                #  decode(model, dataset, vocab)
+                #  logger.info('---------generate completed--------')
 
         # save model of each epoch
         save_state = {
@@ -138,7 +138,10 @@ def train_epochs(model,
         save_logger(logger_str)
 
         # generate sentence
+        logger.info('---------generate-------------')
+        # generate sentence
         decode(model, dataset, vocab)
+        logger.info('---------generate completed--------')
 
 ''' start traing '''
 
@@ -187,6 +190,9 @@ def train(model,
 
     # backward
     loss.backward()
+
+    # clip gradients
+    _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_norm)
 
     # optimizer
     optimizer.step()
@@ -334,6 +340,11 @@ def build_criterion(padid):
 def build_model(vocab_size, padid):
     logger.info('Building model...')
 
+    pre_trained_weight = None
+    if os.path.exists(opt.pre_trained_embedding):
+        logger.info('load pre trained embedding...')
+        pre_trained_weight = torch.from_numpy(np.load(opt.pre_trained_embedding))
+
     model=KGModel(
                 opt.model_type,
                 vocab_size,
@@ -349,7 +360,8 @@ def build_model(vocab_size, padid):
                 opt.dropout,
                 padid,
                 opt.tied,
-                device
+                device,
+                pre_trained_weight
         )
 
     model=model.to(device)
@@ -389,23 +401,6 @@ def save_checkpoint(state, is_best, filename):
     torch.save(state, filename)
     if is_best:
         shutil.copy(filename, 'model_best_%s.pth' % opt.model_type)
-
-def load_pre_trained_embedding(vocab_size, padid, fixed=True):
-    ''' embedding for encoder and decoder '''
-    embedding = nn.Embedding(vocab_size,
-                             opt.embedding_size,
-                             padding_idx=padid)
-
-    ''' load pretrained_weight'''
-    if opt.pre_trained_embedding:
-        pre_trained_embedding = opt.pre_trained_embedding.format(opt.model_type)
-        pre_trained_weight = torch.from_numpy(np.load(pre_trained_embedding))
-        embedding.weight.data.copy_(pre_trained_weight)
-        if fixed:
-            embedding.weight.requires_grad = False
-
-    embedding.to(device=device)
-    return embedding
 
 def load_fasttext_model(vec_file):
     fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
@@ -447,7 +442,6 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        #  embedding = load_pre_trained_embedding(vocab_size, vocab.padid)
         filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
         fasttext = None
         if not os.path.exists(filename):

@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 import argparse
+import numpy as np
 
 sys.path.append('..')
 
@@ -258,8 +259,7 @@ build vocab
 def build_vocab(freq_list):
     vocab = Vocab()
     vocab.build_from_freq(freq_list)
-    opt.vocab_save_path = opt.vocab_save_path.format(opt.model_name)
-    vocab.save(opt.vocab_save_path)
+    vocab.save(opt.vocab_path)
     return vocab
 
 
@@ -384,83 +384,88 @@ if __name__ == '__main__':
     # get optional parameters
     parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
     preprocess_opt(parser)
     train_embedding_opt(parser)
     opt = parser.parse_args()
     model_name = opt.model_name
 
     logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
+    opt.vocab_path = opt.vocab_path.format(opt.model_name)
 
-    raw_conversations, raw_responses, \
-        conversations, responses, \
-        conversations_length_distribution, conversation_max_length, \
-        responses_length_distribution, response_max_length, \
-        conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids, \
-        response_scores, dialogue_turns, conversation_response_nums, \
-        abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger, opt)
+    if not os.path.exists(opt.vocab_path):
+        raw_conversations, raw_responses, \
+            conversations, responses, \
+            conversations_length_distribution, conversation_max_length, \
+            responses_length_distribution, response_max_length, \
+            conversation_hash_values, conversation_subreddit_names, conversation_conversation_ids, \
+            response_scores, dialogue_turns, conversation_response_nums, \
+            abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger, opt)
 
-    logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
-    logger.info('response_max_length: %d ' % response_max_length)  # 186
+        logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
+        logger.info('response_max_length: %d ' % response_max_length)  # 186
 
-    # save conversation response nums
-    #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
+        # save conversation response nums
+        #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
-    # save raw pair
-    #  save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
+        # save raw pair
+        #  save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
 
-    # save abnormal_conversations, abnormal_responses
-    #  save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
-    #  save_abnormal_datas(abnormal_responses, 'abnormal_responses.txt')
+        # save abnormal_conversations, abnormal_responses
+        #  save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
+        #  save_abnormal_datas(abnormal_responses, 'abnormal_responses.txt')
 
-    # re-save conversations, responses, and facts
-    # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-    save_data_to_pair(opt, conversations, responses, conversation_hash_values, filename='conversations_responses.pair.txt')
+        # re-save conversations, responses, and facts
+        # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
+        save_data_to_pair(opt, conversations, responses, conversation_hash_values, filename='conversations_responses.pair.txt')
 
-    #  save_distribution(conversations_length_distribution, 'conversations')
-    #  save_distribution(responses_length_distribution, 'responses')
+        #  save_distribution(conversations_length_distribution, 'conversations')
+        #  save_distribution(responses_length_distribution, 'responses')
 
-    #  stat_frequency(conversations, ['conversations'], 0, 0, logger)
-    #  stat_frequency(responses, ['responses'], 0, 0, logger)
+        #  stat_frequency(conversations, ['conversations'], 0, 0, logger)
+        #  stat_frequency(responses, ['responses'], 0, 0, logger)
 
-    # share a vocab
-    datas = conversations + responses
-    datas_name = ['conversations', 'responses']
+        # share a vocab
+        datas = conversations + responses
+        datas_name = ['conversations', 'responses']
 
-    # read facts
-    raw_facts, facts, facts_hash_values, \
-        facts_subreddit_names, facts_conversation_ids, \
-        domain_names, conversation_fact_nums, \
-        fact_max_length, facts_length_distribution, \
-        abnormal_facts = read_facts(opt.facts_file_path, logger, opt)
+        # read facts
+        raw_facts, facts, facts_hash_values, \
+            facts_subreddit_names, facts_conversation_ids, \
+            domain_names, conversation_fact_nums, \
+            fact_max_length, facts_length_distribution, \
+            abnormal_facts = read_facts(opt.facts_file_path, logger, opt)
 
-    #  logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
+        #  logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
-    # save raw facts to txt
-    #  save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
+        # save raw facts to txt
+        #  save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
 
-    # save conversations, responses and facts count
-    #  save_conversations_responses_facts_count(conversations, responses, facts)
+        # save conversations, responses and facts count
+        #  save_conversations_responses_facts_count(conversations, responses, facts)
 
-    # save conversation fact nums
-    #  save_conversation_response_facts_nums(conversation_fact_nums, 'conversation_fact_nums.txt')
+        # save conversation fact nums
+        #  save_conversation_response_facts_nums(conversation_fact_nums, 'conversation_fact_nums.txt')
 
-    # save abnormal_facts
-    #  save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
+        # save abnormal_facts
+        #  save_abnormal_datas(abnormal_facts, 'abnormal_facts.txt')
 
-    # save lens distribution
-    #  save_distribution(facts_length_distribution, 'facts')
-    #  stat_frequency(facts, ['facts'], 0, 0, logger)
+        # save lens distribution
+        #  save_distribution(facts_length_distribution, 'facts')
+        #  stat_frequency(facts, ['facts'], 0, 0, logger)
 
-    #  datas = conversations + responses + facts
-    #  datas_name = ['conversations', 'responses', 'facts']
+        #  datas = conversations + responses + facts
+        #  datas_name = ['conversations', 'responses', 'facts']
 
-    sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
-        datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
+        sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
+            datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
 
-    # save token_nums, total_type_nums
-    save_token_type_nums(total_token_nums, total_type_nums)
-    vocab = build_vocab(sorted_freq_list)
+        # save token_nums, total_type_nums
+        save_token_type_nums(total_token_nums, total_type_nums)
+        vocab = build_vocab(sorted_freq_list)
+    else:
+        vocab = Vocab()
+        vocab.load(opt.vocab_path)
+
     vocab_size = int(vocab.get_vocab_size())
     logger.info('%s vocab_size: %s' % (model_name, vocab_size))
 
@@ -487,18 +492,20 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
-    """
     # fastText
-    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None, vocab, opt.fasttext_vec_file, opt.fasttext_vec_dim,
-        None, os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)), logger)
+    vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None,
+                                                                                   vocab,
+                                                                                   opt.fasttext_vec_file,
+                                                                                   opt.fasttext_vec_dim,
+                                                                                   None,
+                                                                                   os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.txt' % (model_name, vocab_size, opt.google_vec_dim)),
+                                                                                   logger)
 
     np.save(os.path.join(opt.save_path, 'fasttext_vec_for_vocab_%s.%d.%dd.npy' % (model_name, vocab_size, opt.google_vec_dim)), vocab_embedding)
     logger.info('build_vocab_word2vec(fasttext_vec_file) finished. out_of_vocab_count: %d' % out_of_vocab_count)  #
 
     # save out of vocab words
-    save_out_of_vocab_words(
-        out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
-    """
+    save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
 
     """
     # training own word embedding.
@@ -527,6 +534,7 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
+    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -547,5 +555,6 @@ if __name__ == '__main__':
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
+    """
 
     logger.info('Preprocess finished.')
