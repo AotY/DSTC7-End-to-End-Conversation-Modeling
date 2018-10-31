@@ -97,6 +97,7 @@ class BeamSearch():
             while True:
                 # give up, when decoding takes too long
                 if q_size > self.max_queue_size:
+                    print("q_size: %d , length: %d " % (q_size, node_queue.qsize()))
                     break
 
                 # fetch the best node
@@ -146,8 +147,10 @@ class BeamSearch():
 
                 for i in range(len(next_nodes)):
                     score, node = next_nodes[i]
+                    print(score)
+                    print(node)
                     node_queue.put((score, node))
-                # increase q_size
+
                 q_size += len(next_nodes)
 
             # choose n_best paths, back trace them
