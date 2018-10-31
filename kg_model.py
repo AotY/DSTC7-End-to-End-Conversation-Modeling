@@ -319,7 +319,7 @@ class KGModel(nn.Module):
             decode_outputs.transpose_(0, 1)
             return decode_outputs
         elif decode_type == 'beam_search':
-            batch_utterances = self.beam_search(
+            batch_utterances = self.beam_search.decode(
                 self.decoder,
                 c_encoder_outputs,
                 h_encoder_outputs,
