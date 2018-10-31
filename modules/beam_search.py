@@ -86,7 +86,7 @@ class BeamSearch(nn.Module):
 
             # starting node
             init_node = Node(init_decoder_hidden_state, None, init_decoder_input, 0, 1)
-            node_queue = PriorityQueue()
+            node_queue = PriorityQueue(self.max_queue_size)
 
             # start the queue
             node_queue.put((-init_node.evaluate(), init_node))
@@ -118,10 +118,6 @@ class BeamSearch(nn.Module):
                         continue
 
                 # decode for one step using decoder
-                #  print('cur_decoder_input shape: {}'.format(cur_decoder_input.shape))
-                #  print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
-                #  print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
-
                 decoder_output, next_decoder_hidden_state, _ = decoder(
                     cur_decoder_input.contiguous(),
                     cur_decoder_hidden_state.contiguous(),
@@ -133,6 +129,7 @@ class BeamSearch(nn.Module):
                 log_probs, indices = torch.topk(decoder_output, beam_width, dim=2)
                 print('decoder_output shape: {}'.format(decoder_output.shape))
 
+                next_nodes = []
                 for i in range(beam_width):
                     next_decoder_input = indices[0, 0, i].view(-1, 1)  # [1, 1]
                     log_prob = log_probs[0, 0, i].item()
@@ -146,14 +143,13 @@ class BeamSearch(nn.Module):
                     )
 
                     next_score = - next_node.evaluate()
-                    #  print(next_node)
-                    #  print('next_score: ', next_score)
+                    next_nodes.append((next_score, next_node))
 
-                    # put them into queue
-                    node_queue.put((next_score, next_node))
-
+                for i in range(len(next_nodes)):
+                    score, node = next_nodes[i]
+                    node_queue.put((score, node))
                 # increase q_size
-                q_size += beam_width
+                q_size += len(next_nodes)
 
             # choose n_best paths, back trace them
             if len(res_nodes) == 0:
