@@ -41,7 +41,7 @@ python train_kg_model.py \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type seq2seq
+    --model_type kg
     # --checkpoint ./models/checkpoint.epoch-3_seq2seq_3_dcgm.pth
 
 /
