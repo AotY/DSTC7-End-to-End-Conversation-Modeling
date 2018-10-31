@@ -97,6 +97,7 @@ class BeamSearch(nn.Module):
             while True:
                 # give up, when decoding takes too long
                 if q_size > self.max_queue_size:
+                    print("q_size: %d , length: %d " % (q_size, node_queue.qsize()))
                     break
 
                 # fetch the best node
@@ -118,10 +119,6 @@ class BeamSearch(nn.Module):
                         continue
 
                 # decode for one step using decoder
-                #  print('cur_decoder_input shape: {}'.format(cur_decoder_input.shape))
-                #  print('cur_decoder_hidden_state shape: {}'.format(cur_decoder_hidden_state.shape))
-                #  print('c_encoder_outputs_bi shape: {}'.format(c_encoder_outputs_bi.shape))
-
                 decoder_output, next_decoder_hidden_state, _ = decoder(
                     cur_decoder_input.contiguous(),
                     cur_decoder_hidden_state.contiguous(),
@@ -145,15 +142,12 @@ class BeamSearch(nn.Module):
                         cur_node.length + 1
                     )
 
-                    next_score = - next_node.evaluate()
-                    #  print(next_node)
-                    #  print('next_score: ', next_score)
-
                     # put them into queue
-                    node_queue.put((next_score, next_node))
+                    node_queue.put((-next_node.evaluate(), next_node))
 
                 # increase q_size
                 q_size += beam_width
+                print('q_size: %d' % q_size)
 
             # choose n_best paths, back trace them
             if len(res_nodes) == 0:
