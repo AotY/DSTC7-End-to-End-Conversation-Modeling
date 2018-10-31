@@ -412,7 +412,7 @@ class KGModel(nn.Module):
         P = F.softmax(tmpP, dim=2)
 
         o = torch.bmm(P, fact_C)  # [batch_size, num_layers, hidden_size]
-        u_ = torch.add(o, hidden_state)
+        u_ = torch.add(o, hidden_state.transpose(0, 1))
         # [num_layers, batch_size, hidden_size]
         u_ = u_.transpose(0, 1).contiguous()
         return u_

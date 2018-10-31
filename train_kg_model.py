@@ -109,10 +109,10 @@ def train_epochs(model,
                 log_loss_total = 0
                 log_accuracy_total = 0
 
-                logger.info('---------generate-------------')
-                # generate sentence
-                decode(model, dataset, vocab)
-                logger.info('---------generate completed--------')
+                #  logger.info('---------generate-------------')
+                #  # generate sentence
+                #  decode(model, dataset, vocab)
+                #  logger.info('---------generate completed--------')
 
         # save model of each epoch
         save_state = {
