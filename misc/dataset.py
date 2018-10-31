@@ -402,7 +402,7 @@ class Dataset:
                 if decode_type == 'greedy':
                     f.write('Generated: %s\n' % generated_text)
                 elif decode_type == 'beam_search':
-                    for i, topk_text in enumerate(batch_generated_texts):
+                    for i, topk_text in enumerate(generated_text):
                         f.write('Generated best_n: %d: %s\n' % (i, topk_text))
 
                 if topk_facts is not None:
