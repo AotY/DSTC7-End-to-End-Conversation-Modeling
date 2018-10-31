@@ -34,7 +34,7 @@ class Node(object):
         self.length = length
 
     def evaluate(self, alpha=1.0):
-        reward = 0.5
+        reward = 0.0
         # Add here a function for shaping a reward
         score = self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward
         return score
@@ -48,7 +48,7 @@ class Node(object):
     """
 
 class BeamSearch():
-    def __init__(self, max_queue_size=2000):
+    def __init__(self, max_queue_size=1000):
         super(BeamSearch, self).__init__()
         self.max_queue_size = max_queue_size
 
@@ -102,13 +102,14 @@ class BeamSearch():
 
                 # fetch the best node
                 cur_score, cur_node = node_queue.get()
+                print('cur_score: %d ' % cur_score)
 
                 cur_decoder_input = cur_node.decoder_input
                 cur_decoder_hidden_state = cur_node.hidden_state
 
                 # break
                 if (cur_decoder_input[0][0].item() == eosid or \
-                    cur_node.length == r_max_len) and \
+                    cur_node.length >= r_max_len) and \
                     cur_node.previous_node != None:
 
                     res_nodes.append((cur_score, cur_node))
@@ -143,13 +144,14 @@ class BeamSearch():
                     )
 
                     next_score = - next_node.evaluate()
-                    next_nodes.append((next_score, next_node))
+                    #  next_nodes.append((next_score, next_node))
+                    node_queue.put((next_score, next_node))
 
+                """
                 for i in range(len(next_nodes)):
                     score, node = next_nodes[i]
-                    print(score)
-                    print(node)
                     node_queue.put((score, node))
+                """
 
                 q_size += len(next_nodes)
 
