@@ -34,7 +34,7 @@ class Node(object):
         self.length = length
 
     def evaluate(self, alpha=1.0):
-        reward = 0
+        reward = 0.5
         # Add here a function for shaping a reward
         score = self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward
         return score
@@ -169,6 +169,7 @@ class BeamSearch():
 
                 # reverse
                 utterance.reverse()
+                print('utterance: {}'.format(utterance))
                 utterances.append(utterance)
 
             batch_utterances.append(utterances)
