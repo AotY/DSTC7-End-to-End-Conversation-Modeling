@@ -51,10 +51,10 @@ def beam_decode(
         next_c_encoder_outputs = None
         next_h_encoder_outputs = None
 
-        last_scores = [0] * beam_width
+        #  last_scores = [0] * beam_width
         cur_scores = [0] * beam_width
 
-        last_sentences = [[]] * beam_width
+        #  last_sentences = [[]] * beam_width
         cur_sentences = [[]] * beam_width
 
         res = []
@@ -105,11 +105,17 @@ def beam_decode(
                 output = output.view(-1).contiguous()
                 log_probs, indices = output.topk(cur_beam_width)
 
-                next_decoder_input = []
-                next_indices = []
-                for i, (index, prob) in enumerate(zip(indices.tolist(), log_probs.tolist())):
+                tmp_update = []
+                for index, prob in zip(indecs.tolist(), log_probs.tolist()):
                     last_index = index // vocab_size
                     vocab_index = index % vocab_size
+                    tmp_update.append((last_index, vocab_index, prob))
+                tmp_update = sorted(tmp_update, key=lambda item: item[0])
+
+                next_decoder_input = []
+                next_indices = []
+
+                for i, (last_index, vocab_index, prob) in enumerate(tmp_update):
                     print('last_index: %d, vocab_index: %d' % (last_index, vocab_index))
 
                     if vocab_index == eosid:
@@ -120,24 +126,27 @@ def beam_decode(
                         next_decoder_input.append(vocab_index)
                         next_indices.append(i)
 
-                        cur_scores[i] = last_scores[last_index] + prob
-                        cur_sentences[i].extend(last_sentences[i])
-                        cur_sentences[i].append(vocab_index)
+                        cur_scores[i] = cur_scores[last_index] + prob
+                        tmp_sentence = cur_sentences[last_index].copy()
+                        tmp_sentence.append(vocab_index)
+                        cur_sentences[i] = tmp_sentence
+                        del tmp_sentence
 
                 next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device)
                 next_decoder_input = next_decoder_input.view(1, -1)
 
-                next_indices = torch.tensor(next_indices, dtype=torch.long, device=device)
-                next_decoder_hidden_state = hidden_state.index_select(1, next_indices)
-                next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, next_indices)
+                if len(next_indices) != cur_beam_width:
+                    next_indices = torch.tensor(next_indices, dtype=torch.long, device=device)
+                    next_decoder_hidden_state = hidden_state.index_select(1, next_indices)
+                    next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, next_indices)
 
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, next_indices)
 
-                del last_scores
-                del last_sentences
-                last_scores = cur_scores.copy()
-                last_sentences = copy.deepcopy(cur_sentences)
+                #  del last_scores
+                #  del last_sentences
+                #  last_scores = cur_scores.copy()
+                #  last_sentences = copy.deepcopy(cur_sentences)
 
         for score, sentence in zip(cur_scores, cur_sentences):
             res.append((score / len(sentence), sentence))
