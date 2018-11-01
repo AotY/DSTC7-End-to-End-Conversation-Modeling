@@ -9,7 +9,6 @@ Beam Search,
 Original method
 """
 import copy
-import numpy as np
 
 import torch
 
@@ -60,13 +59,13 @@ def beam_decode(
 
         res = []
 
-        for i in range(r_max_len):
+        for ri in range(r_max_len):
 
             if len(cur_scores) == 0 or len(cur_sentences) == 0:
                 break
 
             # init step
-            if i == 0:
+            if ri == 0:
                 output, hidden_state, _ = decoder(
                     init_decoder_input,
                     init_decoder_hidden_state,
