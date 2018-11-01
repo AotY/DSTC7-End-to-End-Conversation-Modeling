@@ -173,11 +173,11 @@ def train(model,
 
     optimizer.zero_grad()
 
-    loss=0
+    loss = 0
 
     # decoder_outputs -> [max_length, batch_size, vocab_sizes]
-    decoder_outputs_argmax=torch.argmax(decoder_outputs, dim=2)
-    accuracy=compute_accuracy(decoder_outputs_argmax, decoder_targets)
+    decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
+    accuracy = compute_accuracy(decoder_outputs_argmax, decoder_targets)
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
@@ -186,7 +186,7 @@ def train(model,
     decoder_targets=decoder_targets.view(-1)
 
     # compute loss
-    loss=criterion(decoder_outputs, decoder_targets)
+    loss = criterion(decoder_outputs, decoder_targets)
 
     # backward
     loss.backward()
@@ -341,13 +341,14 @@ def build_model(vocab_size, padid):
     logger.info('Building model...')
 
     pre_trained_weight = None
-    if os.path.exists(opt.pre_trained_embedding):
+    if opt.pre_trained_embedding and os.path.exists(opt.pre_trained_embedding):
         logger.info('load pre trained embedding...')
         pre_trained_weight = torch.from_numpy(np.load(opt.pre_trained_embedding))
 
     model=KGModel(
                 opt.model_type,
                 vocab_size,
+                opt.pre_embedding_size,
                 opt.embedding_size,
                 opt.rnn_type,
                 opt.hidden_size,
@@ -448,10 +449,11 @@ if __name__ == '__main__':
         fasttext = None
         if not os.path.exists(filename):
             fasttext = load_fasttext_model(opt.fasttext_vec)
+
         dataset.computing_similarity_facts_offline(fasttext,
-                                                opt.embedding_size,
-                                                opt.f_topk,
-                                                filename)
+                                                   opt.pre_embedding_size,
+                                                   opt.f_topk,
+                                                   filename)
     model=build_model(vocab_size, vocab.padid)
 
     # Build optimizer.

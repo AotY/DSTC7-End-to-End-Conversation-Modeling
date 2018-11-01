@@ -71,6 +71,11 @@ def model_opt(parser):
                        default=300,
                        help='embedding size for dialog encoder.')
 
+    group.add_argument('--pre_embedding_size',
+                       type=int,
+                       default=300,
+                       help='pre embedding size for dialog encoder.')
+
     group.add_argument('--pre_trained_embedding',
                        type=str,
                        help='pre trained word embedded.')

@@ -258,7 +258,7 @@ class Dataset:
         self._indicator_dict[task] = cur_indicator
 
         if self.model_type == 'kg':
-            f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0) #[batch_size, topk, embedding_size]
+            f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
 
         return c_encoder_inputs, c_encoder_inputs_lengths, \
             decoder_inputs, decoder_targets, \
@@ -270,17 +270,17 @@ class Dataset:
         # load top_k facts
         topk_facts_embedded, topk_facts=self.topk_facts_embedded_dict.get(hash_value, (None, None))
         if topk_facts_embedded is None:
-            return (torch.zeros((self.f_topk, self.embedding_size), device=self.device), [])
+            return (torch.zeros((self.f_topk, self.pre_embedding_size), device=self.device), [])
 
         return topk_facts_embedded, topk_facts
 
     def computing_similarity_facts_offline(self,
                                            fasttext,
-                                           embedding_size,
+                                           pre_embedding_size,
                                            f_topk,
                                            filename):
 
-        self.embedding_size=embedding_size
+        self.pre_embedding_size=pre_embedding_size
 
         if os.path.exists(filename):
             self.logger.info('Loading topk_facts_embedded_dict')
@@ -330,7 +330,7 @@ class Dataset:
 
                         topk_facts_embedded = []
                         for text in topk_facts_text:
-                            fact_embedded = torch.zeros(embedding_size)
+                            fact_embedded = torch.zeros(pre_embedding_size)
                             count = 0
                             text_keywords = keywords.keywords(text, ratio=0.5, split=True)
                             for word in ' '.join(text_keywords).split():
@@ -343,14 +343,14 @@ class Dataset:
                             if count != 0:
                                 mean_fact_embedded = torch.div(fact_embedded, count * 1.0)
                             topk_facts_embedded.append(mean_fact_embedded)
-                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, embedding_size]
+                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, pre_embedding_size]
 
                         topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
 
                         """
                         facts_weight = torch.tensor(facts_weight, dtype=torch.float, device=self.device)
                         facts_ids=[fact_ids[-min(self.fact_max_len, len(facts_ids)):] for fact_ids in facts_ids]
-                        # score top_k_facts_embedded -> [top_k, embedding_size]
+                        # score top_k_facts_embedded -> [top_k, pre_embedding_size]
                         topk_facts_embedded, topk_indexes = get_topk_facts(embedding_size,
                                                                             embedding,
                                                                             conversation_ids,
