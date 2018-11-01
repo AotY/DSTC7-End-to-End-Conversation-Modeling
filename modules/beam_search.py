@@ -31,6 +31,7 @@ class BeamNode:
         self.decoder_input = decoder_input
         self.log_prob = log_prob
         self.length = length
+
         self.score = 0
 
     def set_score(self, score):
@@ -50,13 +51,12 @@ class BeamNode:
             return (self.score / self.length) > (other.score / other.length)
 
 
-def evaluate_score(log_prob, length, alpha=1.0):
-    score = 0.0
-    # Add here a function for shaping a reward
-    reward = 0.5
+    def evaluate_score(self, alpha=1.0):
+        score = 0.0
+        # Add here a function for shaping a reward
+        reward = 0.5
 
-    score = log_prob / float(length - 1 + 1e-6) + alpha * reward
-    return float(score)
+        self.score = - (self.log_prob / float(self.length - 1 + 1e-6) + alpha * reward)
 
 def beam_decode(
     decoder,
@@ -101,8 +101,7 @@ def beam_decode(
                              init_decoder_input, 0, 1)
 
         # start the queue
-        init_score = - evaluate_score(0, 1)
-        init_node.set_score(init_score)
+        init_node.evaluate_score()
         node_queue.put(init_node)
         #  node_queue.put(tuple([float(init_score), init_node]))
 
@@ -156,8 +155,7 @@ def beam_decode(
                     cur_node.length + 1
                 )
 
-                next_score = - evaluate_score(next_node.log_prob, next_node.length)
-                next_node.set_score(next_score)
+                next_node.evaluate_score()
                 node_queue.put(next_node)
 
         # choose n_best paths, back trace them

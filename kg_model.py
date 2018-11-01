@@ -13,7 +13,8 @@ from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt
-from modules.beam_search import beam_decode
+#  from modules.beam_search import beam_decode
+from modules.beam_search_original import beam_decode
 
 """
 KGModel
@@ -53,6 +54,7 @@ class KGModel(nn.Module):
                  pre_trained_weight=None):
         super(KGModel, self).__init__()
 
+        self.vocab_size = vocab_size
         self.model_type = model_type
         self.embedding_size = embedding_size
         self.pre_embedding_size = pre_embedding_size
@@ -337,7 +339,9 @@ class KGModel(nn.Module):
                 beam_width,
                 best_n,
                 eosid,
-                r_max_len
+                r_max_len,
+                self.vocab_size,
+                self.device
             )
             return batch_utterances
 
