@@ -25,8 +25,8 @@ class ReduceState(nn.Module):
 
         #  self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
         #  init_linear_wt(self.reduce_h)
-        self.boost_h = nn.Linear(hidden_size // 2, hidden_size)
-        init_linear_wt(self.boost_h)
+        #  self.boost_h = nn.Linear(hidden_size // 2, hidden_size)
+        #  init_linear_wt(self.boost_h)
 
         #  if rnn_type == 'LSTM':
             #  self.reduce_c = nn.Linear(hidden_size * 2, hidden_size)

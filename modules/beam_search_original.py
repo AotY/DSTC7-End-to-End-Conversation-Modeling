@@ -9,8 +9,10 @@ Beam Search,
 Original method
 """
 import copy
+import numpy as np
 
 import torch
+
 
 def beam_decode(
     decoder,
@@ -50,8 +52,8 @@ def beam_decode(
         next_c_encoder_outputs = None
         next_h_encoder_outputs = None
 
-        last_scores = np.zeros(beam_width)
-        cur_scores = np.zeros(beam_width)
+        last_scores = [0] * beam_width
+        cur_scores = [0] * beam_width
 
         last_sentences = [[]] * beam_width
         cur_sentences = [[]] * beam_width
@@ -65,27 +67,26 @@ def beam_decode(
 
             # init step
             if i == 0:
-                decoder_output, decoder_hidden_state, _ = decoder(
+                output, hidden_state, _ = decoder(
                     init_decoder_input,
                     init_decoder_hidden_state,
                     init_c_encoder_outputs,
                     init_h_encoder_outputs
-                ) # decoder_output: [1, 1, vocab_size], decoder_hidden_state: [num_layers, 1, hidden_size]
+                ) # output: [1, 1, vocab_size], decoder_hidden_state: [num_layers, 1, hidden_size]
 
-                log_probs, indices = torch.topk(decoder_output, beam_width, dim=2) # [1, 1, beam_width]
+                log_probs, indices = torch.topk(output, beam_width, dim=2) # [1, 1, beam_width]
 
                 # for next step
                 next_decoder_input = indices.squeeze(0)
 
                 # accumulate
-                score = log_probs.view(-1).numpy()
-                last_scores += score
+                last_scores = log_probs.view(-1).tolist()
 
                 for i, vocab_index in enumerate(indices.tolist()):
                     last_sentences[i].append(vocab_index)
 
                 # repeat
-                next_decoder_hidden_state = decoder_hidden_state.repeat(1, beam_width, 1)
+                next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1)
                 next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1)
 
                 if init_h_encoder_outputs is not None:
@@ -94,45 +95,45 @@ def beam_decode(
                 cur_beam_width = next_decoder_input.size(1)
                 print('cur_beam_width: %d' % cur_beam_width)
 
-                decoder_output, decoder_hidden_state, _ = decoder(
+                output, hidden_state, _ = decoder(
                     next_decoder_input,
                     next_decoder_hidden_state,
                     next_c_encoder_outputs,
                     next_h_encoder_outputs
-                ) # cur_decoder_output: [1, k, vocab_size], init_decoder_hidden_state: [num_layers, k, hidden_size]
+                ) # output: [1, k, vocab_size], hidden_state: [num_layers, k, hidden_size]
 
                 # squeeze
-                cur_decoder_output = decoder_output.view(-1).contiguous()
-                log_probs, indices = decoder_output.topk(cur_beam_width)
+                output = output.view(-1).contiguous()
+                log_probs, indices = output.topk(cur_beam_width)
 
                 next_decoder_input = []
                 next_indices = []
                 for i, (index, prob) in enumerate(zip(indices.tolist(), log_probs.tolist())):
                     last_index = index // vocab_size
                     vocab_index = index % vocab_size
+                    print('last_index: %d, vocab_index: %d' % (last_index, vocab_index))
 
                     if vocab_index == eosid:
                         res.append((cur_scores[i] / len(cur_sentences[i]), cur_sentences[i]))
                         cur_scores.remove(cur_scores[i])
                         cur_sentences.remove(cur_sentences[i])
                     else:
-                        next_decoder_input.append(vocab_size)
+                        next_decoder_input.append(vocab_index)
                         next_indices.append(i)
 
                         cur_scores[i] = last_scores[last_index] + prob
-                        cur_sentences[i] = cur_sentences[i].extend(last_sentences[last_sentences])
+                        cur_sentences[i].extend(last_sentences[i])
                         cur_sentences[i].append(vocab_index)
 
                 next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device)
                 next_decoder_input = next_decoder_input.view(1, -1)
 
-                if len(next_indices) != cur_beam_width:
-                    next_indices = torch.tensor(next_indices, dtype=torch.long, device=device)
-                    next_decoder_hidden_state = cur_decoder_hidden_state.index_select(dim=1, next_indices)
-                    next_c_encoder_outputs = next_c_encoder_outputs.index_select(dim=1, next_indices)
+                next_indices = torch.tensor(next_indices, dtype=torch.long, device=device)
+                next_decoder_hidden_state = hidden_state.index_select(1, next_indices)
+                next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, next_indices)
 
                 if next_h_encoder_outputs is not None:
-                    next_h_encoder_outputs = next_h_encoder_outputs.index_select(dim=1, next_indices)
+                    next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, next_indices)
 
                 last_scores = cur_scores.copy()
                 last_sentences = copy.deepcopy(cur_sentences)
