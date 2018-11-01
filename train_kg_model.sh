@@ -24,7 +24,7 @@ python train_kg_model.py \
     --bidirectional \
     --tied \
 	--decoder_type bahdanau \
-    --decode_type beam_search \
+    --decode_type greedy \
     --beam_width 64 \
     --best_n 5 \
     --attn_type concat \
