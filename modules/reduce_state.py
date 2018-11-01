@@ -51,7 +51,8 @@ class ReduceState(nn.Module):
             #  h = hidden_state
             #  reduce_h = _fix_enc_hidden(h)
             #  return reduce_h
-            return torch.relu(self.boost_h(hidden_state))
+            #  return torch.relu(self.boost_h(hidden_state))
+            return hidden_state
 
         #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))
         #  hidden_reduced_c = F.relu(self.reduce_c(c.view(-1, hidden_size * 2)))

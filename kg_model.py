@@ -34,6 +34,7 @@ class KGModel(nn.Module):
     def __init__(self,
                  model_type,
                  vocab_size,
+                 pre_embedding_size,
                  embedding_size,
                  rnn_type,
                  hidden_size,
@@ -54,6 +55,7 @@ class KGModel(nn.Module):
 
         self.model_type = model_type
         self.embedding_size = embedding_size
+        self.pre_embedding_size = pre_embedding_size
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -95,8 +97,9 @@ class KGModel(nn.Module):
             self.fact_linearC = nn.Linear(hidden_size, hidden_size)
             init_linear_wt(self.fact_linearC)
 
-            self.fact_linear = nn.Linear(embedding_size, hidden_size)
-            init_linear_wt(self.fact_linear)
+            if pre_embedding_size != hidden_size:
+                self.fact_linear = nn.Linear(pre_embedding_size, hidden_size)
+                init_linear_wt(self.fact_linear)
 
         # encoder hidden_state -> decoder hidden_state
         self.reduce_state = ReduceState(rnn_type,
@@ -104,7 +107,7 @@ class KGModel(nn.Module):
                                         num_layers,
                                         self.c_encoder.bidirection_num)
 
-        self.combine_c_h_linear = nn.Linear(hidden_size * 2, hidden_size)
+        self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
         init_linear_wt(self.combine_c_h_linear)
 
         # decoder
@@ -402,7 +405,7 @@ class KGModel(nn.Module):
             - batch_size
         """
         # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
-        if self.embedding_size != self.hidden_size:
+        if self.pre_embedding_size != self.hidden_size:
             f_encoder_inputs = self.fact_linear(f_encoder_inputs)
 
         # M [batch_size, topk, hidden_size]
