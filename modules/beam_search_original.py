@@ -81,8 +81,8 @@ def beam_decode(
                 # accumulate
                 last_scores = log_probs.view(-1).tolist()
 
-                for i, vocab_index in enumerate(indices.tolist()):
-                    last_sentences[i].append(vocab_index)
+                for vi, vocab_index in enumerate(indices.tolist()):
+                    last_sentences[vi].append(vocab_index)
 
                 # repeat
                 next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1)
@@ -134,6 +134,8 @@ def beam_decode(
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, next_indices)
 
+                del last_scores
+                del last_sentences
                 last_scores = cur_scores.copy()
                 last_sentences = copy.deepcopy(cur_sentences)
 
