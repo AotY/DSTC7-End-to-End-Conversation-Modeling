@@ -109,10 +109,10 @@ def train_epochs(model,
                 log_loss_total = 0
                 log_accuracy_total = 0
 
-                #  logger.info('---------generate-------------')
-                #  # generate sentence
-                #  decode(model, dataset, vocab)
-                #  logger.info('---------generate completed--------')
+                logger.info('---------generate-------------')
+                # generate sentence
+                decode(model, dataset, vocab)
+                logger.info('---------generate completed--------')
 
         # save model of each epoch
         save_state = {
@@ -141,7 +141,6 @@ def train_epochs(model,
         logger.info('---------generate-------------')
         # generate sentence
         decode(model, dataset, vocab)
-        logger.info('---------generate completed--------')
 
 ''' start traing '''
 
@@ -291,7 +290,7 @@ def decode(model, dataset, vocab):
             dataset.save_generated_texts(conversation_texts,
                                          response_texts,
                                          batch_texts,
-                                         os.path.join(opt.save_path, 'generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, time_str, opt.turn_num, opt.turn_type)),
+                                         os.path.join(opt.save_path, 'generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type)
 
 

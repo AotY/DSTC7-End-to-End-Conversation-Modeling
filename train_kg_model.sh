@@ -24,9 +24,9 @@ python train_kg_model.py \
     --bidirectional \
     --tied \
 	--decoder_type bahdanau \
-    --decode_type greedy \
-    --beam_width 64 \
-    --best_n 5 \
+    --decode_type beam_search \
+    --beam_width 128 \
+    --best_n 8 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
@@ -37,13 +37,13 @@ python train_kg_model.py \
     --teacher_forcing_ratio 0.7 \
     --seed 7 \
     --device cuda \
-    --log_interval 100 \
+    --log_interval 3 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type kg
+    --model_type seq2seq
     # --checkpoint ./models/checkpoint.epoch-3_seq2seq_3_dcgm.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
 
