@@ -258,7 +258,6 @@ class Dataset:
         self._indicator_dict[task] = cur_indicator
 
         if self.model_type == 'kg':
-            #  f_encoder_inputs = torch.cat(f_encoder_inputs, dim=0)
             f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0) #[batch_size, topk, embedding_size]
 
         return c_encoder_inputs, c_encoder_inputs_lengths, \
