@@ -37,29 +37,26 @@ class BeamNode:
         self.score = score
 
     def __lt__(self, other):
-        return self.score < other.score
+        if self.length == other.length:
+            return self.score < other.score
+        else:
+            return (self.score / self.length) < (other.score / other.length)
+
 
     def __gt__(self, other):
-        return self.score > self.score
+        if self.length == other.length:
+            return self.score > other.score
+        else:
+            return (self.score / self.length) > (other.score / other.length)
 
 
-def evaluate(log_prob, length, alpha=1.0):
+def evaluate_score(log_prob, length, alpha=1.0):
     score = 0.0
     # Add here a function for shaping a reward
     reward = 0.5
 
     score = log_prob / float(length - 1 + 1e-6) + alpha * reward
     return float(score)
-
-
-"""
-class BeamSearch():
-    def __init__(self, max_queue_size=1000):
-        super(BeamSearch, self).__init__()
-        self.max_queue_size = max_queue_size
-
-"""
-
 
 def beam_decode(
     decoder,
@@ -72,7 +69,9 @@ def beam_decode(
     best_n,
     eosid,
     r_max_len,
-    max_queue_size=2048):
+    max_queue_size=3000):
+
+    max_queue_size = max(2048, beam_width * r_max_len + 512)
     """
     Args:
         c_encoder_outputs: [len, batch, hidden_size]
@@ -102,17 +101,15 @@ def beam_decode(
                              init_decoder_input, 0, 1)
 
         # start the queue
-        init_score = - evaluate(0, 1)
+        init_score = - evaluate_score(0, 1)
         init_node.set_score(init_score)
         node_queue.put(init_node)
         #  node_queue.put(tuple([float(init_score), init_node]))
 
-        q_size = 1
-
         # start beam search
         while True:
             # give up, when decoding takes too long
-            if q_size >= max_queue_size or node_queue.qsize() == 0:
+            if node_queue.qsize() >= max_queue_size or node_queue.qsize() == 0:
                 break
 
             # fetch the best node
@@ -159,14 +156,9 @@ def beam_decode(
                     cur_node.length + 1
                 )
 
-                next_score = - evaluate(next_node.log_prob, next_node.length)
+                next_score = - evaluate_score(next_node.log_prob, next_node.length)
                 next_node.set_score(next_score)
                 node_queue.put(next_node)
-
-                #  node_queue.put(tuple([float(next_score), next_node]))
-                #  count += 1
-
-            q_size += beam_width
 
         # choose n_best paths, back trace them
         if len(res_nodes) == 0:
