@@ -291,8 +291,7 @@ class KGModel(nn.Module):
         decoder_input: [1, batch_size], maybe: [sos * 1]
         '''
         # encoder
-        c_encoder_hidden_state = self.c_encoder.init_hidden(
-            batch_size, self.device)
+        c_encoder_hidden_state = self.c_encoder.init_hidden(batch_size, self.device)
         c_encoder_outputs,  c_encoder_hidden_state = self.c_encoder(c_encoder_inputs,
                                                                     c_encoder_inputs_length,
                                                                     c_encoder_hidden_state)
@@ -305,8 +304,8 @@ class KGModel(nn.Module):
         # fact encoder
         if self.model_type == 'kg':
             decoder_hidden_state = self.f_forward(f_encoder_inputs,
-                                                     decoder_hidden_state,
-                                                     batch_size)
+                                                  decoder_hidden_state,
+                                                  batch_size)
 
         # decoder
         if decode_type == 'greedy':

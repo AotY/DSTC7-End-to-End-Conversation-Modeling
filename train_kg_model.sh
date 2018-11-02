@@ -37,7 +37,7 @@ python train_kg_model.py \
     --teacher_forcing_ratio 0.8 \
     --seed 7 \
     --device cuda \
-    --log_interval 5 \
+    --log_interval 3 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.1 \
