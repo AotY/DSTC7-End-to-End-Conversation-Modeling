@@ -145,7 +145,6 @@ Read facts file.
 
 
 def read_facts(facts_file_path, logger, opt):
-    # 读取  facts，保存到
     facts = []
     raw_facts = []
 
