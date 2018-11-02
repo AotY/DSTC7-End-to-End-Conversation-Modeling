@@ -60,10 +60,11 @@ class BahdanauAttnDecoder(nn.Module):
         # linear
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
-        init_linear_wt(self.linear)
 
         if tied and embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
+        else:
+            init_linear_wt(self.linear)
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)

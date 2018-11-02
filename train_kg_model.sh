@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -7,7 +7,7 @@ python train_kg_model.py \
     --vocab_path data/vocab_word2idx_seq2seq.dict \
     --turn_num 3 \
     --turn_type dcgm \
-    --embedding_size 512 \
+    --embedding_size 300 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
@@ -37,14 +37,14 @@ python train_kg_model.py \
     --teacher_forcing_ratio 0.8 \
     --seed 7 \
     --device cuda \
-    --log_interval 3 \
+    --log_interval 100 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type seq2seq
+    --model_type seq2seq \
+    --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
     # --checkpoint ./models/checkpoint.epoch-3_seq2seq_3_dcgm.pth
-    # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.50004.300d.npy \
 
 /

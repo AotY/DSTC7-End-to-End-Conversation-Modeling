@@ -50,16 +50,16 @@ def beam_decode(
         next_h_encoder_outputs = None
 
         last_scores = [0] * beam_width
-        cur_scores = [0] * beam_width
+        cur_scores = last_scores.copy()
 
-        last_sentences = [[]] * beam_width
-        cur_sentences = [[]] * beam_width
+        last_sentences = list()
+        cur_sentences = list()
 
         res = []
 
         for ri in range(r_max_len):
 
-            if len(cur_scores) == 0 or len(cur_sentences) == 0:
+            if len(cur_scores) == 0:
                 break
 
             # init step
@@ -77,10 +77,14 @@ def beam_decode(
                 next_decoder_input = indices.squeeze(0)
 
                 # accumulate
-                cur_scores = log_probs.view(-1).tolist()
+                last_scores = log_probs.view(-1).tolist()
 
                 for vi, vocab_index in enumerate(indices.view(-1).tolist()):
-                    cur_sentences[vi].append(vocab_index)
+                    last_sentences.append(list())
+                    last_sentences[vi].append(vocab_index)
+
+                    cur_sentences.append(list())
+                #  print(last_sentences)
 
                 # repeat
                 next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1)
@@ -116,16 +120,21 @@ def beam_decode(
                 next_indices = []
                 remove_indices = []
 
-                for i, (index, prob) in zip(indices.tolist(), log_probs.tolist()):
+                for i, (index, prob) in enumerate(zip(indices.tolist(), log_probs.tolist())):
                     last_index = index // vocab_size
                     vocab_index = index % vocab_size
+                    #  print('last_index: %d, vocab_index: %d' % (last_index, vocab_index))
 
                     next_decoder_input.append(vocab_index)
                     next_indices.append(i)
 
                     cur_scores[i] = last_scores[last_index] + prob
+                    #  print('cur_scores[i]: {}'.format(cur_scores[i]))
+
                     last_sentences[last_index].append(vocab_index)
-                    cur_sentences[i] = last_sentences[last_sentences].copy()
+                    cur_sentences[i] = last_sentences[last_index].copy()
+                    #  print('last_sentences[last_index]: {}'.format(last_sentences[last_index]))
+                    #  print('cur_sentences[i]: {}'.format(cur_sentences[i]))
 
                     if vocab_index == eosid:
                         res.append((cur_scores[i] / len(cur_sentences[i]), cur_sentences[i]))
@@ -157,7 +166,7 @@ def beam_decode(
             res.append((score / len(sentence), sentence))
 
         best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
-        print('best_n_sentences[0]: {}'.format(best_n_sentences[0]))
+        #  print('best_n_sentences[0]: {}'.format(best_n_sentences[0]))
         batch_utterances.append(best_n_sentences)
 
         del res
