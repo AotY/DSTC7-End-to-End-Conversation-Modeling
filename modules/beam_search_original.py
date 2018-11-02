@@ -8,8 +8,6 @@
 Beam Search,
 Original method
 """
-import copy
-
 import torch
 
 
@@ -45,7 +43,7 @@ def beam_decode(
         init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
         init_decoder_input = decoder_input[:, bi].unsqueeze(1).contiguous()  # [1, 1]
 
-        next_input = None
+        next_decoder_input = None
         next_hidden_state = None
         next_decoder_hidden_state = None
         next_c_encoder_outputs = None
@@ -79,10 +77,10 @@ def beam_decode(
                 next_decoder_input = indices.squeeze(0)
 
                 # accumulate
-                last_scores = log_probs.view(-1).tolist()
+                cur_scores = log_probs.view(-1).tolist()
 
-                for vi, vocab_index in enumerate(indices.tolist()):
-                    last_sentences[vi].append(vocab_index)
+                for vi, vocab_index in enumerate(indices.view(-1).tolist()):
+                    cur_sentences[vi].append(vocab_index)
 
                 # repeat
                 next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1)
@@ -92,7 +90,7 @@ def beam_decode(
                     next_h_encoder_outputs = init_h_encoder_outputs.repeat(1, beam_width, 1)
             else:
                 cur_beam_width = next_decoder_input.size(1)
-                print('cur_beam_width: %d' % cur_beam_width)
+                #  print('cur_beam_width: %d' % cur_beam_width)
 
                 output, hidden_state, _ = decoder(
                     next_decoder_input,
@@ -106,7 +104,7 @@ def beam_decode(
                 log_probs, indices = output.topk(cur_beam_width)
 
                 tmp_update = []
-                for index, prob in zip(indecs.tolist(), log_probs.tolist()):
+                for index, prob in zip(indices.tolist(), log_probs.tolist()):
                     last_index = index // vocab_size
                     vocab_index = index % vocab_size
                     tmp_update.append((last_index, vocab_index, prob))
@@ -116,8 +114,6 @@ def beam_decode(
                 next_indices = []
 
                 for i, (last_index, vocab_index, prob) in enumerate(tmp_update):
-                    print('last_index: %d, vocab_index: %d' % (last_index, vocab_index))
-
                     if vocab_index == eosid:
                         res.append((cur_scores[i] / len(cur_sentences[i]), cur_sentences[i]))
                         cur_scores.remove(cur_scores[i])
@@ -130,7 +126,6 @@ def beam_decode(
                         tmp_sentence = cur_sentences[last_index].copy()
                         tmp_sentence.append(vocab_index)
                         cur_sentences[i] = tmp_sentence
-                        del tmp_sentence
 
                 next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device)
                 next_decoder_input = next_decoder_input.view(1, -1)
@@ -143,16 +138,12 @@ def beam_decode(
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, next_indices)
 
-                #  del last_scores
-                #  del last_sentences
-                #  last_scores = cur_scores.copy()
-                #  last_sentences = copy.deepcopy(cur_sentences)
-
         for score, sentence in zip(cur_scores, cur_sentences):
             res.append((score / len(sentence), sentence))
 
-        sorted_sentences = sorted(res, key=lambda item: item[0], reverse=True)
+        best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
+        batch_utterances.append(best_n_sentences)
 
-        batch_utterances.append(sorted_sentences[:best_n])
+        del res
 
     return batch_utterances
