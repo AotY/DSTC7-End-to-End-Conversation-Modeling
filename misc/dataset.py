@@ -403,17 +403,17 @@ class Dataset:
         with open(filename, 'a', encoding='utf-8') as f:
             for conversation, response, greedy_text, beam_text in zip(conversation_texts, response_texts, greedy_texts, beam_texts):
                 # conversation, true response, generated_text
-                f.write('Conversation: %s\n' % conversation)
-                f.write('Response: %s\n' % response)
+                f.write('Conversation:\t %s\n' % conversation)
+                f.write('Response:\t %s\n' % response)
                 #  if decode_type == 'greedy':
-                f.write('greedy: %s\n' % greedy_text)
+                f.write('greedy:\t %s\n' % greedy_text)
                 #  elif decode_type == 'beam_search':
                 for i, best_text in enumerate(beam_text):
-                    f.write('Generated best_n: %d: %s\n' % (i, best_text))
+                    f.write('beam %d:\t %s\n' % (i, best_text))
 
                 if topk_facts is not None:
                     for fi, fact_text in enumerate(topk_facts):
-                        f.write('Facts %d: %s\n' % (fi, fact_text))
+                        f.write('Fact %d:\t %s\n' % (fi, fact_text))
 
                 f.write('---------------------------------\n')
 
