@@ -42,7 +42,7 @@ def beam_decode(
     decoder_hidden_state,
     decoder_input,
     batch_size,
-    beam_width,
+    _beam_width,
     best_n,
     eosid,
     r_max_len,
@@ -55,6 +55,7 @@ def beam_decode(
         decoder_hidden_state: [layers, batch, hidden_size]
         decoder_input: [1, batch_size] * sosid
     """
+    beam_width = _beam_width
 
     batch_utterances = []
     for bi in range(batch_size):
@@ -89,6 +90,7 @@ def beam_decode(
         next_decoder_input = indices.squeeze(0) #[1, beam_width]
         next_decoder_hidden_state = init_decoder_hidden_state.repeat(1, beam_width, 1)
         next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1)
+
         next_h_encoder_outputs = None
         if init_h_encoder_outputs is not None:
             next_h_encoder_outputs = init_h_encoder_outputs.repeat(1, beam_width, 1)
@@ -111,6 +113,7 @@ def beam_decode(
 
             next_decoder_input = []
             indices_select = []
+
             for j, (log_prob, index) in enumerate(zip(log_probs.tolist(), indices.tolist())):
                 last_j = index // outputs.size(2)
                 word_idx = index % outputs.size(2)
@@ -130,12 +133,14 @@ def beam_decode(
                 indices_select.append(j)
 
             node_queue.put(cur_node_list)
-            del last_node_list
 
+            if len(next_decoder_input) == 0:
+                break
             next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device).view(1, -1)
             if len(indices_select) != outputs.size(1):
                 indices_select = torch.tensor(indices_select, dtype=torch.long, device=device).view(-1)
                 next_decoder_hidden_state = hidden_states.index_select(dim=1, index=indices_select)
+
                 next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, indices_select)
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, indices_select)
@@ -150,10 +155,6 @@ def beam_decode(
             res.append((score, ids))
 
         best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
-        #  print('best_n_sentences[0]: {}'.format(best_n_sentences[0]))
         batch_utterances.append(best_n_sentences)
-
-        del res
-        del node_queue
 
     return batch_utterances
