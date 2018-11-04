@@ -533,7 +533,6 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
-    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -554,6 +553,5 @@ if __name__ == '__main__':
     # save to elasticsearch, facts
     save_to_es(es, zip(facts_hash_values, facts_subreddit_names, facts_conversation_ids,
                        domain_names, facts), doc_type=es_helper.fact_type)
-    """
 
     logger.info('Preprocess finished.')
