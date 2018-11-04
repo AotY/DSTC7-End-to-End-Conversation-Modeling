@@ -12,10 +12,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-PAD = '<pad>'
-UNK = '<unk>'
-SOS = '<sos>'
-EOS = '<eos>'
+PAD = '__pad__'
+UNK = '__unk__'
+SOS = '__sos__'
+EOS = '__eos__'
 
 
 class Vocab(object):
@@ -52,7 +52,6 @@ class Vocab(object):
     '''ids to word'''
     def ids_to_word(self, ids):
         words = [self.id_to_word(id) for id in ids]
-        #  words = [word for word in words if word != self.unk]
         return words
 
     def build_from_freq(self, freq_list):

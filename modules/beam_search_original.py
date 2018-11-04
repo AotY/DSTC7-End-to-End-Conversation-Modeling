@@ -8,7 +8,6 @@
 Beam Search,
 Original method
 """
-import copy
 import torch
 
 
@@ -83,7 +82,7 @@ def beam_decode(
                     cur_sentences.append(list())
                     cur_sentences[vi].append(vocab_index)
 
-                print(cur_sentences)
+                #  print(cur_sentences)
 
                 # repeat
                 next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1)
@@ -118,10 +117,10 @@ def beam_decode(
                 remove_indices = []
 
                 #  for i, (index, prob) in enumerate(zip(indices.tolist(), log_probs.tolist())):
-                for i, (last_index, vocab_index) in enumerate(tmp_update):
+                for i, (last_index, vocab_index, prob) in enumerate(tmp_update):
                     #  last_index = index // vocab_size
                     #  vocab_index = index % vocab_size
-                    #  print('last_index: %d, vocab_index: %d' % (last_index, vocab_index))
+                    print('last_index: %d, vocab_index: %d' % (last_index, vocab_index))
 
                     next_decoder_input.append(vocab_index)
                     next_indices.append(i)
@@ -143,11 +142,11 @@ def beam_decode(
                         res.append((cur_scores[i] / len(cur_sentences[i]), cur_sentences[i]))
                         remove_indices.append(i)
 
-                for i in remove_indices:
-                    next_decoder_input.remove(next_decoder_input[i])
-                    next_indices.remove(next_indices[i])
-                    cur_scores.remove(cur_scores[i])
-                    cur_sentences.remove(cur_sentences[i])
+                for index in remove_indices:
+                    next_decoder_input.remove(next_decoder_input[index])
+                    next_indices.remove(next_indices[index])
+                    cur_scores.remove(cur_scores[index])
+                    cur_sentences.remove(cur_sentences[index])
 
                 next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device)
                 next_decoder_input = next_decoder_input.view(1, -1) # [1, k]
