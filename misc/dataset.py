@@ -38,6 +38,7 @@ class Dataset:
                  turn_num,
                  turn_type,
                  eval_split,  # how many hold out as eval data
+                 test_split,
                  device,
                  logger):
 
@@ -65,9 +66,10 @@ class Dataset:
 
         self.read_txt(save_path,
                       pair_path,
-                      eval_split)
+                      eval_split,
+                      test_split)
 
-    def read_txt(self, save_path, pair_path, eval_split):
+    def read_txt(self, save_path, pair_path, eval_split, test_split):
         _data_dict_path = os.path.join(save_path, '_data_dict_%s.pkl' % self.turn_type)
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
@@ -130,23 +132,26 @@ class Dataset:
 
             np.random.shuffle(datas)
             # train-eval split
-            self.n_train = int(len(datas) * (1. - eval_split))
-            self.n_eval = len(datas) - self.n_train
+            self.n_train = int(len(datas) * (1. - eval_split - test_split))
+            self.n_eval = int(len(datas) * eval_split)
+            self.n_test = len(datas) - self.n_train - self.n_eval
 
             self._data_dict = {
                 'train': datas[0: self.n_train],
-                'eval': datas[self.n_train:]
+                'eval': datas[self.n_train: (self.n_train + self.n_eval)],
+                'test': datas[self.n_train + self.n_eval: ]
             }
-
             pickle.dump(self._data_dict, open(_data_dict_path, 'wb'))
         else:
             self._data_dict = pickle.load(open(_data_dict_path, 'rb'))
             self.n_train = len(self._data_dict['train'])
             self.n_eval = len(self._data_dict['eval'])
+            self.n_test = len(self._data_dict['test'])
 
         self._indicator_dict = {
             'train': 0,
-            'eval': 0
+            'eval': 0,
+            'test': 0
         }
 
     def parser_conversations(self, conversation, symbol='conversation'):
@@ -389,21 +394,22 @@ class Dataset:
     def save_generated_texts(self,
                              conversation_texts,
                              response_texts,
-                             batch_generated_texts,
+                             greedy_texts,
+                             beam_texts,
                              filename,
                              decode_type='greed',
                              topk_facts=None):
 
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation, response, generated_text in zip(conversation_texts, response_texts, batch_generated_texts):
+            for conversation, response, greedy_text, beam_text in zip(conversation_texts, response_texts, greedy_texts, beam_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation: %s\n' % conversation)
                 f.write('Response: %s\n' % response)
-                if decode_type == 'greedy':
-                    f.write('Generated: %s\n' % generated_text)
-                elif decode_type == 'beam_search':
-                    for i, topk_text in enumerate(generated_text):
-                        f.write('Generated best_n: %d: %s\n' % (i, topk_text))
+                #  if decode_type == 'greedy':
+                f.write('greedy: %s\n' % greedy_text)
+                #  elif decode_type == 'beam_search':
+                for i, best_text in enumerate(beam_text):
+                    f.write('Generated best_n: %d: %s\n' % (i, best_text))
 
                 if topk_facts is not None:
                     for fi, fact_text in enumerate(topk_facts):

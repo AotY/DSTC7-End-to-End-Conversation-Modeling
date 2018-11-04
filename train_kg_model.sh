@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -40,7 +40,8 @@ python train_kg_model.py \
     --log_interval 3 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.07 \
+    --eval_split 0.01 \
+    --test_split 0.06 \
     --start_epoch 1 \
     --task train \
     --model_type seq2seq \

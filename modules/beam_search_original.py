@@ -15,6 +15,8 @@ from queue import Queue
 """
 Beam Node
 """
+
+
 class BeamNode:
     def __init__(self):
         self.sentence = ''
@@ -66,7 +68,7 @@ def beam_decode(
         init_decoder_input = decoder_input[:, bi].view(1, -1).contiguous()  # [1, 1]
 
         node_queue = Queue()
-        init_output, init_hidden_state, _ = decoder(
+        output, hidden_state, _ = decoder(
             init_decoder_input,
             init_decoder_hidden_state,
             init_c_encoder_outputs,
@@ -79,16 +81,17 @@ def beam_decode(
         for word_idx, log_prob in zip(indices.view(-1).tolist(), log_probs.view(-1).tolist()):
             node = BeamNode()
             node.push(word_idx, log_prob)
-            node_list.append(node)
+            init_node_list.append(node)
 
         node_queue.put(init_node_list)
 
         # for next step
         next_decoder_input = indices.squeeze(0) #[1, beam_width]
         next_decoder_hidden_state = init_decoder_hidden_state.repeat(1, beam_width, 1)
-        next_c_encoder_outputs = next_c_encoder_outputs.repeat(1, beam_width, 1)
-        if next_h_encoder_outputs is not None:
-            next_h_encoder_outputs = next_h_encoder_outputs.repeat(1, beam_width, 1)
+        next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1)
+        next_h_encoder_outputs = None
+        if init_h_encoder_outputs is not None:
+            next_h_encoder_outputs = init_h_encoder_outputs.repeat(1, beam_width, 1)
 
         res = []
 
@@ -101,8 +104,7 @@ def beam_decode(
             )
 
             # squeeze
-            outputs = outputs.view(-1).contiguous()
-            log_probs, indices = outputs.topk(beam_width)
+            log_probs, indices = output.view(-1).topk(beam_width)
 
             last_node_list = node_queue.get()
             cur_node_list = []
@@ -134,6 +136,7 @@ def beam_decode(
             if len(indices_select) != outputs.size(1):
                 indices_select = torch.tensor(indices_select, dtype=torch.long, device=device).view(-1)
                 next_decoder_hidden_state = hidden_states.index_select(dim=1, index=indices_select)
+                next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, indices_select)
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, indices_select)
             else:

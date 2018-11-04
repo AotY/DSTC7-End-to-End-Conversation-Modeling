@@ -60,6 +60,9 @@ def data_set_opt(parser):
                        type=float,
                        help="Ratio for splitting data set.")
 
+    group.add_argument('--test_split',
+                       type=float,
+                       help="Ratio for splitting data set (test).")
 
 def model_opt(parser):
 
