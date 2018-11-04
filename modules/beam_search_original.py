@@ -30,7 +30,7 @@ class BeamNode:
         return [int(item) for item in self.sentence[:-1].split(',')]
 
     def get_score(self):
-        reward = 0.01
+        reward = 0.00
         ids = self.get_ids()
         return self.log_prob / len(ids) + reward * len(ids)
 

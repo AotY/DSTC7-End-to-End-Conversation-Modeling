@@ -25,8 +25,8 @@ python train_kg_model.py \
     --tied \
 	--decoder_type bahdanau \
     --decode_type beam_search \
-    --beam_width 64 \
-    --best_n 5 \
+    --beam_width 128 \
+    --best_n 7 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
@@ -37,7 +37,7 @@ python train_kg_model.py \
     --teacher_forcing_ratio 0.8 \
     --seed 7 \
     --device cuda \
-    --log_interval 3 \
+    --log_interval 5 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.01 \
