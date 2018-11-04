@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -26,7 +26,7 @@ python train_kg_model.py \
 	--decoder_type bahdanau \
     --decode_type beam_search \
     --beam_width 128 \
-    --best_n 7 \
+    --best_n 12 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
