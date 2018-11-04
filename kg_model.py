@@ -308,41 +308,43 @@ class KGModel(nn.Module):
                                                   batch_size)
 
         # decoder
-        if decode_type == 'greedy':
-            decode_outputs = []
-            for i in range(r_max_len):
-                decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
-                                                                                  decoder_hidden_state,
-                                                                                  c_encoder_outputs,
-                                                                                  h_encoder_outputs)
+        greedy_outputs = None
+        beam_outputs = None
+        #  if decode_type == 'greedy':
+        greedy_outputs = []
+        for i in range(r_max_len):
+            decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
+                                                                                decoder_hidden_state,
+                                                                                c_encoder_outputs,
+                                                                                h_encoder_outputs)
 
-                decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
-                decode_outputs.append(decoder_input)
+            decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
+            greedy_outputs.append(decoder_input)
 
-                ni = decoder_input[0][0].item()
-                if ni == eosid:
-                    break
+            ni = decoder_input[0][0].item()
+            if ni == eosid:
+                break
 
-            decode_outputs = torch.cat(decode_outputs, dim=0)
-            # [len, batch_size]  -> [batch_size, len]
-            decode_outputs.transpose_(0, 1)
-            return decode_outputs
-        elif decode_type == 'beam_search':
-            batch_utterances = beam_decode(
-                self.decoder,
-                c_encoder_outputs,
-                h_encoder_outputs,
-                decoder_hidden_state,
-                decoder_input,
-                batch_size,
-                beam_width,
-                best_n,
-                eosid,
-                r_max_len,
-                self.vocab_size,
-                self.device
-            )
-            return batch_utterances
+        greedy_outputs = torch.cat(greedy_outputs, dim=0)
+        # [len, batch_size]  -> [batch_size, len]
+        greedy_outputs.transpose_(0, 1)
+
+        #  elif decode_type == 'beam_search':
+        beam_outputs = beam_decode(
+            self.decoder,
+            c_encoder_outputs,
+            h_encoder_outputs,
+            decoder_hidden_state,
+            decoder_input,
+            batch_size,
+            beam_width,
+            best_n,
+            eosid,
+            r_max_len,
+            self.vocab_size,
+            self.device
+        )
+        return greedy_outputs, beam_outputs
 
 
     def h_forward(self, h_encoder_inputs, batch_size):
@@ -428,9 +430,9 @@ class KGModel(nn.Module):
         return u_
 
     def combine_c_h_state(self, c_encoder_hidden_state, h_encoder_hidden_state):
-        tmp_encoder_hidden_state = torch.add(c_encoder_hidden_state, h_encoder_hidden_state)
+        #  tmp_encoder_hidden_state = torch.add(c_encoder_hidden_state, h_encoder_hidden_state)
         # or
-        #  tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
-        #  tmp_encoder_hidden_state = torch.relu(self.combine_c_h_linear(tmp_encoder_hidden_state))
+        tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
+        tmp_encoder_hidden_state = torch.relu(self.combine_c_h_linear(tmp_encoder_hidden_state))
         return tmp_encoder_hidden_state
 

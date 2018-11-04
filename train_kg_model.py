@@ -212,14 +212,14 @@ def evaluate(model,
     loss_total=0
     accuracy_total=0
     max_load=int(np.ceil(dataset.n_eval / opt.batch_size))
-    dataset.reset_data('eval')
+    dataset.reset_data('test')
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
             c_encoder_inputs, c_encoder_inputs_length, \
                 decoder_inputs, decoder_targets, \
                 conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('eval', opt.batch_size)
+                f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
@@ -267,7 +267,7 @@ def decode(model, dataset, vocab):
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            batch_utterances = model.decode(
+            greedy_outputs, beam_outputs = model.decode(
                 h_encoder_inputs,
                 c_encoder_inputs,  # LongTensor
                 c_encoder_inputs_length,
@@ -282,14 +282,19 @@ def decode(model, dataset, vocab):
 
             # generate sentence, and save to file
             # [max_length, batch_size]
-            batch_texts = dataset.generating_texts(batch_utterances,
+            greedy_texts = dataset.generating_texts(greedy_outputs,
                                                    opt.batch_size,
-                                                   opt.decode_type)
+                                                   'greedy')
+
+            beam_texts = dataset.generating_texts(beam_outputs,
+                                                  opt.batch_size,
+                                                  'beam_search')
 
             # save sentences
             dataset.save_generated_texts(conversation_texts,
                                          response_texts,
-                                         batch_texts,
+                                         greedy_texts,
+                                         beam_texts,
                                          os.path.join(opt.save_path, 'generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type)
 
@@ -387,6 +392,7 @@ def build_dataset(vocab):
                 opt.turn_num,
                 opt.turn_type,
                 opt.eval_split,  # how many hold out as eval data
+                opt.test_split,
                 device,
                 logger)
     return dataset
