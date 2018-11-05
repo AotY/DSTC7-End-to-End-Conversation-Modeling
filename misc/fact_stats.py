@@ -30,9 +30,11 @@ last_domain = None
 line_count = 0
 maybe_table = False
 
-facts_path = './../data/facts.txt'
+facts_path = './../data/train.facts.txt'
 table_filename = './wiki_table.txt'
 table_file = open(table_filename, 'w', encoding='utf-8')
+
+wiki_table_dict = {}
 
 with open(facts_path, 'r', encoding='utf-8') as f:
     for line in tqdm(f):
@@ -41,10 +43,11 @@ with open(facts_path, 'r', encoding='utf-8') as f:
 
         parts = line.split('\t')
 
-        subreddit_name = parts[0]
-        conversation_id = parts[1]
-        domain_name = parts[2]
-        fact = parts[3]
+        hash_value = parts[0]
+        subreddit_name = parts[1]
+        conversation_id = parts[2]
+        domain_name = parts[3]
+        fact = parts[4]
 
         if fact.find('<title>') != -1:
             title_count += 1
@@ -63,24 +66,32 @@ with open(facts_path, 'r', encoding='utf-8') as f:
             else:
                 is_wiki = False
 
+            line_count = 0
             last_domain = domain_name
+            maybe_table = False
+            table = []
             continue
 
         if is_wiki and domain_name == last_domain:
             if fact.find('jump to : navigation , search') != -1:
                 maybe_table = True
+                table = []
                 continue
 
         if is_wiki and domain_name == last_domain and maybe_table:
             if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
                 if line_count > 2:
                     wiki_table_count += 1
+                    wiki_table_dict[conversation_id] = table
+
                 maybe_table = False
                 line_count = 0
+                table = []
                 table_file.write('----------------------\n')
             else:
                 line_count += 1
                 table_file.write(fact)
+                table.append(fact)
                 continue
 
         if domain_name != last_domain:
@@ -88,6 +99,7 @@ with open(facts_path, 'r', encoding='utf-8') as f:
             domain_name = ''
             maybe_table = False
             line_count = 0
+            table = []
 
 table_file.close()
 
@@ -98,6 +110,7 @@ print('wiki_table_count: %d' % wiki_table_count)
 print('table_ratio: %.4f' % (wiki_table_count / wiki_count))
 
 
+pickle.dump(wiki_table_dict, open('./../data/wiki_table_dict.pkl', 'wb'))
 
 
 
