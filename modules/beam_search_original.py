@@ -126,7 +126,7 @@ def beam_decode(
                     continue
 
                 tmp_node = BeamNode()
-                tmp_node.push(last_node_list[last_j].sentence + str(word_idx), log_prob)
+                tmp_node.push(last_node_list[last_j].sentence + str(word_idx), last_node_list[last_j].log_prob + log_prob)
                 cur_node_list.append(tmp_node)
 
                 next_decoder_input.append(word_idx)

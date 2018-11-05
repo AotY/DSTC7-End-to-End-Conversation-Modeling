@@ -139,7 +139,6 @@ def train_epochs(model,
 
         # generate sentence
         logger.info('---------generate-------------')
-        # generate sentence
         decode(model, dataset, vocab)
 
 ''' start traing '''
@@ -201,7 +200,6 @@ def train(model,
 '''
 evaluate model.
 '''
-
 
 def evaluate(model,
              dataset,
