@@ -106,6 +106,7 @@ def beam_decode(
             )
 
             # squeeze
+            print(output.shape)
             log_probs, indices = output.view(-1).topk(beam_width)
 
             last_node_list = node_queue.get()
