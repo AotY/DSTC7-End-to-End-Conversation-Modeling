@@ -50,7 +50,7 @@ with open(facts_path, 'r', encoding='utf-8') as f:
             title_count += 1
 
             if domain_name == 'en.wikipedia.org':
-                table_file.write(fact + '\n')
+                table_file.write(fact)
                 wiki_count += 1
 
                 # parser table
@@ -77,10 +77,10 @@ with open(facts_path, 'r', encoding='utf-8') as f:
                     wiki_table_count += 1
                 maybe_table = False
                 line_count = 0
-                table_file.write('----------------------')
+                table_file.write('----------------------\n')
             else:
                 line_count += 1
-                table_file.write(fact + '\n')
+                table_file.write(fact)
                 continue
 
         if domain_name != last_domain:

@@ -136,6 +136,7 @@ def beam_decode(
 
             if len(next_decoder_input) == 0:
                 break
+
             next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device).view(1, -1)
             if len(indices_select) != outputs.size(1):
                 indices_select = torch.tensor(indices_select, dtype=torch.long, device=device).view(-1)
