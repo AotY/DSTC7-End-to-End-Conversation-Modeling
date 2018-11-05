@@ -76,7 +76,7 @@ def beam_decode(
             init_h_encoder_outputs
         ) # output: [1, 1, vocab_size], hidden_sate: [num_layers, 1, hidden_size]
 
-        log_probs, indices = torch.topk(output, beam_width, dim=2) # [1, 1, beam_width]
+        log_probs, indices = output.topk(beam_width, dim=2) # [1, 1, beam_width]
 
         init_node_list = []
         for word_idx, log_prob in zip(indices.view(-1).tolist(), log_probs.view(-1).tolist()):
@@ -106,7 +106,7 @@ def beam_decode(
             )
 
             # squeeze
-            log_probs, indices = output.view(-1).topk(beam_width)
+            log_probs, indices = outputs.view(-1).topk(beam_width)
 
             last_node_list = node_queue.get()
             cur_node_list = []
