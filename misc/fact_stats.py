@@ -31,6 +31,9 @@ line_count = 0
 maybe_table = False
 
 facts_path = './../data/facts.txt'
+table_filename = './wiki_table.txt'
+table_file = open(table_filename, 'w', encoding='utf-8')
+
 with open(facts_path, 'r', encoding='utf-8') as f:
     for line in tqdm(f):
         if not bool(line.rstrip()):
@@ -47,6 +50,7 @@ with open(facts_path, 'r', encoding='utf-8') as f:
             title_count += 1
 
             if domain_name == 'en.wikipedia.org':
+                table_file.write(fact + '\n')
                 wiki_count += 1
 
                 # parser table
@@ -73,8 +77,10 @@ with open(facts_path, 'r', encoding='utf-8') as f:
                     wiki_table_count += 1
                 maybe_table = False
                 line_count = 0
+                table_file.write('----------------------')
             else:
                 line_count += 1
+                table_file.write(fact + '\n')
                 continue
 
         if domain_name != last_domain:
@@ -83,6 +89,7 @@ with open(facts_path, 'r', encoding='utf-8') as f:
             maybe_table = False
             line_count = 0
 
+table_file.close()
 
 print('title_count: %d' % title_count)
 print('wiki_count: %d' % wiki_count)
