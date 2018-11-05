@@ -312,17 +312,17 @@ class KGModel(nn.Module):
         beam_outputs = None
         #  if decode_type == 'greedy':
         greedy_outputs = []
+        input = decoder_input
         for i in range(r_max_len):
-            decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
-                                                                                decoder_hidden_state,
-                                                                                c_encoder_outputs,
-                                                                                h_encoder_outputs)
+            decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
+                                                                              decoder_hidden_state,
+                                                                              c_encoder_outputs,
+                                                                              h_encoder_outputs)
 
-            decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
-            greedy_outputs.append(decoder_input)
+            input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
+            greedy_outputs.append(input)
 
-            ni = decoder_input[0][0].item()
-            if ni == eosid:
+            if input[0][0].item() == eosid:
                 break
 
         greedy_outputs = torch.cat(greedy_outputs, dim=0)
@@ -330,12 +330,13 @@ class KGModel(nn.Module):
         greedy_outputs.transpose_(0, 1)
 
         #  elif decode_type == 'beam_search':
+        input = decoder_input
         beam_outputs = beam_decode(
             self.decoder,
             c_encoder_outputs,
             h_encoder_outputs,
             decoder_hidden_state,
-            decoder_input,
+            input,
             batch_size,
             beam_width,
             best_n,
