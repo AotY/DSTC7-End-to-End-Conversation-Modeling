@@ -76,8 +76,6 @@ def beam_decode(
             init_h_encoder_outputs
         ) # output: [1, 1, vocab_size], hidden_sate: [num_layers, 1, hidden_size]
 
-        print('output: ', output.shape)
-        print('beam_width:', beam_width)
         log_probs, indices = output.topk(beam_width, dim=2) # [1, 1, beam_width]
 
         init_node_list = []
