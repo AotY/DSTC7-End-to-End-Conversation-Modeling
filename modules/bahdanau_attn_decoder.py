@@ -43,7 +43,7 @@ class BahdanauAttnDecoder(nn.Module):
 
         # rnn, * 2 because using concat
         self.rnn = nn.GRU(
-            hidden_size + embedding_size,
+            hidden_size + self.embedding_size,
             hidden_size,
             num_layers,
             dropout=dropout
@@ -55,7 +55,7 @@ class BahdanauAttnDecoder(nn.Module):
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
 
-        if tied and embedding_size == hidden_size:
+        if tied and self.embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
         else:
             init_linear_wt(self.linear)

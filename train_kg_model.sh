@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -9,7 +9,6 @@ python train_kg_model.py \
     --turn_type none \
     --embedding_size 512 \
     --pre_embedding_size 300 \
-    --share_embedding \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
     --rnn_type GRU \
     --hidden_size 512 \
@@ -46,6 +45,7 @@ python train_kg_model.py \
     --start_epoch 1 \
     --task train \
     --model_type seq2seq
+    # --share_embedding \
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --checkpoint ./models/checkpoint.epoch-2_seq2seq_3_dcgm.pth
 

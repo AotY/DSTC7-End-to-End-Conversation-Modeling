@@ -47,7 +47,7 @@ class SimpleEncoder(nn.Module):
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
-            input_size=embedding_size,
+            input_size=self.embedding_size,
             hidden_size=self.hidden_size,
             num_layers=num_layers,
             bidirectional=bidirectional,

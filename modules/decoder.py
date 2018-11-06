@@ -51,7 +51,7 @@ class Decoder(nn.Module):
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
-            input_size=embedding_size,
+            input_size=self.embedding_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
             dropout=dropout
@@ -66,7 +66,7 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(self.hidden_size, self.vocab_size)
         init_linear_wt(self.linear)
 
-        if tied and hidden_size == embedding_size:
+        if tied and hidden_size == self.embedding_size:
             self.linear.weight = self.embedding.weight
 
         # log softmax
