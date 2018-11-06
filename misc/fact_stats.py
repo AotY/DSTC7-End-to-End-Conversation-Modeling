@@ -18,6 +18,7 @@ wiki_table_count: 5052
 table_ratio: 0.7295
 """
 import os
+import pickle
 from tqdm import tqdm
 
 
@@ -81,17 +82,19 @@ with open(facts_path, 'r', encoding='utf-8') as f:
         if is_wiki and domain_name == last_domain and maybe_table:
             if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
                 if line_count > 2:
-                    wiki_table_count += 1
-                    wiki_table_dict[conversation_id] = table
+                    if len(table) > 0:
+                        wiki_table_dict[conversation_id] = table
+                        wiki_table_count += 1
 
                 maybe_table = False
                 line_count = 0
                 table = []
                 table_file.write('----------------------\n')
             else:
-                line_count += 1
-                table_file.write(fact)
-                table.append(fact)
+                if len(fact) > 3:
+                    line_count += 1
+                    table_file.write(fact)
+                    table.append(fact)
                 continue
 
         if domain_name != last_domain:
