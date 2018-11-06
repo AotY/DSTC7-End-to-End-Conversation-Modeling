@@ -182,7 +182,7 @@ def train(model,
     decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
 
     # , decoder_targets.shape[1])
-    decoder_targets=decoder_targets.view(-1)
+    decoder_targets = decoder_targets.view(-1)
 
     # compute loss
     loss = criterion(decoder_outputs, decoder_targets)
