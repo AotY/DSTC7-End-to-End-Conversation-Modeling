@@ -20,32 +20,24 @@ from modules.utils import init_lstm_wt, init_gru_orth, init_lstm_orth
 class Encoder(nn.Module):
     def __init__(self,
                  vocab_size,
-                 embedding_size,
-                 pre_trained_weight,
+                 embeddding,
                  rnn_type,
                  hidden_size,
                  num_layers=1,
                  bidirectional=True,
-                 dropout=0.0,
-                 padding_idx=0):
+                 dropout=0.0):
 
         super(Encoder, self).__init__()
 
         self.vocab_size = vocab_size
-        self.embedding_size = embedding_size
+        self.embedding_size = embedding.embedding_dim
         self.rnn_type = rnn_type
-        self.padding_idx = padding_idx
         self.num_layers = num_layers
         self.bidirection_num = 2 if bidirectional else 1
         self.hidden_size = hidden_size // self.bidirection_num
 
         # embedding
-        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, self.padding_idx)
-        if pre_trained_weight is not None:
-            self.embedding.weight.data.copy_(pre_trained_weight)
-        else:
-            init_wt_normal(self.embedding.weight)
-
+        self.embedding = embedding
 
         # dropout
         self.dropout = nn.Dropout(dropout)

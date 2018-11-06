@@ -83,6 +83,10 @@ def model_opt(parser):
                        type=str,
                        help='pre trained word embedded.')
 
+    group.add_argument('--share_embedding',
+                       action='store_true',
+                       help='is sharing embedding between encoder and decoder.')
+
     group.add_argument('--fasttext_vec',
                        type=str,
                        help='1 million word vectors trained with subword infomation on Wikipedia 2017, UMBC webbase corpus and statmt.org news dataset (16B tokens).')

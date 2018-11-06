@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=7
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -9,6 +9,7 @@ python train_kg_model.py \
     --turn_type none \
     --embedding_size 512 \
     --pre_embedding_size 300 \
+    --share_embedding \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
     --rnn_type GRU \
     --hidden_size 512 \
@@ -25,8 +26,8 @@ python train_kg_model.py \
     --tied \
 	--decoder_type normal \
     --decode_type beam_search \
-    --beam_width 128 \
-    --best_n 8 \
+    --beam_width 64 \
+    --best_n 5 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
@@ -40,7 +41,7 @@ python train_kg_model.py \
     --log_interval 100 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.003 \
+    --eval_split 0.0005 \
     --test_split 0.1 \
     --start_epoch 1 \
     --task train \
