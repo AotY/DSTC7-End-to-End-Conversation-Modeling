@@ -20,7 +20,7 @@ from modules.utils import init_lstm_wt, init_gru_orth, init_lstm_orth
 class Encoder(nn.Module):
     def __init__(self,
                  vocab_size,
-                 embeddding,
+                 embedding,
                  rnn_type,
                  hidden_size,
                  num_layers=1,
@@ -45,7 +45,7 @@ class Encoder(nn.Module):
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
-            input_size=embedding_size,
+            input_size=self.embedding_size,
             hidden_size=self.hidden_size,
             num_layers=num_layers,
             bidirectional=bidirectional,

@@ -32,6 +32,7 @@ class LuongAttnDecoder(nn.Module):
         super(LuongAttnDecoder, self).__init__()
 
         self.vocab_size = vocab_size
+        self.embedding_size = embedding.embedding_dim
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -50,7 +51,7 @@ class LuongAttnDecoder(nn.Module):
 
         self.rnn = rnn_factory(
             rnn_type,
-            input_size=embedding_size,
+            input_size=self.embedding_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
             dropout=dropout
@@ -68,7 +69,7 @@ class LuongAttnDecoder(nn.Module):
         self.linear = nn.Linear(hidden_size, vocab_size)
         init_linear_wt(self.linear)
 
-        if tied and embedding_size == hidden_size:
+        if tied and self.embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
         else:
             init_linear_wt(self.linear)

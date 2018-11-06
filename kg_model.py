@@ -12,7 +12,7 @@ from modules.reduce_state import ReduceState
 from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
-from modules.utils import init_linear_wt
+from modules.utils import init_linear_wt, init_wt_normal
 #  from modules.beam_search import beam_decode
 from modules.beam_search_original import beam_decode
 
@@ -78,7 +78,7 @@ class KGModel(nn.Module):
         if pre_trained_weight is not None:
             encoder_embedding.weight.data.copy_(pre_trained_weight)
         else:
-            init_wt_normal(encoder_embedding)
+            init_wt_normal(encoder_embedding.weight)
 
         # h_encoder
         if turn_type != 'concat' or turn_type != 'none':
@@ -132,7 +132,7 @@ class KGModel(nn.Module):
             if pre_trained_weight is not None:
                 decoder_embedding.weight.data.copy_(pre_trained_weight)
             else:
-                init_wt_normal(decoder_embedding)
+                init_wt_normal(decoder_embedding.weight)
 
         self.decoder = self.get_decoder(
             decoder_type,
@@ -458,7 +458,7 @@ class KGModel(nn.Module):
                 embedding,
                 rnn_type,
                 hidden_size,
-                decoder_num_layers,
+                num_layers,
                 dropout,
                 tied
             )
@@ -467,7 +467,7 @@ class KGModel(nn.Module):
                                             embedding,
                                             rnn_type,
                                             hidden_size,
-                                            decoder_num_layers,
+                                            num_layers,
                                             dropout,
                                             tied,
                                             attn_type,
@@ -478,13 +478,13 @@ class KGModel(nn.Module):
                 vocab_size,
                 embedding,
                 hidden_size,
-                decoder_num_layers,
+                num_layers,
                 dropout,
                 tied,
                 attn_type,
                 device
             )
 
-    return decoder
+        return decoder
 
 
