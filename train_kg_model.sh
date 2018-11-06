@@ -44,7 +44,7 @@ python train_kg_model.py \
     --test_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type seq2seq
+    --model_type kg
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --checkpoint ./models/checkpoint.epoch-2_seq2seq_3_dcgm.pth
 

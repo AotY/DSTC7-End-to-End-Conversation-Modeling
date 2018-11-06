@@ -295,7 +295,6 @@ class Dataset:
         if os.path.exists(filename):
             self.topk_facts_embedded_dict=pickle.load(open(filename, 'rb'))
         else:
-
             topk_facts_embedded_dict={}
             with torch.no_grad():
                 for task, datas in self._data_dict.items():
@@ -304,13 +303,14 @@ class Dataset:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
 
-                        facts = wiki_table_dict.get(es_helper.search_conversation_id(es, hash_value), None)
+                        facts = wiki_table_dict.get(es_helper.search_conversation_id(self.es, hash_value), None)
+                        #  print(facts)
 
                         if facts is None or len(facts) == 0:
                             continue
 
                         # tokenizer
-                        facts_words = [tokenizer.tokenize(fact) for fact in facts]
+                        facts_words = [tokenizer.tokenize(fact.rstrip()) for fact in facts]
 
                         #  conversation keywords
                         conversation_keywords = keywords.keywords(conversation, ratio=0.5, split=True)
@@ -330,6 +330,7 @@ class Dataset:
 
                         topk_indexes_list = topk_indexes.tolist()
                         topk_facts_words = [facts_words[topi] for topi in topk_indexes_list]
+                        topk_facts_text = [' '.join(fact_words) for fact_words in topk_facts_words]
 
                         topk_facts_embedded = []
                         for fact_words in topk_facts_words:
