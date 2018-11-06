@@ -34,16 +34,16 @@ class GlobalAttn(nn.Module):
         stdv = 1. / math.sqrt(self.v.size(0))
         self.v.data.normal_(mean=0, std=stdv)
 
-    def forward(self, hidden_state, encoder_outputs):
+    def forward(self, input, encoder_outputs):
         """
         Args:
-            hidden_state: [1, batch_size, hidden_size]
+            input: [1, batch_size, hidden_size]
             encoder_outputs: [max_len, batch_size, hidden_size]
         return:
             attention weights: [batch_size, 1,  max_len]
         """
         max_len, batch_size, _ = encoder_outputs.shape
-        H = hidden_state.repeat(max_len, 1, 1).transpose(0, 1)
+        H = input.repeat(max_len, 1, 1).transpose(0, 1)
         attn_weights = self.score(H, encoder_outputs.transpose(0, 1))
 
         attn_weights = F.softmax(attn_weights, dim=2)
