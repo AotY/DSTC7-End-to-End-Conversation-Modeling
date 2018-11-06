@@ -56,8 +56,6 @@ class Dataset:
         self.turn_num = turn_num
         self.turn_type = turn_type
 
-        self.tokenizer = Tokenizer()
-
         self.device = device
         self.logger = logger
 
@@ -289,17 +287,16 @@ class Dataset:
                                          f_topk,
                                          filename):
 
+        tokenizer = Tokenizer()
+
         self.pre_embedding_size = pre_embedding_size
 
         if os.path.exists(filename):
-            self.logger.info('Loading topk_facts_table_embedded_dict')
             self.topk_facts_embedded_dict=pickle.load(open(filename, 'rb'))
         else:
-            self.logger.info('Computing topk_facts_embedded_dict..........')
 
             topk_facts_embedded_dict={}
             with torch.no_grad():
-                """ computing similarity between conversation and facts, then saving to dict"""
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
                     for conversation, _, conversation_ids, _, hash_value in datas:
@@ -312,7 +309,7 @@ class Dataset:
                             continue
 
                         # tokenizer
-                        facts_words = [self.tokenizer.tokenize(fact) for fact in facts]
+                        facts_words = [tokenizer.tokenize(fact) for fact in facts]
 
                         #  conversation keywords
                         conversation_keywords = keywords.keywords(conversation, ratio=0.5, split=True)
@@ -331,43 +328,35 @@ class Dataset:
                         topk_indexes = sorted_indexes[:f_topk]
 
                         topk_indexes_list = topk_indexes.tolist()
-                        topk_facts_text = [facts_text[topi] for topi in topk_indexes_list]
+                        topk_facts_words = [facts_words[topi] for topi in topk_indexes_list]
 
                         topk_facts_embedded = []
-                        for text in topk_facts_text:
+                        for fact_words in topk_facts_words:
                             fact_embedded = torch.zeros(pre_embedding_size)
                             count = 0
-                            text_keywords = keywords.keywords(text, ratio=0.5, split=True)
-                            for word in ' '.join(text_keywords).split():
+                            for word in fact_words:
                                 try:
                                     worde_embedded = torch.tensor(fasttext.get_vector(word)).view(-1)
                                     fact_embedded.add_(worde_embedded)
                                     count += 1
                                 except KeyError:
                                     continue
+
                             if count != 0:
                                 mean_fact_embedded = torch.div(fact_embedded, count * 1.0)
+
                             topk_facts_embedded.append(mean_fact_embedded)
                         topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, pre_embedding_size]
 
                         topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
 
-                        """
-                        facts_weight = torch.tensor(facts_weight, dtype=torch.float, device=self.device)
-                        facts_ids=[fact_ids[-min(self.fact_max_len, len(facts_ids)):] for fact_ids in facts_ids]
-                        # score top_k_facts_embedded -> [top_k, pre_embedding_size]
-                        topk_facts_embedded, topk_indexes = get_topk_facts(embedding_size,
-                                                                            embedding,
-                                                                            conversation_ids,
-                                                                            facts_ids,
-                                                                            topk,
-                                                                            facts_weight,
-                                                                            self.device)
-                        """
-
             # save topk_facts_embedded_dict
             pickle.dump(topk_facts_embedded_dict, open(filename, 'wb'))
             self.topk_facts_embedded_dict=topk_facts_embedded_dict
+
+
+
+
 
     def computing_similarity_facts_offline(self,
                                            fasttext,
