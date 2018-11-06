@@ -46,6 +46,7 @@ class LuongAttnDecoder(nn.Module):
         self.embedding = nn.Embedding(vocab_size,
                                       embedding_size,
                                       padding_idx)
+
         init_wt_normal(self.embedding.weight)
 
         # dropout
@@ -69,14 +70,16 @@ class LuongAttnDecoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
+        """
         if turn_type == 'attention': # history attn
             self.attn_history = GlobalAttn(self.attn_type, self.hidden_size, device)
             self.concat_history_linear = nn.Linear(hidden_size * 3, hidden_size)
             init_linear_wt(self.concat_history_linear)
         else:
             # concat linear
-            self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
-            init_linear_wt(self.concat_linear)
+        """
+        self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
+        init_linear_wt(self.concat_linear)
 
         # linear
         self.linear = nn.Linear(hidden_size, vocab_size)
@@ -84,6 +87,8 @@ class LuongAttnDecoder(nn.Module):
 
         if tied and embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
+        else:
+            init_linear_wt(self.linear)
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=1)
@@ -108,12 +113,13 @@ class LuongAttnDecoder(nn.Module):
 
         # Calculate attention from current RNN state and all encoder outputs;
         # apply to encoder outputs to get weighted average<Paste>
-        attn_weights = self.attn(output.transpose(0, 1), c_encoder_outputs.transpose(0, 1))  # [batch_size, 1, max_len]
+        attn_weights = self.attn(output, c_encoder_outputs) # [batch_size, 1, max_len]
 
         # [batch_size, 1, hidden_size]
         context = torch.bmm(attn_weights, c_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1)  # [1, batch_size, hidden_size]
 
+        """
         if h_encoder_outputs is not None and self.turn_type == 'attention':
             attn_weights_h = self.attn_history(output.squeeze(0), h_encoder_outputs)  # [batch_size, max_len]
             attn_weights_h = attn_weights_h.unsqueeze(1)  # [batch_size, 1, max_len]
@@ -124,11 +130,13 @@ class LuongAttnDecoder(nn.Module):
             concat_output = torch.tanh(self.concat_history_linear(concat_input))
 
         else:
-            # [1, batch_size, hidden_size * 2]
-            concat_input = torch.cat((context, output), dim=2)
+        """
 
-            # [1, batch_size, hidden_size]
-            concat_output = torch.tanh(self.concat_linear(concat_input))
+        # [1, batch_size, hidden_size * 2]
+        concat_input = torch.cat((context, output), dim=2)
+
+        # [1, batch_size, hidden_size]
+        concat_output = torch.tanh(self.concat_linear(concat_input))
 
         # linear
         output = self.linear(concat_output)

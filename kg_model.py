@@ -135,6 +135,7 @@ class KGModel(nn.Module):
                                             tied,
                                             attn_type,
                                             device)
+                                            
         else:
             self.decoder = BahdanauAttnDecoder(
                 vocab_size,
