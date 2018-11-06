@@ -126,8 +126,7 @@ class KGModel(nn.Module):
             )
         elif decoder_type == 'luong':
             self.decoder = LuongAttnDecoder(vocab_size,
-                                            embedding_size,
-                                            rnn_type,
+                                            embedding_size, rnn_type,
                                             hidden_size,
                                             decoder_num_layers,
                                             dropout,

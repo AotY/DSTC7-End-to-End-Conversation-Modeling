@@ -113,12 +113,13 @@ class LuongAttnDecoder(nn.Module):
 
         # Calculate attention from current RNN state and all encoder outputs;
         # apply to encoder outputs to get weighted average<Paste>
-        attn_weights = self.attn(output.transpose(0, 1), c_encoder_outputs.transpose(0, 1))  # [batch_size, 1, max_len]
+        attn_weights = self.attn(output, c_encoder_outputs) # [batch_size, 1, max_len]
 
         # [batch_size, 1, hidden_size]
         context = torch.bmm(attn_weights, c_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1)  # [1, batch_size, hidden_size]
 
+        """
         if h_encoder_outputs is not None and self.turn_type == 'attention':
             attn_weights_h = self.attn_history(output.squeeze(0), h_encoder_outputs)  # [batch_size, max_len]
             attn_weights_h = attn_weights_h.unsqueeze(1)  # [batch_size, 1, max_len]
@@ -129,11 +130,13 @@ class LuongAttnDecoder(nn.Module):
             concat_output = torch.tanh(self.concat_history_linear(concat_input))
 
         else:
-            # [1, batch_size, hidden_size * 2]
-            concat_input = torch.cat((context, output), dim=2)
+        """
 
-            # [1, batch_size, hidden_size]
-            concat_output = torch.tanh(self.concat_linear(concat_input))
+        # [1, batch_size, hidden_size * 2]
+        concat_input = torch.cat((context, output), dim=2)
+
+        # [1, batch_size, hidden_size]
+        concat_output = torch.tanh(self.concat_linear(concat_input))
 
         # linear
         output = self.linear(concat_output)
