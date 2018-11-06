@@ -102,9 +102,9 @@ def train_epochs(model,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
-                logger_str = '\ntrain ---> epoch: %d %s (%d %d%%) %.4f %.4f' % (epoch, timeSince(start, load / max_load),
+                logger_str = '\ntrain ---> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % (epoch, timeSince(start, load / max_load),
                                                                                 load, load / max_load * 100, log_loss_avg,
-                                                                                log_accuracy_avg)
+                                                                                log_accuracy_avg, math.exp(log_loss_avg))
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
@@ -134,7 +134,7 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '\nevaluate -------------> %.4f %.4f' % (evaluate_loss, evaluate_accuracy)
+        logger_str = '\nevaluate -------------> loss: %.4f acc: %.4f ppl: %.4f' % (evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
         logger.info(logger_str)
         save_logger(logger_str)
 
