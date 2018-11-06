@@ -77,6 +77,26 @@ def search_fact_count(es, hash_value):
     return total_count
 
 
+def search_conversation_id(es, hash_value):
+    query_body = {
+        'query': {
+            'match': {
+                'hash_value': hash_value
+            }
+        }
+    }
+
+    result = es.search(index, conversation_type, query_body)
+    hits = result['hits']['hits']
+    if len(hits) == 0:
+        return 0, None
+
+    subreddit_name, conversation_id = hits[0]['_source']['subreddit_name'], hits[0]['_source']['conversation_id']
+
+    return conversation_id
+
+
+
 
 def search_facts(es, hash_value):
     # obtain subreddit_name, conversation_id

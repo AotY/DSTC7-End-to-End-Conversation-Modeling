@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.dict \
-    --turn_num 3 \
+    --turn_num 4 \
     --turn_type dcgm \
-    --embedding_size 512 \
+    --embedding_size 300 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
@@ -15,7 +15,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 4 \
-    --dropout 0.8 \
+    --dropout 0.5 \
     --max_len 35 \
     --h_max_len 35 \
     --c_max_len 35 \
@@ -40,7 +40,7 @@ python train_kg_model.py \
     --log_interval 100 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.002 \
+    --eval_split 0.001 \
     --test_split 0.1 \
     --start_epoch 1 \
     --task train \
