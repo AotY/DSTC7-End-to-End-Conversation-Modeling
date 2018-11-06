@@ -93,7 +93,7 @@ class LuongAttnDecoder(nn.Module):
         # log softmax
         self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, input, hidden_state,  c_encoder_outputs, h_encoder_outputs=None):
+    def forward(self, input, hidden_state, c_encoder_outputs, h_encoder_outputs=None):
         '''
 		Args:
 			input: [1, batch_size]  LongTensor
