@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -40,11 +40,11 @@ python train_kg_model.py \
     --log_interval 100 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.001 \
+    --eval_split 0.0005 \
     --test_split 0.1 \
     --start_epoch 1 \
     --task train \
-    --model_type kg
+    --model_type seq2seq
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --checkpoint ./models/checkpoint.epoch-2_seq2seq_3_dcgm.pth
 
