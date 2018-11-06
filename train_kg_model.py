@@ -11,6 +11,7 @@ import argparse
 
 import numpy as np
 import shutil
+import pickle
 
 import torch
 import torch.nn as nn
@@ -453,7 +454,7 @@ if __name__ == '__main__':
         wiki_table_dict = None
         if not os.path.exists(filename):
             fasttext = load_fasttext_model(opt.fasttext_vec)
-            wiki_table_dict = pickle.load('./data/wiki_table_dict.pkl')
+            wiki_table_dict = pickle.load(open('./data/wiki_table_dict.pkl', 'rb'))
 
         dataset.computing_similarity_facts_table(
             wiki_table_dict,
