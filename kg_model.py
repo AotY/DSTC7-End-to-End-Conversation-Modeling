@@ -37,6 +37,7 @@ class KGModel(nn.Module):
                  vocab_size,
                  pre_embedding_size,
                  embedding_size,
+                 share_embedding,
                  rnn_type,
                  hidden_size,
                  num_layers,
@@ -68,27 +69,35 @@ class KGModel(nn.Module):
         self.decoder_type = decoder_type
         self.device = device
 
+        encoder_embedding = nn.Embedding(
+            vocab_size,
+            embedding_size,
+            padding_idx
+        )
+
+        if pre_trained_weight is not None:
+            encoder_embedding.weight.data.copy_(pre_trained_weight)
+        else:
+            init_wt_normal(encoder_embedding)
+
+        # h_encoder
         if turn_type != 'concat' or turn_type != 'none':
             self.h_encoder = SimpleEncoder(vocab_size,
-                                            embedding_size,
-                                            pre_trained_weight,
+                                            encoder_embedding,
                                             rnn_type,
                                             hidden_size,
                                             encoder_num_layers,
                                             bidirectional,
-                                            dropout,
-                                            padding_idx)
+                                            dropout)
 
         # c_encoder (conversation encoder)
         self.c_encoder = Encoder(vocab_size,
-                                 embedding_size,
-                                 pre_trained_weight,
+                                 encoder_embedding,
                                  rnn_type,
                                  hidden_size,
                                  encoder_num_layers,
                                  bidirectional,
-                                 dropout,
-                                 padding_idx)
+                                 dropout)
 
         # fact encoder
         if model_type == 'kg':
@@ -112,42 +121,32 @@ class KGModel(nn.Module):
         #  self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
         #  init_linear_wt(self.combine_c_h_linear)
 
-        # decoder
-        if decoder_type == 'normal':
-            self.decoder = Decoder(
-                vocab_size,
-                embedding_size,
-                rnn_type,
-                hidden_size,
-                decoder_num_layers,
-                dropout,
-                padding_idx,
-                tied
-            )
-        elif decoder_type == 'luong':
-            self.decoder = LuongAttnDecoder(vocab_size,
-                                            embedding_size, rnn_type,
-                                            hidden_size,
-                                            decoder_num_layers,
-                                            dropout,
-                                            padding_idx,
-                                            turn_type,
-                                            tied,
-                                            attn_type,
-                                            device)
-                                            
+        if share_embedding:
+            decoder_embedding = encoder_embedding
         else:
-            self.decoder = BahdanauAttnDecoder(
+            decoder_embedding = nn.Embedding(
                 vocab_size,
                 embedding_size,
-                hidden_size,
-                decoder_num_layers,
-                dropout,
-                padding_idx,
-                tied,
-                attn_type,
-                device
+                padding_idx
             )
+            if pre_trained_weight is not None:
+                decoder_embedding.weight.data.copy_(pre_trained_weight)
+            else:
+                init_wt_normal(decoder_embedding)
+
+        self.decoder = self.get_decoder(
+            decoder_type,
+            vocab_size,
+            decoder_embedding,
+            rnn_type,
+            hidden_size,
+            num_layers,
+            dropout,
+            tied,
+            attn_type,
+            device
+        )
+
 
     def forward(self,
                 h_encoder_inputs,
@@ -439,4 +438,53 @@ class KGModel(nn.Module):
         #  tmp_encoder_hidden_state = torch.relu(self.combine_c_h_linear(tmp_encoder_hidden_state))
         #  tmp_encoder_hidden_state = self.combine_c_h_linear(tmp_encoder_hidden_state)
         return tmp_encoder_hidden_state
+
+    """build decoder"""
+    def get_decoder(self,
+                    decoder_type,
+                    vocab_size,
+                    embedding,
+                    rnn_type,
+                    hidden_size,
+                    num_layers,
+                    dropout,
+                    tied,
+                    attn_type,
+                    device):
+
+        if decoder_type == 'normal':
+            decoder = Decoder(
+                vocab_size,
+                embedding,
+                rnn_type,
+                hidden_size,
+                decoder_num_layers,
+                dropout,
+                tied
+            )
+        elif decoder_type == 'luong':
+            decoder = LuongAttnDecoder(vocab_size,
+                                            embedding,
+                                            rnn_type,
+                                            hidden_size,
+                                            decoder_num_layers,
+                                            dropout,
+                                            tied,
+                                            attn_type,
+                                            device)
+
+        else:
+            decoder = BahdanauAttnDecoder(
+                vocab_size,
+                embedding,
+                hidden_size,
+                decoder_num_layers,
+                dropout,
+                tied,
+                attn_type,
+                device
+            )
+
+    return decoder
+
 

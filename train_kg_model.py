@@ -111,20 +111,18 @@ def train_epochs(model,
                 log_accuracy_total = 0
 
                 #  logger.info('---------generate-------------')
-                #  # generate sentence
                 #  decode(model, dataset, vocab)
-                #  logger.info('---------generate completed--------')
 
         # save model of each epoch
         save_state = {
             'loss': log_loss_avg,
+            'ppl': math.exp(log_loss_avg),
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict()
         }
 
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
-        # optimizer.state_dict()
         save_checkpoint(state=save_state,
                         is_best=False,
                         filename=os.path.join(opt.model_path, 'checkpoint.epoch-%d_%s_%d_%s.pth' % (epoch, opt.model_type, opt.turn_num, opt.turn_type)))
@@ -134,12 +132,12 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '\nevaluate -------------> loss: %.4f acc: %.4f ppl: %.4f' % (evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
+        logger_str = '\nevaluate ---> loss: %.4f acc: %.4f ppl: %.4f' % (evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
         logger.info(logger_str)
         save_logger(logger_str)
 
         # generate sentence
-        logger.info('---------generate-------------')
+        logger.info('generate...')
         decode(model, dataset, vocab)
 
 ''' start traing '''
@@ -348,11 +346,12 @@ def build_model(vocab_size, padid):
         logger.info('load pre trained embedding...')
         pre_trained_weight = torch.from_numpy(np.load(opt.pre_trained_embedding))
 
-    model=KGModel(
+    model = KGModel(
                 opt.model_type,
                 vocab_size,
                 opt.pre_embedding_size,
                 opt.embedding_size,
+                opt.share_embedding,
                 opt.rnn_type,
                 opt.hidden_size,
                 opt.num_layers,
@@ -370,7 +369,7 @@ def build_model(vocab_size, padid):
                 pre_trained_weight
         )
 
-    model=model.to(device)
+    model = model.to(device)
 
     print(model)
     return model
@@ -394,6 +393,7 @@ def build_dataset(vocab):
                 opt.test_split,
                 device,
                 logger)
+
     return dataset
 
 
@@ -480,7 +480,8 @@ if __name__ == '__main__':
         optimizer.load_state_dict(checkpoint['optimizer'])
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
-        logger_str = '\nevaluate ---------------------------------> %.4f' % loss
+        ppl = checkpoint['ppl']
+        logger_str = '\nevaluate ---------------------------------> loss: %.4f ppl: %.4f' % (loss, ppl)
         logger.info(logger_str)
 
     if opt.task == 'train':

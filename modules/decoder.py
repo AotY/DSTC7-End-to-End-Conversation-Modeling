@@ -27,26 +27,23 @@ Decoder:
 class Decoder(nn.Module):
     def __init__(self,
                  vocab_size,
-                 embedding_size,
+                 embedding,
                  rnn_type,
                  hidden_size,
                  num_layers,
                  dropout,
-                 padding_idx,
                  tied):
 
         super(Decoder, self).__init__()
 
         self.vocab_size = vocab_size
-        self.embedding_size = embedding_size
+        self.embedding_size = embedding.embedding_dim
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.padding_idx = padding_idx
 
         # embedding
-        self.embedding = nn.Embedding(vocab_size, embedding_size, padding_idx)
-        init_wt_normal(self.embedding.weight)
+        self.embedding = embedding
 
         # dropout
         self.dropout = nn.Dropout(dropout)
