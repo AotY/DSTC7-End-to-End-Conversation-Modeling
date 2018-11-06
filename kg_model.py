@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 from modules.encoder import Encoder
 from modules.simple_encoder import SimpleEncoder
+from modules.session_encoder import SessionEncoder
 from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
 from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
@@ -82,13 +83,19 @@ class KGModel(nn.Module):
 
         # h_encoder
         if turn_type != 'concat' or turn_type != 'none':
-            self.h_encoder = SimpleEncoder(vocab_size,
+            self.simple_encoder = SimpleEncoder(vocab_size,
                                             encoder_embedding,
                                             rnn_type,
                                             hidden_size,
                                             encoder_num_layers,
                                             bidirectional,
                                             dropout)
+        if turn_type == 'hred':
+            self.session_encoder = SessionEncoder(
+                rnn_type,
+                hidden_size,
+                dropout
+            )
 
         # c_encoder (conversation encoder)
         self.c_encoder = Encoder(vocab_size,
@@ -176,7 +183,7 @@ class KGModel(nn.Module):
                                                                    c_encoder_inputs_length,
                                                                    c_encoder_hidden_state)
 
-        # cat h_encoder and c_encoder, rnn -> GRU
+        # cat h_encoder and c_encoder, rnn -> GRU, for dcgm
         if h_encoder_hidden_state is not None:
             c_encoder_hidden_state = self.combine_c_h_state(c_encoder_hidden_state, h_encoder_hidden_state)
 
@@ -365,11 +372,11 @@ class KGModel(nn.Module):
             h_encoder_hidden_states = []
             for h_encoder_input in h_encoder_inputs:
                 if len(h_encoder_input) == 0:
-                    h_encoder_hidden_state = torch.zeros((self.encoder_num_layers * self.h_encoder.bidirection_num, 1, self.hidden_size), device=self.device)
+                    h_encoder_hidden_state = torch.zeros((self.encoder_num_layers * self.simple_encoder.bidirection_num, 1, self.hidden_size), device=self.device)
                 else:
                     # h_encoder_input: [h]
-                    h_encoder_hidden_state = self.h_encoder.init_hidden(1, self.device)
-                    _, h_encoder_hidden_state = self.h_encoder(h_encoder_input[0].view(-1, 1), h_encoder_hidden_state) # h_encoder_hidden_state: [num_layers * bidirection_num, 1, hidden_size]
+                    h_encoder_hidden_state = self.simple_encoder.init_hidden(1, self.device)
+                    _, h_encoder_hidden_state = self.simple_encoder(h_encoder_input[0].view(-1, 1), h_encoder_hidden_state) # h_encoder_hidden_state: [num_layers * bidirection_num, 1, hidden_size]
 
                 h_encoder_hidden_states.append(h_encoder_hidden_state)
             h_encoder_hidden_states = torch.cat(h_encoder_hidden_states, dim=1) # [num_layers * bidirection_num, batch_size, hidden_size]
@@ -381,24 +388,33 @@ class KGModel(nn.Module):
                 h_attn_hidden_states = []
                 for i, h in enumerate(h_encoder_input):
                     # h: h is a tensor object
-                    h_encoder_hidden_state = self.h_encoder.init_hidden(1, self.device)
-                    _, h_encoder_hidden_state = self.h_encoder(h.view(-1, 1), h_encoder_hidden_state)
+                    h_encoder_hidden_state = self.simple_encoder.init_hidden(1, self.device)
+                    _, h_encoder_hidden_state = self.simple_encoder(h.view(-1, 1), h_encoder_hidden_state)
                     h_encoder_hidden_states.append(h_encoder_hidden_state.squeeze(1))
                 h_attn_hidden_states = torch.stack(h_attn_hidden_states, dim=0) #[num, num_layers * bidirection_num, hidden_size]
-
-                #  h_encoder_hidden_state.append(torch.stack(h_encoder_hidden_states, dim=0).mean(0))
-            #  # [batch_size, turn_num - 1, hidden_size]
-            #  h_outputs = torch.stack(h_outputs, dim=0)
-            #  # [turn_num - 1, batch_size, hidden_size]
-            #  h_outputs.transpose_(0, 1)
-            #  # [num_layers * bidirection_num, batch_size, hidden_size]
-            #  h_encoder_hidden_state = torch.cat(h_encoder_hidden_state, dim=1)
-
             return h_outputs, h_encoder_hidden_states
-        elif self.turn_type == 'hred':
-            pass
 
-        return None, None
+        elif self.turn_type == 'hred':
+            h_encoder_hidden_states = None
+            h_encoder_outputs = []
+            for h_encoder_input in h_encoder_inputs:
+                session_encoder_hidden_state = self.session_encoder.init_hidden(1, self.device)
+                if len(h_encoder_input) == 0:
+                    simple_encoder_output = torch.zeros((1, 1, self.hidden_size), device=self.device)
+                    session_encoder_outputs, _ = self.session_encoder(simple_encoder_output, session_encoder_hidden_state)
+                else:
+                    for ids in h_encoder_input:
+                        simple_encoder_hidden_state = self.simple_encoder.init_hidden(1, self.device)
+                        simple_encoder_outputs, simple_encoder_hidden_state = self.simple_encoder(ids.view(-1, 1), simple_encoder_hidden_state)
+                        # session update
+                        session_encoder_outputs, session_encoder_hidden_state = self.session_encoder(simple_encoder_outputs[-1].unsqueeze(0), session_encoder_hidden_state)
+
+                session_encoder_output = session_encoder_outputs[-1]
+
+                h_encoder_outputs.append(session_encoder_output)
+            h_encoder_outputs = torch.stack(h_encoder_outputs, dim=1) # [1, batch_size, hidden_size]
+
+            return h_encoder_outputs, None
 
 
     def f_forward(self,

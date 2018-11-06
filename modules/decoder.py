@@ -69,6 +69,8 @@ class Decoder(nn.Module):
         if tied and hidden_size == self.embedding_size:
             self.linear.weight = self.embedding.weight
 
+        self.h_linear = nn.Linear(hidden_size, hidden_size)
+
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
 
@@ -81,17 +83,22 @@ class Decoder(nn.Module):
         input: [1, batch_size]  LongTensor
         hidden_state: [num_layers, batch_size, hidden_size]
         c_encoder_outputs: [max_len, batch_size, hidden_size * 2]
-        h_encoder_outputs: history encoder outputs
+        h_encoder_outputs: history encoder outputs, for hred model [1, batch_size, hidden_size]
 
-        output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
+        output: [1, batch_size, hidden_size]
         hidden_state: (h_n, c_n)
         '''
+
         # embedded
         embedded = self.embedding(input) #[1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
 
         # rnn
         output, hidden_state = self.rnn(embedded, hidden_state)
+
+        if h_encoder_outputs is not None:
+            con_output = output + h_encoder_outputs
+            output = self.h_linear(con_output)
 
         # [1, batch_size, hidden_size]
         # linear
