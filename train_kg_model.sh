@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.dict \
     --turn_num 3 \
-    --turn_type dcgm \
-    --embedding_size 300 \
+    --turn_type none \
+    --embedding_size 512 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
     --rnn_type GRU \
@@ -34,7 +34,7 @@ python train_kg_model.py \
     --max_norm 50.0 \
     --epochs 10 \
     --batch_size 128 \
-    --teacher_forcing_ratio 0.7 \
+    --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
     --log_interval 100 \

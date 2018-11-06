@@ -167,6 +167,7 @@ class KGModel(nn.Module):
 
             f_encoder_inputs: [batch_size, r_max_len, topk]
         '''
+
         # h encoder
         h_encoder_outputs, h_encoder_hidden_state = self.h_forward(h_encoder_inputs, batch_size)
 

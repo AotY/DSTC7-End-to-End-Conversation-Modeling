@@ -51,9 +51,6 @@ class Decoder(nn.Module):
         # dropout
         self.dropout = nn.Dropout(dropout)
 
-        # encoder_max_output + embedded ->
-        #  self.context_linear = nn.Linear(hidden_size * 2 + embedding_size, embedding_size)
-
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
@@ -62,6 +59,7 @@ class Decoder(nn.Module):
             num_layers=num_layers,
             dropout=dropout
         )
+
         if rnn_type == 'LSTM':
             init_lstm_orth(self.rnn)
         else:
@@ -77,7 +75,7 @@ class Decoder(nn.Module):
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, 
+    def forward(self,
                 input,
                 hidden_state,
                 c_encoder_outputs=None,

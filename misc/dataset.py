@@ -85,6 +85,7 @@ class Dataset:
                     response_ids = self.vocab.words_to_id(response.split(' '))
                     if len(response_ids) < self.min_len:
                             continue
+
                     response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
 
                     # conversation split by EOS, START
