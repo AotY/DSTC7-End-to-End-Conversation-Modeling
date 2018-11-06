@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=6
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.dict \
     --turn_num 3 \
-    --turn_type none \
+    --turn_type hred \
     --embedding_size 512 \
     --pre_embedding_size 300 \
     --share_embedding \
