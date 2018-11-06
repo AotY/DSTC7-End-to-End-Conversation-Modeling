@@ -46,6 +46,7 @@ class LuongAttnDecoder(nn.Module):
         self.embedding = nn.Embedding(vocab_size,
                                       embedding_size,
                                       padding_idx)
+
         init_wt_normal(self.embedding.weight)
 
         # dropout
@@ -69,14 +70,16 @@ class LuongAttnDecoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
+        """
         if turn_type == 'attention': # history attn
             self.attn_history = GlobalAttn(self.attn_type, self.hidden_size, device)
             self.concat_history_linear = nn.Linear(hidden_size * 3, hidden_size)
             init_linear_wt(self.concat_history_linear)
         else:
             # concat linear
-            self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
-            init_linear_wt(self.concat_linear)
+        """
+        self.concat_linear = nn.Linear(hidden_size * 2, hidden_size)
+        init_linear_wt(self.concat_linear)
 
         # linear
         self.linear = nn.Linear(hidden_size, vocab_size)
@@ -84,6 +87,8 @@ class LuongAttnDecoder(nn.Module):
 
         if tied and embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
+        else:
+            init_linear_wt(self.linear)
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=1)

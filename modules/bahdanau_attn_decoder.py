@@ -55,6 +55,7 @@ class BahdanauAttnDecoder(nn.Module):
             num_layers,
             dropout=dropout
         )
+
         init_gru_orth(self.rnn)
 
         # linear
