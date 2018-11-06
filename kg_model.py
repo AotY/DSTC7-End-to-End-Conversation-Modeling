@@ -109,8 +109,8 @@ class KGModel(nn.Module):
                                         num_layers,
                                         self.c_encoder.bidirection_num)
 
-        self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
-        init_linear_wt(self.combine_c_h_linear)
+        #  self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
+        #  init_linear_wt(self.combine_c_h_linear)
 
         # decoder
         if decoder_type == 'normal':
@@ -432,10 +432,10 @@ class KGModel(nn.Module):
         return u_
 
     def combine_c_h_state(self, c_encoder_hidden_state, h_encoder_hidden_state):
-        #  tmp_encoder_hidden_state = torch.add(c_encoder_hidden_state, h_encoder_hidden_state)
+        tmp_encoder_hidden_state = torch.add(c_encoder_hidden_state, h_encoder_hidden_state)
         # or
-        tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
+        #  tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
         #  tmp_encoder_hidden_state = torch.relu(self.combine_c_h_linear(tmp_encoder_hidden_state))
-        tmp_encoder_hidden_state = self.combine_c_h_linear(tmp_encoder_hidden_state)
+        #  tmp_encoder_hidden_state = self.combine_c_h_linear(tmp_encoder_hidden_state)
         return tmp_encoder_hidden_state
 
