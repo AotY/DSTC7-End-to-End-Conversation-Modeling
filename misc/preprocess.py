@@ -490,6 +490,7 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
+    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None,
                                                                                    vocab,
@@ -504,6 +505,8 @@ if __name__ == '__main__':
 
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
+
+    """
 
     """
     # training own word embedding.
