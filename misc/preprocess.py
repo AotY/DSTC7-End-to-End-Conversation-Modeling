@@ -274,13 +274,12 @@ def save_distribution(distribution, name):
 ''' save data to pair, conversation - response '''
 
 
-def save_data_to_pair(opt, conversations, responses, hash_values, filename):
+def save_data_to_pair(opt, conversations, responses, conversation_ids, hash_values, filename):
     '''Save data in pair format.'''
     save_file = open(os.path.join(opt.save_path, filename),
                      'w', encoding='utf-8')
-    for conversation, response, hash_value in zip(conversations, responses, hash_values):
-        save_file.write('%sSPLITTOKEN%sSPLITTOKEN%s\n' % (
-            ' '.join(conversation), ' '.join(response), hash_value))
+    for conversation_id, conversation, response, hash_value in zip(conversation_ids, conversations, responses, hash_values):
+        save_file.write('%sSPLITTOKEN%sSPLITTOKEN%sSPLITTOKEN%s\n' % (conversation_id, ' '.join(conversation), ' '.join(response), hash_value))
 
     save_file.close()
 
@@ -415,7 +414,7 @@ if __name__ == '__main__':
 
         # re-save conversations, responses, and facts
         # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-        save_data_to_pair(opt, conversations, responses, conversation_hash_values, filename='conversations_responses.pair.txt')
+        save_data_to_pair(opt, conversations, responses, conversation_conversation_ids, conversation_hash_values, filename='conversations_responses.pair.txt')
 
         #  save_distribution(conversations_length_distribution, 'conversations')
         #  save_distribution(responses_length_distribution, 'responses')
@@ -533,6 +532,7 @@ if __name__ == '__main__':
                 out_of_vocab_count)  #
     """
 
+    """
     logger.info('Save to ElasticSearch ...')
     es = es_helper.get_connection()
 
@@ -555,3 +555,4 @@ if __name__ == '__main__':
                        domain_names, facts), doc_type=es_helper.fact_type)
 
     logger.info('Preprocess finished.')
+    """

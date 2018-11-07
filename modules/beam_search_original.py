@@ -158,6 +158,6 @@ def beam_decode(
             res.append((score, ids))
 
         best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
-        batch_utterances.append(best_n_sentences + best_n_sentences2)
+        batch_utterances.append(best_n_sentences)
 
     return batch_utterances

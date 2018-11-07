@@ -79,7 +79,7 @@ class Dataset:
             datas = []
             with open(pair_path, 'r', encoding='utf-8') as f:
                 for line in f:
-                    conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
+                    _, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
 
                     if not bool(conversation) or not bool(response):
                         continue
@@ -301,12 +301,12 @@ class Dataset:
             with torch.no_grad():
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-                    for conversation, _, conversation_ids, _, hash_value in datas:
+                    for conversation_id, conversation, _, conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
 
-                        facts = wiki_table_dict.get(es_helper.search_conversation_id(self.es, hash_value), None)
-                        #  print(facts)
+                        #  facts = wiki_table_dict.get(es_helper.search_conversation_id(self.es, hash_value), None)
+                        facts = wiki_table_dict.get(conversation_id, None)
 
                         if facts is None or len(facts) == 0:
                             continue
@@ -381,7 +381,7 @@ class Dataset:
                 """ computing similarity between conversation and facts, then saving to dict"""
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-                    for conversation, _, conversation_ids, _, hash_value in datas:
+                    for _, conversation, _, conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
 
