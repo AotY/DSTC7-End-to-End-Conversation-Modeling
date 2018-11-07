@@ -24,14 +24,18 @@ from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 from collections import Counter
 
-import es_helper
+from utils import Tokenizer
+
+#  import es_helper
+#  es = es_helper.get_connection()
 
 stopWords = set(stopwords.words('english'))
+
+tokenizer = Tokenizer()
 
 def remove_stop_words(words):
     return [word for word in words if word not in stopWords]
 
-es = es_helper.get_connection()
 
 def table_h2_stats(facts_path):
     title_count = 0
@@ -102,8 +106,8 @@ def table_h2_stats(facts_path):
                 elif fact.find('<h2>') != -1:
                     soup = BeautifulSoup(fact, 'lxml')
                     h2 = soup.text.replace('[ edit ]', '').strip()
-                    h2_words = remove_stop_words(h2.split(' '))
-                    h2s.append(' '.join(h2_words))
+                    h2_words = remove_stop_words(tokenizer.tokenize(h2.split(' ')))
+                    h2s.append(h2_words)
 
                     if len(abstracts) > 0 and maybe_abstract:
                         wiki_abstract_dict[conversation_id] = abstracts
@@ -115,8 +119,8 @@ def table_h2_stats(facts_path):
                 elif fact.find('<p>') != -1 and maybe_abstract:
                     soup = BeautifulSoup(fact, 'lxml')
                     abstract = soup.text.strip()
-                    abstract_words = remove_stop_words(abstract.split(' '))
-                    abstracts.append(' '.join(abstract_words))
+                    abstract_words = remove_stop_words(tokenizer.tokenize(abstract.split(' ')))
+                    abstracts.append(abstract_words)
 
             if is_wiki and domain_name == last_domain and maybe_table:
                 if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
@@ -132,9 +136,9 @@ def table_h2_stats(facts_path):
                 else:
                     if len(fact) > 3:
                         line_count += 1
-                        fact_words = remove_stop_words(fact.split(' '))
-                        table_file.write(' '.join(fact_words))
-                        table.append(fact)
+                        table_file.write(fact)
+                        fact_words = remove_stop_words(Tokenizer.tokenize(fact.split(' ')))
+                        table.append(fact_words)
                     continue
 
             if domain_name != last_domain or fact == 'mobile view': # mobile view, last line
@@ -148,6 +152,7 @@ def table_h2_stats(facts_path):
                 line_count = 0
                 table = []
                 h2s = []
+                abstracts = []
 
     table_file.close()
 
@@ -178,20 +183,24 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
     with open(conversation_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
-            conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
+            conversation_id, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
 
             if not bool(conversation) or not bool(response):
                 continue
 
-            conversation_id = es_helper.search_conversation_id(es, hash_value)
-            if conversation_id != last_conversation_id or hash_value == '014b92c1c7785b9aab90593fd465d9deab0fb88f9baa97a913077805':
-                last_conversation_id = conversation_id
-                if len(word_counter) == 0:
-                    continue
+            #  conversation_id = es_helper.search_conversation_id(es, hash_value)
+            if len(word_counter) > 0 and (conversation_id != last_conversation_id or hash_value == '014b92c1c7785b9aab90593fd465d9deab0fb88f9baa97a913077805'):
 
                 # stats count
-                table_words = set(wiki_table_dict.get(conversation_id, '').split())
-                h2_words = set(wiki_h2_dict.get(conversation_id, []).split())
+                table_words = set()
+                for words in wiki_table_dict.get(conversation_id, []):
+                    for word in words:
+                        table_words.add(word)
+
+                h2_words = set()
+                for words in wiki_h2_dict.get(conversation_id, []):
+                    for word in words:
+                        h2_words.add(word)
 
                 save_f.write('%s:\n' % conversation_id)
 
@@ -205,23 +214,31 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
                     count = word_counter.get(word, 0)
                     save_f.write('\t\t%s: %d\n' % (word, count))
 
+                abstract_words = set()
+                for words in wiki_abstract_dict.get(conversation_id, []):
+                    for word in words:
+                        abstract_words.add(word)
+
+                save_f.write('\tabstract:\n')
+                for word in abstract_words:
+                    count = word_counter.get(word, 0)
+                    save_f.write('\t\t%s: %d\n' % (word, count))
+
                 save_f.write('-------------------------\n')
 
                 del word_counter
                 word_counter = Counter()
 
             else:
-                conversation_words = remove_stop_words(conversation.split(' '))
-                response_words = remove_stop_words(response.split(' '))
-                if len(conversation_words) == 0 or len(response_words) == 0:
-                    continue
+                last_conversation_id = conversation_id
+
+                conversation_words = conversation.split(' ')
+                response_words = response.split(' ')
 
                 word_counter.update(conversation_words)
                 word_counter.update(response_words)
 
-
     save_f.close()
-
 
 
 if __name__ == '__main__':
