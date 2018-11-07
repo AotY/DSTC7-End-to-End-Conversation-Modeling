@@ -481,10 +481,10 @@ class Dataset:
                              beam_texts,
                              filename,
                              decode_type='greed',
-                             topk_facts=None):
+                             facts_texts=None):
 
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation, response, greedy_text, beam_text in zip(conversation_texts, response_texts, greedy_texts, beam_texts):
+            for conversation, response, greedy_text, beam_text, topk_facts in zip(conversation_texts, response_texts, greedy_texts, beam_texts, facts_texts):
                 # conversation, true response, generated_text
                 f.write('Conversation:\t %s\n' % conversation)
                 f.write('Response:\t %s\n' % response)
