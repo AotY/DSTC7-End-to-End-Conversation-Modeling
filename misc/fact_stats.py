@@ -8,6 +8,15 @@
 <title>(total): 8471
 Wikipedia: 6925
 
+title_count: 8555
+wiki_count: 6925
+wiki ratio: 0.8095
+wiki_table_count: 5351
+table_ratio: 0.7727
+h2 count: 6909
+h2 ratio: 0.9977
+abstract count: 6916
+abstract ratio: 0.9987
 """
 import os
 import pickle
@@ -26,15 +35,6 @@ def remove_stop_words(words):
 es = es_helper.get_connection()
 
 def table_h2_stats(facts_path):
-    """
-    Wikipedia contains table
-    title_count: 8471
-    wiki_count: 6925
-    wiki ratio: 0.8175
-    wiki_table_count: 5052
-    table_ratio: 0.7295
-    """
-
     title_count = 0
     wiki_count = 0
     wiki_table_count = 0
