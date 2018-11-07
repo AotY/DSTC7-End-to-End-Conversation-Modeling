@@ -55,6 +55,8 @@ class BahdanauAttnDecoder(nn.Module):
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
 
+        self.h_linear = nn.Linear(hidden_size, hidden_size)
+
         if tied and self.embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
         else:
@@ -89,6 +91,10 @@ class BahdanauAttnDecoder(nn.Module):
 
         # rnn
         output, hidden_state = self.rnn(rnn_input, hidden_state)
+
+        if h_encoder_outputs is not None:
+            con_output = output + h_encoder_outputs
+            output = self.h_linear(con_output)
 
         # linear
         output = self.linear(output)

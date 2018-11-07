@@ -18,19 +18,19 @@ Beam Node
 
 
 class BeamNode:
-    def __init__(self):
-        self.sentence = ''
-        self.log_prob = 0.0
+    def __init__(self, word_idx, log_prob):
+        self.sentence = '' + str(word_idx)
+        self.log_prob = 0.0 + log_prob
 
     def push(self, word_idx, log_prob):
-        self.sentence += str(word_idx) + ','
+        self.sentence += ',' + str(word_idx)
         self.log_prob += log_prob
 
     def get_ids(self):
-        return [int(item) for item in self.sentence[:-1].split(',')]
+        return [int(item) for item in self.sentence.split(',')]
 
     def get_score(self):
-        reward = 0.00
+        reward = 0.0000001
         ids = self.get_ids()
         return self.log_prob / len(ids) + reward * len(ids)
 
@@ -68,6 +68,7 @@ def beam_decode(
         init_decoder_input = decoder_input[:, bi].view(1, -1).contiguous()  # [1, 1]
 
         node_queue = Queue()
+
         output, hidden_state, _ = decoder(
             init_decoder_input,
             init_decoder_hidden_state,
@@ -79,16 +80,15 @@ def beam_decode(
 
         init_node_list = []
         for word_idx, log_prob in zip(indices.view(-1).tolist(), log_probs.view(-1).tolist()):
-            node = BeamNode()
-            node.push(word_idx, log_prob)
+            node = BeamNode(word_idx, log_prob)
             init_node_list.append(node)
 
         node_queue.put(init_node_list)
 
         # for next step
-        next_decoder_input = indices.squeeze(0) #[1, beam_width]
-        next_decoder_hidden_state = init_decoder_hidden_state.repeat(1, beam_width, 1)
-        next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1)
+        next_decoder_input = indices.view(1, -1).contiguous() #[1, beam_width]
+        next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1) #[num_layers, beam_width, hidden_size]
+        next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1) #[len, beam_width, hidden_size]
 
         next_h_encoder_outputs = None
         if init_h_encoder_outputs is not None:
@@ -113,25 +113,28 @@ def beam_decode(
             next_decoder_input = []
             indices_select = []
 
-            for j, (log_prob, index) in enumerate(zip(log_probs.tolist(), indices.tolist())):
+            for j, (index, log_prob) in enumerate(zip(indices.tolist(), log_probs.tolist())):
                 last_j = index // outputs.size(2)
                 word_idx = index % outputs.size(2)
 
+                last_node_j = last_node_list[last_j]
+
                 if word_idx == eosid:
-                    tmp_ids = last_node_list[last_j].get_ids()
-                    tmp_score = last_node_list[last_j].get_score()
+                    tmp_ids = last_node_j.get_ids()
+                    tmp_score = last_node_j.get_score()
                     res.append((tmp_score, tmp_ids))
                     beam_width -= 1
                     continue
 
-                tmp_node = BeamNode()
-                tmp_node.push(last_node_list[last_j].sentence + str(word_idx), last_node_list[last_j].log_prob + log_prob)
+                tmp_node = BeamNode(last_node_j.sentence, last_node_j.log_prob)
+                tmp_node.push(word_idx, log_prob)
                 cur_node_list.append(tmp_node)
 
                 next_decoder_input.append(word_idx)
                 indices_select.append(j)
 
             node_queue.put(cur_node_list)
+            del last_node_list
 
             if len(next_decoder_input) == 0:
                 break
@@ -155,7 +158,6 @@ def beam_decode(
             res.append((score, ids))
 
         best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
-        best_n_sentences2 = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=False)][:best_n]
         batch_utterances.append(best_n_sentences + best_n_sentences2)
 
     return batch_utterances
