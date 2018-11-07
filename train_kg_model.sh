@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.dict \
-    --turn_num 3 \
+    --turn_num 4 \
     --turn_type hred \
     --embedding_size 512 \
     --pre_embedding_size 300 \
@@ -25,8 +25,8 @@ python train_kg_model.py \
     --tied \
 	--decoder_type bahdanau \
     --decode_type beam_search \
-    --beam_width 64 \
-    --best_n 5 \
+    --beam_width 32 \
+    --best_n 10 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
@@ -41,7 +41,7 @@ python train_kg_model.py \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0007 \
-    --test_split 0.1 \
+    --test_split 0.06 \
     --start_epoch 1 \
     --task train \
     --model_type seq2seq
