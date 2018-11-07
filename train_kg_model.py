@@ -391,6 +391,7 @@ def build_dataset(vocab):
                 opt.turn_type,
                 opt.eval_split,  # how many hold out as eval data
                 opt.test_split,
+                opt.batch_size,
                 device,
                 logger)
 

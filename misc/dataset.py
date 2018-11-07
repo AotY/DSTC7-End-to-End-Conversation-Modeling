@@ -40,6 +40,7 @@ class Dataset:
                  turn_type,
                  eval_split,  # how many hold out as eval data
                  test_split,
+                 batch_size,
                  device,
                  logger):
 
@@ -68,9 +69,10 @@ class Dataset:
         self.read_txt(save_path,
                       pair_path,
                       eval_split,
-                      test_split)
+                      test_split,
+                      batch_size)
 
-    def read_txt(self, save_path, pair_path, eval_split, test_split):
+    def read_txt(self, save_path, pair_path, eval_split, test_split, batch_size):
         _data_dict_path = os.path.join(save_path, '_data_dict_%s.pkl' % self.turn_type)
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
@@ -135,7 +137,7 @@ class Dataset:
             np.random.shuffle(datas)
             # train-eval split
             self.n_train = int(len(datas) * (1. - eval_split - test_split))
-            self.n_eval = int(len(datas) * eval_split)
+            self.n_eval = max(int(len(datas) * eval_split), batch_size)
             self.n_test = len(datas) - self.n_train - self.n_eval
 
             self._data_dict = {
@@ -147,8 +149,8 @@ class Dataset:
         else:
             self._data_dict = pickle.load(open(_data_dict_path, 'rb'))
             self.n_train = len(self._data_dict['train'])
-            self.n_eval = len(self._data_dict['eval'])
             self.n_test = len(self._data_dict['test'])
+            self.n_eval = len(self._data_dict['eval'])
 
         self._indicator_dict = {
             'train': 0,
@@ -181,7 +183,7 @@ class Dataset:
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
 
-        cur_indicator=self._indicator_dict[task] + batch_size
+        cur_indicator = self._indicator_dict[task] + batch_size
         if cur_indicator > task_len:
             self.reset_data(task)
             cur_indicator=batch_size
