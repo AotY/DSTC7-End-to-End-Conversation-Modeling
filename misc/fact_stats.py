@@ -190,8 +190,15 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
                     continue
 
                 # stats count
-                table_words = set(wiki_table_dict.get(conversation_id, '').split())
-                h2_words = set(wiki_h2_dict.get(conversation_id, []).split())
+                table_words = set()
+                for line in wiki_table_dict.get(conversation_id, []):
+                    for word in line.split():
+                        table_words.add(word)
+
+                h2_words = set()
+                for line in wiki_h2_dict.get(conversation_id, []):
+                    for word in line.split():
+                        h2_words.add(word)
 
                 save_f.write('%s:\n' % conversation_id)
 
