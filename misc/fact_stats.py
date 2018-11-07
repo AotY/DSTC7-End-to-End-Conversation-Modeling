@@ -106,14 +106,14 @@ with open(facts_path, 'r', encoding='utf-8') as f:
 
 table_file.close()
 
-print('title_count: %d' % title_count)
-print('wiki_count: %d' % wiki_count)
-print('wiki ratio: %.4f ' % (wiki_count / title_count))
-print('wiki_table_count: %d' % wiki_table_count)
-print('table_ratio: %.4f' % (wiki_table_count / wiki_count))
 
+#  print('title_count: %d' % title_count)
+#  print('wiki_count: %d' % wiki_count)
+#  print('wiki ratio: %.4f ' % (wiki_count / title_count))
+#  print('wiki_table_count: %d' % wiki_table_count)
+#  print('table_ratio: %.4f' % (wiki_table_count / wiki_count))
 
-pickle.dump(wiki_table_dict, open('./../data/wiki_table_dict.pkl', 'wb'))
+#  pickle.dump(wiki_table_dict, open('./../data/wiki_table_dict.pkl', 'wb'))
 
 
 

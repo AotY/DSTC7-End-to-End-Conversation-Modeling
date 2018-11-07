@@ -138,3 +138,10 @@ def search_facts(es, hash_value):
 
     #  assert hit_count == len()
     return hit_count, facts
+
+
+if __name__ == '__main__':
+    es = get_connection()
+    hash_value = 'e16b4ec79cbf3bce455c55c82cacb2585faa4f312b680c6d3fbf5b8e'
+    id = search_conversation_id(es, hash_value)
+    print(id)

@@ -293,7 +293,8 @@ def decode(model, dataset, vocab):
                                          greedy_texts,
                                          beam_texts,
                                          os.path.join(opt.save_path, 'generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
-                                         opt.decode_type)
+                                         opt.decode_type,
+                                         facts_texts)
 
 
 
