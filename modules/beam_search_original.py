@@ -55,7 +55,6 @@ def beam_decode(
         decoder_hidden_state: [layers, batch, hidden_size]
         decoder_input: [1, batch_size] * sosid
     """
-
     batch_utterances = []
     for bi in range(batch_size):
         beam_width = _beam_width
@@ -156,6 +155,7 @@ def beam_decode(
             res.append((score, ids))
 
         best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
-        batch_utterances.append(best_n_sentences)
+        best_n_sentences2 = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=False)][:best_n]
+        batch_utterances.append(best_n_sentences + best_n_sentences2)
 
     return batch_utterances
