@@ -34,7 +34,7 @@ python train_kg_model.py \
     --max_norm 50.0 \
     --epochs 10 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
     --log_interval 70 \
@@ -44,8 +44,8 @@ python train_kg_model.py \
     --test_split 0.06 \
     --start_epoch 1 \
     --task train \
-    --model_type seq2seq
-    # --share_embedding \
+    --model_type seq2seq \
+    --share_embedding
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --checkpoint ./models/checkpoint.epoch-2_seq2seq_3_dcgm.pth
 
