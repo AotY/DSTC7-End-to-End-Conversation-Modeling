@@ -9,14 +9,13 @@
 Wikipedia: 6925
 
 """
-import os
 import pickle
 from tqdm import tqdm
 from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 from collections import Counter
 
-from misc import es_helper
+import es_helper
 
 stopWords = set(stopwords.words('english'))
 
@@ -186,6 +185,7 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
 
             conversation_id = es_helper.search_conversation_id(es, hash_value)
             if conversation_id != last_conversation_id or hash_value == '014b92c1c7785b9aab90593fd465d9deab0fb88f9baa97a913077805':
+                last_conversation_id = conversation_id
                 if len(word_counter) == 0:
                     continue
 
@@ -212,7 +212,7 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
 
             else:
                 conversation_words = remove_stop_words(conversation.split(' '))
-                response_words = remove_stop_words(response_words.split(' '))
+                response_words = remove_stop_words(response.split(' '))
                 if len(conversation_words) == 0 or len(response_words) == 0:
                     continue
 
@@ -226,7 +226,7 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
 
 if __name__ == '__main__':
     facts_path = './../data/train.facts.txt'
-    conversation_path = 'conversations_responses.pair.txt'
+    conversation_path = '../data/conversations_responses.pair.txt'
     wiki_table_dict, wiki_h2_dict, _ = table_h2_stats(facts_path)
     conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path)
 
