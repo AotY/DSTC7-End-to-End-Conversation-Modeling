@@ -301,12 +301,12 @@ class Dataset:
             with torch.no_grad():
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-                    for conversation_id, conversation, _, conversation_ids, _, hash_value in datas:
+                    for conversation, _, conversation_ids, _, hash_value in datas:
                         if not bool(conversation_ids) or not bool(hash_value):
                             continue
 
-                        #  facts = wiki_table_dict.get(es_helper.search_conversation_id(self.es, hash_value), None)
-                        facts = wiki_table_dict.get(conversation_id, None)
+                        facts = wiki_table_dict.get(es_helper.search_conversation_id(self.es, hash_value), None)
+                        #  facts = wiki_table_dict.get(conversation_id, None)
 
                         if facts is None or len(facts) == 0:
                             continue
