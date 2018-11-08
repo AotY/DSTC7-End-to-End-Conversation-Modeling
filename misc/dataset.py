@@ -129,7 +129,7 @@ class Dataset:
                     history_conversations_ids = []
                     for history in history_conversations:
                         history_ids = self.vocab.words_to_id(history.split(' '))
-                        history_ids = history_ids[-min(self.h_max_len - 1, len(history_ids))]
+                        history_ids = history_ids[-min(self.h_max_len, len(history_ids))]
                         history_conversations_ids.append(history_ids)
 
                     datas.append((raw_conversation, history_conversations_ids, conversation_ids, response_ids, hash_value))
@@ -228,7 +228,7 @@ class Dataset:
             if len(history_conversations_ids) > 0:
                 history_input=[]
                 for ids in history_conversations_ids:
-                    ids.insert(0, self.vocab.sosid)
+                    #  ids.insert(0, self.vocab.sosid)
                     ids = torch.tensor(ids, dtype=torch.long, device=self.device)
                     history_input.append(ids)
                 history_input = torch.stack(history_input, dim=0) #[num, ids]
