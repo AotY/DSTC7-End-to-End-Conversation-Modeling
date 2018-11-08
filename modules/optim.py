@@ -6,6 +6,7 @@
 
 """
 custom optim
+https://github.com/IBM/pytorch-seq2seq/blob/master/seq2seq/optim/optim.py
 """
 
 import itertools
@@ -42,6 +43,7 @@ class Optimizer(object):
         if self.max_grad_norm > 0:
             params = itertools.chain.from_iterable([group['params'] for group in self.optimizer.param_groups])
             torch.nn.utils.clip_grad_norm_(params, self.max_grad_norm)
+
         self.optimizer.step()
 
     def update(self, loss, epoch):

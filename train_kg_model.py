@@ -15,7 +15,8 @@ import pickle
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
+
+from modules.optim import Optimizer
 
 from gensim.models import KeyedVectors
 
@@ -113,13 +114,15 @@ def train_epochs(model,
                 #  logger.info('---------generate-------------')
                 #  decode(model, dataset, vocab)
 
+        optimizer.update(log_loss_avg, epoch)
+
         # save model of each epoch
         save_state = {
             'loss': log_loss_avg,
             'ppl': math.exp(log_loss_avg),
             'epoch': epoch,
             'state_dict': model.state_dict(),
-            'optimizer': optimizer.state_dict()
+            'optimizer': optimizer.optimizer.state_dict()
         }
 
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
@@ -168,7 +171,8 @@ def train(model,
         opt.teacher_forcing_ratio
     )
 
-    optimizer.zero_grad()
+    #  optimizer.zero_grad()
+    model.zero_grad()
 
     loss = 0
 
@@ -189,7 +193,7 @@ def train(model,
     loss.backward()
 
     # clip gradients
-    _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_norm)
+    #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_norm)
 
     # optimizer
     optimizer.step()
@@ -328,16 +332,26 @@ def save_logger(logger_str):
         f.write(logger_str)
 
 def build_optim(model):
-    optimizer=optim.Adam(model.parameters(),
-                           lr=opt.lr,
-                           betas=(0.9, 0.999))
+    optim = torch.optim.Adam(
+        model.parameters(),
+        lr=opt.lr,
+        betas=(0.9, 0.999)
+    )
+
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.17)
+
+    optimizer = optimizer(
+        optim,
+        scheduler,
+        opt.max_norm
+    )
 
     return optimizer
 
 
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion=nn.NLLLoss(reduction='elementwise_mean',
+    criterion = nn.NLLLoss(reduction='elementwise_mean',
                            ignore_index=padid)
 
     return criterion
@@ -476,14 +490,14 @@ if __name__ == '__main__':
     model=build_model(vocab_size, vocab.padid)
 
     # Build optimizer.
-    optimizer=build_optim(model)
+    optimizer = build_optim(model)
 
     criterion=build_criterion(vocab.padid)
 
     '''if load checkpoint'''
     if checkpoint:
         model.load_state_dict(checkpoint['state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
