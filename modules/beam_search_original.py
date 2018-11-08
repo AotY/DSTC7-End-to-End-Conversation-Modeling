@@ -59,6 +59,7 @@ def beam_decode(
         decoder_hidden_state: [layers, batch, hidden_size]
         decoder_input: [1, batch_size] * sosid
     """
+    rnn_type = decoder.rnn_type
     batch_utterances = []
     for bi in range(batch_size):
         beam_width = _beam_width
@@ -68,7 +69,10 @@ def beam_decode(
         if h_encoder_outputs is not None:
             init_h_encoder_outputs = h_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [num, 1, hidden_size]
 
-        init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
+        if rnn_type == 'GRU':
+            init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
+        else:
+            init_decoder_hidden_state = tuple([item[:, bi, :].unsqueeze(1).contiguous() for item in decoder_hidden_state])  # [layers, 1, hidden_size]
         init_decoder_input = decoder_input[:, bi].view(1, -1).contiguous()  # [1, 1]
 
         node_queue = Queue()
@@ -91,7 +95,10 @@ def beam_decode(
 
         # for next step
         next_decoder_input = indices.view(1, -1).contiguous() #[1, beam_width]
-        next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1) #[num_layers, beam_width, hidden_size]
+        if rnn_type == 'GRU':
+            next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1) #[num_layers, beam_width, hidden_size]
+        else:
+            next_decoder_hidden_state = tuple([item.repeat(1, beam_width, 1) for item in hidden_state])  # [layers, 1, hidden_size]
         next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1) #[len, beam_width, hidden_size]
 
         next_h_encoder_outputs = None
@@ -148,7 +155,11 @@ def beam_decode(
             next_decoder_input = torch.tensor(next_decoder_input, dtype=torch.long, device=device).view(1, -1)
             if len(indices_select) != outputs.size(1):
                 indices_select = torch.tensor(indices_select, dtype=torch.long, device=device).view(-1)
-                next_decoder_hidden_state = hidden_states.index_select(dim=1, index=indices_select)
+
+                if rnn_type == 'GRU':
+                    next_decoder_hidden_state = hidden_states.index_select(dim=1, index=indices_select)
+                else:
+                    next_decoder_hidden_state = tuple([item.index_select(dim=1, index=indices_select) for item in hidden_states])  # [layers, 1, hidden_size]
 
                 next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, indices_select)
                 if next_h_encoder_outputs is not None:
