@@ -35,8 +35,9 @@ class SimpleEncoder(nn.Module):
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.bidirection_num = 2 if bidirectional else 1
-        self.hidden_size = hidden_size // self.bidirection_num
+
+        #  self.bidirection_num = 2 if bidirectional else 1
+        #  self.hidden_size = hidden_size // self.bidirection_num
 
         # embedding
         self.embedding = embedding
@@ -49,9 +50,9 @@ class SimpleEncoder(nn.Module):
             rnn_type,
             input_size=self.embedding_size,
             hidden_size=self.hidden_size,
-            num_layers=num_layers,
-            bidirectional=bidirectional,
-            dropout=dropout
+            #  num_layers=num_layers,
+            #  bidirectional=bidirectional,
+            #  dropout=dropout
         )
 
         if rnn_type == 'LSTM':
@@ -87,7 +88,7 @@ class SimpleEncoder(nn.Module):
             return initial_state1
 
         """
-        initial_state_scale = math.sqrt(3.0 / self.hidden_size) 
+        initial_state_scale = math.sqrt(3.0 / self.hidden_size)
         initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
         nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
         if self.rnn_type == 'LSTM':
