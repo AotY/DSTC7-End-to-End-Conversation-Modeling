@@ -399,8 +399,8 @@ if __name__ == '__main__':
             response_scores, dialogue_turns, conversation_response_nums, \
             abnormal_conversations, abnormal_responses = read_convos(opt.convos_file_path, logger, opt)
 
-        logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
-        logger.info('response_max_length: %d ' % response_max_length)  # 186
+        #  logger.info('conversation_max_length: %d ' % conversation_max_length)  # 2429
+        #  logger.info('response_max_length: %d ' % response_max_length)  # 186
 
         # save conversation response nums
         #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
