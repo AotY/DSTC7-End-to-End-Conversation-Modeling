@@ -102,9 +102,9 @@ class Encoder(nn.Module):
         return outputs, hidden_state
 
     def init_hidden(self, batch_size, device):
-        initial_state1 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+        initial_state1 = torch.zeros((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
         if self.rnn_type == 'LSTM':
-            initial_state2 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+            initial_state2 = torch.zeros((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
             return (initial_state1, initial_state2)
         else:
             return initial_state1

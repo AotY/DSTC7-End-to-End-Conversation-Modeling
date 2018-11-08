@@ -9,16 +9,16 @@ BahdanauAttnDecoder
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from modules.global_attn import GlobalAttn
-from modules.utils import init_gru_orth, init_linear_wt, init_wt_normal
+from modules.utils import init_gru_orth, init_lstm_orth, init_linear_wt, init_wt_normal
+from modules.utils import rnn_factory
 
 class BahdanauAttnDecoder(nn.Module):
     def __init__(self,
                  vocab_size,
-                 rnn_type,
                  embedding,
+                 rnn_type,
                  hidden_size,
                  num_layers,
                  dropout,
@@ -29,6 +29,7 @@ class BahdanauAttnDecoder(nn.Module):
         super(BahdanauAttnDecoder, self).__init__()
 
         self.vocab_size = vocab_size
+        self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
 
@@ -45,7 +46,7 @@ class BahdanauAttnDecoder(nn.Module):
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
-            input_size=self.embedding_size + embedding_size,
+            input_size=self.embedding_size + self.embedding_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
             dropout=dropout
