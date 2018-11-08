@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_seq2seq.dict \
+    --vocab_path data/vocab_word2idx_seq2seq.70004.dict \
     --turn_num 4 \
     --turn_type hred \
     --embedding_size 512 \
@@ -34,7 +34,7 @@ python train_kg_model.py \
     --max_norm 50.0 \
     --epochs 10 \
     --batch_size 128 \
-    --teacher_forcing_ratio 0.5 \
+    --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
     --log_interval 70 \
@@ -43,7 +43,7 @@ python train_kg_model.py \
     --eval_split 0.0007 \
     --test_split 0.06 \
     --start_epoch 1 \
-    --task decode \
+    --task train \
     --model_type seq2seq \
     --share_embedding \
     # --checkpoint models/checkpoint.epoch-1_seq2seq_4_hred.pth
