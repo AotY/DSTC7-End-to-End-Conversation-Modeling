@@ -6,13 +6,14 @@ import os
 import argparse
 import logging
 
-from utils_opts import merge_convos_facts_opt
+from misc_opts import merge_convos_facts_opt
 
 '''
 merge data-official-2011,  data-official-2012-13
 to
 train.convos.txt, train.facts.txt
 '''
+
 
 def merge(opt, logger):
     convos_file = open(opt.save_convos_path, 'w', encoding='utf-8')

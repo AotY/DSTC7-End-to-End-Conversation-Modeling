@@ -12,7 +12,7 @@ python preprocess.py \
     --f_max_len 220\
     --f_min_len 3 \
     --min_count 4 \
-    --max_vocab_size 6e4 \
+    --max_vocab_size 7e4 \
     --word_embedding_model_name v1.0_word_embedding \
     --google_vec_file /home/taoqing/Research/data/GoogleNews-vectors-negative300.bin \
     --google_vec_dim 300 \
