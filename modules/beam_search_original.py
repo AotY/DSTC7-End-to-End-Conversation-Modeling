@@ -16,6 +16,38 @@ from queue import Queue
 Beam Node
 """
 
+def _inflate(tensor, times, dim):
+        """
+        Given a tensor, 'inflates' it along the given dimension by replicating each slice specified number of times (in-place)
+        Args:
+            tensor: A :class:`Tensor` to inflate
+            times: number of repetitions
+            dim: axis for inflation (default=0)
+        Returns:
+            A :class:`Tensor`
+        Examples::
+            >> a = torch.LongTensor([[1, 2], [3, 4]])
+            >> a
+            1   2
+            3   4
+            [torch.LongTensor of size 2x2]
+            >> b = ._inflate(a, 2, dim=1)
+            >> b
+            1   2   1   2
+            3   4   3   4
+            [torch.LongTensor of size 2x4]
+            >> c = _inflate(a, 2, dim=0)
+            >> c
+            1   2
+            3   4
+            1   2
+            3   4
+            [torch.LongTensor of size 4x2]
+        """
+        repeat_dims = [1] * tensor.dim()
+        repeat_dims[dim] = times
+
+        return tensor.repeat(*repeat_dims)
 
 class BeamNode:
     def __init__(self, word_idx, log_prob):
@@ -73,6 +105,7 @@ def beam_decode(
             init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
         else:
             init_decoder_hidden_state = tuple([item[:, bi, :].unsqueeze(1).contiguous() for item in decoder_hidden_state])  # [layers, 1, hidden_size]
+
         init_decoder_input = decoder_input[:, bi].view(1, -1).contiguous()  # [1, 1]
 
         node_queue = Queue()
@@ -96,14 +129,19 @@ def beam_decode(
         # for next step
         next_decoder_input = indices.view(1, -1).contiguous() #[1, beam_width]
         if rnn_type == 'GRU':
-            next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1) #[num_layers, beam_width, hidden_size]
+            #  next_decoder_hidden_state = hidden_state.repeat(1, beam_width, 1) #[num_layers, beam_width, hidden_size]
+            next_decoder_hidden_state = _inflate(hidden_state, beam_width, dim=1)
         else:
-            next_decoder_hidden_state = tuple([item.repeat(1, beam_width, 1) for item in hidden_state])  # [layers, 1, hidden_size]
-        next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1) #[len, beam_width, hidden_size]
+            #  next_decoder_hidden_state = tuple([item.repeat(1, beam_width, 1) for item in hidden_state])  # [layers, 1, hidden_size]
+            next_decoder_hidden_state = tuple([_inflate(item, beam_width, dim=1) for item in hidden_state])  # [layers, 1, hidden_size]
+
+        next_c_encoder_outputs = _inflate(init_c_encoder_outputs, beam_width, dim=1)
+        #  next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1) #[len, beam_width, hidden_size]
 
         next_h_encoder_outputs = None
         if init_h_encoder_outputs is not None:
-            next_h_encoder_outputs = init_h_encoder_outputs.repeat(1, beam_width, 1)
+            next_h_encoder_outputs = _inflate(init_h_encoder_outputs, beam_width, dim=1)
+            #  next_h_encoder_outputs = init_h_encoder_outputs.repeat(1, beam_width, 1)
 
         res = []
 
@@ -162,6 +200,7 @@ def beam_decode(
                     next_decoder_hidden_state = tuple([item.index_select(dim=1, index=indices_select) for item in hidden_states])  # [layers, 1, hidden_size]
 
                 next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, indices_select)
+
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, indices_select)
             else:
