@@ -106,7 +106,7 @@ def table_h2_stats(facts_path):
                 elif fact.find('<h2>') != -1:
                     soup = BeautifulSoup(fact, 'lxml')
                     h2 = soup.text.replace('[ edit ]', '').strip()
-                    h2_words = remove_stop_words(tokenizer.tokenize(h2.split(' ')))
+                    h2_words = remove_stop_words(tokenizer.tokenize(h2))
                     h2s.append(h2_words)
 
                     if len(abstracts) > 0 and maybe_abstract:
@@ -119,7 +119,7 @@ def table_h2_stats(facts_path):
                 elif fact.find('<p>') != -1 and maybe_abstract:
                     soup = BeautifulSoup(fact, 'lxml')
                     abstract = soup.text.strip()
-                    abstract_words = remove_stop_words(tokenizer.tokenize(abstract.split(' ')))
+                    abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
                     abstracts.append(abstract_words)
 
             if is_wiki and domain_name == last_domain and maybe_table:
@@ -137,7 +137,7 @@ def table_h2_stats(facts_path):
                     if len(fact) > 3:
                         line_count += 1
                         table_file.write(fact)
-                        fact_words = remove_stop_words(Tokenizer.tokenize(fact.split(' ')))
+                        fact_words = remove_stop_words(tokenizer.tokenize(fact))
                         table.append(fact_words)
                     continue
 
@@ -176,7 +176,7 @@ def table_h2_stats(facts_path):
     return wiki_table_dict, wiki_h2_dict, wiki_abstract_dict
 
 
-def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
+def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path):
     last_conversation_id = ''
     word_counter = Counter()
     save_f = open('./fact_conversation_word_count.txt', 'w', encoding='utf-8')
@@ -226,7 +226,6 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
 
                 save_f.write('-------------------------\n')
 
-                del word_counter
                 word_counter = Counter()
 
             else:
@@ -244,6 +243,6 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path):
 if __name__ == '__main__':
     facts_path = './../data/train.facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
-    wiki_table_dict, wiki_h2_dict, _ = table_h2_stats(facts_path)
-    conversation_table_stats(wiki_table_dict, wiki_h2_dict, conversation_path)
+    wiki_table_dict, wiki_h2_dict, wiki_abstract_dict = table_h2_stats(facts_path)
+    conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path)
 

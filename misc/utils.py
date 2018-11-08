@@ -22,6 +22,9 @@ class Tokenizer:
     def tokenize(self, text):
         #  tokens = self.R.tokenize(text)
         #  tokens = self.replace_url(tokens)
+        if isinstance(text, list):
+            text = ' '.join(text)
+
         tokens = self.clean_str(text).split()
         tokens = self.replace_number(tokens)
         #  tokens = self.split_hyphen(tokens)
