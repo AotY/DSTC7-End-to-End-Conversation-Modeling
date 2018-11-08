@@ -10,7 +10,7 @@ python train_kg_model.py \
     --embedding_size 512 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
-    --rnn_type GRU \
+    --rnn_type LSTM \
     --hidden_size 512 \
     --num_layers 2 \
     --encoder_num_layers 2 \
@@ -30,7 +30,7 @@ python train_kg_model.py \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
-    --lr 0.0005 \
+    --lr 0.001 \
     --max_norm 50.0 \
     --epochs 10 \
     --batch_size 128 \
@@ -46,7 +46,7 @@ python train_kg_model.py \
     --task train \
     --model_type seq2seq \
     --share_embedding \
-    --checkpoint models/checkpoint.epoch-9_seq2seq_4_hred.pth
+    # --checkpoint models/checkpoint.epoch-9_seq2seq_4_hred.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
 
 /

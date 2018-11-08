@@ -79,8 +79,15 @@ class SimpleEncoder(nn.Module):
         return outputs, hidden_state
 
     def init_hidden(self, batch_size, device):
-        initial_state_scale = math.sqrt(3.0 / self.hidden_size)
+        initial_state1 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+        if self.rnn_type == 'LSTM':
+            initial_state2 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+            return (initial_state1, initial_state2)
+        else:
+            return initial_state1
 
+        """
+        initial_state_scale = math.sqrt(3.0 / self.hidden_size) 
         initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
         nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
         if self.rnn_type == 'LSTM':
@@ -89,3 +96,5 @@ class SimpleEncoder(nn.Module):
             return (initial_state1, initial_state2)
         else:
             return initial_state1
+
+        """
