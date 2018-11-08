@@ -483,18 +483,19 @@ class Dataset:
                              decode_type='greed',
                              facts_texts=None):
 
+        print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation, response, greedy_text, beam_text, topk_facts in zip(conversation_texts, response_texts, greedy_texts, beam_texts, facts_texts):
-                # conversation, true response, generated_text
+            for i, (conversation, response, greedy_text, beam_text) in enumerate(zip(conversation_texts, response_texts, greedy_texts, beam_texts)):
                 f.write('Conversation:\t %s\n' % conversation)
                 f.write('Response:\t %s\n' % response)
-                #  if decode_type == 'greedy':
+
                 f.write('greedy:\t %s\n' % greedy_text)
-                #  elif decode_type == 'beam_search':
+
                 for i, best_text in enumerate(beam_text):
                     f.write('beam %d:\t %s\n' % (i, best_text))
 
-                if topk_facts is not None:
+                if facts_texts is not None and len(facts_texts) > 0:
+                    topk_facts = facts_texts[i]
                     for fi, fact_text in enumerate(topk_facts):
                         f.write('Fact %d:\t %s\n' % (fi, fact_text))
 

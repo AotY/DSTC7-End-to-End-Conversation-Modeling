@@ -18,6 +18,7 @@ h2 ratio: 0.9977
 abstract count: 6916
 abstract ratio: 0.9987
 """
+import string
 import pickle
 from tqdm import tqdm
 from nltk.corpus import stopwords
@@ -25,16 +26,20 @@ from bs4 import BeautifulSoup
 from collections import Counter
 
 from utils import Tokenizer
+from gensim.models import KeyedVectors
 
 #  import es_helper
 #  es = es_helper.get_connection()
 
 stopWords = set(stopwords.words('english'))
+punctuations = list(string.punctuation)
 
 tokenizer = Tokenizer()
 
 def remove_stop_words(words):
-    return [word for word in words if word not in stopWords]
+    words = [word for word in words if word not in stopWords]
+    words = [word for word in words if word not in punctuations]
+    return words
 
 
 def table_h2_stats(facts_path):
@@ -175,62 +180,88 @@ def table_h2_stats(facts_path):
 
     return wiki_table_dict, wiki_h2_dict, wiki_abstract_dict
 
-
-def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path):
-    last_conversation_id = ''
+def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext):
+    last_conversation_id = 'idr0t'
     word_counter = Counter()
     save_f = open('./fact_conversation_word_count.txt', 'w', encoding='utf-8')
     with open(conversation_path, 'r', encoding='utf-8') as f:
-        for line in tqdm(f):
+        for line in f:
             line = line.rstrip()
             conversation_id, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
+            print(conversation_id == last_conversation_id)
 
-            if not bool(conversation) or not bool(response):
-                continue
+            if conversation_id != last_conversation_id or hash_value == '014b92c1c7785b9aab90593fd465d9deab0fb88f9baa97a913077805':
+                print('\nlen word_counter: %d\n' % len(word_counter))
 
-            #  conversation_id = es_helper.search_conversation_id(es, hash_value)
-            if len(word_counter) > 0 and (conversation_id != last_conversation_id or hash_value == '014b92c1c7785b9aab90593fd465d9deab0fb88f9baa97a913077805'):
+                save_f.write('%s:\n' % conversation_id)
 
                 # stats count
                 table_words = set()
                 for words in wiki_table_dict.get(conversation_id, []):
                     for word in words:
                         table_words.add(word)
+                        try:
+                            similar_words = fasttext.most_similar(word, topn=5)
+                            for s_word in similar_words:
+                                table_words.add(word + '_fasttext')
+                        except KeyError:
+                            continue
+
+                save_f.write('\ttable:\n')
+                for word in table_words:
+                    if word.find('fasttext') != -1:
+                        tmp_word = word.split('_')[0]
+                    else:
+                        tmp_word = word
+                    count = word_counter.get(tmp_word, 0)
+                    save_f.write('\t\t%s: %d\n' % (word, count))
 
                 h2_words = set()
                 for words in wiki_h2_dict.get(conversation_id, []):
                     for word in words:
                         h2_words.add(word)
-
-                save_f.write('%s:\n' % conversation_id)
-
-                save_f.write('\ttable:\n')
-                for word in table_words:
-                    count = word_counter.get(word, 0)
-                    save_f.write('\t\t%s: %d\n' % (word, count))
+                        try:
+                            similar_words = fasttext.most_similar(word, topn=5)
+                            for s_word in similar_words:
+                                h2_words.add(word + '_fasttext')
+                        except KeyError:
+                            continue
 
                 save_f.write('\th2:\n')
                 for word in h2_words:
-                    count = word_counter.get(word, 0)
+                    if word.find('fasttext') != -1:
+                        tmp_word = word.split('_')[0]
+                    else:
+                        tmp_word = word
+                    count = word_counter.get(tmp_word, 0)
                     save_f.write('\t\t%s: %d\n' % (word, count))
 
                 abstract_words = set()
                 for words in wiki_abstract_dict.get(conversation_id, []):
                     for word in words:
                         abstract_words.add(word)
+                        try:
+                            similar_words = fasttext.most_similar(word, topn=5)
+                            for s_word in similar_words:
+                                abstract_words.add(word + '_fasttext')
+                        except KeyError:
+                            continue
 
                 save_f.write('\tabstract:\n')
                 for word in abstract_words:
-                    count = word_counter.get(word, 0)
+                    if word.find('fasttext') != -1:
+                        tmp_word = word.split('_')[0]
+                    else:
+                        tmp_word = word
+                    count = word_counter.get(tmp_word, 0)
                     save_f.write('\t\t%s: %d\n' % (word, count))
 
-                save_f.write('-------------------------\n')
+                save_f.write('---------------------------------------------------\n')
 
-                word_counter = Counter()
+                last_conversation_id = conversation_id
+                word_counter.clear()
 
             else:
-                last_conversation_id = conversation_id
-
                 conversation_words = conversation.split(' ')
                 response_words = response.split(' ')
 
@@ -244,5 +275,10 @@ if __name__ == '__main__':
     facts_path = './../data/train.facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
     wiki_table_dict, wiki_h2_dict, wiki_abstract_dict = table_h2_stats(facts_path)
-    conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path)
+    # similarity words
+    vec_file = '/home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin'
+    fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
+    conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
+
+
 
