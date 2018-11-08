@@ -185,14 +185,14 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
     word_counter_dict = {}
     save_f = open('./fact_conversation_word_count.txt', 'w', encoding='utf-8')
     with open(conversation_path, 'r', encoding='utf-8') as f:
-        for line in f:
+        for line in tqdm(f):
             line = line.rstrip()
             conversation_id, conversation, response, _ = line.rstrip().split('SPLITTOKEN')
 
             conversation_words = conversation.split(' ')
             response_words = response.split(' ')
 
-            if word_counter_dict.get(conversation_id, None) is None:
+            if conversation_id not in word_counter_dict.keys():
                 word_counter_dict[conversation_id] = Counter()
 
             word_counter_dict[conversation_id].update(conversation_words)
@@ -201,7 +201,8 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
             conversation_ids.add(conversation_id)
 
 
-        for conversation_id in conversation_ids:
+        conversation_ids = list(conversation_ids)
+        for conversation_id in tqdm(conversation_ids):
             save_f.write('%s:\n' % conversation_id)
 
             # stats count
@@ -217,6 +218,7 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
                         continue
 
             save_f.write('\ttable:\n')
+            table_words = sorted(table_words, key=lambda item: len(item), reverse=True)
             for word in table_words:
                 if word.find('fasttext') != -1:
                     tmp_word = word.split('_')[0]
@@ -237,6 +239,7 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
                         continue
 
             save_f.write('\th2:\n')
+            h2_words = sorted(h2_words, key=lambda item: len(item), reverse=True)
             for word in h2_words:
                 if word.find('fasttext') != -1:
                     tmp_word = word.split('_')[0]
@@ -257,6 +260,7 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
                         continue
 
             save_f.write('\tabstract:\n')
+            abstract_words = sorted(abstract_words, key=lambda item: len(item), reverse=True)
             for word in abstract_words:
                 if word.find('fasttext') != -1:
                     tmp_word = word.split('_')[0]
