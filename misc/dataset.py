@@ -483,7 +483,7 @@ class Dataset:
                              decode_type='greed',
                              facts_texts=None):
 
-        print(facts_texts)
+        #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
             for i, (conversation, response, greedy_text, beam_text) in enumerate(zip(conversation_texts, response_texts, greedy_texts, beam_texts)):
                 f.write('Conversation:\t %s\n' % conversation)
@@ -492,6 +492,7 @@ class Dataset:
                 f.write('greedy:\t %s\n' % greedy_text)
 
                 for i, best_text in enumerate(beam_text):
+                    #  print('best_text: {}'.format(best_text))
                     f.write('beam %d:\t %s\n' % (i, best_text))
 
                 if facts_texts is not None and len(facts_texts) > 0:
@@ -520,9 +521,12 @@ class Dataset:
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
                 best_n_ids = batch_utterances[bi]
+                #  print('best_n_ids: {}'.format(best_n_ids))
                 best_n_texts=[]
                 for ids in best_n_ids:
+                    #  print('ids: {}'.format(ids))
                     text = self.vocab.ids_to_text(ids)
+                    #  print('text: {}'.format(text))
                     best_n_texts.append(text)
                 batch_generated_texts.append(best_n_texts)
 

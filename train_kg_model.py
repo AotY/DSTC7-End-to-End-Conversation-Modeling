@@ -279,6 +279,7 @@ def decode(model, dataset, vocab):
                 opt.beam_width,
                 opt.best_n)
 
+            print(beam_outputs)
             # generate sentence, and save to file
             # [max_length, batch_size]
             greedy_texts = dataset.generating_texts(greedy_outputs,
@@ -288,7 +289,7 @@ def decode(model, dataset, vocab):
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   opt.batch_size,
                                                   'beam_search')
-            print(beam_texts)
+            #  print(beam_texts)
 
             # save sentences
             dataset.save_generated_texts(conversation_texts,
