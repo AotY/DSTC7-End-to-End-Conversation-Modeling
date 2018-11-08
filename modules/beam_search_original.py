@@ -123,14 +123,14 @@ def beam_decode(
 
                 last_node_j = last_node_list[last_j]
 
-                if word_idx == eosid:
-                    tmp_ids = last_node_j.get_ids()
-                    tmp_score = last_node_j.get_score()
-                    res.append((tmp_score, tmp_ids))
-                    beam_width -= 1
-                    continue
-                elif word_idx == 4:
-                    pass
+                #  if word_idx == eosid:
+                    #  tmp_ids = last_node_j.get_ids()
+                    #  tmp_score = last_node_j.get_score()
+                    #  res.append((tmp_score, tmp_ids))
+                    #  beam_width -= 1
+                    #  continue
+                #  elif word_idx == 4:
+                    #  pass
 
                 tmp_node = BeamNode(last_node_j.sentence, last_node_j.log_prob)
                 tmp_node.push(word_idx, log_prob)
@@ -163,7 +163,8 @@ def beam_decode(
             score = node.get_score()
             res.append((score, ids))
 
-        best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:]
-        batch_utterances.append(best_n_sentences)
+        best_n_ids = [ids for _, ids in sorted(res, key=lambda item: item[0], reverse=True)][:]
+        #  print('best_n_ids: {}'.format(best_n_ids))
+        batch_utterances.append(best_n_ids)
 
     return batch_utterances

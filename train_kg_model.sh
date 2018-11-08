@@ -43,7 +43,7 @@ python train_kg_model.py \
     --eval_split 0.0007 \
     --test_split 0.06 \
     --start_epoch 1 \
-    --task decode \
+    --task train \
     --model_type seq2seq \
     --share_embedding \
     --checkpoint models/checkpoint.epoch-9_seq2seq_4_hred.pth
