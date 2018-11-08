@@ -91,23 +91,25 @@ class Encoder(nn.Module):
         # unpack
         outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs_packed)
 
-        #  if self.bidirection_num == 2:
-            #  [seq, batch_size, hidden_size * 2] -> [seq, batch_size, hidden_size]
-            #  outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
-
         # to original sequence
         outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+
         if self.rnn_type == 'LSTM':
             hidden_state = tuple([item.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous() for item in hidden_state])
         else:
             hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
-        #  max_output, _ = outputs.max(dim=0)
-        #  max_output.unsqueeze_(0) #[1, batch_size, hidden_size * 2]
-
         return outputs, hidden_state
 
     def init_hidden(self, batch_size, device):
+        initial_state1 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+        if self.rnn_type == 'LSTM':
+            initial_state2 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+            return (initial_state1, initial_state2)
+        else:
+            return initial_state1
+
+        """
         initial_state_scale = math.sqrt(3.0 / self.hidden_size)
 
         initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
@@ -118,3 +120,5 @@ class Encoder(nn.Module):
             return (initial_state1, initial_state2)
         else:
             return initial_state1
+
+        """

@@ -523,6 +523,7 @@ class KGModel(nn.Module):
             decoder = BahdanauAttnDecoder(
                 vocab_size,
                 embedding,
+                rnn_type,
                 hidden_size,
                 num_layers,
                 dropout,

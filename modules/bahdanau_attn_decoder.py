@@ -17,6 +17,7 @@ from modules.utils import init_gru_orth, init_linear_wt, init_wt_normal
 class BahdanauAttnDecoder(nn.Module):
     def __init__(self,
                  vocab_size,
+                 rnn_type,
                  embedding,
                  hidden_size,
                  num_layers,
@@ -28,12 +29,12 @@ class BahdanauAttnDecoder(nn.Module):
         super(BahdanauAttnDecoder, self).__init__()
 
         self.vocab_size = vocab_size
-        self.embedding_size = embedding.embedding_dim
         self.hidden_size = hidden_size
         self.num_layers = num_layers
 
         # embedding
         self.embedding = embedding
+        self.embedding_size = embedding.embedding_dim
 
         # dropout
         self.dropout = nn.Dropout(dropout)
@@ -41,15 +42,19 @@ class BahdanauAttnDecoder(nn.Module):
         # attn
         self.attn = GlobalAttn(attn_type, hidden_size, device)
 
-        # rnn, * 2 because using concat
-        self.rnn = nn.GRU(
-            hidden_size + self.embedding_size,
-            hidden_size,
-            num_layers,
+        # rnn
+        self.rnn = rnn_factory(
+            rnn_type,
+            input_size=self.embedding_size + embedding_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
             dropout=dropout
         )
 
-        init_gru_orth(self.rnn)
+        if rnn_type == 'LSTM':
+            init_lstm_orth(self.rnn)
+        else:
+            init_gru_orth(self.rnn)
 
         # linear
         self.linear = nn.Linear(self.hidden_size,
@@ -82,7 +87,11 @@ class BahdanauAttnDecoder(nn.Module):
         #  print(embedded.shape)
 
         # attn_weights
-        attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)  # [batch_size, 1, max_len]
+        if self.rnn_type == 'GRU':
+            attn_weights = self.attn(hidden_state[-1], c_encoder_outputs)  # [batch_size, 1, max_len]
+        else:
+            attn_weights = self.attn(hidden_state[0][-1], c_encoder_outputs)  # [batch_size, 1, max_len]
+
         context = attn_weights.bmm(c_encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1) #[1, batch_size, hidden_size]
 

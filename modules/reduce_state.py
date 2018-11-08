@@ -45,7 +45,6 @@ class ReduceState(nn.Module):
             h, c = hidden_state
             reduce_h = _fix_enc_hidden(h)
             reduce_c = _fix_enc_hidden(c)
-            #  reduce_c = F.relu(self.reduce_c(c.view(-1, batch_size, self.hidden_size * 2)))
             return (reduce_h, reduce_c)
         else:
             reduce_h = _fix_enc_hidden(hidden_state)
