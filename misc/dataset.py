@@ -124,12 +124,12 @@ class Dataset:
                         history_conversations = []
 
                     conversation_ids = self.vocab.words_to_id(conversation.split(' '))
-                    conversation_ids = conversation_ids[-min(self.c_max_len, len(conversation_ids)):]
+                    conversation_ids = conversation_ids[-min(self.c_max_len - 1, len(conversation_ids)):]
 
                     history_conversations_ids = []
                     for history in history_conversations:
                         history_ids = self.vocab.words_to_id(history.split(' '))
-                        history_ids = history_ids[-min(self.h_max_len, len(history_ids))]
+                        history_ids = history_ids[-min(self.h_max_len - 1, len(history_ids))]
                         history_conversations_ids.append(history_ids)
 
                     datas.append((raw_conversation, history_conversations_ids, conversation_ids, response_ids, hash_value))
@@ -215,6 +215,7 @@ class Dataset:
         for i, (conversation, history_conversations_ids, conversation_ids, response_ids, hash_value) in enumerate(batch_data):
 
             # append length
+            conversation_ids.insert(0, self.vocab.sosid)
             c_encoder_inputs_lengths.append(len(conversation_ids))
 
             # ids to word
@@ -226,20 +227,16 @@ class Dataset:
 			# history inputs
             if len(history_conversations_ids) > 0:
                 history_input=[]
-                #  history_input_length = []
                 for ids in history_conversations_ids:
-                    #  slot_ids = torch.zeros(self.h_max_len, dtype=torch.long, device=self.device)
-                    #  slot_ids[:len(ids)] = ids[:len(ids)]
+                    ids.insert(0, self.vocab.sosid)
                     ids = torch.tensor(ids, dtype=torch.long, device=self.device)
                     history_input.append(ids)
-                    #  history_input_length.append(len(ids))
                 history_input = torch.stack(history_input, dim=0) #[num, ids]
                 h_encoder_inputs.append(history_input)
 
             # c_encoder_inputs
             for c, token_id in enumerate(conversation_ids):
                 c_encoder_inputs[c, i] = token_id
-            #  c_encoder_inputs[len(conversation_ids), i]=self.vocab.eosid
 
             # decoder_inputs
             decoder_inputs[0, i]=self.vocab.sosid
