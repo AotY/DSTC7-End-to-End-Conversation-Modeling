@@ -181,92 +181,91 @@ def table_h2_stats(facts_path):
     return wiki_table_dict, wiki_h2_dict, wiki_abstract_dict
 
 def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext):
-    last_conversation_id = 'idr0t'
-    word_counter = Counter()
+    conversation_ids = set()
+    word_counter_dict = {}
     save_f = open('./fact_conversation_word_count.txt', 'w', encoding='utf-8')
     with open(conversation_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
-            conversation_id, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
-            print(conversation_id == last_conversation_id)
+            conversation_id, conversation, response, _ = line.rstrip().split('SPLITTOKEN')
 
-            if conversation_id != last_conversation_id or hash_value == '014b92c1c7785b9aab90593fd465d9deab0fb88f9baa97a913077805':
-                print('\nlen word_counter: %d\n' % len(word_counter))
+            conversation_words = conversation.split(' ')
+            response_words = response.split(' ')
 
-                save_f.write('%s:\n' % conversation_id)
+            if word_counter_dict.get(conversation_id, None) is None:
+                word_counter_dict[conversation_id] = Counter()
 
-                # stats count
-                table_words = set()
-                for words in wiki_table_dict.get(conversation_id, []):
-                    for word in words:
-                        table_words.add(word)
-                        try:
-                            similar_words = fasttext.most_similar(word, topn=5)
-                            for s_word in similar_words:
-                                table_words.add(word + '_fasttext')
-                        except KeyError:
-                            continue
+            word_counter_dict[conversation_id].update(conversation_words)
+            word_counter_dict[conversation_id].update(response_words)
 
-                save_f.write('\ttable:\n')
-                for word in table_words:
-                    if word.find('fasttext') != -1:
-                        tmp_word = word.split('_')[0]
-                    else:
-                        tmp_word = word
-                    count = word_counter.get(tmp_word, 0)
-                    save_f.write('\t\t%s: %d\n' % (word, count))
+            conversation_ids.add(conversation_id)
 
-                h2_words = set()
-                for words in wiki_h2_dict.get(conversation_id, []):
-                    for word in words:
-                        h2_words.add(word)
-                        try:
-                            similar_words = fasttext.most_similar(word, topn=5)
-                            for s_word in similar_words:
-                                h2_words.add(word + '_fasttext')
-                        except KeyError:
-                            continue
 
-                save_f.write('\th2:\n')
-                for word in h2_words:
-                    if word.find('fasttext') != -1:
-                        tmp_word = word.split('_')[0]
-                    else:
-                        tmp_word = word
-                    count = word_counter.get(tmp_word, 0)
-                    save_f.write('\t\t%s: %d\n' % (word, count))
+        for conversation_id in conversation_ids:
+            save_f.write('%s:\n' % conversation_id)
 
-                abstract_words = set()
-                for words in wiki_abstract_dict.get(conversation_id, []):
-                    for word in words:
-                        abstract_words.add(word)
-                        try:
-                            similar_words = fasttext.most_similar(word, topn=5)
-                            for s_word in similar_words:
-                                abstract_words.add(word + '_fasttext')
-                        except KeyError:
-                            continue
+            # stats count
+            table_words = set()
+            for words in wiki_table_dict.get(conversation_id, []):
+                for word in words:
+                    table_words.add(word)
+                    try:
+                        similar_words = fasttext.most_similar(word, topn=5)
+                        for s_word in similar_words:
+                            table_words.add(word + '_fasttext')
+                    except KeyError:
+                        continue
 
-                save_f.write('\tabstract:\n')
-                for word in abstract_words:
-                    if word.find('fasttext') != -1:
-                        tmp_word = word.split('_')[0]
-                    else:
-                        tmp_word = word
-                    count = word_counter.get(tmp_word, 0)
-                    save_f.write('\t\t%s: %d\n' % (word, count))
+            save_f.write('\ttable:\n')
+            for word in table_words:
+                if word.find('fasttext') != -1:
+                    tmp_word = word.split('_')[0]
+                else:
+                    tmp_word = word
+                count = word_counter_dict[conversation_id].get(tmp_word, 0)
+                save_f.write('\t\t%s: %d\n' % (word, count))
 
-                save_f.write('---------------------------------------------------\n')
+            h2_words = set()
+            for words in wiki_h2_dict.get(conversation_id, []):
+                for word in words:
+                    h2_words.add(word)
+                    try:
+                        similar_words = fasttext.most_similar(word, topn=5)
+                        for s_word in similar_words:
+                            h2_words.add(word + '_fasttext')
+                    except KeyError:
+                        continue
 
-                last_conversation_id = conversation_id
-                word_counter.clear()
+            save_f.write('\th2:\n')
+            for word in h2_words:
+                if word.find('fasttext') != -1:
+                    tmp_word = word.split('_')[0]
+                else:
+                    tmp_word = word
+                count = word_counter_dict[conversation_id].get(tmp_word, 0)
+                save_f.write('\t\t%s: %d\n' % (word, count))
 
-            else:
-                conversation_words = conversation.split(' ')
-                response_words = response.split(' ')
+            abstract_words = set()
+            for words in wiki_abstract_dict.get(conversation_id, []):
+                for word in words:
+                    abstract_words.add(word)
+                    try:
+                        similar_words = fasttext.most_similar(word, topn=5)
+                        for s_word in similar_words:
+                            abstract_words.add(word + '_fasttext')
+                    except KeyError:
+                        continue
 
-                word_counter.update(conversation_words)
-                word_counter.update(response_words)
+            save_f.write('\tabstract:\n')
+            for word in abstract_words:
+                if word.find('fasttext') != -1:
+                    tmp_word = word.split('_')[0]
+                else:
+                    tmp_word = word
+                count = word_counter_dict[conversation_id].get(tmp_word, 0)
+                save_f.write('\t\t%s: %d\n' % (word, count))
+
+            save_f.write('---------------------------------------------------\n')
 
     save_f.close()
 

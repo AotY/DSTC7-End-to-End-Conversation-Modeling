@@ -135,7 +135,7 @@ class Vocab(object):
     def ids_to_text(self, ids):
         words = self.ids_to_word(ids)
         # remove pad, sos, eos, unk
-        words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos]]
+        words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos, '.']]
         text = ' '.join(words)
         return text
 

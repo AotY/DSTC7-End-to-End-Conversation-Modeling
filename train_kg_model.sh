@@ -25,7 +25,7 @@ python train_kg_model.py \
     --tied \
 	--decoder_type bahdanau \
     --decode_type beam_search \
-    --beam_width 64 \
+    --beam_width 32 \
     --best_n 10 \
     --attn_type concat \
     --f_max_len 50 \
