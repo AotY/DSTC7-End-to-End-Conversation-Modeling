@@ -29,10 +29,14 @@ class BeamNode:
     def get_ids(self):
         return [int(item) for item in self.sentence.split(',')]
 
-    def get_score(self):
-        reward = 0.0000001
+    def get_score(self, p=0.001):
+        reward = 0.0
         ids = self.get_ids()
-        return self.log_prob / len(ids) + reward * len(ids)
+        for id in ids:
+            if id != 4:
+                reward += p
+
+        return self.log_prob / len(ids) + reward
 
 
 def beam_decode(
@@ -125,6 +129,8 @@ def beam_decode(
                     res.append((tmp_score, tmp_ids))
                     beam_width -= 1
                     continue
+                elif word_idx == 4:
+                    pass
 
                 tmp_node = BeamNode(last_node_j.sentence, last_node_j.log_prob)
                 tmp_node.push(word_idx, log_prob)
@@ -157,7 +163,7 @@ def beam_decode(
             score = node.get_score()
             res.append((score, ids))
 
-        best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:best_n]
+        best_n_sentences = [sentence for _, sentence in sorted(res, key=lambda item: item[0], reverse=True)][:]
         batch_utterances.append(best_n_sentences)
 
     return batch_utterances

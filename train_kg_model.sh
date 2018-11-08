@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -25,12 +25,12 @@ python train_kg_model.py \
     --tied \
 	--decoder_type bahdanau \
     --decode_type beam_search \
-    --beam_width 32 \
+    --beam_width 64 \
     --best_n 10 \
     --attn_type concat \
     --f_max_len 50 \
     --f_topk 10 \
-    --lr 0.001 \
+    --lr 0.0005 \
     --max_norm 50.0 \
     --epochs 10 \
     --batch_size 128 \
@@ -43,10 +43,10 @@ python train_kg_model.py \
     --eval_split 0.0007 \
     --test_split 0.06 \
     --start_epoch 1 \
-    --task train \
-    --model_type kg \
+    --task decode \
+    --model_type seq2seq \
     --share_embedding \
-    # --checkpoint models/checkpoint.epoch-1_seq2seq_4_hred.pth
+    --checkpoint models/checkpoint.epoch-9_seq2seq_4_hred.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
 
 /

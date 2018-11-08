@@ -250,15 +250,17 @@ def evaluate(model,
 def decode(model, dataset, vocab):
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    max_load=int(np.ceil(dataset.n_eval / opt.batch_size))
     dataset.reset_data('eval')
+    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
-            # load data
             c_encoder_inputs, c_encoder_inputs_length, \
                 decoder_inputs, decoder_targets, \
                 conversation_texts, response_texts, \
                 f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('eval', opt.batch_size)
+
+            print(decoder_inputs)
+            print(decoder_targets)
 
             # train and get cur loss
             # greedy: [batch_size, r_max_len]
@@ -286,6 +288,7 @@ def decode(model, dataset, vocab):
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   opt.batch_size,
                                                   'beam_search')
+            print(beam_texts)
 
             # save sentences
             dataset.save_generated_texts(conversation_texts,
