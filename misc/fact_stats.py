@@ -71,11 +71,11 @@ def table_h2_stats(facts_path):
 
             parts = line.split('\t')
 
-            hash_value = parts[0]
-            subreddit_name = parts[1]
-            conversation_id = parts[2]
-            domain_name = parts[3]
-            fact = parts[4]
+            #  hash_value = parts[0]
+            subreddit_name = parts[0]
+            conversation_id = parts[1]
+            domain_name = parts[2]
+            fact = parts[-1]
 
             if fact.find('<title>') != -1:
                 title_count += 1

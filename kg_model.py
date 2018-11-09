@@ -533,3 +533,4 @@ class KGModel(nn.Module):
             )
 
         return decoder
+
