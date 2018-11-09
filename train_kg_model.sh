@@ -6,7 +6,7 @@ python train_kg_model.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.80004.dict \
     --turn_num 4 \
-    --turn_type hred \
+    --turn_type hred_attn \
     --embedding_size 512 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
@@ -23,7 +23,7 @@ python train_kg_model.py \
     --min_len 3 \
     --bidirectional \
     --tied \
-	--decoder_type bahdanau \
+	--decoder_type luong \
     --decode_type beam_search \
     --beam_width 32 \
     --best_n 10 \

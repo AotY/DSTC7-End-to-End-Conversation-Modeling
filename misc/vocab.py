@@ -76,7 +76,7 @@ class Vocab(object):
         try:
             self.word2idx = pickle.load(open(path, 'rb'))
             self.idx2word = {v: k for k, v in self.word2idx.items()}
-        except:
+        except FileNotFoundError:
             raise RuntimeError("Make sure vocab_word2idx.dict exists.")
 
     ''' wordid '''
@@ -86,7 +86,6 @@ class Vocab(object):
         """return the id of padding
         """
         return self.word2idx.get(PAD, 0)
-
 
     @property
     def unkid(self):
@@ -135,7 +134,8 @@ class Vocab(object):
     def ids_to_text(self, ids):
         words = self.ids_to_word(ids)
         # remove pad, sos, eos, unk
-        words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos, '.']]
+        #  words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos, '.']]
+        #  words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos]]
         text = ' '.join(words)
         return text
 

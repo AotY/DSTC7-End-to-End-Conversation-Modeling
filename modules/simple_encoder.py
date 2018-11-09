@@ -7,9 +7,6 @@
 """
 Encoder based on lstm
 """
-
-
-import math
 import torch
 import torch.nn as nn
 
@@ -24,7 +21,7 @@ class SimpleEncoder(nn.Module):
                  embedding,
                  rnn_type,
                  hidden_size,
-                 num_layers=1,
+                 num_layers=2,
                  bidirectional=True,
                  dropout=0.0):
 
@@ -33,11 +30,10 @@ class SimpleEncoder(nn.Module):
         self.vocab_size = vocab_size
         self.embedding_size = embedding.embedding_dim
         self.rnn_type = rnn_type
-        self.hidden_size = hidden_size
         self.num_layers = num_layers
 
-        #  self.bidirection_num = 2 if bidirectional else 1
-        #  self.hidden_size = hidden_size // self.bidirection_num
+        self.bidirection_num = 2 if bidirectional else 1
+        self.hidden_size = hidden_size // self.bidirection_num
 
         # embedding
         self.embedding = embedding
@@ -50,9 +46,9 @@ class SimpleEncoder(nn.Module):
             rnn_type,
             input_size=self.embedding_size,
             hidden_size=self.hidden_size,
-            #  num_layers=num_layers,
-            #  bidirectional=bidirectional,
-            #  dropout=dropout
+            num_layers=num_layers,
+            bidirectional=bidirectional,
+            dropout=dropout
         )
 
         if rnn_type == 'LSTM':
@@ -80,9 +76,9 @@ class SimpleEncoder(nn.Module):
         return outputs, hidden_state
 
     def init_hidden(self, batch_size, device):
-        initial_state1 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+        initial_state1 = torch.zeros((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
         if self.rnn_type == 'LSTM':
-            initial_state2 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+            initial_state2 = torch.zeros((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
             return (initial_state1, initial_state2)
         else:
             return initial_state1

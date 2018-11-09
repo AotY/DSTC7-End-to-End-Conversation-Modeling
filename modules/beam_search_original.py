@@ -74,7 +74,9 @@ class BeamNode:
 def beam_decode(
     decoder,
     c_encoder_outputs,
+    c_encoder_inputs_length,
     h_encoder_outputs,
+    h_encoder_inputs_length,
     decoder_hidden_state,
     decoder_input,
     batch_size,
@@ -94,12 +96,15 @@ def beam_decode(
     rnn_type = decoder.rnn_type
     batch_utterances = []
     for bi in range(batch_size):
+
         beam_width = _beam_width
         init_c_encoder_outputs = c_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [max_length, 1, hidden_size]
+        init_c_encoder_length = c_encoder_inputs_length[bi].view(1)
 
         init_h_encoder_outputs = None
         if h_encoder_outputs is not None:
             init_h_encoder_outputs = h_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [num, 1, hidden_size]
+            init_h_encoder_length = h_encoder_inputs_length[bi].view(1)
 
         if rnn_type == 'GRU':
             init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
@@ -114,7 +119,9 @@ def beam_decode(
             init_decoder_input,
             init_decoder_hidden_state,
             init_c_encoder_outputs,
-            init_h_encoder_outputs
+            init_c_encoder_length,
+            init_h_encoder_outputs,
+            init_h_encoder_length,
         ) # output: [1, 1, vocab_size], hidden_sate: [num_layers, 1, hidden_size]
 
         log_probs, indices = output.topk(beam_width, dim=2) # [1, 1, beam_width]
@@ -136,12 +143,12 @@ def beam_decode(
             next_decoder_hidden_state = tuple([_inflate(item, beam_width, dim=1) for item in hidden_state])  # [layers, 1, hidden_size]
 
         next_c_encoder_outputs = _inflate(init_c_encoder_outputs, beam_width, dim=1)
-        #  next_c_encoder_outputs = init_c_encoder_outputs.repeat(1, beam_width, 1) #[len, beam_width, hidden_size]
+        next_c_encoder_length = _inflate(init_c_encoder_length, beam_width, dim=0)
 
         next_h_encoder_outputs = None
         if init_h_encoder_outputs is not None:
             next_h_encoder_outputs = _inflate(init_h_encoder_outputs, beam_width, dim=1)
-            #  next_h_encoder_outputs = init_h_encoder_outputs.repeat(1, beam_width, 1)
+            next_h_encoder_length = _inflate(init_h_encoder_length, beam_width, dim=0)
 
         res = []
 
@@ -150,7 +157,9 @@ def beam_decode(
                 next_decoder_input,
                 next_decoder_hidden_state,
                 next_c_encoder_outputs,
-                next_h_encoder_outputs
+                next_c_encoder_length,
+                next_h_encoder_outputs,
+                next_h_encoder_length
             )
 
             # squeeze
@@ -200,9 +209,11 @@ def beam_decode(
                     next_decoder_hidden_state = tuple([item.index_select(dim=1, index=indices_select) for item in hidden_states])  # [layers, 1, hidden_size]
 
                 next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, indices_select)
+                next_c_encoder_length = next_c_encoder_length.index_select(0, indices_select)
 
                 if next_h_encoder_outputs is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, indices_select)
+                    next_h_encoder_length = next_h_encoder_length.index_select(0, indices_select)
             else:
                 next_decoder_hidden_state = hidden_states
 

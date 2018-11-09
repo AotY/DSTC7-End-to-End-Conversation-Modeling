@@ -84,7 +84,8 @@ def train_epochs(model,
             c_encoder_inputs, c_encoder_inputs_length, \
                 decoder_inputs, decoder_targets, \
                 conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('train', opt.batch_size)
+                f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+                h_encoder_inputs, h_encoder_inputs_length = dataset.load_data('train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
@@ -220,7 +221,8 @@ def evaluate(model,
             c_encoder_inputs, c_encoder_inputs_length, \
                 decoder_inputs, decoder_targets, \
                 conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('test', opt.batch_size)
+                f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+                h_encoder_inputs, h_encoder_inputs_length = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
@@ -261,7 +263,8 @@ def decode(model, dataset, vocab):
             c_encoder_inputs, c_encoder_inputs_length, \
                 decoder_inputs, decoder_targets, \
                 conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('eval', opt.batch_size)
+                f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+                h_encoder_inputs, h_encoder_inputs_length = dataset.load_data('eval', opt.batch_size)
 
             #  print(decoder_inputs)
             #  print(decoder_targets)
