@@ -7,7 +7,6 @@ import logging
 import argparse
 import numpy as np
 
-sys.path.append('..')
 
 from misc.vocab import Vocab
 from misc.utils import Tokenizer
@@ -16,6 +15,8 @@ from misc import es_helper
 from embedding.embedding_opt import train_embedding_opt
 from embedding.utils import build_vocab_word2vec, build_vocab_fastText
 from embedding import train_embedding
+
+sys.path.append('..')
 '''
 Generate
 
@@ -208,9 +209,9 @@ datas, may be conversations + responses or conversations individually.
 '''
 
 
-def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=None):
+def stat_frequency(datas, datas_name, min_count=3, vocab_size=8e5, logger=None):
     freq_dict = {}
-    max_vocab_size = int(max_vocab_size)
+    vocab_size = int(vocab_size)
     total_token_nums = 0
     token_len_dict = {}
     for data in datas:
@@ -242,9 +243,9 @@ def stat_frequency(datas, datas_name, min_count=3, max_vocab_size=8e5, logger=No
         logger.info('Clip tokens by min_count')
         sorted_freq_list = [item for item in sorted_freq_list if item[1] >= min_count]
 
-    if max_vocab_size > 0 and len(sorted_freq_list) >= max_vocab_size:
-        logger.info('Clip tokens by max_vocab_size')
-        sorted_freq_list = sorted_freq_list[:max_vocab_size]
+    if vocab_size > 0 and len(sorted_freq_list) >= vocab_size:
+        logger.info('Clip tokens by vocab_size')
+        sorted_freq_list = sorted_freq_list[:vocab_size]
 
     print('token size: %d' % len(sorted_freq_list))
     return sorted_freq_list, total_token_nums, total_type_nums
@@ -364,7 +365,7 @@ def save_out_of_vocab_words(out_of_vocab_words, filename):
             f.write('%s\n' % word)
 
 
-def save_raw_facts(raw_facts, subreddit_names, conversation_ids, domain_names, filename):
+def save_facts(raw_facts, subreddit_names, conversation_ids, domain_names, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         for fact, subreddit, conversation_id, domain in zip(raw_facts, subreddit_names, conversation_ids, domain_names):
             f.write('%s\t%s\t%s\t%s\n' %
@@ -387,8 +388,9 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     model_name = opt.model_name
 
-    logger.info('opt.max_vocab_size: %f ' % opt.max_vocab_size)
-    opt.vocab_path = opt.vocab_path.format(opt.model_name)
+    opt.vocab_size = int(opt.vocab_size)
+    logger.info('opt.vocab_size: %f ' % opt.vocab_size)
+    opt.vocab_path = opt.vocab_path.format(opt.model_name, opt.vocab_size)
 
     if not os.path.exists(opt.vocab_path):
         raw_conversations, raw_responses, \
@@ -435,8 +437,9 @@ if __name__ == '__main__':
 
         #  logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
-        # save raw facts to txt
-        #  save_raw_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
+        #  save raw facts to txt
+        save_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'raw_facts.txt'))
+        save_facts(facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
 
         # save conversations, responses and facts count
         #  save_conversations_responses_facts_count(conversations, responses, facts)
@@ -455,7 +458,7 @@ if __name__ == '__main__':
         #  datas_name = ['conversations', 'responses', 'facts']
 
         sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
-            datas, datas_name, opt.min_count, opt.max_vocab_size, logger)
+            datas, datas_name, opt.min_count, opt.vocab_size, logger)
 
         # save token_nums, total_type_nums
         save_token_type_nums(total_token_nums, total_type_nums)
@@ -490,7 +493,6 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
-    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None,
                                                                                    vocab,
@@ -506,7 +508,6 @@ if __name__ == '__main__':
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
 
-    """
 
     """
     # training own word embedding.

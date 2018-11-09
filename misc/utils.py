@@ -13,6 +13,7 @@ class Tokenizer:
         #  url_regex_str = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+'
 
         number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
+
         self.number_re = re.compile(number_regex_str, re.VERBOSE | re.IGNORECASE)
 
     ''' replace number by NUMBER_TAG'''

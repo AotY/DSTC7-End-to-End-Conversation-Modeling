@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=3
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_seq2seq.70004.dict \
+    --vocab_path data/vocab_word2idx_seq2seq.80004.dict \
     --turn_num 4 \
     --turn_type hred \
     --embedding_size 512 \

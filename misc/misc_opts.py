@@ -61,7 +61,7 @@ def preprocess_opt(parser):
                        type=int,
                        help="min len of response.")
 
-    group.add_argument('--max_vocab_size',
+    group.add_argument('--vocab_size',
                        default=5e4,
                        type=float,
                        help="Limits the RAM during vocabulary building. Every 10 million word types need about 1GB of RAM.")
