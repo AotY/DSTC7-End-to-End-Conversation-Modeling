@@ -263,8 +263,8 @@ def decode(model, dataset, vocab):
                 conversation_texts, response_texts, \
                 f_encoder_inputs, facts_texts, h_encoder_inputs = dataset.load_data('eval', opt.batch_size)
 
-            print(decoder_inputs)
-            print(decoder_targets)
+            #  print(decoder_inputs)
+            #  print(decoder_targets)
 
             # train and get cur loss
             # greedy: [batch_size, r_max_len]
@@ -338,13 +338,13 @@ def build_optim(model):
         betas=(0.9, 0.999)
     )
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.17)
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
 
-    optimizer = optimizer(
+    optimizer = Optimizer(
         optim,
-        scheduler,
         opt.max_norm
     )
+    optimizer.set_scheduler(scheduler)
 
     return optimizer
 
