@@ -7,6 +7,7 @@ import logging
 import argparse
 import numpy as np
 
+sys.path.append('..')
 
 from misc.vocab import Vocab
 from misc.utils import Tokenizer
@@ -16,7 +17,6 @@ from embedding.embedding_opt import train_embedding_opt
 from embedding.utils import build_vocab_word2vec, build_vocab_fastText
 from embedding import train_embedding
 
-sys.path.append('..')
 '''
 Generate
 
@@ -184,7 +184,7 @@ def read_facts(facts_file_path, logger, opt):
             #  if fact_len <= 7:
                 #  abnormal_facts.append(fact_tokens)
 
-            #  raw_facts.append(fact)
+            raw_facts.append(fact)
 
             facts.append(fact_tokens)
 
@@ -364,9 +364,11 @@ def save_out_of_vocab_words(out_of_vocab_words, filename):
             f.write('%s\n' % word)
 
 
-def save_facts(raw_facts, subreddit_names, conversation_ids, domain_names, filename):
+def save_facts(facts, subreddit_names, conversation_ids, domain_names, filename):
     with open(filename, 'w', encoding='utf-8') as f:
-        for fact, subreddit, conversation_id, domain in zip(raw_facts, subreddit_names, conversation_ids, domain_names):
+        for fact, subreddit, conversation_id, domain in zip(facts, subreddit_names, conversation_ids, domain_names):
+            if isinstance(fact, list):
+                fact = ' '.join(fact)
             f.write('%s\t%s\t%s\t%s\n' %
                     (subreddit, conversation_id, domain, fact))
 
@@ -387,9 +389,8 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     model_name = opt.model_name
 
-    opt.vocab_size = int(opt.vocab_size)
-    logger.info('opt.vocab_size: %f ' % opt.vocab_size)
-    opt.vocab_path = opt.vocab_path.format(opt.model_name, opt.vocab_size)
+    logger.info('opt.vocab_size: %d ' % int(opt.vocab_size))
+    opt.vocab_path = opt.vocab_path.format(opt.model_name, int(opt.vocab_size))
 
     if not os.path.exists(opt.vocab_path):
         raw_conversations, raw_responses, \
@@ -407,7 +408,7 @@ if __name__ == '__main__':
         #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
         # save raw pair
-        #  save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
+        save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
 
         # save abnormal_conversations, abnormal_responses
         #  save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
@@ -492,6 +493,7 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
+    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None,
                                                                                    vocab,
@@ -506,6 +508,7 @@ if __name__ == '__main__':
 
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
+    """
 
 
     """
