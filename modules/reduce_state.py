@@ -6,8 +6,6 @@
 import torch
 import torch.nn as nn
 
-from modules.utils import init_linear_wt
-
 """
 hidden_state state
 num_layers * num_directions, batch_size, hidden_size
@@ -15,24 +13,15 @@ num_layers * num_directions, batch_size, hidden_size
 num_layers, batch_size, hidden_size
 """
 
+
 class ReduceState(nn.Module):
-    def __init__(self, rnn_type, hidden_size, num_layers, bidirection_num):
+    def __init__(self, rnn_type):
         super(ReduceState, self).__init__()
 
         self.rnn_type = rnn_type
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
 
-        #  self.reduce_h = nn.Linear(hidden_size * 2, hidden_size)
-        #  init_linear_wt(self.reduce_h)
-        #  self.boost_h = nn.Linear(hidden_size // 2, hidden_size)
-        #  init_linear_wt(self.boost_h)
 
-        #  if rnn_type == 'LSTM':
-            #  self.reduce_c = nn.Linear(hidden_size * 2, hidden_size)
-            #  init_linear_wt(self.reduce_c)
-
-    def forward(self, hidden_state, batch_size):
+    def forward(self, hidden_state):
         """ Init decoder state with last state of the encoder """
         def _fix_enc_hidden(hidden):
             # The encoder hidden is  (layers*directions) x batch x dim.
@@ -49,8 +38,4 @@ class ReduceState(nn.Module):
         else:
             reduce_h = _fix_enc_hidden(hidden_state)
             return reduce_h
-
-        #  hidden_reduced_h = F.relu(self.reduce_h(h.view(-1, hidden_size * 2)))
-        #  hidden_reduced_c = F.relu(self.reduce_c(c.view(-1, hidden_size * 2)))
-        #  return (hidden_reduced_h.unsqueeze(0), hidden_reduced_c.unsqueeze(0)) # h, c dim = 1 x b x hidden_size
 

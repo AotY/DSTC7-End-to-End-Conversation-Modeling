@@ -263,7 +263,6 @@ def build_vocab(freq_list):
     return vocab
 
 
-
 def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[0])
     with open(name + '.len.distribution.txt', 'w', encoding="utf-8") as f:

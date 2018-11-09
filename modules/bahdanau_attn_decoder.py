@@ -23,6 +23,7 @@ class BahdanauAttnDecoder(nn.Module):
                  num_layers,
                  dropout,
                  tied,
+                 turn_type='hred',
                  attn_type='concat',
                  device='cuda'):
 
@@ -32,6 +33,8 @@ class BahdanauAttnDecoder(nn.Module):
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
+
+        self.turn_type = turn_type
 
         # embedding
         self.embedding = embedding
@@ -61,7 +64,10 @@ class BahdanauAttnDecoder(nn.Module):
         self.linear = nn.Linear(self.hidden_size,
                                 self.vocab_size)
 
-        self.h_linear = nn.Linear(hidden_size, hidden_size)
+        if turn_type == 'hred_attn':
+            selef.h_attn = GlobalAttn(attn_type, hidden_size, device)
+        elif turn_type == 'hred':
+            self.h_linear = nn.Linear(hidden_size + hidden_size, hidden_size)
 
         if tied and self.embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
@@ -77,11 +83,11 @@ class BahdanauAttnDecoder(nn.Module):
             input: [1, batch_size]  LongTensor
             hidden_state: [num_layers, batch_size, hidden_size]
             c_encoder_outputs: [max_len, batch_size, hidden_size]
+            h_encoder_outputs: [num, batch_size, hidden_size]
 
         return:
             output: [seq_len, batch, hidden_size] [1, batch_size, hidden_size]
         '''
-
         # embedded
         embedded = self.embedding(input)  # [1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
@@ -103,8 +109,12 @@ class BahdanauAttnDecoder(nn.Module):
         output, hidden_state = self.rnn(rnn_input, hidden_state)
 
         if h_encoder_outputs is not None:
-            con_output = output + h_encoder_outputs
-            output = self.h_linear(con_output)
+            if self.turn_type == 'hred_attn':
+                pass
+            elif self.turn_type == 'hred':
+                #  con_output = output + h_encoder_outputs[-1].unsqueeze(0)
+                con_output = torch.cat((output, h_encoder_outputs[-1].unsqueeze(0)), dim=2)
+                output = self.h_linear(con_output)
 
         # linear
         output = self.linear(output)

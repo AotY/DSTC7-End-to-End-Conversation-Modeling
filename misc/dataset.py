@@ -116,7 +116,7 @@ class Dataset:
                     elif self.turn_type == 'dcgm':
                         conversation = history_conversations[-1]
                         history_conversations = [' '.join(history_conversations[:-1])]
-                    elif self.turn_type == 'hred':
+                    elif self.turn_type == 'hred' or self.turn_type == 'hred_attn':
                         conversation = history_conversations[-1]
                         history_conversations = history_conversations[:-1]
                     elif self.turn_type == 'none':
@@ -190,12 +190,12 @@ class Dataset:
             cur_indicator=batch_size
 
         h_encoder_inputs = []
-        #  h_encoder_inputs_length = []
+        h_encoder_inputs_length = []
 
         c_encoder_inputs=torch.zeros((self.c_max_len, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
-        c_encoder_inputs_lengths=[]
+        c_encoder_inputs_length=[]
 
         decoder_inputs=torch.zeros((self.r_max_len, batch_size),
                                      dtype=torch.long,
@@ -210,6 +210,7 @@ class Dataset:
 
         # facts
         f_encoder_inputs=[]
+        f_encoder_inputs_length = []
         facts_texts=[]
 
         batch_data=self._data_dict[task][self._indicator_dict[task]: cur_indicator]
@@ -217,7 +218,7 @@ class Dataset:
 
             # append length
             #  conversation_ids.insert(0, self.vocab.sosid)
-            c_encoder_inputs_lengths.append(len(conversation_ids))
+            c_encoder_inputs_length.append(len(conversation_ids))
 
             # ids to word
             conversation_text = ' '.join(self.vocab.ids_to_word(conversation_ids))
@@ -226,10 +227,10 @@ class Dataset:
             response_texts.append(response_text)
 
 			# history inputs
+            h_encoder_inputs_length.append(len(history_conversations_ids))
             if len(history_conversations_ids) > 0:
                 history_input=[]
                 for ids in history_conversations_ids:
-                    #  ids.insert(0, self.vocab.sosid)
                     ids = torch.tensor(ids, dtype=torch.long, device=self.device)
                     history_input.append(ids)
                 history_input = torch.stack(history_input, dim=0) #[num, ids]
@@ -247,30 +248,37 @@ class Dataset:
             decoder_targets[len(response_ids), i]=self.vocab.eosid
 
             if self.model_type == 'kg':
-                topk_facts_embedded, topk_facts_text=self.assembel_facts(hash_value)
+                topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
                 if topk_facts_embedded.size(0) < self.f_topk:
+                    #  tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
                     tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
                     tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
                     topk_facts_embedded = tmp_tensor
-                elif topk_facts_embedded.size(0) > self.f_topk:
+                elif topk_facts_embedded.size(0) >= self.f_topk:
                     topk_facts_embedded = topk_facts_embedded[:self.f_topk]
 
                 topk_facts_embedded = topk_facts_embedded.to(self.device)
                 f_encoder_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
+                f_encoder_inputs_length.append(topk_facts_embedded.size(0))
 
         # To long tensor
-        c_encoder_inputs_lengths = torch.tensor(c_encoder_inputs_lengths, dtype=torch.long, device=self.device)
-        # update _indicator_dict[task]
-        self._indicator_dict[task] = cur_indicator
+        c_encoder_inputs_length = torch.tensor(c_encoder_inputs_length, dtype=torch.long, device=self.device)
+
+        h_encoder_inputs_length = torch.tensor(h_encoder_inputs_length, dtype=torch.long, device=self.device)
 
         if self.model_type == 'kg':
             f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
+            f_encoder_inputs_length = torch.tensor(f_encoder_inputs_length, dtype=torch.long, device=self.device)
 
-        return c_encoder_inputs, c_encoder_inputs_lengths, \
+        # update _indicator_dict[task]
+        self._indicator_dict[task] = cur_indicator
+
+        return c_encoder_inputs, c_encoder_inputs_length, \
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_encoder_inputs, facts_texts, h_encoder_inputs
+            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+            h_encoder_inputs, h_encoder_inputs_length
 
 
     def assembel_facts(self, hash_value):

@@ -21,18 +21,20 @@ class SessionEncoder(nn.Module):
     def __init__(self,
                  rnn_type,
                  hidden_size,
+                 num_layers,
                  dropout=0.0):
         super(SessionEncoder, self).__init__()
 
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
+        self.num_layers = num_layers
 
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
             input_size=hidden_size,
             hidden_size=hidden_size,
-            #  dropout=dropout
+            num_layers=num_layers
         )
 
         if rnn_type == 'LSTM':
@@ -50,9 +52,9 @@ class SessionEncoder(nn.Module):
         return output, hidden_state
 
     def init_hidden(self, batch_size, device):
-        initial_state1 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+        initial_state1 = torch.zeros((self.num_layers, batch_size, self.hidden_size), device=device)
         if self.rnn_type == 'LSTM':
-            initial_state2 = torch.zeros((1, batch_size, self.hidden_size), device=device)
+            initial_state2 = torch.zeros((self.num_layers, batch_size, self.hidden_size), device=device)
             return (initial_state1, initial_state2)
         else:
             return initial_state1

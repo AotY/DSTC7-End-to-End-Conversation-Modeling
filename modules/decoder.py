@@ -32,7 +32,8 @@ class Decoder(nn.Module):
                  hidden_size,
                  num_layers,
                  dropout,
-                 tied):
+                 tied,
+                 turn_type):
 
         super(Decoder, self).__init__()
 
@@ -41,6 +42,8 @@ class Decoder(nn.Module):
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
+
+        self.turn_type = turn_type
 
         # embedding
         self.embedding = embedding
@@ -61,6 +64,9 @@ class Decoder(nn.Module):
             init_lstm_orth(self.rnn)
         else:
             init_gru_orth(self.rnn)
+
+        if turn_type == 'hred':
+            self.h_linear = nn.Linear(hidden_size + hidden_size, hidden_size)
 
         # linear
         self.linear = nn.Linear(self.hidden_size, self.vocab_size)
@@ -96,11 +102,11 @@ class Decoder(nn.Module):
         # rnn
         output, hidden_state = self.rnn(embedded, hidden_state)
 
-        if h_encoder_outputs is not None:
-            con_output = output + h_encoder_outputs
+        if self.turn_type == 'hred':
+            #  con_output = output + h_encoder_outputs[-1].unsqueeze(0)
+            con_output = torch.cat((output, h_encoder_outputs[-1].unsqueeze(0)), dim=2)
             output = self.h_linear(con_output)
 
-        # [1, batch_size, hidden_size]
         # linear
         output = self.linear(output)
 
