@@ -184,7 +184,7 @@ def read_facts(facts_file_path, logger, opt):
             #  if fact_len <= 7:
                 #  abnormal_facts.append(fact_tokens)
 
-            #  raw_facts.append(fact)
+            raw_facts.append(fact)
 
             facts.append(fact_tokens)
 
@@ -409,7 +409,7 @@ if __name__ == '__main__':
         #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
         # save raw pair
-        #  save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
+        save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
 
         # save abnormal_conversations, abnormal_responses
         #  save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
