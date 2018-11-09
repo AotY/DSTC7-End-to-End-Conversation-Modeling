@@ -124,7 +124,8 @@ class Dataset:
                         history_conversations = []
 
                     conversation_ids = self.vocab.words_to_id(conversation.split(' '))
-                    conversation_ids = conversation_ids[-min(self.c_max_len - 1, len(conversation_ids)):]
+                    #  conversation_ids = conversation_ids[-min(self.c_max_len - 1, len(conversation_ids)):]
+                    conversation_ids = conversation_ids[-min(self.c_max_len, len(conversation_ids)):]
 
                     history_conversations_ids = []
                     for history in history_conversations:
@@ -215,7 +216,7 @@ class Dataset:
         for i, (conversation, history_conversations_ids, conversation_ids, response_ids, hash_value) in enumerate(batch_data):
 
             # append length
-            conversation_ids.insert(0, self.vocab.sosid)
+            #  conversation_ids.insert(0, self.vocab.sosid)
             c_encoder_inputs_lengths.append(len(conversation_ids))
 
             # ids to word
@@ -239,7 +240,7 @@ class Dataset:
                 c_encoder_inputs[c, i] = token_id
 
             # decoder_inputs
-            decoder_inputs[0, i]=self.vocab.sosid
+            decoder_inputs[0, i] = self.vocab.sosid
             for r, token_id in enumerate(response_ids):
                 decoder_inputs[r + 1, i]=token_id
                 decoder_targets[r, i]=token_id

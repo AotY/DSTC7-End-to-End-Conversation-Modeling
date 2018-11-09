@@ -32,12 +32,12 @@ python train_kg_model.py \
     --f_topk 10 \
     --lr 0.001 \
     --max_norm 50.0 \
-    --epochs 10 \
+    --epochs 15 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
-    --log_interval 70 \
+    --log_interval 50 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0007 \
