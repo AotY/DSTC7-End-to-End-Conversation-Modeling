@@ -237,11 +237,11 @@ def stat_frequency(datas, datas_name, min_count=3, vocab_size=8e5, logger=None):
             f.write('%d\t%d\n' % (item[0], item[1]))
 
     # clip max len of token
-    sorted_freq_list = [item for item in sorted_freq_list if len(item[0]) <= 15]
+    sorted_freq_list = [item for item in sorted_freq_list if len(item[0]) < 15]
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
-        sorted_freq_list = [item for item in sorted_freq_list if item[1] >= min_count]
+        sorted_freq_list = [item for item in sorted_freq_list if item[1] > min_count]
 
     if vocab_size > 0 and len(sorted_freq_list) >= vocab_size:
         logger.info('Clip tokens by vocab_size')
