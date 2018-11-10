@@ -12,7 +12,6 @@ import torch
 import torch.nn as nn
 
 from modules.utils import init_wt_normal, init_linear_wt, init_lstm_orth, init_gru_orth
-#  from modules.global_attn import GlobalAttn
 from modules.attention import Attention
 from modules.utils import rnn_factory
 
@@ -47,8 +46,8 @@ class LuongAttnDecoder(nn.Module):
         # dropout
         self.dropout = nn.Dropout(dropout)
 
-        # c_attn
-        self.c_attn = Attention(hidden_size)
+        # h_attn
+        self.h_attn = Attention(hidden_size)
 
         self.rnn = rnn_factory(
             rnn_type,
@@ -63,10 +62,8 @@ class LuongAttnDecoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-        if self.turn_type == 'hred_attn':
+        if self.turn_type == 'weight':
             self.h_attn = Attention(hidden_size)
-        elif self.turn_type == 'hred':
-            self.h_linear = nn.Linear(hidden_size + hidden_size, hidden_size)
 
         # linear
         self.linear = nn.Linear(hidden_size, vocab_size)
@@ -80,18 +77,15 @@ class LuongAttnDecoder(nn.Module):
     def forward(self,
                 input,
                 hidden_state,
-                c_encoder_outputs,
-                c_encoder_inputs_length,
                 h_encoder_outputs=None,
-                h_encoder_inputs_length=None):
-
+                h_decoder_lengths=None):
         '''
 		Args:
-			input: [1, batch_size]  or [len, batch_size]
+			input: [1, batch_size]
 			hidden_state: [num_layers, batch_size, hidden_size]
-			c_encoder_outputs: [seq_len, batch, hidden_size]
-			h_encoder_outputs: [len, batch_size, hidden_size]
-			hidden_state: (h_n, c_n)
+
+			h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
+            h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
         '''
 
         # embedded
@@ -101,26 +95,16 @@ class LuongAttnDecoder(nn.Module):
         # Get current hidden state from input word and last hidden state
         output, hidden_state = self.rnn(embedded, hidden_state)
 
-        # c attention
-        c_attn_output, c_attn_weights = self.c_attn(output, c_encoder_outputs, c_encoder_inputs_length)
-
-        # h attention
         h_attn_output = None
-        if h_encoder_outputs is not None:
-            if self.turn_type == 'hred_attn':
-                h_attn_output, h_attn_weights = self.h_attn(c_attn_output, h_encoder_outputs, h_encoder_inputs_length)
-            elif self.turn_type == 'hred':
-                h_concat_input = torch.cat((c_attn_output, h_encoder_outputs[-1].unsqueeze(0)), dim=2)
-                h_concat_output = torch.tanh(self.h_linear(h_concat_input))
+        if h_encoder_outputs is not None and h_decoder_lengths is not None:
+            h_attn_output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_decoder_lengths)
 
-        if h_attn_output is not None:
+        elif h_attn_output is not None:
             output = self.linear(h_attn_output)
-        elif h_concat_output is not None:
-            output = self.linear(h_concat_output)
         else:
-            output = self.linear(c_attn_output)
+            output = self.linear(output)
 
         # softmax
         output = self.softmax(output)
 
-        return output, hidden_state, c_attn_weights
+        return output, hidden_state, h_attn_weights

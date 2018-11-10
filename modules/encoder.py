@@ -56,7 +56,7 @@ class Encoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, inputs_length, hidden_state):
+    def forward(self, inputs, hidden_state, inputs_length=None):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -66,9 +66,9 @@ class Encoder(nn.Module):
             max_output: [1, batch_size, hidden_size * num_directions]
             hidden_state: (h_n, c_n)
         '''
-        # Note: we run this all at once (over multiple batches of multiple sequences)
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
+
         # [batch_size, seq_len, embedding_size]
         embedded = embedded.transpose(0, 1)
 
@@ -108,17 +108,3 @@ class Encoder(nn.Module):
             return (initial_state1, initial_state2)
         else:
             return initial_state1
-
-        """
-        initial_state_scale = math.sqrt(3.0 / self.hidden_size)
-
-        initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-        nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
-        if self.rnn_type == 'LSTM':
-            initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-            nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
-            return (initial_state1, initial_state2)
-        else:
-            return initial_state1
-
-        """

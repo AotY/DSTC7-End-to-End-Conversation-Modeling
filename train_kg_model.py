@@ -54,16 +54,9 @@ if opt.seed:
     torch.manual_seed(opt.seed)
 
 # update max_len
-if opt.turn_num > 1:
-    if opt.turn_type == 'concat':
-        opt.h_max_len = opt.h_max_len * opt.turn_num
-        opt.c_max_len = opt.h_max_len + opt.c_max_len
-    elif opt.turn_type == 'dcgm':
-        opt.h_max_len = opt.h_max_len * (opt.turn_num - 1)
-    elif opt.turn_type == 'hred' or opt.turn_type == 'hred_attn':
-        pass
+if opt.turn_type == 'concat':
+    opt.c_max_len = opt.c_max_len + opt.turn_num
 
-logger.info('h_max_len: %d' % opt.h_max_len)
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
 
@@ -81,18 +74,16 @@ def train_epochs(model,
         log_accuracy_total = 0
         for load in range(1, max_load + 1):
             # load data
-            c_encoder_inputs, c_encoder_inputs_length, \
-                decoder_inputs, decoder_targets, \
-                conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-                h_encoder_inputs, h_encoder_inputs_length = dataset.load_data('train', opt.batch_size)
+            decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts, \
+            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+            h_encoder_inputs, h_turn_lengths, h_inputs_lengths = dataset.load_data('train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
                                    h_encoder_inputs,
-                                   h_encoder_inputs_length,
-                                   c_encoder_inputs,
-                                   c_encoder_inputs_length,
+                                   h_turn_lengths,
+                                   h_inputs_lengths,
                                    decoder_inputs,
                                    decoder_targets,
                                    f_encoder_inputs,
@@ -150,7 +141,8 @@ def train_epochs(model,
 
 def train(model,
           h_encoder_inputs,
-          h_encoder_inputs_length,
+          h_turn_lengths,
+          h_inputs_lengths,
           c_encoder_inputs,
           c_encoder_inputs_length,
           decoder_inputs,
@@ -167,7 +159,8 @@ def train(model,
     # [max_len, batch_size, vocab_size]
     decoder_outputs = model(
         h_encoder_inputs,
-        h_encoder_inputs_length,
+        h_turn_lengths,
+        h_inputs_lengths,
         c_encoder_inputs,
         c_encoder_inputs_length,
         decoder_inputs,
@@ -224,19 +217,17 @@ def evaluate(model,
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            c_encoder_inputs, c_encoder_inputs_length, \
-                decoder_inputs, decoder_targets, \
-                conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-                h_encoder_inputs, h_encoder_inputs_length = dataset.load_data('test', opt.batch_size)
+            decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts, \
+            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+            h_encoder_inputs, h_turn_lengths, h_inputs_lengths = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             decoder_outputs=model.evaluate(
                 h_encoder_inputs,
-                h_encoder_inputs_length,
-                c_encoder_inputs,
-                c_encoder_inputs_length,
+                h_turn_lengths,
+                h_inputs_lengths,
                 decoder_input,
                 f_encoder_inputs,
                 f_encoder_inputs_length,
@@ -268,14 +259,11 @@ def decode(model, dataset, vocab):
     max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
-            c_encoder_inputs, c_encoder_inputs_length, \
-                decoder_inputs, decoder_targets, \
-                conversation_texts, response_texts, \
-                f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-                h_encoder_inputs, h_encoder_inputs_length = dataset.load_data('eval', opt.batch_size)
+            decoder_inputs, decoder_targets, \
+            conversation_texts, response_texts, \
+            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
+            h_encoder_inputs, h_turn_lengths, h_inputs_lengths = dataset.load_data('eval', opt.batch_size)
 
-            #  print(decoder_inputs)
-            #  print(decoder_targets)
 
             # train and get cur loss
             # greedy: [batch_size, r_max_len]
@@ -283,9 +271,8 @@ def decode(model, dataset, vocab):
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             greedy_outputs, beam_outputs = model.decode(
                 h_encoder_inputs,
-                h_encoder_inputs_length,
-                c_encoder_inputs,  # LongTensor
-                c_encoder_inputs_length,
+                h_turn_lengths,
+                h_inputs_lengths,
                 decoder_input,
                 f_encoder_inputs,
                 f_encoder_inputs_length,
@@ -410,8 +397,6 @@ def build_dataset(vocab):
     dataset = Dataset(
                 opt.model_type,
                 opt.pair_path,
-                opt.max_len,
-                opt.h_max_len,
                 opt.c_max_len,
                 opt.r_max_len,
                 opt.min_len,

@@ -60,12 +60,3 @@ class SessionDecoder(nn.Module):
         attn_output, attn_weights = self.attn(output, encoder_outputs)
 
         return attn_output, hidden_state, attn_weights
-
-    def init_hidden(self, batch_size, device):
-        initial_state1 = torch.zeros((self.num_layers, batch_size, self.hidden_size), device=device)
-        if self.rnn_type == 'LSTM':
-            initial_state2 = torch.zeros((self.num_layers, batch_size, self.hidden_size), device=device)
-            return (initial_state1, initial_state2)
-        else:
-            return initial_state1
-
