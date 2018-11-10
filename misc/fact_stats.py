@@ -33,6 +33,7 @@ h2 ratio: 0.0091
 abstract count: 15116
 abstract ratio: 0.9938
 """
+import re
 import string
 import pickle
 from tqdm import tqdm
@@ -57,14 +58,14 @@ def remove_stop_words(words):
     return words
 
 
-def table_h2_stats(facts_path):
+def wiki_stats(facts_path):
     title_count = 0
     wiki_count = 0
     wiki_table_count = 0
 
     is_wiki = False
     last_domain = None
-    line_count = 0
+    table_line_count = 0
     maybe_table = False
 
     table_filename = './wiki_table.txt'
@@ -86,17 +87,16 @@ def table_h2_stats(facts_path):
 
             parts = line.split('\t')
 
-            #  hash_value = parts[0]
             subreddit_name = parts[0]
             conversation_id = parts[1]
             domain_name = parts[2]
-            fact = parts[-1]
+            fact = parts[3]
 
             if fact.find('<title>') != -1:
                 title_count += 1
 
                 if domain_name == 'en.wikipedia.org':
-                    table_file.write(fact)
+                    table_file.write(fact + '\n')
                     wiki_count += 1
 
                     # parser table
@@ -109,15 +109,18 @@ def table_h2_stats(facts_path):
                 else:
                     is_wiki = False
 
-                line_count = 0
-                last_domain = domain_name
-                maybe_table = False
                 table = []
+                table_line_count = 0
+                maybe_table = False
                 h2s = []
+
                 abstracts = []
                 maybe_abstract = True
+
                 references = []
                 maybe_refenrence = False
+
+                last_domain = domain_name
                 continue
 
             if is_wiki and domain_name == last_domain:
@@ -126,7 +129,8 @@ def table_h2_stats(facts_path):
                     maybe_table = True
                     table = []
                     continue
-                elif fact.find('<h2>') != -1:
+
+                if fact.find('<h2>') != -1:
                     soup = BeautifulSoup(fact, 'lxml')
                     h2 = soup.text.replace('[ edit ]', '').strip()
                     h2_words = remove_stop_words(tokenizer.tokenize(h2))
@@ -139,14 +143,12 @@ def table_h2_stats(facts_path):
                     abstracts = []
                     maybe_abstract = False
 
-                if fact.startswith('<h2> reference'):
+                if fact.find('<h2> references') != -1 or fact.find('<h2> notes') != -1:
                     maybe_refenrence = True
-                    references = []
                     continue
 
-                if fact.startswith('<h2> external') or fact.startswith('<h2> navigation') or fact.startswith('<h2> further '):
+                if fact.find('<h2> external') != -1 or fact.find('<h2> navigation') != -1 or fact.find('<h2> further ') != -1:
                     maybe_refenrence = False
-                    references = []
                     continue
 
                 if fact.find('<p>') != -1 and maybe_abstract:
@@ -155,42 +157,45 @@ def table_h2_stats(facts_path):
                     abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
                     abstracts.append(abstract_words)
 
-                if fact.startswith('^ ') and maybe_refenrence:
+                if fact.find('"') != -1 and maybe_refenrence:
                     reference = fact.strip()
-                    refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
-                    references.append(refenrence_words)
+                    parts = re.findall(r'".+"', reference)
+                    if len(parts) > 0:
+                        reference = ' '.join(parts).replace('"', '')
+                        refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
+                        references.append(refenrence_words)
 
-            if is_wiki and domain_name == last_domain and maybe_table:
-                if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
-                    if line_count > 2:
-                        if len(table) > 0:
-                            wiki_table_dict[conversation_id] = table
-                            wiki_table_count += 1
+                if maybe_table:
+                    if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
+                        if table_line_count > 2:
+                            if len(table) > 0:
+                                wiki_table_dict[conversation_id] = table
+                                wiki_table_count += 1
 
-                    maybe_table = False
-                    line_count = 0
-                    table = []
-                    table_file.write('----------------------\n')
-                else:
-                    if len(fact) > 3:
-                        line_count += 1
-                        table_file.write(fact)
-                        fact_words = remove_stop_words(tokenizer.tokenize(fact))
-                        table.append(fact_words)
-                    continue
+                        maybe_table = False
+                        table_line_count = 0
+                        table = []
+                        table_file.write('----------------------\n')
+                    else:
+                        if len(fact) > 3:
+                            table_line_count += 1
+                            table_file.write(fact)
+                            fact_words = remove_stop_words(tokenizer.tokenize(fact))
+                            table.append(fact_words)
+                        continue
 
-            if domain_name != last_domain or fact.startswith('mobile view'): # mobile view, last line
+            if domain_name != last_domain or fact.find('<h2> navigation') != -1 or fact.find('<h2> external') != -1: # mobile view, last line
                 if is_wiki and len(h2s) > 0:
                     wiki_h2_dict[conversation_id] = h2s
                     h2_count += 1
 
-                if maybe_refenrence and len(references) > 0:
+                if is_wiki and len(references) > 0:
                     wiki_reference_dict[conversation_id] = references
 
                 is_wiki = False
-                domain_name = ''
+                domain_name = None
                 maybe_table = False
-                line_count = 0
+                table_line_count = 0
                 table = []
                 h2s = []
                 abstracts = []
@@ -316,7 +321,8 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
 if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
-    wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = table_h2_stats(facts_path)
+    wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
+
     # similarity words
     #  vec_file = '/home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin'
     #  fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
