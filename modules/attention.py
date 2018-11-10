@@ -46,7 +46,7 @@ class Attention(nn.Module):
         context: [c_len, batch_size, hidden_size]
         """
 
-        _, batch_size, hidden_size = output.shape
+        output_len, batch_size, hidden_size = output.shape
         input_size = context.size(0)
 
         # (batch, out_len, hidden_size) * (batch, hidden_size, in_len) -> (batch, out_len, in_len)
@@ -57,17 +57,17 @@ class Attention(nn.Module):
             mask = mask.unsqueeze(1)  # Make it broadcastable. # [batch_size, 1, in_len]
             attn.data.masked_fill_(1 - mask, -float('inf'))
 
-        attn = torch.softmax(attn.view(-1, input_size), hidden_size=1).view(batch_size, -1, input_size)
+        attn = torch.softmax(attn.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
 
         # (batch, out_len, in_len) * (batch, in_len, hidden_size) -> (batch, out_len, hidden_size)
-        mix = torch.bmm(attn, context)
+        mix = torch.bmm(attn, context.transpose(0, 1))
         mix = mix.transpose(0, 1) #[out_len, batch_size, hidden_size]
 
         # concat -> (out_len, batch_size, 2 * hidden_size)
-        combined = torch.cat((mix, output), hidden_size=2)
+        combined = torch.cat((mix, output), dim=2)
 
         # output -> (batch, out_len, hidden_size)
-        output = F.tanh(self.linear_out(combined.view(-1, 2 * hidden_size))).view(-1, batch_size, hidden_size)
+        output = torch.tanh(self.linear_out(combined.view(-1, 2 * hidden_size))).view(-1, batch_size, hidden_size)
 
         return output, attn
 
