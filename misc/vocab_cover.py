@@ -4,11 +4,15 @@
 #
 # Distributed under terms of the MIT license.
 
-def turn_stats(pair_path, logger=None):
-    turn_dict = {}
+from collections import Counter
+from vocab import Vocab
+
+
+def vocab_cover_stats(pair_path, vocab=None):
+    unique_words = Counter()
     with open(pair_path, 'r', encoding='utf-8') as f:
         for line in f:
-            conversation, response, hash_value = line.split('SPLITTOKEN')
+            _, conversation, response, hash_value = line.split('SPLITTOKEN')
 
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
@@ -22,22 +26,24 @@ def turn_stats(pair_path, logger=None):
                 # EOS: special symbol indicating a turn transition
                 conversation = conversation[4:]
             conversation_turns = conversation.split('eos')
-            turn_num = len(conversation_turns)
-            turn_dict[turn_num] = turn_dict.get(turn_num, 0) + 1
-    return turn_dict
+            for conversation_turn in conversation_turns:
+                unique_words.update(conversation_turn.split(' '))
+            unique_words.update(response.split(' '))
 
+    print('unique word: %d ' % len(unique_words))
+    cover_num = 0
+    for word in unique_words.keys():
+        if vocab.word2idx.get(word, None) is not None:
+            cover_num += 1
 
-def save_distribution(distribution, name, key=None):
-    if key is None:
-        key = lambda item: item[0]
-    distribution_list = sorted(distribution.items(), key=key)
-    with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
-        f.write('length\tcount\n')
-        for length, count in distribution_list:
-            f.write('%d\t%d\n' % (length, count))
+    print('cover num: %d ' % cover_num)
+    print('cover ratio: %.4f ' % cover_num / len(unique_words))
 
 if __name__ == '__main__':
     pair_path = './../data/conversations_responses.pair.txt'
-    turn_dict = turn_stats(pair_path)
-    save_distribution(turn_dict, 'turn_freq')
+    vocab = Vocab()
+    vocab.load('./../data/vocab_word2idx_seq2seq.80004.dict')
+
+    vocab_cover_stats(pair_path, vocab)
+
 
