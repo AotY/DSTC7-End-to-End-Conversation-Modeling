@@ -4,11 +4,13 @@
 #
 # Distributed under terms of the MIT license.
 
+from tqdm import tqdm
+
 def turn_stats(pair_path, logger=None):
     turn_dict = {}
     with open(pair_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            conversation, response, hash_value = line.split('SPLITTOKEN')
+        for line in tqdm(f):
+            _, conversation, response, hash_value = line.split('SPLITTOKEN')
 
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
@@ -21,6 +23,7 @@ def turn_stats(pair_path, logger=None):
             elif conversation.startswith('eos'):
                 # EOS: special symbol indicating a turn transition
                 conversation = conversation[4:]
+
             conversation_turns = conversation.split('eos')
             turn_num = len(conversation_turns)
             turn_dict[turn_num] = turn_dict.get(turn_num, 0) + 1
