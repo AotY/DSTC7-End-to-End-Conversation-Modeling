@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from modules.encoder import Encoder
 from modules.simple_encoder import SimpleEncoder
 from modules.session_encoder import SessionEncoder
+from modules.session_encoder import SessionDecoder
 from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
 from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
@@ -92,11 +93,12 @@ class KGModel(nn.Module):
                                                 bidirectional,
                                                 dropout)
         if turn_type == 'hred' or turn_type == 'hred_attn':
-            self.session_encoder = SessionEncoder(
+            self.session_encoder = SessionDecoder(
                 rnn_type,
                 hidden_size,
-                encoder_num_layers,
-                dropout
+                num_layers,
+                dropout,
+                attn_type
             )
 
         # c_encoder (conversation encoder)
@@ -124,7 +126,12 @@ class KGModel(nn.Module):
         # encoder hidden_state -> decoder hidden_state
         self.reduce_state = ReduceState(rnn_type)
 
-        self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
+        if self.rnn_type == 'GRU':
+            self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
+        else:
+            self.combine_c_h_linear_1 = nn.Linear(hidden_size, hidden_size)
+            self.combine_c_h_linear_2 = nn.Linear(hidden_size, hidden_size)
+
 
         if share_embedding:
             decoder_embedding = encoder_embedding
@@ -440,8 +447,14 @@ class KGModel(nn.Module):
                                                                                               simple_encoder_hidden_state)
 
                     # session update
-                    session_encoder_output, session_encoder_hidden_state = self.session_encoder(simple_encoder_outputs[-1].unsqueeze(0),
-                                                                                                 session_encoder_hidden_state)
+                    session_encoder_output, session_encoder_hidden_state = self.session_encoder(
+                        simple_encoder_outputs[-1].unsqueeze(0),
+                        session_encoder_hidden_state,
+                        simple_encoder_outputs
+                    )
+
+                    #  session_encoder_output, session_encoder_hidden_state = self.session_encoder(simple_encoder_outputs[-1].unsqueeze(0),
+                                                                                                 #  session_encoder_hidden_state)
 
                     tmp_sesseion_encocer_outputs[i, :, :] = session_encoder_output
 
@@ -510,11 +523,16 @@ class KGModel(nn.Module):
 
     def combine_c_h_state(self, c_encoder_hidden_state, h_encoder_hidden_state):
         if self.rnn_type == 'GRU':
-            tmp_encoder_hidden_state = c_encoder_hidden_state + h_encoder_hidden_state
-            #  tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
-            #  tmp_encoder_hidden_state = torch.tanh(self.combine_c_h_linear(tmp_encoder_hidden_state))
+            #  tmp_encoder_hidden_state = c_encoder_hidden_state + h_encoder_hidden_state
+            tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
+            tmp_encoder_hidden_state = torch.tanh(self.combine_c_h_linear(tmp_encoder_hidden_state))
         else:
-            tmp_encoder_hidden_state = tuple([item1 + item2 for (item1, item2) in zip(c_encoder_hidden_state, h_encoder_hidden_state)])
+            #  tmp_encoder_hidden_state = tuple([item1 + item2 for (item1, item2) in zip(c_encoder_hidden_state, h_encoder_hidden_state)])
+            tmp_encoder_hidden_state_1 = torch.cat((c_encoder_hidden_state[0], h_encoder_hidden_state[0]), dim=2)
+            tmp_encoder_hidden_state_1 = torch.tanh(self.combine_c_h_linear_1(tmp_encoder_hidden_state_1))
+            tmp_encoder_hidden_state_2 = torch.cat((c_encoder_hidden_state[1], h_encoder_hidden_state[1]), dim=2)
+            tmp_encoder_hidden_state_2 = torch.tanh(self.combine_c_h_linear_2(tmp_encoder_hidden_state_2))
+            return tuple([tmp_encoder_hidden_state_1, tmp_encoder_hidden_state_2])
 
         return tmp_encoder_hidden_state
 
