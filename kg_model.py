@@ -7,7 +7,6 @@ import torch.nn.functional as F
 
 from modules.encoder import Encoder
 from modules.simple_encoder import SimpleEncoder
-from modules.session_encoder import SessionEncoder
 from modules.session_decoder import SessionDecoder
 from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
@@ -127,10 +126,10 @@ class KGModel(nn.Module):
         self.reduce_state = ReduceState(rnn_type)
 
         if self.rnn_type == 'GRU':
-            self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
+            self.combine_c_h_linear = nn.Linear(hidden_size * 2, hidden_size)
         else:
-            self.combine_c_h_linear_1 = nn.Linear(hidden_size, hidden_size)
-            self.combine_c_h_linear_2 = nn.Linear(hidden_size, hidden_size)
+            self.combine_c_h_linear_1 = nn.Linear(hidden_size * 2, hidden_size)
+            self.combine_c_h_linear_2 = nn.Linear(hidden_size * 2, hidden_size)
 
 
         if share_embedding:
@@ -438,7 +437,7 @@ class KGModel(nn.Module):
                 session_encoder_hidden_state = self.session_encoder.init_hidden(1, self.device)
 
                 # [turn_num, 1, hidden_size]
-                tmp_sesseion_encocer_outputs = torch.zeros((self.turn_num, 1, self.hidden_size), device=self.device)
+                tmp_sesseion_encocer_outputs = torch.zeros((self.turn_num - 1, 1, self.hidden_size), device=self.device)
 
                 for i, ids in enumerate(h_encoder_input):
                     # [num_layers * bidirection_num, 1, hidden_size // bidirection_num]
@@ -447,7 +446,7 @@ class KGModel(nn.Module):
                                                                                               simple_encoder_hidden_state)
 
                     # session update
-                    session_encoder_output, session_encoder_hidden_state = self.session_encoder(
+                    session_encoder_output, session_encoder_hidden_state, _ = self.session_encoder(
                         simple_encoder_outputs[-1].unsqueeze(0),
                         session_encoder_hidden_state,
                         simple_encoder_outputs
