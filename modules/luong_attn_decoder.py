@@ -102,6 +102,9 @@ class LuongAttnDecoder(nn.Module):
         output, hidden_state = self.rnn(embedded, hidden_state)
 
         # c attention
+        #  print(output.shape)
+        #  print(c_encoder_outputs.shape)
+        #  print(c_encoder_inputs_length.shape)
         c_attn_output, c_attn_weights = self.c_attn(output, c_encoder_outputs, c_encoder_inputs_length)
 
         # h attention

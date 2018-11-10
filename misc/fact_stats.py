@@ -17,6 +17,21 @@ h2 count: 6909
 h2 ratio: 0.9977
 abstract count: 6916
 abstract ratio: 0.9987
+
+
+title_count: 33386
+wiki_count: 15211
+
+wiki ratio: 0.4556
+
+wiki_table_count: 11062
+table_ratio: 0.7272
+
+h2 count: 139
+h2 ratio: 0.0091
+
+abstract count: 15116
+abstract ratio: 0.9938
 """
 import string
 import pickle

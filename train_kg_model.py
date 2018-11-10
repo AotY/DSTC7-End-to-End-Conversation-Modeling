@@ -90,11 +90,13 @@ def train_epochs(model,
             # train and get cur loss
             loss, accuracy = train(model,
                                    h_encoder_inputs,
+                                   h_encoder_inputs_length,
                                    c_encoder_inputs,
                                    c_encoder_inputs_length,
                                    decoder_inputs,
                                    decoder_targets,
                                    f_encoder_inputs,
+                                   f_encoder_inputs_length,
                                    optimizer,
                                    criterion,
                                    vocab)
@@ -148,11 +150,13 @@ def train_epochs(model,
 
 def train(model,
           h_encoder_inputs,
+          h_encoder_inputs_length,
           c_encoder_inputs,
           c_encoder_inputs_length,
           decoder_inputs,
           decoder_targets,
           f_encoder_inputs,
+          f_encoder_inputs_length,
           optimizer,
           criterion,
           vocab):
@@ -163,10 +167,12 @@ def train(model,
     # [max_len, batch_size, vocab_size]
     decoder_outputs = model(
         h_encoder_inputs,
+        h_encoder_inputs_length,
         c_encoder_inputs,
         c_encoder_inputs_length,
         decoder_inputs,
         f_encoder_inputs,
+        f_encoder_inputs_length,
         opt.batch_size,
         opt.r_max_len,
         opt.teacher_forcing_ratio
@@ -228,10 +234,12 @@ def evaluate(model,
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             decoder_outputs=model.evaluate(
                 h_encoder_inputs,
+                h_encoder_inputs_length,
                 c_encoder_inputs,
                 c_encoder_inputs_length,
                 decoder_input,
                 f_encoder_inputs,
+                f_encoder_inputs_length,
                 opt.r_max_len,
                 opt.batch_size
             )
@@ -275,10 +283,12 @@ def decode(model, dataset, vocab):
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             greedy_outputs, beam_outputs = model.decode(
                 h_encoder_inputs,
+                h_encoder_inputs_length,
                 c_encoder_inputs,  # LongTensor
                 c_encoder_inputs_length,
                 decoder_input,
                 f_encoder_inputs,
+                f_encoder_inputs_length,
                 opt.decode_type,
                 opt.r_max_len,
                 vocab.eosid,

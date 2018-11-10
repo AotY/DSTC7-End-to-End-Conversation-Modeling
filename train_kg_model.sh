@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -15,7 +15,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.8 \
+    --dropout 0.7 \
     --max_len 35 \
     --h_max_len 35 \
     --c_max_len 35 \
@@ -34,10 +34,10 @@ python train_kg_model.py \
     --max_norm 50.0 \
     --epochs 15 \
     --batch_size 128 \
-    --teacher_forcing_ratio 0.5 \
+    --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
-    --log_interval 50 \
+    --log_interval 30 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0007 \

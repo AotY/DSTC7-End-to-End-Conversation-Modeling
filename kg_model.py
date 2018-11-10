@@ -14,6 +14,7 @@ from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt, init_wt_normal
+from modules.utils import sequence_mask
 #  from modules.beam_search import beam_decode
 from modules.beam_search_original import beam_decode
 
@@ -121,7 +122,7 @@ class KGModel(nn.Module):
                 init_linear_wt(self.fact_linear)
 
         # encoder hidden_state -> decoder hidden_state
-        self.reduce_state = ReduceState()
+        self.reduce_state = ReduceState(rnn_type)
 
         self.combine_c_h_linear = nn.Linear(hidden_size, hidden_size)
 
@@ -206,7 +207,7 @@ class KGModel(nn.Module):
 
         if use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
-            decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
+            decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
                                                                                decoder_hidden_state,
                                                                                c_encoder_outputs,
                                                                                c_encoder_inputs_length,
@@ -452,18 +453,20 @@ class KGModel(nn.Module):
 
             # [turn_num, batch_size, hidden_size]
             h_encoder_outputs = torch.cat(h_encoder_outputs, dim=1)
-            print(h_encoder_outputs.shape)
 
             # [num_layers, batch_size, hidden_size]
             if self.rnn_type == 'GRU':
                 h_encoder_hidden_states = torch.cat(h_encoder_hidden_states, dim=1)
             else:
-                tmp_hs, tmp_cs = [], []
+                tmp_hs, tmp_cs = list(), list()
                 for h, c in h_encoder_hidden_states:
                     tmp_hs.append(h)
-                    tmp_cs.applies(c)
+                    tmp_cs.append(c)
 
-                h_encoder_hidden_states = tuple(list[torch.cat(item, dim=1) for item in [tmp_hs, tmp_cs]])
+                tmp_hs = torch.cat(tmp_hs, dim=1)
+                tmp_cs = torch.cat(tmp_cs, dim=1)
+                #  h_encoder_hidden_states = tuple(list[torch.cat(item, dim=1) for item in [tmp_hs, tmp_cs]])
+                h_encoder_hidden_states = tuple([tmp_hs, tmp_cs])
 
             return h_encoder_outputs, h_encoder_hidden_states
 
@@ -506,8 +509,13 @@ class KGModel(nn.Module):
         return u_
 
     def combine_c_h_state(self, c_encoder_hidden_state, h_encoder_hidden_state):
-        tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
-        tmp_encoder_hidden_state = torch.tanh(self.combine_c_h_linear(tmp_encoder_hidden_state))
+        if self.rnn_type == 'GRU':
+            tmp_encoder_hidden_state = c_encoder_hidden_state + h_encoder_hidden_state
+            #  tmp_encoder_hidden_state = torch.cat((c_encoder_hidden_state, h_encoder_hidden_state), dim=2)
+            #  tmp_encoder_hidden_state = torch.tanh(self.combine_c_h_linear(tmp_encoder_hidden_state))
+        else:
+            tmp_encoder_hidden_state = tuple([item1 + item2 for (item1, item2) in zip(c_encoder_hidden_state, h_encoder_hidden_state)])
+
         return tmp_encoder_hidden_state
 
     """build decoder"""
