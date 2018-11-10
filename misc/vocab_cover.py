@@ -4,14 +4,20 @@
 #
 # Distributed under terms of the MIT license.
 
+from tqdm import tqdm
 from collections import Counter
 from vocab import Vocab
 
+"""
+unique word: 233147
+cover num: 79997
+cover ratio: 0.3431
+"""
 
 def vocab_cover_stats(pair_path, vocab=None):
     unique_words = Counter()
     with open(pair_path, 'r', encoding='utf-8') as f:
-        for line in f:
+        for line in tqdm(f):
             _, conversation, response, hash_value = line.split('SPLITTOKEN')
 
             # skip if source has nothing
@@ -37,7 +43,7 @@ def vocab_cover_stats(pair_path, vocab=None):
             cover_num += 1
 
     print('cover num: %d ' % cover_num)
-    print('cover ratio: %.4f ' % cover_num / len(unique_words))
+    print('cover ratio: %.4f ' % (cover_num / len(unique_words)))
 
 if __name__ == '__main__':
     pair_path = './../data/conversations_responses.pair.txt'
@@ -45,5 +51,4 @@ if __name__ == '__main__':
     vocab.load('./../data/vocab_word2idx_seq2seq.80004.dict')
 
     vocab_cover_stats(pair_path, vocab)
-
 
