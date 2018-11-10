@@ -8,7 +8,6 @@ import torch
 import numpy as np
 
 from summa import keywords # for keyword extraction
-
 from misc import es_helper
 #  from embedding.embedding_score import get_topk_facts
 
@@ -37,6 +36,7 @@ class Dataset:
                  vocab,
                  save_path,
                  turn_num,
+                 min_turn,
                  turn_type,
                  eval_split,  # how many hold out as eval data
                  test_split,
@@ -55,6 +55,7 @@ class Dataset:
         self.vocab = vocab
         self.vocab_size = vocab.get_vocab_size()
         self.turn_num = turn_num
+        self.min_turn = min_turn
         self.turn_type = turn_type
 
         self.device = device
@@ -85,8 +86,9 @@ class Dataset:
                         continue
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
+
                     if len(response_ids) < self.min_len:
-                            continue
+                        continue
 
                     response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
 
@@ -167,11 +169,10 @@ class Dataset:
         history_conversations = [history_dialogue for history_dialogue in history_conversations if len(
             history_dialogue.split()) >= self.min_len]
 
-        if len(history_conversations) < self.turn_num:
+        if len(history_conversations) < self.min_turn:
             return None
 
-        history_conversations = history_conversations[-min(
-            self.turn_num, len(history_conversations)):]
+        history_conversations = history_conversations[-min(self.turn_num, len(history_conversations)):]
 
         return history_conversations
 
@@ -197,11 +198,11 @@ class Dataset:
                                      device=self.device)
         c_encoder_inputs_length=[]
 
-        decoder_inputs=torch.zeros((self.r_max_len, batch_size),
+        decoder_inputs = torch.zeros((self.r_max_len, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
 
-        decoder_targets=torch.zeros((self.r_max_len, batch_size),
+        decoder_targets = torch.zeros((self.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
 
@@ -213,7 +214,7 @@ class Dataset:
         f_encoder_inputs_length = []
         facts_texts=[]
 
-        batch_data=self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (conversation, history_conversations_ids, conversation_ids, response_ids, hash_value) in enumerate(batch_data):
 
             # append length
