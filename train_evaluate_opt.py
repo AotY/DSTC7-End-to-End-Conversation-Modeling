@@ -17,10 +17,6 @@ def data_set_opt(parser):
                        type=str,
                        help='location of save vocab dict file. ')
 
-    group.add_argument('--max_len',
-                       type=int,
-                       help="tokens after the first max_seq_len tokens will be discarded.")
-
     group.add_argument('--min_len',
                        type=int,
                        help="Ignores all words with total frequency lower than this.")
@@ -29,9 +25,13 @@ def data_set_opt(parser):
                        type=int,
                        help='clip fact by max_len.')
 
-    group.add_argument('--h_max_len',
-                       type=int,
-                       help="history conversation max len.")
+    #  group.add_argument('--max_len',
+                       #  type=int,
+                       #  help="tokens after the first max_seq_len tokens will be discarded.")
+
+    #  group.add_argument('--h_max_len',
+                       #  type=int,
+                       #  help="history conversation max len.")
 
     group.add_argument('--c_max_len',
                        type=int,
@@ -53,10 +53,11 @@ def data_set_opt(parser):
                        type=str,
                        default='concat',
                        help='''how to process conversation historys.
-                       concat | dcgm1 | dcgm2 : https://arxiv.org/abs/1506.06714
-                       hred: https://arxiv.org/abs/1507.04808
-                       attention:
-                       other:
+                       sum | concat | sequential | weight | HRAN | transformer
+
+                       How to Make Context More Useful? An Empirical Study on Context-Aware Neural Conversational Models,
+                       Hierarchical Recurrent Attention Network for Response Generation,
+                       Context-Sensitive Generation of Open-Domain Conversational Responses
                        ''')
 
     group.add_argument('--eval_split',

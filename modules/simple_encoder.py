@@ -56,7 +56,7 @@ class SimpleEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, hidden_state):
+    def forward(self, inputs, lengths=None):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -70,28 +70,13 @@ class SimpleEncoder(nn.Module):
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
 
+        if lengths is not None:
+            embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths)
+
         # [batch_size, hidden_size]
-        outputs, hidden_state = self.rnn(embedded, hidden_state)
+        outputs, hidden_state = self.rnn(embedded)
+
+        if lengths is not None:
+            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
 
         return outputs, hidden_state
-
-    def init_hidden(self, batch_size, device):
-        initial_state1 = torch.zeros((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-        if self.rnn_type == 'LSTM':
-            initial_state2 = torch.zeros((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-            return (initial_state1, initial_state2)
-        else:
-            return initial_state1
-
-        """
-        initial_state_scale = math.sqrt(3.0 / self.hidden_size)
-        initial_state1 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-        nn.init.uniform_(initial_state1, a=-initial_state_scale, b=initial_state_scale)
-        if self.rnn_type == 'LSTM':
-            initial_state2 = torch.rand((self.num_layers * self.bidirection_num, batch_size, self.hidden_size), device=device)
-            nn.init.uniform_(initial_state2, a=-initial_state_scale, b=initial_state_scale)
-            return (initial_state1, initial_state2)
-        else:
-            return initial_state1
-
-        """

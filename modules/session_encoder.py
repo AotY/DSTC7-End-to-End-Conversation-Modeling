@@ -12,9 +12,9 @@ import math
 import torch
 import torch.nn as nn
 
-from modules.utils import init_wt_normal
 from modules.utils import rnn_factory
 from modules.utils import init_lstm_wt, init_gru_orth, init_lstm_orth
+from modules.utils import init_wt_normal
 
 
 class SessionEncoder(nn.Module):
@@ -22,19 +22,23 @@ class SessionEncoder(nn.Module):
                  rnn_type,
                  hidden_size,
                  num_layers,
+                 bidirectional=True,
                  dropout=0.0):
         super(SessionEncoder, self).__init__()
 
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.num_layers = num_layers
+        self.bidirection_num = 2 if bidirectional else 1
 
         # rnn
         self.rnn = rnn_factory(
             rnn_type,
-            input_size=hidden_size,
-            hidden_size=hidden_size,
-            num_layers=num_layers
+            input_size=self.hidden_size,
+            hidden_size=self.hidden_size // self.bidirection_num,
+            num_layers=num_layers,
+            bidirectional=bidirectional,
+            dropout=dropout
         )
 
         if rnn_type == 'LSTM':
@@ -43,21 +47,18 @@ class SessionEncoder(nn.Module):
             init_gru_orth(self.rnn)
 
 
-    def forward(self, input, hidden_state):
+    def forward(self, inputs, lengths=None):
         """
-        input: [1, batch_size, hidden_size]
+        inputs: [turn_num, batch_size, hidden_size]
         """
-        output, hidden_state = self.rnn(input, hidden_state)
+        if lengths is not None:
+            inputs = nn.utils.rnn.pack_padded_sequence(inputs, lengths)
 
-        return output, hidden_state
+        outputs, hidden_state = self.rnn(inputs)
 
-    def init_hidden(self, batch_size, device):
-        initial_state1 = torch.zeros((self.num_layers, batch_size, self.hidden_size), device=device)
-        if self.rnn_type == 'LSTM':
-            initial_state2 = torch.zeros((self.num_layers, batch_size, self.hidden_size), device=device)
-            return (initial_state1, initial_state2)
-        else:
-            return initial_state1
+        if lengths is not None:
+            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
 
+        return outputs, hidden_state
 
 
