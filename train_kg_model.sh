@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.80004.dict \
-    --turn_num 4 \
+    --turn_num 5 \
+    --min_turn 2 \
     --turn_type hred_attn \
     --embedding_size 512 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
-    --rnn_type LSTM \
+    --rnn_type GRU \
     --hidden_size 512 \
     --num_layers 2 \
     --encoder_num_layers 2 \

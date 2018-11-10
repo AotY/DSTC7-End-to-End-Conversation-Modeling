@@ -60,7 +60,7 @@ if opt.turn_num > 1:
         opt.c_max_len = opt.h_max_len + opt.c_max_len
     elif opt.turn_type == 'dcgm':
         opt.h_max_len = opt.h_max_len * (opt.turn_num - 1)
-    elif opt.turn_type == 'hred':
+    elif opt.turn_type == 'hred' or opt.turn_type == 'hred_attn':
         pass
 
 logger.info('h_max_len: %d' % opt.h_max_len)
@@ -420,6 +420,7 @@ def build_dataset(vocab):
                 vocab,
                 opt.save_path,
                 opt.turn_num,
+                opt.min_turn,
                 opt.turn_type,
                 opt.eval_split,  # how many hold out as eval data
                 opt.test_split,
