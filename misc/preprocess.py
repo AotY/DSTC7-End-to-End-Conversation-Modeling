@@ -94,7 +94,7 @@ def read_convos(convos_file_path, logger, opt):
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
 
-            if conversation_length <= opt.c_min_len or conversation_length >= opt.c_max_len or response_length <= opt.r_min_len or response_length >= opt.r_max_len:
+            if conversation_length < opt.c_min_len or conversation_length > opt.c_max_len or response_length < opt.r_min_len or response_length > opt.r_max_len:
                 continue
 
             if response_length <= 7:
@@ -164,7 +164,6 @@ def read_facts(facts_file_path, logger, opt):
     with open(facts_file_path, 'r', encoding='utf-8') as f:
         for line in f:
             n += 1
-
             if n % 1e5 == 0:
                 logger.info('checked %.2fM lines' % (n / 1e6))
 
@@ -174,8 +173,9 @@ def read_facts(facts_file_path, logger, opt):
 
             fact_tokens = tokenizer.tokenize(fact)
             fact_len = len(fact_tokens)
+
             # skip if source has nothing
-            if fact_len <= opt.f_min_len or fact_len >= opt.f_max_len:
+            if fact_len < opt.f_min_len or fact_len > opt.f_max_len:
                 continue
 
             #  max_len = max(max_len, fact_len)
@@ -236,8 +236,6 @@ def stat_frequency(datas, datas_name, min_count=3, vocab_size=8e5, logger=None):
         for item in sorted_len_list:
             f.write('%d\t%d\n' % (item[0], item[1]))
 
-    # clip max len of token
-    sorted_freq_list = [item for item in sorted_freq_list if len(item[0]) < 15]
 
     if min_count > 0:
         logger.info('Clip tokens by min_count')
@@ -493,7 +491,6 @@ if __name__ == '__main__':
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_word2vec.txt')
     """
 
-    """
     # fastText
     vocab_embedding, out_of_vocab_count, out_of_vocab_words = build_vocab_fastText(None,
                                                                                    vocab,
@@ -508,7 +505,6 @@ if __name__ == '__main__':
 
     # save out of vocab words
     save_out_of_vocab_words(out_of_vocab_words, 'out_of_vocab_words_fastText_%s.txt' % model_name)
-    """
 
 
     """
