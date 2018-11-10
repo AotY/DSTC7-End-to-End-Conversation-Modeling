@@ -37,13 +37,15 @@ def vocab_cover_stats(pair_path, vocab=None):
             unique_words.update(response.split(' '))
 
     print('unique word: %d ' % len(unique_words))
+    total_num = sum(unique_words.values())
     cover_num = 0
     for word in unique_words.keys():
         if vocab.word2idx.get(word, None) is not None:
-            cover_num += 1
+            cover_num += unique_words.get(word)
 
+    print('total num: %d ' % total_num)
     print('cover num: %d ' % cover_num)
-    print('cover ratio: %.4f ' % (cover_num / len(unique_words)))
+    print('cover ratio: %.4f ' % (cover_num / total_num))
 
 if __name__ == '__main__':
     pair_path = './../data/conversations_responses.pair.txt'

@@ -12,11 +12,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-PAD = '__pad__'
-UNK = '__unk__'
-SOS = '__sos__'
-EOS = '__eos__'
-
+PAD = '<pad>'
+UNK = '<unk>'
+SOS = '<sos>'
+EOS = '<eos>'
 
 class Vocab(object):
     def __init__(self):
