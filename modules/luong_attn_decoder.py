@@ -102,9 +102,6 @@ class LuongAttnDecoder(nn.Module):
         output, hidden_state = self.rnn(embedded, hidden_state)
 
         # c attention
-        #  print(output.shape)
-        #  print(c_encoder_outputs.shape)
-        #  print(c_encoder_inputs_length.shape)
         c_attn_output, c_attn_weights = self.c_attn(output, c_encoder_outputs, c_encoder_inputs_length)
 
         # h attention
@@ -113,12 +110,13 @@ class LuongAttnDecoder(nn.Module):
             if self.turn_type == 'hred_attn':
                 h_attn_output, h_attn_weights = self.h_attn(c_attn_output, h_encoder_outputs, h_encoder_inputs_length)
             elif self.turn_type == 'hred':
-                #  con_output = output + h_encoder_outputs[-1].unsqueeze(0)
                 h_concat_input = torch.cat((c_attn_output, h_encoder_outputs[-1].unsqueeze(0)), dim=2)
                 h_concat_output = torch.tanh(self.h_linear(h_concat_input))
 
         if h_attn_output is not None:
             output = self.linear(h_attn_output)
+        elif h_concat_output is not None:
+            output = self.linear(h_concat_output)
         else:
             output = self.linear(c_attn_output)
 

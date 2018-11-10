@@ -41,10 +41,13 @@ def data_set_opt(parser):
                        type=int,
                        help='response max len.')
 
-    group.add_argument('--turn_num',
-                       type=int,
+    group.add_argument('--turn_num', type=int,
                        default=1,
                        help='input of the model including how many turn dialogue.')
+
+    group.add_argument('--min_turn', type=int,
+                       default=1,
+                       help='minimal turn num.')
 
     group.add_argument('--turn_type',
                        type=str,

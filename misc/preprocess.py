@@ -389,8 +389,8 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     model_name = opt.model_name
 
-    logger.info('opt.vocab_size: %d ' % int(opt.vocab_size))
-    opt.vocab_path = opt.vocab_path.format(opt.model_name, int(opt.vocab_size))
+    logger.info('opt.vocab_size: %d ' % int(opt.vocab_size + 4))
+    opt.vocab_path = opt.vocab_path.format(opt.model_name, int(opt.vocab_size + 4))
 
     if not os.path.exists(opt.vocab_path):
         raw_conversations, raw_responses, \
