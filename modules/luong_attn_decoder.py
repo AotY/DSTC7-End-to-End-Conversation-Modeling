@@ -88,6 +88,8 @@ class LuongAttnDecoder(nn.Module):
             h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
         '''
 
+        #  print(input.shape)
+        #  print(hidden_state.shape)
         # embedded
         embedded = self.embedding(input)  # [1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
@@ -96,6 +98,7 @@ class LuongAttnDecoder(nn.Module):
         output, hidden_state = self.rnn(embedded, hidden_state)
 
         h_attn_output = None
+        h_attn_weights = None
         if h_encoder_outputs is not None and h_decoder_lengths is not None:
             h_attn_output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_decoder_lengths)
 

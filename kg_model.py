@@ -366,14 +366,13 @@ class KGModel(nn.Module):
             for ti in range(self.turn_num):
                 inputs = h_encoder_inputs[:, :, ti] # [max_len, batch_size]
                 inputs_length = h_inputs_lengths[:, ti] # [batch_size]
-
                 # [max_len, batch_size, hidden_size] , [num_layers * bidirection_num, batch_size, hidden_size]
                 outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
                 stack_outputs.append(outputs[-1].unsqueeze(0))
                 #  stack_hidden_states.append(hidden_state)
             if self.turn_type == 'sum':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
-                return stack_outputs.sum(dim=0), None, None # [1, batch_size, hidden_size]
+                return stack_outputs.sum(dim=0).unsqueeze(0), None, None # [1, batch_size, hidden_size]
             elif self.turn_type == 'c_concat':
                 c_concat_outputs = torch.cat(stack_outputs, dim=2) # [1, hidden_size * turn_num]
                 return self.c_concat_linear(c_concat_outputs), None, None # [1, batch_size, hidden_size]

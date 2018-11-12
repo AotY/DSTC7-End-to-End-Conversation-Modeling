@@ -185,6 +185,7 @@ def train(model,
 
     # compute loss
     loss = criterion(decoder_outputs, decoder_targets)
+    print(loss)
 
     # backward
     loss.backward()
@@ -193,7 +194,7 @@ def train(model,
     #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_norm)
 
     # optimizer
-    optimizer.step()
+    optimizer.step_and_update_lr()
 
     return loss.item(), accuracy
 
