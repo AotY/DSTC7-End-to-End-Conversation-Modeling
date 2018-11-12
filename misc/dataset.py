@@ -101,7 +101,6 @@ class Dataset:
 
                     raw_conversation = conversation
 
-                    # len(history_conversations) <= self.turn_num
                     if self.turn_type == 'concat':
                         conversation = ' '.join(history_conversations)
                         history_conversations = [conversation]
@@ -112,7 +111,7 @@ class Dataset:
                     history_conversations_ids = []
                     for history in history_conversations:
                         history_ids = self.vocab.words_to_id(history.split(' '))
-                        history_ids = history_ids[-min(self.c_max_len, len(history_ids))]
+                        history_ids = history_ids[-min(self.c_max_len, len(history_ids)):]
                         history_conversations_ids.append(history_ids)
 
                     datas.append((raw_conversation, history_conversations_ids, response_ids, hash_value))
@@ -143,8 +142,7 @@ class Dataset:
 
     def parser_conversations(self, conversation):
         history_conversations = conversation.split('eos')
-        history_conversations = [history_dialogue for history_dialogue in history_conversations if len(
-            history_dialogue.split()) >= self.min_len]
+        history_conversations = [history for history in history_conversations if len(history.split()) >= self.min_len]
 
         if len(history_conversations) < self.min_turn:
             return None
@@ -196,16 +194,16 @@ class Dataset:
             response_texts.append(response_text)
 
 			# history inputs
-            h_inputs_lengths.append(list[0] * self.turn_num)
+            h_inputs_lengths.append(list([0]) * self.turn_num)
             h_turn_lengths.append(len(history_conversations_ids))
             if len(history_conversations_ids) > 0:
-                history_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(device)
+                history_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device)
                 for j, ids in enumerate(history_conversations_ids):
                     h_inputs_lengths[i][j] = len(ids)
 
                     tmp = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
-                    for i, id in ids:
-                        tmp[:len(ids)] = ids
+                    for k, id in enumerate(ids):
+                        tmp[: k] = id
                     history_input[:, j] = tmp
                 h_encoder_inputs.append(history_input)
 
