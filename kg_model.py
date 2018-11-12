@@ -5,11 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modules.encoder import Encoder
 from modules.simple_encoder import SimpleEncoder
 import modules.transformer as transformer
 from modules.session_encoder import SessionEncoder
-#  from modules.session_decoder import SessionDecoder
 from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
 from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
