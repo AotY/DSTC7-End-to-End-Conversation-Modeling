@@ -103,14 +103,10 @@ def wiki_stats(facts_path):
 
                 if domain_name == 'en.wikipedia.org':
                     table_file.write(fact + '\n')
+                    reference_file.write(fact + '\n')
+                    abstract_file.write(fact + '\n')
                     wiki_count += 1
 
-                    # parser table
-                    """
-                    jump to: navigation, search
-                    ~
-                    <p>
-                    """
                     is_wiki = True
                 else:
                     is_wiki = False
@@ -121,7 +117,6 @@ def wiki_stats(facts_path):
                 h2s = []
 
                 abstracts = []
-                maybe_abstract = True
 
                 references = []
                 maybe_refenrence = False
@@ -130,50 +125,48 @@ def wiki_stats(facts_path):
                 continue
 
             if is_wiki and domain_name == last_domain:
-
                 if fact.find('jump to : navigation , search') != -1:
                     maybe_table = True
+                    maybe_abstract = True
                     table = []
                     continue
 
                 if fact.find('<h2>') != -1:
-                    soup = BeautifulSoup(fact, 'lxml')
-                    h2 = soup.text.replace('[ edit ]', '').strip()
-                    h2_words = remove_stop_words(tokenizer.tokenize(h2))
-                    h2s.append(h2_words)
+                    h2s.append(fact)
+                    #  soup = BeautifulSoup(fact, 'lxml')
+                    #  h2 = soup.text.replace('[ edit ]', '').strip()
+                    #  h2_words = remove_stop_words(tokenizer.tokenize(h2))
+                    #  h2s.append(h2_words)
 
-                    if len(abstracts) > 0 and maybe_abstract:
-                        wiki_abstract_dict[conversation_id] = abstracts
-                        abstract_count += 1
-
-                    abstracts = []
-                    maybe_abstract = False
-                    abstract_file.write('----------------\n')
-
+                if fact.startswith('1.') or fact.startswith('2.') or fact.startswith('3.') or fact.startswith('4.') or \
+                        fact.startswith('5.') or fact.startswith('6.') or fact.endswith('early life') or \
+                        fact.endswith('see also'):
+                    if maybe_abstract:
+                        maybe_abstract = False
 
                 if fact.find('<h2> references') != -1 or fact.find('<h2> notes') != -1:
                     maybe_refenrence = True
 
-                if fact.find('<h2> external') != -1 or fact.find('<h2> navigation') != -1 or fact.find('<h2> further ') != -1:
-                    reference_file.write('----------------\n')
-                    maybe_refenrence = False
+                if fact.startswith('<h2> external') or fact.startswith('<h2> navigation') or \
+                        fact.startswith('<h2> further'):
+                    if maybe_refenrence:
+                        maybe_refenrence = False
 
                 if fact.find('<p>') != -1 and maybe_abstract:
-                    soup = BeautifulSoup(fact, 'lxml')
-                    abstract = soup.text.strip()
-                    abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
-                    abstracts.append(abstract_words)
-                    abstract_file.write(fact + '\n')
+                    #  soup = BeautifulSoup(fact, 'lxml')
+                    #  abstract = soup.text.strip()
+                    #  abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
+                    #  abstracts.append(abstract_words)
+                    abstracts.append(fact)
 
-                if fact.find('"') != -1 and maybe_refenrence:
+                if fact.startswith('^') and maybe_refenrence:
                     reference = fact.strip()
                     parts = re.findall(r'".+"', reference)
                     if len(parts) > 0:
                         reference = ' '.join(parts).replace('"', '')
-                        refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
-                        references.append(refenrence_words)
-                        reference_file.write(fact + '\n')
-
+                        #  refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
+                        #  references.append(refenrence_words)
+                        references.append(fact)
 
                 if maybe_table:
                     if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
@@ -190,16 +183,28 @@ def wiki_stats(facts_path):
                         if len(fact) > 3:
                             table_line_count += 1
                             table_file.write(fact + '\n')
-                            fact_words = remove_stop_words(tokenizer.tokenize(fact))
-                            table.append(fact_words)
+                            #  fact_words = remove_stop_words(tokenizer.tokenize(fact))
+                            #  table.append(fact_words)
+                            table.append(fact)
 
-            if domain_name != last_domain or fact.find('<h2> navigation') != -1 or fact.find('<h2> external') != -1:
+            if domain_name != last_domain or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
                 if is_wiki and len(h2s) > 0:
                     wiki_h2_dict[conversation_id] = h2s
                     h2_count += 1
 
                 if is_wiki and len(references) > 0:
                     wiki_reference_dict[conversation_id] = references
+                    for reference in references:
+                        reference_file.write(reference + '\n')
+                    reference_file.write('----------------\n')
+
+                if is_wiki and len(abstracts) > 0:
+                    wiki_abstract_dict[conversation_id] = abstracts
+                    abstract_count += 1
+
+                    for abstract in abstracts:
+                        abstract_file.write(abstract + '\n')
+                    abstract_file.write('----------------\n')
 
                 is_wiki = False
                 domain_name = None
@@ -209,6 +214,7 @@ def wiki_stats(facts_path):
                 h2s = []
                 abstracts = []
                 maybe_refenrence = False
+                maybe_abstract = False
                 references = []
 
     table_file.close()
@@ -232,6 +238,22 @@ def wiki_stats(facts_path):
     pickle.dump(wiki_h2_dict, open('./../data/wiki_h2_dict.pkl', 'wb'))
     pickle.dump(wiki_abstract_dict, open('./../data/wiki_abstract_dict.pkl', 'wb'))
     pickle.dump(wiki_reference_dict, open('./../data/wiki_reference_dict.pkl', 'wb'))
+
+    wiki_dict = {}
+    for (hash_value, table) in wiki_table_dict.items():
+        reference = wiki_reference_dict.get(hash_value, None)
+        abstract = wiki_abstract_dict.get(hash_value, None)
+
+        texts = []
+
+        texts.extend([text for text in table if len(text) > 3])
+        texts.extend([text for text in reference if len(text) > 3])
+
+        for text in texts.split('.'):
+            if len(text) > 3:
+                texts.append(text)
+
+        wiki_dict[hash_value] = texts
 
     return wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict
 

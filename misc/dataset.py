@@ -293,7 +293,7 @@ class Dataset:
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
                     for conversation_id, conversation, _, _, hash_value in datas:
-                        if not bool(conversation_ids) or not bool(hash_value):
+                        if not bool(conversation) or not bool(hash_value):
                             continue
 
                         facts = wiki_dict.get(conversation_id, None)
