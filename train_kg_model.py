@@ -187,6 +187,7 @@ def train(model,
     decoder_targets = decoder_targets.view(-1)
 
     # compute loss
+    #  print(decoder_outputs.shape)
     loss = criterion(decoder_outputs, decoder_targets)
     #  print(loss)
 
@@ -199,7 +200,10 @@ def train(model,
     # optimizer
     optimizer.step_and_update_lr()
 
-    return loss.item(), accuracy
+    return_loss = float(loss.item())
+    del loss
+
+    return return_loss, accuracy
 
 '''
 evaluate model.

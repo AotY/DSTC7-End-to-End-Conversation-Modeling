@@ -16,6 +16,7 @@ import torch.nn.functional as F
 from modules.utils import rnn_factory
 from modules.utils import init_wt_normal
 from modules.utils import init_gru_orth, init_lstm_orth
+from modules.utils import sequence_mask
 
 
 class SelfAttentive(nn.Module):
@@ -69,29 +70,36 @@ class SelfAttentive(nn.Module):
         init_wt_normal(self.Ws1)
         init_wt_normal(self.Ws2)
 
-    def forward(self, input):
+    def forward(self, inputs, lengths):
         """
         Args:
-            input: [max_len, batch_size]
+            inputs: [max_len, batch_size]
         return:
-            output: [1, batch_size, mlp_output_size]
+            outputs: [1, batch_size, mlp_output_size]
         """
-        max_len, batch_size = input.size()
+        max_len, batch_size = inputs.size()
 
-        embedded = self.embedding(input)
+        embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
 
-        output, hidden_state = self.rnn(input) # output: [max_len, batch_size, hidden_size]
+        outputs, hidden_state = self.rnn(inputs) # outputs: [max_len, batch_size, hidden_size]
 
-        A = F.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), output.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
+        A = F.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]
+
+        # mask
+        if lengths is not None:
+            mask = sequence_mask(lengths, max_len=A.size(-1)) #mask: [batch_size, max_len)
+            mask = mask.unsqueeze(1)  # Make it broadcastable. # [batch_size, 1, max_len]
+            A.data.masked_fill_(1 - mask, -float('inf')) # [batch_size, 1, max_len]
+
         A = F.softmax(A, dim=2) # [batch_size, attn_hops, max_len]
 
-        M = torch.bmm(A, output.transpose(0, 1)) # [batch_size, attn_hops, hidden_size]
+        M = torch.bmm(A, outputs.transpose(0, 1)) # [batch_size, attn_hops, hidden_size]
         M = M.view(batch_size, -1) # [batch_size, attn_hops * hidden_size]
 
-        output = F.relu(self.fc1(M)) # [batch_size, mlp_output_size]
+        outputs = F.relu(self.fc1(M)) # [batch_size, mlp_output_size]
 
-        output = output.unsqueeze(0).contiguous()
+        outputs = outputs.unsqueeze(0).contiguous()
 
-        return output, A
+        return outputs, hidden_state
