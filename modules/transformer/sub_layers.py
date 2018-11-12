@@ -49,6 +49,13 @@ class  MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, q, k, v, mask=None):
+        """
+        Args:
+            q: [batch_size, max_len, _]
+            k: [batch_size, max_len, _]
+            v: [batch_size, max_len, _]
+            mask: []
+        """
         redidual = q
 
         sz_b, len_q, _ = q.size()
@@ -64,6 +71,7 @@ class  MultiHeadAttention(nn.Module):
         v = q.permute(2, 0, 1, 3).contiguous().(-1, len_v, self.v_dim)
 
         mask = mask.repeat(n_head, 1, 1) # (n*b) x .. x ..
+
         output, attn = self.attn(q, k, v, mask=mask)
 
         output = output.view(self.n_head, sz_b, len_q, self.v_dim)

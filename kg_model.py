@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 from modules.encoder import Encoder
 from modules.simple_encoder import SimpleEncoder
+import modules.transformer as transformer
 from modules.session_encoder import SessionEncoder
 #  from modules.session_decoder import SessionDecoder
 from modules.decoder import Decoder
@@ -33,6 +34,7 @@ class KGModel(nn.Module):
     def __init__(self,
                  model_type,
                  vocab_size,
+                 c_max_len,
                  pre_embedding_size,
                  embedding_size,
                  share_embedding,
@@ -79,13 +81,28 @@ class KGModel(nn.Module):
             init_wt_normal(encoder_embedding.weight)
 
         # h_encoder
-        self.simple_encoder = SimpleEncoder(vocab_size,
-                                            encoder_embedding,
-                                            rnn_type,
-                                            hidden_size,
-                                            encoder_num_layers,
-                                            bidirectional,
-                                            dropout)
+        if turn_type != 'transformer':
+            self.simple_encoder = SimpleEncoder(vocab_size,
+                                                encoder_embedding,
+                                                rnn_type,
+                                                hidden_size,
+                                                encoder_num_layers,
+                                                bidirectional,
+                                                dropout)
+        else:
+            self.transformer_encoder = transformer.models.Encoder(
+                vocab_size,
+                c_max_len,
+                embedding_size,
+                6,
+                8,
+                64,
+                64,
+                hidden_size,
+                1024,
+                padding_idx,
+                dropout
+            )
 
         if turn_type != 'none' or turn_type != 'concat':
             if turn_type == 'c_concat':
@@ -146,30 +163,32 @@ class KGModel(nn.Module):
         )
 
     def forward(self,
-                h_encoder_inputs,
-                h_turn_lengths,
+                h_inputs,
+                h_turns_length,
                 h_inputs_lengths,
+                h_inputs_position,
                 decoder_inputs,
-                f_encoder_inputs,
-                f_encoder_inputs_length,
+                f_inputs,
+                f_inputs_length,
                 batch_size,
                 r_max_len,
                 teacher_forcing_ratio):
         '''
         input:
-            h_encoder_inputs: # [max_len, batch_size, turn_num]
-            h_turn_lengths: [batch_size]
+            h_inputs: # [max_len, batch_size, turn_num]
+            h_turns_length: [batch_size]
             h_inputs_lengths: [batch_size, turn_num]
 
             decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
-            f_encoder_inputs: [batch_size, r_max_len, topk]
-            f_encoder_inputs_length: [batch_size]
+            f_inputs: [batch_size, r_max_len, topk]
+            f_inputs_length: [batch_size]
         '''
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
-            h_encoder_inputs,
-            h_turn_lengths,
+            h_inputs,
+            h_turns_length,
             h_inputs_lengths,
+            h_inputs_position,
             batch_size
         )
 
@@ -180,8 +199,8 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_encoder_inputs,
-                                                  f_encoder_inputs_length,
+            decoder_hidden_state = self.f_forward(f_inputs,
+                                                  f_inputs_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -217,12 +236,13 @@ class KGModel(nn.Module):
     '''evaluate'''
 
     def evaluate(self,
-                 h_encoder_inputs,
-                 h_turn_lengths,
+                 h_inputs,
+                 h_turns_length,
                  h_inputs_lengths,
+                 h_inputs_position,
                  decoder_input,
-                 f_encoder_inputs,
-                 f_encoder_inputs_length,
+                 f_inputs,
+                 f_inputs_length,
                  r_max_len,
                  batch_size):
         '''
@@ -230,9 +250,10 @@ class KGModel(nn.Module):
         decoder_input: [1, batch_size], maybe: [sos * 1]
         '''
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
-            h_encoder_inputs,
-            h_turn_lengths,
+            h_inputs,
+            h_turns_length,
             h_inputs_lengths,
+            h_inputs_position,
             batch_size
         )
 
@@ -243,8 +264,8 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_encoder_inputs,
-                                                  f_encoder_inputs_length,
+            decoder_hidden_state = self.f_forward(f_inputs,
+                                                  f_inputs_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -267,12 +288,13 @@ class KGModel(nn.Module):
     '''decode'''
 
     def decode(self,
-               h_encoder_inputs,
-               h_turn_lengths,
+               h_inputs,
+               h_turns_length,
                h_inputs_lengths,
+               h_inputs_position,
                decoder_input,
-               f_encoder_inputs,
-               f_encoder_inputs_length,
+               f_inputs,
+               f_inputs_length,
                decode_type,
                r_max_len,
                eosid,
@@ -281,9 +303,10 @@ class KGModel(nn.Module):
                best_n):
 
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
-            h_encoder_inputs,
-            h_turn_lengths,
+            h_inputs,
+            h_turns_length,
             h_inputs_lengths,
+            h_inputs_position,
             batch_size
         )
 
@@ -294,8 +317,8 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_encoder_inputs,
-                                                  f_encoder_inputs_length,
+            decoder_hidden_state = self.f_forward(f_inputs,
+                                                  f_inputs_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -342,19 +365,20 @@ class KGModel(nn.Module):
         return greedy_outputs, beam_outputs
 
     def h_forward(self,
-                  h_encoder_inputs,
-                  h_turn_lengths,
+                  h_inputs,
+                  h_turns_length,
                   h_inputs_lengths,
+                  h_inputs_position,
                   batch_size):
         """history forward
         Args:
-            h_encoder_inputs: # [max_len, batch_size, turn_num]
-            h_turn_lengths: [batch_size]
+            h_inputs: # [max_len, batch_size, turn_num]
+            h_turns_length: [batch_size]
             h_inputs_lengths: [batch_size, turn_num]
         turn_type:
         """
         if self.turn_type == 'concat' or self.turn_type == 'none':
-            inputs = h_encoder_inputs[:, :, 0] # [max_len, batch_size]
+            inputs = h_inputs[:, :, 0] # [max_len, batch_size]
             inputs_length = h_inputs_lengths[:, 0]
 
             # [max_len, batch_size, hidden_size]
@@ -364,12 +388,17 @@ class KGModel(nn.Module):
             stack_outputs = []
             #  stack_hidden_states = []
             for ti in range(self.turn_num):
-                inputs = h_encoder_inputs[:, :, ti] # [max_len, batch_size]
-                inputs_length = h_inputs_lengths[:, ti] # [batch_size]
-                # [max_len, batch_size, hidden_size] , [num_layers * bidirection_num, batch_size, hidden_size]
-                outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
+                inputs = h_inputs[:, :, ti] # [max_len, batch_size]
+                if self.turn_type == 'transformer':
+                    inputs_position = h_inputs_position[:, :, ti]
+                    outputs = self.transformer_encoder(inputs, inputs_position)
+                    print('transformer: ', outputs.shape)
+                else:
+                    inputs_length = h_inputs_lengths[:, ti] # [batch_size]
+                    # [max_len, batch_size, hidden_size] , [num_layers * bidirection_num, batch_size, hidden_size]
+                    outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
                 stack_outputs.append(outputs[-1].unsqueeze(0))
-                #  stack_hidden_states.append(hidden_state)
+
             if self.turn_type == 'sum':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
                 return stack_outputs.sum(dim=0).unsqueeze(0), None, None # [1, batch_size, hidden_size]
@@ -379,41 +408,42 @@ class KGModel(nn.Module):
             elif self.turn_type == 'sequential':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
                 session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_lengths) # [1, batch_size, hidden_size]
-                return session_outputs[1].unsqueeze(0), session_hidden_state, h_turn_lengths
+                return session_outputs[1].unsqueeze(0), session_hidden_state, h_turns_length
             elif self.turn_type == 'weight':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
                 session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_lengths) # [1, batch_size, hidden_size]
-                return session_outputs, session_hidden_state, h_turn_lengths
+                return session_outputs, session_hidden_state, h_turns_length
             elif self.turn_type == 'hran':
                 # TODO self attention
                 pass
 
+
     def f_forward(self,
-                  f_encoder_inputs,
-                  f_encoder_inputs_length,
+                  f_inputs,
+                  f_inputs_length,
                   hidden_state,
                   batch_size):
         """
         Args:
-            - f_encoder_inputs: [batch_size, top_k, embedding_size]
+            - f_inputs: [batch_size, top_k, embedding_size]
             - hidden_state: [num_layers, batch_size, hidden_size]
             - batch_size
         """
 
         # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
         if self.pre_embedding_size != self.hidden_size:
-            f_encoder_inputs = self.fact_linear(f_encoder_inputs)
+            f_inputs = self.fact_linear(f_inputs)
 
         # M [batch_size, topk, hidden_size]
-        fact_M = self.fact_linearA(f_encoder_inputs)
+        fact_M = self.fact_linearA(f_inputs)
 
         # C [batch_size, topk, hidden_size]
-        fact_C = self.fact_linearC(f_encoder_inputs)
+        fact_C = self.fact_linearC(f_inputs)
 
         # [batch_size, num_layers, topk]
         tmpP = torch.bmm(hidden_state.transpose(0, 1), fact_M.transpose(1, 2))
 
-        mask = sequence_mask(f_encoder_inputs_length, max_len=tmpP.size(-1))
+        mask = sequence_mask(f_inputs_length, max_len=tmpP.size(-1))
         mask = mask.unsqueeze(1)  # Make it broadcastable.
         tmpP.masked_fill_(1 - mask, -float('inf'))
 

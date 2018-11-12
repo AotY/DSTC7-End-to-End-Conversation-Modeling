@@ -77,18 +77,19 @@ def train_epochs(model,
             # load data
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-            h_encoder_inputs, h_turn_lengths, h_inputs_lengths = dataset.load_data('train', opt.batch_size)
+            f_inputs, facts_texts, f_inputs_length, \
+            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
-                                   h_encoder_inputs,
-                                   h_turn_lengths,
-                                   h_inputs_lengths,
+                                   h_inputs,
+                                   h_turns_length,
+                                   h_inputs_length,
+                                   h_inputs_position,
                                    decoder_inputs,
                                    decoder_targets,
-                                   f_encoder_inputs,
-                                   f_encoder_inputs_length,
+                                   f_inputs,
+                                   f_inputs_length,
                                    optimizer,
                                    criterion,
                                    vocab)
@@ -141,13 +142,14 @@ def train_epochs(model,
 ''' start traing '''
 
 def train(model,
-          h_encoder_inputs,
-          h_turn_lengths,
-          h_inputs_lengths,
+          h_inputs,
+          h_turns_length,
+          h_inputs_length,
+          h_inputs_position,
           decoder_inputs,
           decoder_targets,
-          f_encoder_inputs,
-          f_encoder_inputs_length,
+          f_inputs,
+          f_inputs_length,
           optimizer,
           criterion,
           vocab):
@@ -157,12 +159,13 @@ def train(model,
 
     # [max_len, batch_size, vocab_size]
     decoder_outputs = model(
-        h_encoder_inputs,
-        h_turn_lengths,
-        h_inputs_lengths,
+        h_inputs,
+        h_turns_length,
+        h_inputs_length,
+        h_inputs_position,
         decoder_inputs,
-        f_encoder_inputs,
-        f_encoder_inputs_length,
+        f_inputs,
+        f_inputs_length,
         opt.batch_size,
         opt.r_max_len,
         opt.teacher_forcing_ratio
@@ -217,18 +220,19 @@ def evaluate(model,
             # load data
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-            h_encoder_inputs, h_turn_lengths, h_inputs_lengths = dataset.load_data('test', opt.batch_size)
+            f_inputs, facts_texts, f_inputs_length, \
+            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             decoder_outputs=model.evaluate(
-                h_encoder_inputs,
-                h_turn_lengths,
-                h_inputs_lengths,
+                h_inputs,
+                h_turns_length,
+                h_inputs_length,
+                h_inputs_position,
                 decoder_input,
-                f_encoder_inputs,
-                f_encoder_inputs_length,
+                f_inputs,
+                f_inputs_length,
                 opt.r_max_len,
                 opt.batch_size
             )
@@ -259,21 +263,21 @@ def decode(model, dataset, vocab):
         for load in range(1, max_load + 1):
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-            h_encoder_inputs, h_turn_lengths, h_inputs_lengths = dataset.load_data('eval', opt.batch_size)
-
+            f_inputs, facts_texts, f_inputs_length, \
+            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
 
             # train and get cur loss
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             greedy_outputs, beam_outputs = model.decode(
-                h_encoder_inputs,
-                h_turn_lengths,
-                h_inputs_lengths,
+                h_inputs,
+                h_turns_length,
+                h_inputs_length,
+                h_inputs_position,
                 decoder_input,
-                f_encoder_inputs,
-                f_encoder_inputs_length,
+                f_inputs,
+                f_inputs_length,
                 opt.decode_type,
                 opt.r_max_len,
                 vocab.eosid,
@@ -390,6 +394,7 @@ def build_model(vocab_size, padid):
     model = KGModel(
                 opt.model_type,
                 vocab_size,
+                opt.c_max_len,
                 opt.pre_embedding_size,
                 opt.embedding_size,
                 opt.share_embedding,
