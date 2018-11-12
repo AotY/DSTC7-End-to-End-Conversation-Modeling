@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -7,7 +7,7 @@ python train_kg_model.py \
     --vocab_path data/vocab_word2idx_seq2seq.60004.dict \
     --turn_num 4 \
     --min_turn 2 \
-    --turn_type self_attn \
+    --turn_type sum \
     --embedding_size 512 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
