@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.simple_encoder import SimpleEncoder
+from modules.self_attn import SelfAttentive
 import modules.transformer as transformer
 from modules.session_encoder import SessionEncoder
 from modules.decoder import Decoder
@@ -79,7 +80,7 @@ class KGModel(nn.Module):
             init_wt_normal(encoder_embedding.weight)
 
         # h_encoder
-        if turn_type != 'transformer':
+        if turn_type == 'transformer':
             self.simple_encoder = SimpleEncoder(vocab_size,
                                                 encoder_embedding,
                                                 rnn_type,
@@ -87,6 +88,15 @@ class KGModel(nn.Module):
                                                 encoder_num_layers,
                                                 bidirectional,
                                                 dropout)
+        elif turn_type == 'self_attn':
+            self.self_attn_encoder =  SelfAttentive(
+                encoder_embedding,
+                rnn_type,
+                num_layers,
+                bidirectional,
+                hidden_size,
+                dropout=dropout
+            )
         else:
             self.transformer_encoder = transformer.models.Encoder(
                 vocab_size,
