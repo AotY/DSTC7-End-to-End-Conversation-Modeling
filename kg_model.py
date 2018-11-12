@@ -165,7 +165,7 @@ class KGModel(nn.Module):
     def forward(self,
                 h_inputs,
                 h_turns_length,
-                h_inputs_lengths,
+                h_inputs_length,
                 h_inputs_position,
                 decoder_inputs,
                 f_inputs,
@@ -177,7 +177,7 @@ class KGModel(nn.Module):
         input:
             h_inputs: # [max_len, batch_size, turn_num]
             h_turns_length: [batch_size]
-            h_inputs_lengths: [batch_size, turn_num]
+            h_inputs_length: [batch_size, turn_num]
 
             decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
@@ -187,7 +187,7 @@ class KGModel(nn.Module):
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
-            h_inputs_lengths,
+            h_inputs_length,
             h_inputs_position,
             batch_size
         )
@@ -238,7 +238,7 @@ class KGModel(nn.Module):
     def evaluate(self,
                  h_inputs,
                  h_turns_length,
-                 h_inputs_lengths,
+                 h_inputs_length,
                  h_inputs_position,
                  decoder_input,
                  f_inputs,
@@ -252,7 +252,7 @@ class KGModel(nn.Module):
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
-            h_inputs_lengths,
+            h_inputs_length,
             h_inputs_position,
             batch_size
         )
@@ -290,7 +290,7 @@ class KGModel(nn.Module):
     def decode(self,
                h_inputs,
                h_turns_length,
-               h_inputs_lengths,
+               h_inputs_length,
                h_inputs_position,
                decoder_input,
                f_inputs,
@@ -305,7 +305,7 @@ class KGModel(nn.Module):
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
-            h_inputs_lengths,
+            h_inputs_length,
             h_inputs_position,
             batch_size
         )
@@ -350,7 +350,7 @@ class KGModel(nn.Module):
         beam_outputs = beam_decode(
             self.decoder,
             h_encoder_outputs,
-            h_encoder_inputs_length,
+            h_inputs_length,
             decoder_hidden_state,
             input,
             batch_size,
@@ -367,19 +367,19 @@ class KGModel(nn.Module):
     def h_forward(self,
                   h_inputs,
                   h_turns_length,
-                  h_inputs_lengths,
+                  h_inputs_length,
                   h_inputs_position,
                   batch_size):
         """history forward
         Args:
             h_inputs: # [max_len, batch_size, turn_num]
             h_turns_length: [batch_size]
-            h_inputs_lengths: [batch_size, turn_num]
+            h_inputs_length: [batch_size, turn_num]
         turn_type:
         """
         if self.turn_type == 'concat' or self.turn_type == 'none':
             inputs = h_inputs[:, :, 0] # [max_len, batch_size]
-            inputs_length = h_inputs_lengths[:, 0]
+            inputs_length = h_inputs_length[:, 0]
 
             # [max_len, batch_size, hidden_size]
             outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
@@ -394,7 +394,7 @@ class KGModel(nn.Module):
                     outputs = self.transformer_encoder(inputs, inputs_position)
                     print('transformer: ', outputs.shape)
                 else:
-                    inputs_length = h_inputs_lengths[:, ti] # [batch_size]
+                    inputs_length = h_inputs_length[:, ti] # [batch_size]
                     # [max_len, batch_size, hidden_size] , [num_layers * bidirection_num, batch_size, hidden_size]
                     outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
                 stack_outputs.append(outputs[-1].unsqueeze(0))
@@ -407,11 +407,11 @@ class KGModel(nn.Module):
                 return self.c_concat_linear(c_concat_outputs), None, None # [1, batch_size, hidden_size]
             elif self.turn_type == 'sequential':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_lengths) # [1, batch_size, hidden_size]
-                return session_outputs[1].unsqueeze(0), session_hidden_state, h_turns_length
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_length) # [1, batch_size, hidden_size]
+                return session_outputs[-1].unsqueeze(0), session_hidden_state, h_turns_length
             elif self.turn_type == 'weight':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_lengths) # [1, batch_size, hidden_size]
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_length) # [1, batch_size, hidden_size]
                 return session_outputs, session_hidden_state, h_turns_length
             elif self.turn_type == 'hran':
                 # TODO self attention
