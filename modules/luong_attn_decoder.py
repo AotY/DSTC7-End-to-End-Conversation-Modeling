@@ -104,7 +104,7 @@ class LuongAttnDecoder(nn.Module):
         else:
             output = self.linear(output)
 
-        # softmax
+        # log softmax
         output = self.softmax(output)
 
         return output, hidden_state, h_attn_weights

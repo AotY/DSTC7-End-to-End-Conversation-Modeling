@@ -175,6 +175,9 @@ def train_opt(parser):
     group.add_argument('--lr', type=float, default=0.001,
                        help='initial learning rate')
 
+    group.add_argument('--n_warmup_steps', type=int, default=3000,
+                       help='warm up step.')
+    
     group.add_argument('--max_norm',
                        type=float,
                        default=100.0,

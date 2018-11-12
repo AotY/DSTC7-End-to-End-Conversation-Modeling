@@ -30,6 +30,7 @@ python train_kg_model.py \
     --f_max_len 50 \
     --f_topk 10 \
     --lr 0.001 \
+    --n_warmup_steps 3000 \
     --max_norm 20.0 \
     --epochs 15 \
     --batch_size 128 \
