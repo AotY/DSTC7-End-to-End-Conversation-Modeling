@@ -49,9 +49,11 @@ def init_lstm_wt(lstm):
 
 
 def init_linear_wt(linear):
-    linear.weight.data.normal_(std=trunc_norm_init_std)
+    #  linear.weight.data.normal_(std=trunc_norm_init_std)
+    init_wt_normal(linear.weight, linear.out_features)
     if linear.bias is not None:
-        linear.bias.data.normal_(std=trunc_norm_init_std)
+        init_wt_normal(linear.bias, linear.out_features)
+        #  linear.bias.data.normal_(std=trunc_norm_init_std)
 
 def init_wt_normal(weight, dim=512):
     weight.data.normal_(mean=0, std=np.sqrt(2.0 / dim))

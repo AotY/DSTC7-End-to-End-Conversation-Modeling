@@ -188,7 +188,7 @@ def train(model,
 
     # compute loss
     loss = criterion(decoder_outputs, decoder_targets)
-    print(loss)
+    #  print(loss)
 
     # backward
     loss.backward()
