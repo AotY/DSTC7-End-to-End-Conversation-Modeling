@@ -87,7 +87,6 @@ class SimpleEncoder(nn.Module):
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
 
-        if lengths is not None:
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         return outputs, hidden_state
