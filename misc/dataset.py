@@ -221,7 +221,7 @@ class Dataset:
                 h_inputs.append(h_input)
                 if self.turn_type == 'transformer':
                     h_inputs_position.append(h_position)
-                    print(h_position)
+                    #  print(h_position)
                 #  print(h_input)
 
             # decoder_inputs

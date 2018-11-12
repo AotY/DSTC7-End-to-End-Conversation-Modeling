@@ -8,23 +8,22 @@
 Define the transformer model.
 """
 import torch
-import troch.nn as nn
+import torch.nn as nn
 import numpy as np
 from modules.transformer.layers import EncoderLayer
 from modules.transformer.layers import DecoderLayer
-from modules.transformer.ultils import get_sinusoid_encoding_table
-from modules.transformer.ultils import get_attn_key_pad_mask
-from modules.transformer.ultils import get_non_pad_mask
-from modules.transformer.ultils import get_subsequent_mask
+from modules.transformer.utils import get_sinusoid_encoding_table
+from modules.transformer.utils import get_attn_key_pad_mask
+from modules.transformer.utils import get_non_pad_mask
+from modules.transformer.utils import get_subsequent_mask
 
 class Encoder(nn.Module):
     ''' A encoder model with self attention mechanism. '''
 
     def __init__(
             self,
-            vocab_size,
             max_len,
-            embedding_size,
+            embedding,
             num_layers,
             num_head,
             k_dim,
@@ -36,16 +35,16 @@ class Encoder(nn.Module):
 
         super(Encoder, self).__init__()
 
+        self.padid = padid
         n_position = max_len + 1
 
-        self.embedding = nn.Embedding(
-            vocab_size,
-            embedding_size,
-            padding_idx=padid
-        )
+        self.embedding = embedding
+        self.embedding_size = embedding.embedding_dim
 
         self.position_enc = nn.Embedding.from_pretrained(
-            get_sinusoid_encoding_table(n_position, embedding_size, padding_idx=0),
+            get_sinusoid_encoding_table(n_position,
+                                        self.embedding_size,
+                                        padid=padid),
             freeze=True
         )
 
@@ -62,16 +61,19 @@ class Encoder(nn.Module):
         return:
             enc_output: []
         """
-
         enc_attn_list = []
 
         # -- Prepare masks
-        attn_mask = get_attn_key_pad_mask(k=input, q=input)
+        attn_mask = get_attn_key_pad_mask(k=input, q=input, padid=self.padid)
 
-        non_pad_mask = get_non_pad_mask(input)
+        non_pad_mask = get_non_pad_mask(input, self.padid)
 
         # -- Forward
-        enc_output = self.embedding(input) + self.position_enc(input_position)
+        embedded = self.embedding(input)
+        position_embedded = self.position_enc(input_position).to(input.device)
+
+        enc_output = embedded + position_embedded
+        #  print('enc_output shape: ', enc_output.shape) # [b, max_len, embedding_size]
 
         for enc_layer in self.layer_stack:
             enc_output, enc_attn = enc_layer(
@@ -82,16 +84,12 @@ class Encoder(nn.Module):
             if return_attns:
                 enc_attn_list += [enc_attn]
 
+        #  print('enc_output shape: ', enc_output.shape)
+
         if return_attns:
             return enc_output, enc_attn_list
 
         return enc_output
-
-
-
-
-
-
 
 
 
@@ -222,8 +220,8 @@ class Transformer(nn.Module):
 
         tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
 
-        enc_output, *_ = self.encoder(src_seq, src_pos)
-        dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
+        enc_output, _ = self.encoder(src_seq, src_pos)
+        dec_output, _ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.output_linear(dec_output) * self.x_logit_scale
 
         return seq_logit.view(-1, seq_logit.size(2))
