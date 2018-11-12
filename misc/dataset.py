@@ -195,7 +195,7 @@ class Dataset:
             conversation_texts.append(conversation_text)
 
 			# history inputs
-            h_inputs_lengths.append(list([0]) * self.turn_num)
+            h_inputs_lengths.append(list([1]) * self.turn_num)
             h_turn_lengths.append(len(history_conversations_ids))
 
             if len(history_conversations_ids) > 0:
