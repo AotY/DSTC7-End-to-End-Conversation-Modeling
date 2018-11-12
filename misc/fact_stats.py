@@ -148,11 +148,14 @@ def wiki_stats(facts_path):
 
                     abstracts = []
                     maybe_abstract = False
+                    abstract_file.write('----------------\n')
+
 
                 if fact.find('<h2> references') != -1 or fact.find('<h2> notes') != -1:
                     maybe_refenrence = True
 
                 if fact.find('<h2> external') != -1 or fact.find('<h2> navigation') != -1 or fact.find('<h2> further ') != -1:
+                    reference_file.write('----------------\n')
                     maybe_refenrence = False
 
                 if fact.find('<p>') != -1 and maybe_abstract:
@@ -197,9 +200,6 @@ def wiki_stats(facts_path):
 
                 if is_wiki and len(references) > 0:
                     wiki_reference_dict[conversation_id] = references
-
-                reference_file.write('----------------\n')
-                abstract_file.write('----------------\n')
 
                 is_wiki = False
                 domain_name = None
