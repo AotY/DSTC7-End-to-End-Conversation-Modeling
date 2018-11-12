@@ -76,7 +76,7 @@ class Dataset:
             datas = []
             with open(pair_path, 'r', encoding='utf-8') as f:
                 for line in f:
-                    _, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
+                    conversation_id, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
                     if not bool(conversation) or not bool(response):
                         continue
 
@@ -108,13 +108,13 @@ class Dataset:
                         conversation = history_conversations[-1]
                         history_conversations = [conversation]
 
-                    history_conversations_ids = []
+                    h_conversations_ids = []
                     for history in history_conversations:
                         history_ids = self.vocab.words_to_id(history.split(' '))
                         history_ids = history_ids[-min(self.c_max_len, len(history_ids)):]
-                        history_conversations_ids.append(history_ids)
+                        h_conversations_ids.append(history_ids)
 
-                    datas.append((raw_conversation, history_conversations_ids, response_ids, hash_value))
+                    datas.append((conversation_id, raw_conversation, h_conversations_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -189,7 +189,7 @@ class Dataset:
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         """sort batch_data, by turn num"""
         batch_data = sorted(batch_data, key=lambda item: len(item[1]), reverse=True)
-        for i, (conversation_text, history_conversations_ids, response_ids, hash_value) in enumerate(batch_data):
+        for i, (_, conversation_text, h_conversations_ids, response_ids, hash_value) in enumerate(batch_data):
             # ids to word
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
             response_texts.append(response_text)
@@ -197,14 +197,14 @@ class Dataset:
 
 			# history inputs
             h_inputs_lenght.append(list([1]) * self.turn_num)
-            h_turns_length.append(len(history_conversations_ids))
+            h_turns_length.append(len(h_conversations_ids))
 
-            if len(history_conversations_ids) > 0:
+            if len(h_conversations_ids) > 0:
                 h_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
                 if self.turn_type == 'transformer':
                     h_position = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
 
-                for j, ids in enumerate(history_conversations_ids):
+                for j, ids in enumerate(h_conversations_ids):
                     h_inputs_lenght[i][j] = len(ids)
 
                     tmp_i = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
@@ -274,12 +274,12 @@ class Dataset:
 
         return topk_facts_embedded, topk_facts
 
-    def computing_similarity_facts_table(self,
-                                         wiki_table_dict,
-                                         fasttext,
-                                         pre_embedding_size,
-                                         f_topk,
-                                         filename):
+    def build_similarity_facts_offine(self,
+                                      wiki_dict,
+                                      fasttext,
+                                      pre_embedding_size,
+                                      f_topk,
+                                      filename):
 
         tokenizer = Tokenizer()
 
@@ -292,12 +292,11 @@ class Dataset:
             with torch.no_grad():
                 for task, datas in self._data_dict.items():
                     self.logger.info('computing similarity: %s ' % task)
-                    for conversation, _, conversation_ids, _, hash_value in datas:
-                        if not bool(conversation_ids) or not bool(hash_value):
+                    for conversation_id, conversation, _, _, hash_value in datas:
+                        if not bool(conversation) or not bool(hash_value):
                             continue
 
-                        facts = wiki_table_dict.get(es_helper.search_conversation_id(self.es, hash_value), None)
-                        #  facts = wiki_table_dict.get(conversation_id, None)
+                        facts = wiki_dict.get(conversation_id, None)
 
                         if facts is None or len(facts) == 0:
                             continue
@@ -307,6 +306,7 @@ class Dataset:
 
                         #  conversation keywords
                         conversation_keywords = keywords.keywords(conversation, ratio=0.5, split=True)
+                        print('conversation_keywords: {}'.format(conversation_keywords))
 
                         # extraction keywords
                         distances = []
@@ -344,100 +344,6 @@ class Dataset:
                         topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, pre_embedding_size]
 
                         topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
-
-            # save topk_facts_embedded_dict
-            pickle.dump(topk_facts_embedded_dict, open(filename, 'wb'))
-            self.topk_facts_embedded_dict=topk_facts_embedded_dict
-
-
-
-
-
-    def computing_similarity_facts_offline(self,
-                                           fasttext,
-                                           pre_embedding_size,
-                                           f_topk,
-                                           filename):
-
-        self.pre_embedding_size=pre_embedding_size
-
-        if os.path.exists(filename):
-            self.logger.info('Loading topk_facts_embedded_dict')
-            self.topk_facts_embedded_dict=pickle.load(open(filename, 'rb'))
-        else:
-            self.logger.info('Computing topk_facts_embedded_dict..........')
-
-            topk_facts_embedded_dict={}
-            with torch.no_grad():
-                """ computing similarity between conversation and facts, then saving to dict"""
-                for task, datas in self._data_dict.items():
-                    self.logger.info('computing similarity: %s ' % task)
-                    for _, conversation, _, conversation_ids, _, hash_value in datas:
-                        if not bool(conversation_ids) or not bool(hash_value):
-                            continue
-
-                        # search facts ?
-                        hit_count, facts = es_helper.search_facts(self.es, hash_value)
-                        if hit_count == 0:
-                            continue
-
-                        # parser html tags, <h1-6> <title> <p> etc.
-                        # facts to id
-                        facts_text, facts_weight = self.get_facts_weight(facts)
-                        if len(facts_text) == 0:
-                            continue
-
-                        #  conversation keywords
-                        conversation_keywords = keywords.keywords(conversation, ratio=0.5, split=True)
-
-                        # extraction keywords
-                        distances = []
-                        for text, weight in zip(facts_text, facts_weight):
-                            fact_keywords = keywords.keywords(text, ratio=0.5, split=True)
-                            if len(fact_keywords) != 0:
-                                distance = fasttext.wmdistance(' '.join(conversation_keywords), ' '.join(fact_keywords))
-                                distances.append(distance / weight)
-                            else:
-                                distances.append(np.inf)
-
-                        # sorted
-                        sorted_indexes = np.argsort(distances)
-                        topk_indexes = sorted_indexes[:f_topk]
-
-                        topk_indexes_list = topk_indexes.tolist()
-                        topk_facts_text = [facts_text[topi] for topi in topk_indexes_list]
-
-                        topk_facts_embedded = []
-                        for text in topk_facts_text:
-                            fact_embedded = torch.zeros(pre_embedding_size)
-                            count = 0
-                            text_keywords = keywords.keywords(text, ratio=0.5, split=True)
-                            for word in ' '.join(text_keywords).split():
-                                try:
-                                    worde_embedded = torch.tensor(fasttext.get_vector(word)).view(-1)
-                                    fact_embedded.add_(worde_embedded)
-                                    count += 1
-                                except KeyError:
-                                    continue
-                            if count != 0:
-                                mean_fact_embedded = torch.div(fact_embedded, count * 1.0)
-                            topk_facts_embedded.append(mean_fact_embedded)
-                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, pre_embedding_size]
-
-                        topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
-
-                        """
-                        facts_weight = torch.tensor(facts_weight, dtype=torch.float, device=self.device)
-                        facts_ids=[fact_ids[-min(self.f_max_len, len(facts_ids)):] for fact_ids in facts_ids]
-                        # score top_k_facts_embedded -> [top_k, pre_embedding_size]
-                        topk_facts_embedded, topk_indexes = get_topk_facts(embedding_size,
-                                                                            embedding,
-                                                                            conversation_ids,
-                                                                            facts_ids,
-                                                                            topk,
-                                                                            facts_weight,
-                                                                            self.device)
-                        """
 
             # save topk_facts_embedded_dict
             pickle.dump(topk_facts_embedded_dict, open(filename, 'wb'))
