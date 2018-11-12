@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.simple_encoder import SimpleEncoder
-import modules.transformer as transformer
 from modules.session_encoder import SessionEncoder
 from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
@@ -17,6 +16,8 @@ from modules.utils import init_linear_wt, init_wt_normal
 from modules.utils import sequence_mask
 #  from modules.beam_search import beam_decode
 from modules.beam_search_original import beam_decode
+
+import modules.transformer.models as transformer_models
 
 """
 KGModel
@@ -47,7 +48,7 @@ class KGModel(nn.Module):
                  decoder_type,
                  attn_type,
                  dropout,
-                 padding_idx,
+                 padid,
                  tied,
                  device,
                  pre_trained_weight=None):
@@ -70,7 +71,7 @@ class KGModel(nn.Module):
         encoder_embedding = nn.Embedding(
             vocab_size,
             embedding_size,
-            padding_idx
+            padid
         )
 
         if pre_trained_weight is not None:
@@ -88,25 +89,24 @@ class KGModel(nn.Module):
                                                 bidirectional,
                                                 dropout)
         else:
-            self.transformer_encoder = transformer.models.Encoder(
-                vocab_size,
+            self.transformer_encoder = transformer_models.Encoder(
                 c_max_len,
-                embedding_size,
-                6,
-                8,
-                64,
-                64,
-                hidden_size,
-                1024,
-                padding_idx,
-                dropout
+                encoder_embedding,
+                num_layers=6,
+                num_head=8,
+                k_dim=64,
+                v_dim=64,
+                model_dim=hidden_size,
+                inner_dim=1024,
+                padid=padid,
+                dropout=dropout
             )
 
         if turn_type != 'none' or turn_type != 'concat':
             if turn_type == 'c_concat':
                 self.c_concat_linear = nn.Linear(hidden_size * turn_num, hidden_size)
                 init_linear_wt(self.c_concat_linear)
-            elif turn_type == 'sequential' or turn_type == 'weight':
+            elif turn_type == 'sequential' or turn_type == 'weight' or  turn_type == 'transformer':
                 self.session_encoder = SessionEncoder(
                     rnn_type,
                     hidden_size,
@@ -139,7 +139,7 @@ class KGModel(nn.Module):
             decoder_embedding = nn.Embedding(
                 vocab_size,
                 embedding_size,
-                padding_idx
+                padid
             )
             if pre_trained_weight is not None:
                 decoder_embedding.weight.data.copy_(pre_trained_weight)
@@ -389,12 +389,14 @@ class KGModel(nn.Module):
                 inputs = h_inputs[:, :, ti] # [max_len, batch_size]
                 if self.turn_type == 'transformer':
                     inputs_position = h_inputs_position[:, :, ti]
-                    outputs = self.transformer_encoder(inputs, inputs_position)
-                    print('transformer: ', outputs.shape)
+                    outputs = self.transformer_encoder(inputs.transpose(0, 1), inputs_position.transpose(0, 1))
+                    #  print('transformer: ', outputs.shape) # [batch_size, max_len, hidden_size]
+                    outputs = outputs.transpose(0, 1)
                 else:
                     inputs_length = h_inputs_length[:, ti] # [batch_size]
                     # [max_len, batch_size, hidden_size] , [num_layers * bidirection_num, batch_size, hidden_size]
                     outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
+
                 stack_outputs.append(outputs[-1].unsqueeze(0))
 
             if self.turn_type == 'sum':
@@ -405,13 +407,21 @@ class KGModel(nn.Module):
                 return self.c_concat_linear(c_concat_outputs), None, None # [1, batch_size, hidden_size]
             elif self.turn_type == 'sequential':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_length) # [1, batch_size, hidden_size]
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # [1, batch_size, hidden_size]
                 return session_outputs[-1].unsqueeze(0), session_hidden_state, h_turns_length
             elif self.turn_type == 'weight':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_length) # [1, batch_size, hidden_size]
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # [1, batch_size, hidden_size]
                 return session_outputs, session_hidden_state, h_turns_length
-            elif self.turn_type == 'hran':
+            elif self.turn_type == 'transformer':
+                stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
+                #  print('stack_outputs shape: ', stack_outputs.shape)
+                #  print(h_turns_length)
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # [1, batch_size, hidden_size]
+                #  print(session_outputs.shape)
+                #  print(session_hidden_state.shape)
+                return session_outputs, session_hidden_state, h_turns_length
+            elif self.turn_type == 'self_attn':
                 # TODO self attention
                 pass
 
