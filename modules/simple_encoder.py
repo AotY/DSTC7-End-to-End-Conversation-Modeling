@@ -66,7 +66,7 @@ class SimpleEncoder(nn.Module):
             max_output: [1, batch_size, hidden_size * num_directions]
             hidden_state: (h_n, c_n)
         '''
-        print(lengths)
+        #  print(lengths)
         if lengths is not None:
             # sort lengths
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
