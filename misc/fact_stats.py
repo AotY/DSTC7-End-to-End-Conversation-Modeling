@@ -145,11 +145,9 @@ def wiki_stats(facts_path):
 
                 if fact.find('<h2> references') != -1 or fact.find('<h2> notes') != -1:
                     maybe_refenrence = True
-                    continue
 
                 if fact.find('<h2> external') != -1 or fact.find('<h2> navigation') != -1 or fact.find('<h2> further ') != -1:
                     maybe_refenrence = False
-                    continue
 
                 if fact.find('<p>') != -1 and maybe_abstract:
                     soup = BeautifulSoup(fact, 'lxml')
@@ -179,12 +177,11 @@ def wiki_stats(facts_path):
                     else:
                         if len(fact) > 3:
                             table_line_count += 1
-                            table_file.write(fact)
+                            table_file.write(fact + '\n')
                             fact_words = remove_stop_words(tokenizer.tokenize(fact))
                             table.append(fact_words)
-                        continue
 
-            if domain_name != last_domain or fact.find('<h2> navigation') != -1 or fact.find('<h2> external') != -1: # mobile view, last line
+            if domain_name != last_domain or fact.find('<h2> navigation') != -1 or fact.find('<h2> external') != -1:
                 if is_wiki and len(h2s) > 0:
                     wiki_h2_dict[conversation_id] = h2s
                     h2_count += 1
