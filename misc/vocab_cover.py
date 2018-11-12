@@ -20,7 +20,10 @@ cover ratio: 0.3431
     cover ratio: 0.9655
 
 60004:
-
+    unique word: 210203
+    total num: 166507978
+    cover num: 160549829
+    cover ratio: 0.9642
 
 """
 

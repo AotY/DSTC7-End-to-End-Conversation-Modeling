@@ -379,7 +379,7 @@ class KGModel(nn.Module):
             elif self.turn_type == 'sequential':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
                 session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_lengths) # [1, batch_size, hidden_size]
-                return session_outputs[1].unsqueeze(0), session_hidden_state, h_turn_lengths
+                return session_outputs[-1].unsqueeze(0), session_hidden_state, h_turn_lengths
             elif self.turn_type == 'weight':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
                 session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_inputs_lengths) # [1, batch_size, hidden_size]
