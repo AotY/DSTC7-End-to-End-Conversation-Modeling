@@ -11,22 +11,22 @@ https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/tr
 
 import torch
 import torch.nn as nn
-from modules.sub_layers import MultiHeadAttention
-from modules.sub_layers import PositionwiseFeedForward
+from modules.transformer.sub_layers import MultiHeadAttention
+from modules.transformer.sub_layers import PositionwiseFeedForward
 
 
 class EncoderLayer(nn.Module):
     """compose with two layer."""
     def __init__(self,
-                 model_dim,
-                 inner_dim,
-                 n_head,
-                 k_dim,
-                 v_dim,
+                 model_dim=512,
+                 inner_dim=1024,
+                 n_head=8,
+                 k_dim=64,
+                 v_dim=64,
                  dropout=0.1):
         super(EncoderLayer, self).__init__()
 
-        self.attn = MultiHeadAttention(
+        self.mh_attn = MultiHeadAttention(
             n_head,
             model_dim,
             k_dim,
@@ -50,7 +50,9 @@ class EncoderLayer(nn.Module):
             non_pad_mask: []
             attn_mask: []
         """
-        enc_output, enc_attn = self.attn(
+        #  print('enc_input: ', enc_input.shape)
+
+        enc_output, enc_attn = self.mh_attn(
             enc_input,
             enc_input,
             enc_input,
@@ -64,7 +66,6 @@ class EncoderLayer(nn.Module):
         enc_output *= non_pad_mask
 
         return enc_output, enc_attn
-
 
 
 class DecoderLayer(nn.Module):

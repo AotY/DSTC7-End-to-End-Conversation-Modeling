@@ -102,7 +102,7 @@ class LuongAttnDecoder(nn.Module):
         if h_encoder_outputs is not None and h_decoder_lengths is not None:
             h_attn_output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_decoder_lengths)
 
-        elif h_attn_output is not None:
+        if h_attn_output is not None:
             output = self.linear(h_attn_output)
         else:
             output = self.linear(output)
