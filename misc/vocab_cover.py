@@ -13,10 +13,15 @@ unique word: 233147
 cover num: 79997
 cover ratio: 0.3431
 
-unique word: 210203
-total num: 166507978
-cover num: 160769499
-cover ratio: 0.9655
+80004:
+    unique word: 210203
+    total num: 166507978
+    cover num: 160769499
+    cover ratio: 0.9655
+
+60004:
+
+
 """
 
 def vocab_cover_stats(pair_path, vocab=None):
@@ -55,7 +60,7 @@ def vocab_cover_stats(pair_path, vocab=None):
 if __name__ == '__main__':
     pair_path = './../data/conversations_responses.pair.txt'
     vocab = Vocab()
-    vocab.load('./../data/vocab_word2idx_seq2seq.80004.dict')
+    vocab.load('./../data/vocab_word2idx_seq2seq.60004.dict')
 
     vocab_cover_stats(pair_path, vocab)
 

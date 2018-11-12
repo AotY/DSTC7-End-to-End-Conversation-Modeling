@@ -406,7 +406,7 @@ if __name__ == '__main__':
         #  save_conversation_response_facts_nums(conversation_response_nums, 'conversation_response_nums.txt')
 
         # save raw pair
-        save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
+        #  save_raw_pair(raw_conversations, raw_responses, conversation_hash_values)
 
         # save abnormal_conversations, abnormal_responses
         #  save_abnormal_datas(abnormal_conversations, 'abnormal_conversations.txt')
@@ -414,7 +414,7 @@ if __name__ == '__main__':
 
         # re-save conversations, responses, and facts
         # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-        save_data_to_pair(opt, conversations, responses, conversation_conversation_ids, conversation_hash_values, filename='conversations_responses.pair.txt')
+        #  save_data_to_pair(opt, conversations, responses, conversation_conversation_ids, conversation_hash_values, filename='conversations_responses.pair.txt')
 
         #  save_distribution(conversations_length_distribution, 'conversations')
         #  save_distribution(responses_length_distribution, 'responses')
@@ -427,17 +427,17 @@ if __name__ == '__main__':
         datas_name = ['conversations', 'responses']
 
         # read facts
-        raw_facts, facts, facts_hash_values, \
-            facts_subreddit_names, facts_conversation_ids, \
-            domain_names, conversation_fact_nums, \
-            fact_max_length, facts_length_distribution, \
-            abnormal_facts = read_facts(opt.facts_file_path, logger, opt)
+        #  raw_facts, facts, facts_hash_values, \
+            #  facts_subreddit_names, facts_conversation_ids, \
+            #  domain_names, conversation_fact_nums, \
+            #  fact_max_length, facts_length_distribution, \
+            #  abnormal_facts = read_facts(opt.facts_file_path, logger, opt)
 
         #  logger.info('fact_max_length: %d ' % fact_max_length)  # 2728
 
         #  save raw facts to txt
-        save_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'raw_facts.txt'))
-        save_facts(facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
+        #  save_facts(raw_facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'raw_facts.txt'))
+        #  save_facts(facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
 
         # save conversations, responses and facts count
         #  save_conversations_responses_facts_count(conversations, responses, facts)

@@ -186,18 +186,20 @@ class Dataset:
         facts_texts = list()
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+        """sort batch_data, by turn num"""
+        batch_data = sorted(batch_data, key=lambda item: len(item[1]), reverse=True)
         for i, (conversation_text, history_conversations_ids, response_ids, hash_value) in enumerate(batch_data):
-
             # ids to word
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
-            conversation_texts.append(conversation_text)
             response_texts.append(response_text)
+            conversation_texts.append(conversation_text)
 
 			# history inputs
             h_inputs_lengths.append(list([0]) * self.turn_num)
             h_turn_lengths.append(len(history_conversations_ids))
+
             if len(history_conversations_ids) > 0:
-                history_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device)
+                history_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
                 for j, ids in enumerate(history_conversations_ids):
                     h_inputs_lengths[i][j] = len(ids)
 
