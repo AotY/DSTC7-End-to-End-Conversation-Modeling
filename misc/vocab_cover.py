@@ -25,6 +25,11 @@ cover ratio: 0.3431
     cover num: 160549829
     cover ratio: 0.9642
 
+50004:
+    unique word: 210203
+    total num: 166507978
+    cover num: 160348172
+    cover ratio: 0.9630
 """
 
 def vocab_cover_stats(pair_path, vocab=None):

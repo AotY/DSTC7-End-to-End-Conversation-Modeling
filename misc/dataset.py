@@ -215,12 +215,14 @@ class Dataset:
                             h_position[k] = k + 1
 
                     h_input[:, j] = tmp_i
-                    h_position[:, j] = tmp_h
+                    if self.turn_type == 'transformer':
+                        h_position[:, j] = tmp_h
 
                 h_inputs.append(h_input)
-                h_inputs_position.append(h_position)
-                print(h_input)
-                print(h_position)
+                if self.turn_type == 'transformer':
+                    h_inputs_position.append(h_position)
+                    print(h_position)
+                #  print(h_input)
 
             # decoder_inputs
             decoder_inputs[0, i] = self.vocab.sosid
@@ -245,7 +247,8 @@ class Dataset:
                 f_inputs_length.append(topk_facts_embedded.size(0))
 
         h_inputs = torch.stack(h_inputs, dim=1) # [max_len, batch_size, turn_num]
-        h_inputs_position = torch.stack(h_inputs_position, dim=1) # [max_len, batch_size, turn_num]
+        if self.turn_type == 'transformer':
+            h_inputs_position = torch.stack(h_inputs_position, dim=1) # [max_len, batch_size, turn_num]
 
         h_turns_length = torch.tensor(h_turns_length, dtype=torch.long, device=self.device)
         h_inputs_lenght = torch.tensor(h_inputs_lenght, dtype=torch.long, device=self.device) #[batch_size, turn_num]
