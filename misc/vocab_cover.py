@@ -63,7 +63,7 @@ def vocab_cover_stats(pair_path, vocab=None):
 if __name__ == '__main__':
     pair_path = './../data/conversations_responses.pair.txt'
     vocab = Vocab()
-    vocab.load('./../data/vocab_word2idx_seq2seq.60004.dict')
+    vocab.load('./../data/vocab_word2idx_seq2seq.50004.dict')
 
     vocab_cover_stats(pair_path, vocab)
 
