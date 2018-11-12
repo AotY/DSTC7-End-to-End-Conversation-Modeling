@@ -82,23 +82,6 @@ class KGModel(nn.Module):
 
         # h_encoder
         if turn_type == 'transformer':
-            self.simple_encoder = SimpleEncoder(vocab_size,
-                                                encoder_embedding,
-                                                rnn_type,
-                                                hidden_size,
-                                                encoder_num_layers,
-                                                bidirectional,
-                                                dropout)
-        elif turn_type == 'self_attn':
-            self.self_attn_encoder =  SelfAttentive(
-                encoder_embedding,
-                rnn_type,
-                num_layers,
-                bidirectional,
-                hidden_size,
-                dropout=dropout
-            )
-        else:
             self.transformer_encoder = transformer_models.Encoder(
                 c_max_len,
                 encoder_embedding,
@@ -111,6 +94,23 @@ class KGModel(nn.Module):
                 padid=padid,
                 dropout=dropout
             )
+        elif turn_type == 'self_attn':
+            self.self_attn_encoder =  SelfAttentive(
+                encoder_embedding,
+                rnn_type,
+                num_layers,
+                bidirectional,
+                hidden_size,
+                dropout=dropout
+            )
+        else:
+            self.simple_encoder = SimpleEncoder(vocab_size,
+                                                encoder_embedding,
+                                                rnn_type,
+                                                hidden_size,
+                                                encoder_num_layers,
+                                                bidirectional,
+                                                dropout)
 
         if turn_type != 'none' or turn_type != 'concat':
             if turn_type == 'c_concat':

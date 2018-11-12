@@ -110,7 +110,7 @@ def train_epochs(model,
                 #  logger.info('---------generate-------------')
                 #  decode(model, dataset, vocab)
 
-        optimizer.update(log_loss_avg, epoch)
+        #  optimizer.update(log_loss_avg, epoch)
 
         # save model of each epoch
         save_state = {
