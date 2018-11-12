@@ -7,6 +7,7 @@ import re
 #  from tokenizer import tokenizer
 from nltk.tokenize import TweetTokenizer
 from bs4 import BeautifulSoup
+import warnings
 
 def is_english(text):
     try:
@@ -35,7 +36,9 @@ class Tokenizer:
         if not is_english(text):
             return []
 
-        text = BeautifulSoup(text, "lxml").text
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            text = BeautifulSoup(text, "lxml").text
 
         tokens = self.clean_str(text).split()
 

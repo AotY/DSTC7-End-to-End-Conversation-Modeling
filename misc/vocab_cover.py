@@ -12,6 +12,11 @@ from vocab import Vocab
 unique word: 233147
 cover num: 79997
 cover ratio: 0.3431
+
+unique word: 210203
+total num: 166507978
+cover num: 160769499
+cover ratio: 0.9655
 """
 
 def vocab_cover_stats(pair_path, vocab=None):
