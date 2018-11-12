@@ -15,8 +15,9 @@ import pickle
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-from modules.optim import Optimizer
+from modules.optim import Optimizer, ScheduledOptimizer
 
 from gensim.models import KeyedVectors
 
@@ -331,31 +332,55 @@ def save_logger(logger_str):
     with open(opt.log_path, 'a', encoding='utf-8') as f:
         f.write(logger_str)
 
-def build_optim(model):
-    optim = torch.optim.Adam(
-        model.parameters(),
-        lr=opt.lr,
-        betas=(0.9, 0.999)
-    )
+def build_optimizer(model):
+    #  optim = torch.optim.Adam(
+        #  model.parameters(),
+        #  lr=opt.lr,
+        #  betas=(0.9, 0.999)
+    #  )
+    #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
+    #  optimizer = Optimizer(
+        #  optim,
+        #  opt.max_norm
+    #  )
+    #  optimizer.set_scheduler(scheduler)
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
-
-    optimizer = Optimizer(
-        optim,
-        opt.max_norm
-    )
-    optimizer.set_scheduler(scheduler)
+    optimizer = ScheduledOptimizer(
+        torch.optim.Adam(
+            filter(lambda x: x.requires_grad, model.parameters()),
+            betas=(0.9, 0.98), eps=1e-09),
+        opt.hidden_size, opt.n_warmup_steps)
 
     return optimizer
 
 
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss(reduction='elementwise_mean',
-                           ignore_index=padid)
+    #  criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
+    criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
 
     return criterion
 
+def cal_loss(pred, gold, smoothing, padid=0):
+    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
+
+    gold = gold.contiguous().view(-1)
+
+    if smoothing:
+        eps = 0.1
+        n_class = pred.size(1)
+
+        one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
+        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+        log_prb = F.log_softmax(pred, dim=1)
+
+        non_pad_mask = gold.ne(padid)
+        loss = -(one_hot * log_prb).sum(dim=1)
+        loss = loss.masked_select(non_pad_mask).sum()  # average later
+    else:
+        loss = F.cross_entropy(pred, gold, ignore_index=padid, reduction='sum')
+
+    return loss
 
 def build_model(vocab_size, padid):
     logger.info('Building model...')
@@ -489,7 +514,7 @@ if __name__ == '__main__':
     model=build_model(vocab_size, vocab.padid)
 
     # Build optimizer.
-    optimizer = build_optim(model)
+    optimizer = build_optimizer(model)
 
     criterion=build_criterion(vocab.padid)
 

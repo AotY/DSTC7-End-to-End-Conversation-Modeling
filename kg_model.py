@@ -371,7 +371,6 @@ class KGModel(nn.Module):
                 outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
                 stack_outputs.append(outputs[-1].unsqueeze(0))
                 #  stack_hidden_states.append(hidden_state)
-
             if self.turn_type == 'sum':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
                 return stack_outputs.sum(dim=0), None, None # [1, batch_size, hidden_size]

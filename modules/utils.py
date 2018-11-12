@@ -7,23 +7,18 @@ from __future__ import unicode_literals
 import torch
 import numpy as np
 import torch.nn as nn
-import torch.nn.init as I
-import torch.nn.functional as functional
 
 """
     Utils
 """
 
-
-"""
-orthogonal initialization
-"""
+# orthogonal initialization
 def init_gru_orth(model, gain=1):
     model.reset_parameters()
     # orthogonal initialization of gru weights
     for _, hh, _, _ in model.all_weights:
         for i in range(0, hh.size(0), model.hidden_size):
-            I.orthogonal_(hh[i:i + model.hidden_size], gain=gain)
+            torch.nn.init.orthogonal_(hh[i:i + model.hidden_size], gain=gain)
 
 def init_lstm_orth(model, gain=1):
     init_gru_orth(model, gain)
@@ -58,11 +53,11 @@ def init_linear_wt(linear):
     if linear.bias is not None:
         linear.bias.data.normal_(std=trunc_norm_init_std)
 
-def init_wt_normal(wt):
-    wt.data.normal_(std=trunc_norm_init_std)
+def init_wt_normal(weight, dim=512):
+    weight.data.normal_(mean=0, std=np.sqrt(2.0 / dim))
 
-def init_wt_unif(wt):
-    wt.data.uniform_(-rand_unif_init_mag, rand_unif_init_mag)
+def init_wt_unif(weight, dim=512):
+    weight.data.uniform_(-np.sqrt(3.0 / dim), np.sqrt(3.0 / dim))
 
 def sequence_mask(lengths, max_len=None):
     """
