@@ -506,7 +506,7 @@ if __name__ == '__main__':
             fasttext = load_fasttext_model(opt.fasttext_vec)
             wiki_table_dict = pickle.load(open('./data/wiki_table_dict.pkl', 'rb'))
 
-        dataset.computing_similarity_facts_table(
+        dataset.build_similarity_facts_offine(
             wiki_table_dict,
             fasttext,
             opt.pre_embedding_size,
