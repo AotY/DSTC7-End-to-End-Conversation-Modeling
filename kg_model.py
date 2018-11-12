@@ -116,7 +116,7 @@ class KGModel(nn.Module):
             if turn_type == 'c_concat':
                 self.c_concat_linear = nn.Linear(hidden_size * turn_num, hidden_size)
                 init_linear_wt(self.c_concat_linear)
-            elif turn_type == 'sequential' or turn_type == 'weight' or  turn_type == 'transformer':
+            elif turn_type in ['sequential', 'weight', 'transformer', 'self_attn']:
                 self.session_encoder = SessionEncoder(
                     rnn_type,
                     hidden_size,
@@ -192,6 +192,7 @@ class KGModel(nn.Module):
             f_inputs: [batch_size, r_max_len, topk]
             f_inputs_length: [batch_size]
         '''
+
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
@@ -397,6 +398,7 @@ class KGModel(nn.Module):
             #  stack_hidden_states = []
             for ti in range(self.turn_num):
                 inputs = h_inputs[:, :, ti] # [max_len, batch_size]
+
                 if self.turn_type == 'transformer':
                     inputs_position = h_inputs_position[:, :, ti]
                     outputs = self.transformer_encoder(inputs.transpose(0, 1), inputs_position.transpose(0, 1))
@@ -407,7 +409,6 @@ class KGModel(nn.Module):
                     outputs, hidden_state = self.self_attn_encoder(inputs, inputs_length)
                 else:
                     inputs_length = h_inputs_length[:, ti] # [batch_size]
-                    # [max_len, batch_size, hidden_size] , [num_layers * bidirection_num, batch_size, hidden_size]
                     outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
 
                 stack_outputs.append(outputs[-1].unsqueeze(0))
@@ -435,8 +436,9 @@ class KGModel(nn.Module):
                 #  print(session_hidden_state.shape)
                 return session_outputs, session_hidden_state, h_turns_length
             elif self.turn_type == 'self_attn':
-                # TODO self attention
-                pass
+                stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # [1, batch_size, hidden_size]
+                return session_outputs, session_hidden_state, h_turns_length
 
 
     def f_forward(self,

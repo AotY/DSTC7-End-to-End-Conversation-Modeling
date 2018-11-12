@@ -26,7 +26,7 @@ class SelfAttentive(nn.Module):
                  num_layers,
                  bidirectional,
                  hidden_size=512,
-                 attn_hops=10,
+                 attn_hops=6,
                  mlp_input_size=256,
                  mlp_output_size=512,
                  dropout=0.5):
@@ -34,7 +34,7 @@ class SelfAttentive(nn.Module):
         super(SelfAttentive, self).__init__()
 
         self.embedding = embedding
-        self.embedding_sizes = embedding.embedding_dim
+        self.embedding_size = embedding.embedding_dim
         self.rnn_type = rnn_type
         self.num_layers = num_layers
 
@@ -82,7 +82,7 @@ class SelfAttentive(nn.Module):
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
 
-        outputs, hidden_state = self.rnn(inputs) # outputs: [max_len, batch_size, hidden_size]
+        outputs, hidden_state = self.rnn(embedded) # outputs: [max_len, batch_size, hidden_size]
 
         A = F.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]
