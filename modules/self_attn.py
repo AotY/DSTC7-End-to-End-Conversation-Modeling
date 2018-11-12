@@ -84,7 +84,7 @@ class SelfAttentive(nn.Module):
 
         outputs, hidden_state = self.rnn(inputs) # outputs: [max_len, batch_size, hidden_size]
 
-        A = F.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
+        A = torch.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]
 
         # mask
@@ -98,7 +98,7 @@ class SelfAttentive(nn.Module):
         M = torch.bmm(A, outputs.transpose(0, 1)) # [batch_size, attn_hops, hidden_size]
         M = M.view(batch_size, -1) # [batch_size, attn_hops * hidden_size]
 
-        outputs = F.relu(self.fc1(M)) # [batch_size, mlp_output_size]
+        outputs = torch.relu(self.fc1(M)) # [batch_size, mlp_output_size]
 
         outputs = outputs.unsqueeze(0).contiguous()
 

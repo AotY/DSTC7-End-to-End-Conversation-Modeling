@@ -71,6 +71,12 @@ def wiki_stats(facts_path):
     table_filename = './wiki_table.txt'
     table_file = open(table_filename, 'w', encoding='utf-8')
 
+    reference_filename = './wiki_reference.txt'
+    reference_file = open(reference_filename, 'w', encoding='utf-8')
+
+    abstract_filename = './wiki_abstract.txt'
+    abstract_file = open(abstract_filename, 'w', encoding='utf-8')
+
     wiki_table_dict = {}
     wiki_h2_dict = {}
     h2_count = 0
@@ -154,6 +160,7 @@ def wiki_stats(facts_path):
                     abstract = soup.text.strip()
                     abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
                     abstracts.append(abstract_words)
+                    abstract_file.write(fact + '\n')
 
                 if fact.find('"') != -1 and maybe_refenrence:
                     reference = fact.strip()
@@ -162,6 +169,8 @@ def wiki_stats(facts_path):
                         reference = ' '.join(parts).replace('"', '')
                         refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
                         references.append(refenrence_words)
+                        reference_file.write(fact + '\n')
+
 
                 if maybe_table:
                     if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
@@ -189,6 +198,9 @@ def wiki_stats(facts_path):
                 if is_wiki and len(references) > 0:
                     wiki_reference_dict[conversation_id] = references
 
+                reference_file.write('----------------\n')
+                abstract_file.write('----------------\n')
+
                 is_wiki = False
                 domain_name = None
                 maybe_table = False
@@ -200,6 +212,8 @@ def wiki_stats(facts_path):
                 references = []
 
     table_file.close()
+    reference_file.close()
+    abstract_file.close()
 
     print('title_count: %d' % title_count)
     print('wiki_count: %d' % wiki_count)
