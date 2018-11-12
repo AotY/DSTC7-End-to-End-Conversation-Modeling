@@ -35,19 +35,17 @@ def get_sinusoid_encodeing_table(n_position, hid_dim, padding_idx=None):
 
     return torch.tensor(sinusoid_table, dtype=torch.float)
 
-def get_attn_key_pad_mask(seq_k, seq_q, padid):
+def get_attn_key_pad_mask(k, q, padid):
     ''' For masking out the padding part of key sequence. '''
 
     # Expand to fit the shape of key query attention matrix.
-    len_q = seq_q.size(1)
-    padding_mask = seq_k.eq(padid)
+    len_q = q.size(1)
+    padding_mask = k.eq(padid)
     padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
 
     return padding_mask
 
-
-
-def get_subsequent_mask(seq):
+def get_subsequent_mask(input):
     ''' For masking out the subsequent info. '''
 
     sz_b, len_s = seq.size()

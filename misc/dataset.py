@@ -165,9 +165,10 @@ class Dataset:
             self.reset_data(task)
             cur_indicator=batch_size
 
-        h_encoder_inputs = list()
-        h_turn_lengths = list()
-        h_inputs_lengths = list()
+        h_inputs = list()
+        h_inputs_position = list()
+        h_turns_length = list()
+        h_inputs_lenght = list()
 
         decoder_inputs = torch.zeros((self.r_max_len, batch_size),
                                      dtype=torch.long,
@@ -181,8 +182,8 @@ class Dataset:
         response_texts = list()
 
         # facts
-        f_encoder_inputs = list()
-        f_encoder_inputs_length = list()
+        f_inputs = list()
+        f_inputs_length = list()
         facts_texts = list()
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
@@ -195,19 +196,31 @@ class Dataset:
             conversation_texts.append(conversation_text)
 
 			# history inputs
-            h_inputs_lengths.append(list([1]) * self.turn_num)
-            h_turn_lengths.append(len(history_conversations_ids))
+            h_inputs_lenght.append(list([1]) * self.turn_num)
+            h_turns_length.append(len(history_conversations_ids))
 
             if len(history_conversations_ids) > 0:
-                history_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
-                for j, ids in enumerate(history_conversations_ids):
-                    h_inputs_lengths[i][j] = len(ids)
+                h_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+                if self.turn_type == 'transformer':
+                    h_position = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
 
-                    tmp = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
+                for j, ids in enumerate(history_conversations_ids):
+                    h_inputs_lenght[i][j] = len(ids)
+
+                    tmp_i = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
+                    tmp_h = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
                     for k, id in enumerate(ids):
-                        tmp[: k] = id
-                    history_input[:, j] = tmp
-                h_encoder_inputs.append(history_input)
+                        tmp_i[k] = id
+                        if self.turn_type == 'transformer':
+                            h_position[k] = k + 1
+
+                    h_input[:, j] = tmp_i
+                    h_position[:, j] = tmp_h
+
+                h_inputs.append(h_input)
+                h_inputs_position.append(h_position)
+                print(h_input)
+                print(h_position)
 
             # decoder_inputs
             decoder_inputs[0, i] = self.vocab.sosid
@@ -227,25 +240,27 @@ class Dataset:
                     topk_facts_embedded = topk_facts_embedded[:self.f_topk]
 
                 topk_facts_embedded = topk_facts_embedded.to(self.device)
-                f_encoder_inputs.append(topk_facts_embedded)
+                f_inputs.append(topk_facts_embedded)
                 facts_texts.append(topk_facts_text)
-                f_encoder_inputs_length.append(topk_facts_embedded.size(0))
+                f_inputs_length.append(topk_facts_embedded.size(0))
 
-        h_encoder_inputs = torch.stack(h_encoder_inputs, dim=1) # [max_len, batch_size, turn_num]
-        h_turn_lengths = torch.tensor(h_turn_lengths, dtype=torch.long, device=self.device)
-        h_inputs_lengths = torch.tensor(h_inputs_lengths, dtype=torch.long, device=self.device) #[batch_size, turn_num]
+        h_inputs = torch.stack(h_inputs, dim=1) # [max_len, batch_size, turn_num]
+        h_inputs_position = torch.stack(h_inputs_position, dim=1) # [max_len, batch_size, turn_num]
+
+        h_turns_length = torch.tensor(h_turns_length, dtype=torch.long, device=self.device)
+        h_inputs_lenght = torch.tensor(h_inputs_lenght, dtype=torch.long, device=self.device) #[batch_size, turn_num]
 
         if self.model_type == 'kg':
-            f_encoder_inputs=torch.stack(f_encoder_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
-            f_encoder_inputs_length = torch.tensor(f_encoder_inputs_length, dtype=torch.long, device=self.device)
+            f_inputs=torch.stack(f_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
+            f_inputs_length = torch.tensor(f_inputs_length, dtype=torch.long, device=self.device)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
         return decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_encoder_inputs, facts_texts, f_encoder_inputs_length, \
-            h_encoder_inputs, h_turn_lengths, h_inputs_lengths
+            f_inputs, facts_texts, f_inputs_length, \
+            h_inputs, h_turns_length, h_inputs_lenght, h_inputs_position
 
 
     def assembel_facts(self, hash_value):

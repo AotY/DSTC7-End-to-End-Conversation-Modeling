@@ -24,9 +24,9 @@ class Encoder(nn.Module):
             self,
             vocab_size,
             max_len,
-            word_vec_dim,
-            n_layers,
-            n_head,
+            embedding_size,
+            num_layers,
+            num_head,
             k_dim,
             v_dim,
             model_dim,
@@ -40,43 +40,58 @@ class Encoder(nn.Module):
 
         self.embedding = nn.Embedding(
             vocab_size,
-            word_vec_dim,
+            embedding_size,
             padding_idx=padid
         )
 
         self.position_enc = nn.Embedding.from_pretrained(
-            get_sinusoid_encoding_table(n_position, word_vec_dim, padding_idx=0),
+            get_sinusoid_encoding_table(n_position, embedding_size, padding_idx=0),
             freeze=True
         )
 
         self.layer_stack = nn.ModuleList([
-            EncoderLayer(model_dim, inner_dim, n_head, k_dim, v_dim, dropout=dropout)
-            for _ in range(n_layers)]
+            EncoderLayer(model_dim, inner_dim, num_head, k_dim, v_dim, dropout=dropout)
+            for _ in range(num_layers)]
         )
 
-    def forward(self, src_seq, src_pos, return_attns=False):
+    def forward(self, input, input_position, return_attns=False):
+        """
+        Args:
+            input: [batch_size, max_len]
+            input_position: [batch_size, max_len]
+        return:
+            enc_output: []
+        """
 
-        enc_slf_attn_list = []
+        enc_attn_list = []
 
         # -- Prepare masks
-        slf_attn_mask = get_attn_key_pad_mask(seq_k=src_seq, seq_q=src_seq)
-        non_pad_mask = get_non_pad_mask(src_seq)
+        attn_mask = get_attn_key_pad_mask(k=input, q=input)
+
+        non_pad_mask = get_non_pad_mask(input)
 
         # -- Forward
-        enc_output = self.embedding(src_seq) + self.position_enc(src_pos)
+        enc_output = self.embedding(input) + self.position_enc(input_position)
 
         for enc_layer in self.layer_stack:
-            enc_output, enc_slf_attn = enc_layer(
+            enc_output, enc_attn = enc_layer(
                 enc_output,
                 non_pad_mask=non_pad_mask,
-                slf_attn_mask=slf_attn_mask)
+                attn_mask=attn_mask)
+
             if return_attns:
-                enc_slf_attn_list += [enc_slf_attn]
+                enc_attn_list += [enc_attn]
 
         if return_attns:
-            return enc_output, enc_slf_attn_list
+            return enc_output, enc_attn_list
 
         return enc_output
+
+
+
+
+
+
 
 
 
@@ -87,9 +102,9 @@ class Decoder(nn.Module):
             self,
             vocab_size,
             max_len,
-            word_vec_dim,
-            n_layers,
-            n_head,
+            embedding_size,
+            num_layers,
+            num_head,
             k_dim,
             v_dim,
             model_dim,
@@ -101,15 +116,15 @@ class Decoder(nn.Module):
         n_position = max_len + 1
 
         self.embedding = nn.Embedding(
-            vocab_size, word_vec_dim, padding_idx=padid)
+            vocab_size, embedding_size, padding_idx=padid)
 
         self.position_enc = nn.Embedding.from_pretrained(
-            get_sinusoid_encoding_table(n_position, word_vec_dim, padding_idx=0),
+            get_sinusoid_encoding_table(n_position, embedding_size, padding_idx=0),
             freeze=True)
 
         self.layer_stack = nn.ModuleList([
-            DecoderLayer(model_dim, inner_dim, n_head, k_dim, v_dim, dropout=dropout)
-            for _ in range(n_layers)])
+            DecoderLayer(model_dim, inner_dim, num_head, k_dim, v_dim, dropout=dropout)
+            for _ in range(num_layers)])
 
     def forward(self, tgt_seq, tgt_pos, src_seq, enc_output, return_attns=False):
 
@@ -120,7 +135,7 @@ class Decoder(nn.Module):
 
         slf_attn_mask_subseq = get_subsequent_mask(tgt_seq)
         slf_attn_mask_keypad = get_attn_key_pad_mask(seq_k=tgt_seq, seq_q=tgt_seq)
-        slf_attn_mask = (slf_attn_mask_keypad + slf_attn_mask_subseq).gt(0)
+        attn_mask = (slf_attn_mask_keypad + slf_attn_mask_subseq).gt(0)
 
         dec_enc_attn_mask = get_attn_key_pad_mask(seq_k=src_seq, seq_q=tgt_seq)
 
@@ -131,7 +146,7 @@ class Decoder(nn.Module):
             dec_output, dec_slf_attn, dec_enc_attn = dec_layer(
                 dec_output, enc_output,
                 non_pad_mask=non_pad_mask,
-                slf_attn_mask=slf_attn_mask,
+                attn_mask=attn_mask,
                 dec_enc_attn_mask=dec_enc_attn_mask)
 
             if return_attns:
@@ -149,11 +164,11 @@ class Transformer(nn.Module):
             self,
             vocab_size,
             max_len,
-            word_vec_dim=512,
+            embedding_size=512,
             model_dim=512,
             inner_dim=2048,
-            n_layers=6,
-            n_head=8,
+            num_layers=6,
+            num_head=8,
             k_dim=64,
             v_dim=64,
             dropout=0.1,
@@ -165,11 +180,11 @@ class Transformer(nn.Module):
         self.encoder = Encoder(
             vocab_size=vocab_size,
             max_len=max_len,
-            word_vec_dim=word_vec_dim,
+            embedding_size=embedding_size,
             model_dim=model_dim,
             inner_dim=inner_dim,
-            n_layers=n_layers,
-            n_head=n_head,
+            num_layers=num_layers,
+            num_head=num_head,
             k_dim=k_dim,
             v_dim=v_dim,
             dropout=dropout)
@@ -177,11 +192,11 @@ class Transformer(nn.Module):
         self.decoder = Decoder(
             vocab_size=vocab_size,
             max_len=max_len,
-            word_vec_dim=word_vec_dim,
+            embedding_size=embedding_size,
             model_dim=model_dim,
             inner_dim=inner_dim,
-            n_layers=n_layers,
-            n_head=n_head,
+            num_layers=num_layers,
+            num_head=num_head,
             k_dim=k_dim,
             v_dim=v_dim,
             dropout=dropout)
@@ -189,7 +204,7 @@ class Transformer(nn.Module):
         self.output_linear = nn.Linear(model_dim, vocab_size, bias=False)
         nn.init.xavier_normal_(self.output_linear.weight)
 
-        assert model_dim == word_vec_dim, \
+        assert model_dim == embedding_size, \
         'To facilitate the residual connections, \
          the dimensions of all module outputs shall be the same.'
         if tied:
