@@ -18,6 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.optim import Optimizer, ScheduledOptimizer
+from modules.early_stopping import EarlyStopping
 
 from gensim.models import KeyedVectors
 
@@ -65,7 +66,8 @@ def train_epochs(model,
                  dataset,
                  optimizer,
                  criterion,
-                 vocab):
+                 vocab,
+                 early_stopping):
 
     start = time.time()
     max_load = int(np.ceil(dataset.n_train / opt.batch_size))
@@ -138,6 +140,12 @@ def train_epochs(model,
         # generate sentence
         logger.info('generate...')
         decode(model, dataset, vocab)
+
+        is_stop = early_stopping.step(evaluate_loss)
+        if is_stop:
+            logger.info('Early Stopping.')
+            sys.exit(0)
+
 
 ''' start traing '''
 
@@ -485,14 +493,14 @@ if __name__ == '__main__':
     # Load checkpoint if we resume from a previous training.
     if opt.checkpoint:
         logger.info('Loading checkpoint from: %s' % opt.checkpoint)
-        checkpoint=load_checkpoint(filename=opt.checkpoint)
+        checkpoint = load_checkpoint(filename=opt.checkpoint)
     else:
-        checkpoint=None
+        checkpoint = None
 
-    vocab=Vocab()
+    vocab = Vocab()
     #  vocab.load(opt.vocab_path.format(opt.model_type))
     vocab.load(opt.vocab_path)
-    vocab_size=vocab.get_vocab_size()
+    vocab_size = vocab.get_vocab_size()
     logger.info("vocab_size -----------------> %d" % vocab_size)
 
     dataset = build_dataset(vocab)
@@ -513,16 +521,19 @@ if __name__ == '__main__':
             opt.f_topk,
             filename
         )
-        #  dataset.computing_similarity_facts_offline(fasttext,
-                                                   #  opt.pre_embedding_size,
-                                                   #  opt.f_topk,
-                                                   #  filename)
-    model=build_model(vocab_size, vocab.padid)
+
+    model = build_model(vocab_size, vocab.padid)
 
     # Build optimizer.
     optimizer = build_optimizer(model)
 
-    criterion=build_criterion(vocab.padid)
+    criterion = build_criterion(vocab.padid)
+
+    early_stopping = EarlyStopping(
+        type='min',
+        min_delta=0.001,
+        patience=3
+    )
 
     '''if load checkpoint'''
     if checkpoint:
@@ -539,7 +550,8 @@ if __name__ == '__main__':
                      dataset=dataset,
                      optimizer=optimizer,
                      criterion=criterion,
-                     vocab=vocab)
+                     vocab=vocab,
+                     early_stopping=early_stopping)
     elif opt.task == 'eval':
         evaluate(model,
                 dataset,
