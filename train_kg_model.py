@@ -79,7 +79,8 @@ def train_epochs(model,
             # load data
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_inputs, facts_texts, f_inputs_length, \
+            f_embedded_inputs, f_embedded_inputs_length, \
+            f_ids_inputs, f_ids_inputs_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
 
             # train and get cur loss
@@ -90,8 +91,10 @@ def train_epochs(model,
                                    h_inputs_position,
                                    decoder_inputs,
                                    decoder_targets,
-                                   f_inputs,
-                                   f_inputs_length,
+                                   f_embedded_inputs,
+                                   f_embedded_inputs_length,
+                                   f_ids_inputs,
+                                   f_ids_inputs_length,
                                    optimizer,
                                    criterion,
                                    vocab)
@@ -156,8 +159,10 @@ def train(model,
           h_inputs_position,
           decoder_inputs,
           decoder_targets,
-          f_inputs,
-          f_inputs_length,
+          f_embedded_inputs,
+          f_embedded_inputs_length,
+          f_ids_inputs,
+          f_ids_inputs_length,
           optimizer,
           criterion,
           vocab):
@@ -172,8 +177,10 @@ def train(model,
         h_inputs_length,
         h_inputs_position,
         decoder_inputs,
-        f_inputs,
-        f_inputs_length,
+        f_embedded_inputs,
+        f_embedded_inputs_length,
+        f_ids_inputs,
+        f_ids_inputs_length,
         opt.batch_size,
         opt.r_max_len,
         opt.teacher_forcing_ratio
@@ -232,7 +239,8 @@ def evaluate(model,
             # load data
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_inputs, facts_texts, f_inputs_length, \
+            f_embedded_inputs, f_embedded_inputs_length, \
+            f_ids_inputs, f_ids_inputs_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
@@ -243,8 +251,10 @@ def evaluate(model,
                 h_inputs_length,
                 h_inputs_position,
                 decoder_input,
-                f_inputs,
-                f_inputs_length,
+                f_embedded_inputs,
+                f_embedded_inputs_length,
+                f_ids_inputs,
+                f_ids_inputs_length,
                 opt.r_max_len,
                 opt.batch_size
             )
@@ -273,9 +283,11 @@ def decode(model, dataset, vocab):
     max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
+
             decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_inputs, facts_texts, f_inputs_length, \
+            f_embedded_inputs, f_embedded_inputs_length, \
+            f_ids_inputs, f_ids_inputs_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
 
             # train and get cur loss
@@ -288,8 +300,10 @@ def decode(model, dataset, vocab):
                 h_inputs_length,
                 h_inputs_position,
                 decoder_input,
-                f_inputs,
-                f_inputs_length,
+                f_embedded_inputs,
+                f_embedded_inputs_length,
+                f_ids_inputs,
+                f_ids_inputs_length,
                 opt.decode_type,
                 opt.r_max_len,
                 vocab.eosid,
@@ -507,7 +521,7 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
+        filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
         fasttext = None
         wiki_dict = None
         if not os.path.exists(filename):
