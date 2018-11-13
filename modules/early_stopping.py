@@ -36,7 +36,7 @@ class EarlyStopping:
             self.is_better = lambda cur, best: cur > best + min_delta
 
     def step(self, metrics):
-        if self.is_best is None:
+        if self.best is None:
             self.best = metrics
             return False
 
@@ -53,9 +53,3 @@ class EarlyStopping:
             return True
 
         return False
-
-
-
-
-
-
