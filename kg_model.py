@@ -359,7 +359,7 @@ class KGModel(nn.Module):
         beam_outputs = beam_decode(
             self.decoder,
             h_encoder_outputs,
-            h_inputs_length,
+            h_decoder_lengths,
             decoder_hidden_state,
             input,
             batch_size,

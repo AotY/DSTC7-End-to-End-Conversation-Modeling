@@ -188,7 +188,7 @@ class Dataset:
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         """sort batch_data, by turn num"""
-        batch_data = sorted(batch_data, key=lambda item: len(item[1]), reverse=True)
+        batch_data = sorted(batch_data, key=lambda item: len(item[2]), reverse=True)
         for i, (_, conversation_text, h_conversations_ids, response_ids, hash_value) in enumerate(batch_data):
             # ids to word
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
@@ -274,7 +274,7 @@ class Dataset:
 
         return topk_facts_embedded, topk_facts
 
-    def build_similarity_facts_offine(self,
+    def build_similarity_facts_offline(self,
                                       wiki_dict,
                                       fasttext,
                                       pre_embedding_size,
@@ -305,8 +305,8 @@ class Dataset:
                         facts_words = [tokenizer.tokenize(fact.rstrip()) for fact in facts]
 
                         #  conversation keywords
-                        conversation_keywords = keywords.keywords(conversation, ratio=0.5, split=True)
-                        print('conversation_keywords: {}'.format(conversation_keywords))
+                        conversation_keywords = keywords.keywords(conversation, ratio=0.7, split=True)
+                        #  print('conversation_keywords: {}'.format(conversation_keywords))
 
                         # extraction keywords
                         distances = []

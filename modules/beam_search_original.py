@@ -73,10 +73,8 @@ class BeamNode:
 
 def beam_decode(
     decoder,
-    c_encoder_outputs,
-    c_encoder_inputs_length,
     h_encoder_outputs,
-    h_encoder_inputs_length,
+    h_decoder_lengths,
     decoder_hidden_state,
     decoder_input,
     batch_size,
@@ -89,7 +87,6 @@ def beam_decode(
 
     """
     Args:
-        c_encoder_outputs: [len, batch, hidden_size]
         decoder_hidden_state: [layers, batch, hidden_size]
         decoder_input: [1, batch_size] * sosid
     """
@@ -98,13 +95,12 @@ def beam_decode(
     for bi in range(batch_size):
 
         beam_width = _beam_width
-        init_c_encoder_outputs = c_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [max_length, 1, hidden_size]
-        init_c_encoder_length = c_encoder_inputs_length[bi].view(1)
 
         init_h_encoder_outputs = None
-        if h_encoder_outputs is not None:
+        init_h_decoder_length = None
+        if h_decoder_lengths is not None:
             init_h_encoder_outputs = h_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [num, 1, hidden_size]
-            init_h_encoder_length = h_encoder_inputs_length[bi].view(1)
+            init_h_decoder_length = h_decoder_lengths[bi].view(1)
 
         if rnn_type == 'GRU':
             init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
@@ -118,10 +114,8 @@ def beam_decode(
         output, hidden_state, _ = decoder(
             init_decoder_input,
             init_decoder_hidden_state,
-            init_c_encoder_outputs,
-            init_c_encoder_length,
             init_h_encoder_outputs,
-            init_h_encoder_length,
+            init_h_decoder_length,
         ) # output: [1, 1, vocab_size], hidden_sate: [num_layers, 1, hidden_size]
 
         log_probs, indices = output.topk(beam_width, dim=2) # [1, 1, beam_width]
@@ -142,13 +136,11 @@ def beam_decode(
             #  next_decoder_hidden_state = tuple([item.repeat(1, beam_width, 1) for item in hidden_state])  # [layers, 1, hidden_size]
             next_decoder_hidden_state = tuple([_inflate(item, beam_width, dim=1) for item in hidden_state])  # [layers, 1, hidden_size]
 
-        next_c_encoder_outputs = _inflate(init_c_encoder_outputs, beam_width, dim=1)
-        next_c_encoder_length = _inflate(init_c_encoder_length, beam_width, dim=0)
-
         next_h_encoder_outputs = None
-        if init_h_encoder_outputs is not None:
+        next_h_decoder_length = None
+        if h_decoder_lengths is not None:
             next_h_encoder_outputs = _inflate(init_h_encoder_outputs, beam_width, dim=1)
-            next_h_encoder_length = _inflate(init_h_encoder_length, beam_width, dim=0)
+            next_h_decoder_length = _inflate(init_h_decoder_length, beam_width, dim=0)
 
         res = []
 
@@ -156,10 +148,8 @@ def beam_decode(
             outputs, hidden_states, _ = decoder(
                 next_decoder_input,
                 next_decoder_hidden_state,
-                next_c_encoder_outputs,
-                next_c_encoder_length,
                 next_h_encoder_outputs,
-                next_h_encoder_length
+                next_h_decoder_length
             )
 
             # squeeze
@@ -208,12 +198,9 @@ def beam_decode(
                 else:
                     next_decoder_hidden_state = tuple([item.index_select(dim=1, index=indices_select) for item in hidden_states])  # [layers, 1, hidden_size]
 
-                next_c_encoder_outputs = next_c_encoder_outputs.index_select(1, indices_select)
-                next_c_encoder_length = next_c_encoder_length.index_select(0, indices_select)
-
-                if next_h_encoder_outputs is not None:
+                if h_decoder_lengths is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, indices_select)
-                    next_h_encoder_length = next_h_encoder_length.index_select(0, indices_select)
+                    next_h_decoder_length = next_h_decoder_length.index_select(0, indices_select)
             else:
                 next_decoder_hidden_state = hidden_states
 
