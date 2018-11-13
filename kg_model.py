@@ -137,8 +137,8 @@ class KGModel(nn.Module):
             init_linear_wt(self.fact_linearC)
 
             if pre_embedding_size != hidden_size:
-                self.fact_linear = nn.Linear(pre_embedding_size, hidden_size)
-                init_linear_wt(self.fact_linear)
+                self.f_embedded_linear = nn.Linear(pre_embedding_size, hidden_size)
+                init_linear_wt(self.f_embedded_linear)
 
         # encoder hidden_state -> decoder hidden_state
         self.reduce_state = ReduceState(rnn_type)
@@ -176,8 +176,10 @@ class KGModel(nn.Module):
                 h_inputs_length,
                 h_inputs_position,
                 decoder_inputs,
-                f_inputs,
-                f_inputs_length,
+                f_embedded_inputs,
+                f_embedded_inputs_length,
+                f_ids_inputs,
+                f_ids_inputs_length,
                 batch_size,
                 r_max_len,
                 teacher_forcing_ratio):
@@ -189,8 +191,8 @@ class KGModel(nn.Module):
 
             decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
-            f_inputs: [batch_size, r_max_len, topk]
-            f_inputs_length: [batch_size]
+            f_embedded_inputs: [batch_size, r_max_len, topk]
+            f_embedded_inputs_length: [batch_size]
         '''
 
         h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
@@ -208,8 +210,10 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_inputs,
-                                                  f_inputs_length,
+            decoder_hidden_state = self.f_forward(f_embedded_inputs,
+                                                  f_embedded_inputs_length,
+                                                  f_ids_inputs,
+                                                  f_ids_inputs_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -250,8 +254,10 @@ class KGModel(nn.Module):
                  h_inputs_length,
                  h_inputs_position,
                  decoder_input,
-                 f_inputs,
-                 f_inputs_length,
+                 f_embedded_inputs,
+                 f_embedded_inputs_length,
+                 f_ids_inputs,
+                 f_ids_inputs_length,
                  r_max_len,
                  batch_size):
         '''
@@ -273,8 +279,10 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_inputs,
-                                                  f_inputs_length,
+            decoder_hidden_state = self.f_forward(f_embedded_inputs,
+                                                  f_embedded_inputs_length,
+                                                  f_ids_inputs,
+                                                  f_ids_inputs_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -302,8 +310,10 @@ class KGModel(nn.Module):
                h_inputs_length,
                h_inputs_position,
                decoder_input,
-               f_inputs,
-               f_inputs_length,
+               f_embedded_inputs,
+               f_embedded_inputs_length,
+               f_ids_inputs,
+               f_ids_inputs_length,
                decode_type,
                r_max_len,
                eosid,
@@ -326,11 +336,12 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_inputs,
-                                                  f_inputs_length,
+            decoder_hidden_state = self.f_forward(f_embedded_inputs,
+                                                  f_embedded_inputs_length,
+                                                  f_ids_inputs,
+                                                  f_ids_inputs_length,
                                                   decoder_hidden_state,
                                                   batch_size)
-
         # decoder
         greedy_outputs = None
         beam_outputs = None
@@ -442,37 +453,41 @@ class KGModel(nn.Module):
 
 
     def f_forward(self,
-                  f_inputs,
-                  f_inputs_length,
+                  f_embedded_inputs,
+                  f_embedded_inputs_length,
+                  f_ids_inputs,
+                  f_ids_inputs_length,
                   hidden_state,
                   batch_size):
         """
         Args:
-            - f_inputs: [batch_size, top_k, embedding_size]
+            - f_embedded_inputs: [batch_size, topk, embedding_size]
             - hidden_state: [num_layers, batch_size, hidden_size]
-            - batch_size
+            -f_ids_inputs: [max_len, batch_size, topk]
+            -f_ids_inputs_length: [batch_size, topk]
+            -hidden_state: [num_layers, batch_size, hidden_size]
         """
 
         # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
         if self.pre_embedding_size != self.hidden_size:
-            f_inputs = self.fact_linear(f_inputs)
+            f_embedded_inputs = self.f_embedded_linear(f_embedded_inputs)
 
         # M [batch_size, topk, hidden_size]
-        fact_M = self.fact_linearA(f_inputs)
+        fM = self.fact_linearA(f_embedded_inputs)
 
         # C [batch_size, topk, hidden_size]
-        fact_C = self.fact_linearC(f_inputs)
+        fC = self.fact_linearC(f_embedded_inputs)
 
         # [batch_size, num_layers, topk]
-        tmpP = torch.bmm(hidden_state.transpose(0, 1), fact_M.transpose(1, 2))
+        tmpP = torch.bmm(hidden_state.transpose(0, 1), fM.transpose(1, 2))
 
-        mask = sequence_mask(f_inputs_length, max_len=tmpP.size(-1))
+        mask = sequence_mask(f_embedded_inputs_length, max_len=tmpP.size(-1))
         mask = mask.unsqueeze(1)  # Make it broadcastable.
         tmpP.masked_fill_(1 - mask, -float('inf'))
 
         P = F.softmax(tmpP, dim=2)
 
-        o = torch.bmm(P, fact_C)  # [batch_size, num_layers, hidden_size]
+        o = torch.bmm(P, fC)  # [batch_size, num_layers, hidden_size]
         u_ = torch.add(o, hidden_state.transpose(0, 1))
 
         # [num_layers, batch_size, hidden_size]
