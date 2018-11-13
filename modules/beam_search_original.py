@@ -61,11 +61,11 @@ class BeamNode:
     def get_ids(self):
         return [int(item) for item in self.sentence.split(',')]
 
-    def get_score(self, p=0.001):
+    def get_score(self, p=0.0001):
         reward = 0.0
         ids = self.get_ids()
         for id in ids:
-            if id != 4:
+            if id not in [0, 1, 2, 3, 4]:
                 reward += p
 
         return self.log_prob / len(ids) + reward

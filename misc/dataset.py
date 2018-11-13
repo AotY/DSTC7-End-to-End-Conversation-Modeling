@@ -8,6 +8,7 @@ import torch
 import numpy as np
 
 from summa import keywords # for keyword extraction
+from rake_nltk import Rake
 from misc import es_helper
 #  from embedding.embedding_score import get_topk_facts
 
@@ -182,9 +183,12 @@ class Dataset:
         response_texts = list()
 
         # facts
-        f_inputs = list()
-        f_inputs_length = list()
+        f_embedded_inputs = list()
+        f_embedded_inputs_length = list()
         facts_texts = list()
+
+        f_ids_inputs = list()
+        f_ids_inputs_length = list()
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         """sort batch_data, by turn num"""
@@ -233,18 +237,35 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
+
+                f_ids_input = torch.zeros((self.f_max_len, self.f_topk),
+                                            dtype=torch.long,
+                                            device=self.device)
+
+                f_ids_input_length = torch.zeros(self.f_topk,
+                                                 device=torch.long,
+                                                 device=self.device)
+
+                topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
+                for fi, ids in enumerate(topk_facts_ids):
+                    f_ids_input_length[fi] = len(ids)
+                    for fj, id in enumerate(ids):
+                        f_ids_input[fj, fi] = id
+
+                f_ids_inputs.append(f_intput_ids)
+                f_ids_inputs_length.append(f_ids_input_length)
+
                 if topk_facts_embedded.size(0) < self.f_topk:
                     #  tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
                     tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
                     tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
-                    topk_facts_embedded = tmp_tensor
                 elif topk_facts_embedded.size(0) >= self.f_topk:
-                    topk_facts_embedded = topk_facts_embedded[:self.f_topk]
+                    tmp_tensor = topk_facts_embedded[:self.f_topk]
 
-                topk_facts_embedded = topk_facts_embedded.to(self.device)
-                f_inputs.append(topk_facts_embedded)
+                tmp_tensor = tmp_tensor.to(self.device)
+                f_embedded_inputs.append(tmp_tensor)
+                f_embedded_inputs_length.append(topk_facts_embedded.size(0))
                 facts_texts.append(topk_facts_text)
-                f_inputs_length.append(topk_facts_embedded.size(0))
 
         h_inputs = torch.stack(h_inputs, dim=1) # [max_len, batch_size, turn_num]
         if self.turn_type == 'transformer':
@@ -254,15 +275,19 @@ class Dataset:
         h_inputs_lenght = torch.tensor(h_inputs_lenght, dtype=torch.long, device=self.device) #[batch_size, turn_num]
 
         if self.model_type == 'kg':
-            f_inputs=torch.stack(f_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
-            f_inputs_length = torch.tensor(f_inputs_length, dtype=torch.long, device=self.device)
+            f_embedded_inputs=torch.stack(f_embedded_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
+            f_embedded_inputs_length = torch.tensor(f_embedded_inputs_length, dtype=torch.long, device=self.device)
+
+            f_ids_inputs = torch.stack(f_ids_inputs, dim=1) # [f_max_len, batch_size, f_topk]
+            f_ids_inputs_length = torch.stack(f_ids_inputs_length, dim=0) # [batch_size, f_topk]
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
         return decoder_inputs, decoder_targets, \
             conversation_texts, response_texts, \
-            f_inputs, facts_texts, f_inputs_length, \
+            f_embedded_inputs, f_embedded_inputs_length, \
+            f_ids_inputs, f_ids_inputs_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_lenght, h_inputs_position
 
 
@@ -282,6 +307,7 @@ class Dataset:
                                       filename):
 
         tokenizer = Tokenizer()
+        rake = Rake()
 
         self.pre_embedding_size = pre_embedding_size
 
@@ -305,8 +331,10 @@ class Dataset:
                         facts_words = [tokenizer.tokenize(fact.rstrip()) for fact in facts]
 
                         #  conversation keywords
-                        conversation_keywords = keywords.keywords(conversation, ratio=0.7, split=True)
-                        #  print('conversation_keywords: {}'.format(conversation_keywords))
+                        #  conversation_keywords = keywords.keywords(conversation, ratio=0.7, split=True)
+                        rake.extract_keywords_from_text(conversation)
+                        conversation_keywords = rake.get_ranked_phrases()
+                        print('conversation_keywords: {}'.format(conversation_keywords))
 
                         # extraction keywords
                         distances = []
@@ -320,30 +348,42 @@ class Dataset:
                         # sorted
                         sorted_indexes = np.argsort(distances)
                         topk_indexes = sorted_indexes[:f_topk]
+                        topk_distances = distances[topk_indexes]
 
                         topk_indexes_list = topk_indexes.tolist()
                         topk_facts_words = [facts_words[topi] for topi in topk_indexes_list]
                         topk_facts_text = [' '.join(fact_words) for fact_words in topk_facts_words]
 
                         topk_facts_embedded = []
-                        for fact_words in topk_facts_words:
-                            fact_embedded = torch.zeros(pre_embedding_size)
-                            count = 0
-                            for word in fact_words:
+                        for words, distance in zip(topk_facts_words, distances):
+                            #  fact_embedded = torch.zeros(pre_embedding_size)
+                            fact_embedded = list()
+                            fact_distance = []
+
+                            count = 0.0
+                            for word in words:
                                 try:
-                                    worde_embedded = torch.tensor(fasttext.get_vector(word)).view(-1)
-                                    fact_embedded.add_(worde_embedded)
-                                    count += 1
+                                    word_embedded = torch.tensor(fasttext.get_vector(word), device=self.device).view(-1)
+                                    #  fact_embedded.add_(word_embedded)
+                                    fact_embedded.append(word_embedded)
+                                    fact_distance.append(distance)
+                                    count += 1.0
                                 except KeyError:
                                     continue
 
                             if count != 0:
-                                mean_fact_embedded = torch.div(fact_embedded, count * 1.0)
+                                #  fact_embedded = torch.div(fact_embedded, count)
+                                fact_embedded = torch.stack(fact_embedded, dim=0) # [topk, embedding_size]
+                                fact_distance = torch.FloatTensor(fact_distance, device=self.device).view(1, -1)
 
-                            topk_facts_embedded.append(mean_fact_embedded)
-                        topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, pre_embedding_size]
+                                fact_weight = torch.softmax(fact_distance, dim=1)
+                                fact_embedded = torch.mm(fact_weight, fact_embedded) # [1, embedding_size]
 
-                        topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
+                                topk_facts_embedded.append(fact_embedded)
+
+                        if len(topk_facts_embedded) > 0:
+                            topk_facts_embedded = torch.stack(topk_facts_embedded, dim=0) # [f_topk, pre_embedding_size]
+                            topk_facts_embedded_dict[hash_value]=(topk_facts_embedded, topk_facts_text)
 
             # save topk_facts_embedded_dict
             pickle.dump(topk_facts_embedded_dict, open(filename, 'wb'))
