@@ -135,6 +135,7 @@ class Vocab(object):
         # remove pad, sos, eos, unk
         #  words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos, '.']]
         #  words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos]]
+        words = [word for word in words if word not in [self.sos, self.eos]]
         text = ' '.join(words)
         return text
 

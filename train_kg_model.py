@@ -171,8 +171,8 @@ def train(model,
         opt.teacher_forcing_ratio
     )
 
-    #  optimizer.zero_grad()
-    model.zero_grad()
+    optimizer.zero_grad()
+    #  model.zero_grad()
 
     loss = 0
 
@@ -289,7 +289,7 @@ def decode(model, dataset, vocab):
                 opt.beam_width,
                 opt.best_n)
 
-            print(beam_outputs)
+            #  print(beam_outputs)
             # generate sentence, and save to file
             # [max_length, batch_size]
             greedy_texts = dataset.generating_texts(greedy_outputs,
@@ -501,13 +501,13 @@ if __name__ == '__main__':
         """ computing similarity between conversation and fact """
         filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
         fasttext = None
-        wiki_table_dict = None
+        wiki_dict = None
         if not os.path.exists(filename):
             fasttext = load_fasttext_model(opt.fasttext_vec)
-            wiki_table_dict = pickle.load(open('./data/wiki_table_dict.pkl', 'rb'))
+            wiki_dict = pickle.load(open('./data/wiki_dict.pkl', 'rb'))
 
-        dataset.build_similarity_facts_offine(
-            wiki_table_dict,
+        dataset.build_similarity_facts_offline(
+            wiki_dict,
             fasttext,
             opt.pre_embedding_size,
             opt.f_topk,
