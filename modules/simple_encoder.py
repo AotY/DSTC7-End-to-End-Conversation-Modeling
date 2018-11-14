@@ -10,9 +10,8 @@ Encoder based on lstm
 import torch
 import torch.nn as nn
 
-from modules.utils import init_lstm_wt
 from modules.utils import rnn_factory
-from modules.utils import init_wt_normal
+from modules.utils import init_wt_normal, init_linear_wt
 from modules.utils import init_gru_orth, init_lstm_orth
 
 class SimpleEncoder(nn.Module):

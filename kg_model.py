@@ -15,7 +15,6 @@ from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt, init_wt_normal
 from modules.utils import sequence_mask
-#  from modules.beam_search import beam_decode
 from modules.beam_search_original import beam_decode
 
 import modules.transformer.models as transformer_models
@@ -78,7 +77,7 @@ class KGModel(nn.Module):
         if pre_trained_weight is not None:
             encoder_embedding.weight.data.copy_(pre_trained_weight)
         else:
-            init_wt_normal(encoder_embedding.weight)
+            init_wt_normal(encoder_embedding.weight, encoder_embedding.embedding_dim)
 
         # h_encoder
         if turn_type == 'transformer':
@@ -154,7 +153,7 @@ class KGModel(nn.Module):
             if pre_trained_weight is not None:
                 decoder_embedding.weight.data.copy_(pre_trained_weight)
             else:
-                init_wt_normal(decoder_embedding.weight)
+                init_wt_normal(decoder_embedding.weight, decoder_embedding.embedding_dim)
 
         self.decoder = self.build_decoder(
             decoder_type,

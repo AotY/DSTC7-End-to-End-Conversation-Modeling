@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.utils import rnn_factory
-from modules.utils import init_wt_normal
+from modules.utils import init_wt_normal, init_linear_wt
 from modules.utils import init_gru_orth, init_lstm_orth
 from modules.utils import sequence_mask
 
@@ -63,6 +63,7 @@ class SelfAttentive(nn.Module):
             init_gru_orth(self.rnn)
 
         self.fc1 = nn.Linear(attn_hops * self.bidirection_num * self.hidden_size, mlp_output_size)
+        init_linear_wt(self.fc1)
 
         self.Ws1 = nn.Parameter(torch.Tensor(1, mlp_input_size, self.bidirection_num * self.hidden_size))
         self.Ws2 = nn.Parameter(torch.Tensor(1, attn_hops, mlp_input_size))
@@ -100,6 +101,6 @@ class SelfAttentive(nn.Module):
 
         outputs = torch.relu(self.fc1(M)) # [batch_size, mlp_output_size]
 
-        outputs = outputs.unsqueeze(0).contiguous()
+        outputs = outputs.unsqueeze(0).contiguous() # [1, batch_size, mlp_output_size]
 
         return outputs, hidden_state

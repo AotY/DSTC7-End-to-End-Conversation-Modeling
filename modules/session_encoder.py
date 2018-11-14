@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 
 from modules.utils import rnn_factory
-from modules.utils import init_lstm_wt, init_gru_orth, init_lstm_orth
+from modules.utils import init_gru_orth, init_lstm_orth
 from modules.utils import init_wt_normal
 
 
