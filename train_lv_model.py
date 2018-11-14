@@ -364,7 +364,7 @@ def kl_anneal_function(**kwargs):
 def kl_loss_fn(mean, logvar, **kwargs):
     """Calculate the ELBO, consiting of the Negative Log Likelihood and KL Divergence. """
 
-    kl_loss = -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
+    kl_loss = (-0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())).mean()
 
     kl_weight = kl_anneal_function(**kwargs)
 
