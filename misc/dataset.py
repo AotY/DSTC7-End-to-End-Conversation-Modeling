@@ -246,25 +246,34 @@ class Dataset:
                                                  dtype=torch.long,
                                                  device=self.device)
 
-                topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
-                for fi, ids in enumerate(topk_facts_ids):
-                    f_ids_input_length[fi] = len(ids)
-                    for fj, id in enumerate(ids):
-                        f_ids_input[fj, fi] = id
+                if topk_facts_embedded is not None:
+                    topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
+                    for fi, ids in enumerate(topk_facts_ids):
+                        f_ids_input_length[fi] = len(ids)
+                        for fj, id in enumerate(ids):
+                            f_ids_input[fj, fi] = id
 
                 f_ids_inputs.append(f_ids_input)
                 f_ids_inputs_length.append(f_ids_input_length)
 
-                if topk_facts_embedded.size(0) < self.f_topk:
-                    #  tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
+                if topk_facts_embedded is not None:
+                    if topk_facts_embedded.size(0) < self.f_topk:
+                        #  tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
+                        tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
+                        tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
+                    elif topk_facts_embedded.size(0) >= self.f_topk:
+                        tmp_tensor = topk_facts_embedded[:self.f_topk]
+                else:
                     tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
-                    tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
-                elif topk_facts_embedded.size(0) >= self.f_topk:
-                    tmp_tensor = topk_facts_embedded[:self.f_topk]
 
                 tmp_tensor = tmp_tensor.to(self.device)
                 f_embedded_inputs.append(tmp_tensor)
-                f_embedded_inputs_length.append(topk_facts_embedded.size(0))
+
+                if topk_facts_embedded is not None:
+                    f_embedded_inputs_length.append(topk_facts_embedded.size(0))
+                else:
+                    f_embedded_inputs_length.append(1)
+
                 facts_texts.append(topk_facts_text)
 
         h_inputs = torch.stack(h_inputs, dim=1) # [max_len, batch_size, turn_num]
@@ -293,9 +302,10 @@ class Dataset:
 
     def assembel_facts(self, hash_value):
         # load top_k facts
-        topk_facts_embedded, topk_facts=self.topk_facts_embedded_dict.get(hash_value, (None, None))
+        topk_facts_embedded, topk_facts = self.topk_facts_embedded_dict.get(hash_value, (None, None))
         if topk_facts_embedded is None:
-            return (torch.zeros((self.f_topk, self.pre_embedding_size), device=self.device), [])
+            #  return (torch.zeros((self.f_topk, self.pre_embedding_size), device=self.device), [])
+            return None, None
 
         return topk_facts_embedded, topk_facts
 
