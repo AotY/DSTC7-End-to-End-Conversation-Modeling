@@ -178,6 +178,7 @@ class Dataset:
         decoder_targets = torch.zeros((self.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
+        decoder_inputs_length = list()
 
         conversation_texts = list()
         response_texts = list()
@@ -231,9 +232,11 @@ class Dataset:
             # decoder_inputs
             decoder_inputs[0, i] = self.vocab.sosid
             for r, token_id in enumerate(response_ids):
-                decoder_inputs[r + 1, i]=token_id
-                decoder_targets[r, i]=token_id
-            decoder_targets[len(response_ids), i]=self.vocab.eosid
+                decoder_inputs[r + 1, i] = token_id
+                decoder_targets[r, i] = token_id
+
+            decoder_targets[r + 1, i] = self.vocab.eosid
+            decoder_inputs_length.append(r + 1)
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
@@ -259,12 +262,12 @@ class Dataset:
                 if topk_facts_embedded is not None:
                     if topk_facts_embedded.size(0) < self.f_topk:
                         #  tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
-                        tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
+                        tmp_tensor = torch.zeros((self.f_topk, self.pre_embedding_size))
                         tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
                     elif topk_facts_embedded.size(0) >= self.f_topk:
                         tmp_tensor = topk_facts_embedded[:self.f_topk]
                 else:
-                    tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
+                    tmp_tensor = torch.zeros((self.f_topk, self.pre_embedding_size))
 
                 tmp_tensor = tmp_tensor.to(self.device)
                 f_embedded_inputs.append(tmp_tensor)
@@ -283,6 +286,8 @@ class Dataset:
         h_turns_length = torch.tensor(h_turns_length, dtype=torch.long, device=self.device)
         h_inputs_lenght = torch.tensor(h_inputs_lenght, dtype=torch.long, device=self.device) #[batch_size, turn_num]
 
+        decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long, device=self.device) #[batch_size]
+
         if self.model_type == 'kg':
             f_embedded_inputs=torch.stack(f_embedded_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
             f_embedded_inputs_length = torch.tensor(f_embedded_inputs_length, dtype=torch.long, device=self.device)
@@ -293,7 +298,7 @@ class Dataset:
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
-        return decoder_inputs, decoder_targets, \
+        return decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
             f_ids_inputs, f_ids_inputs_length, facts_texts, \

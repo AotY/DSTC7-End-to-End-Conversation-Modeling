@@ -26,7 +26,7 @@ class SelfAttentive(nn.Module):
                  num_layers,
                  bidirectional,
                  hidden_size=512,
-                 attn_hops=6,
+                 attn_hops=4,
                  mlp_input_size=256,
                  mlp_output_size=512,
                  dropout=0.5):

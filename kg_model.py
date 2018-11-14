@@ -128,16 +128,16 @@ class KGModel(nn.Module):
 
         # fact encoder
         if model_type == 'kg':
+            if pre_embedding_size != hidden_size:
+                self.f_embedded_linear = nn.Linear(pre_embedding_size, hidden_size)
+                init_linear_wt(self.f_embedded_linear)
+
             # mi = A * ri    fact_linearA(300, 512)
             self.fact_linearA = nn.Linear(hidden_size, hidden_size)
             init_linear_wt(self.fact_linearA)
             # ci = C * ri
             self.fact_linearC = nn.Linear(hidden_size, hidden_size)
             init_linear_wt(self.fact_linearC)
-
-            if pre_embedding_size != hidden_size:
-                self.f_embedded_linear = nn.Linear(pre_embedding_size, hidden_size)
-                init_linear_wt(self.f_embedded_linear)
 
         # encoder hidden_state -> decoder hidden_state
         self.reduce_state = ReduceState(rnn_type)
@@ -175,6 +175,7 @@ class KGModel(nn.Module):
                 h_inputs_length,
                 h_inputs_position,
                 decoder_inputs,
+                decoder_inputs_length,
                 f_embedded_inputs,
                 f_embedded_inputs_length,
                 f_ids_inputs,
@@ -224,7 +225,8 @@ class KGModel(nn.Module):
             decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
                                                                                decoder_hidden_state,
                                                                                h_encoder_outputs,
-                                                                               h_decoder_lengths)
+                                                                               h_decoder_lengths,
+                                                                               decoder_inputs_length)
             return decoder_outputs
 
         else:
@@ -233,6 +235,7 @@ class KGModel(nn.Module):
             for i in range(r_max_len):
                 decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
                                                                                   decoder_hidden_state,
+                                                                                  None,
                                                                                   h_encoder_outputs,
                                                                                   h_decoder_lengths)
 

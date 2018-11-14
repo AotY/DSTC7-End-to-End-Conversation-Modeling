@@ -78,39 +78,54 @@ class LuongAttnDecoder(nn.Module):
         self.softmax = nn.LogSoftmax(dim=2)
 
     def forward(self,
-                input,
+                inputs,
                 hidden_state,
                 h_encoder_outputs=None,
-                h_decoder_lengths=None):
+                h_decoder_lengths=None,
+                inputs_length=None):
         '''
 		Args:
-			input: [1, batch_size]
+			inputs: [1, batch_size] or [max_len, batch_size]
 			hidden_state: [num_layers, batch_size, hidden_size]
+            inputs_length: [batch_size, ] or [1, ]
 
 			h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
             h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
         '''
-        #  print(input.shape)
-        #  print(hidden_state.shape)
+        if inputs_length is not None:
+            # sort inputs_length
+            inputs_length, sorted_indexes = torch.sort(inputs_length, dim=0, descending=True)
+            # restore to original indexes
+            _, restore_indexes = torch.sort(sorted_indexes, dim=0)
+
+            inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
 
         # embedded
-        embedded = self.embedding(input)  # [1, batch_size, embedding_size]
+        embedded = self.embedding(inputs)  # [1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
 
-        # Get current hidden state from input word and last hidden state
-        output, hidden_state = self.rnn(embedded, hidden_state)
+        if inputs_length is not None:
+            embedded = nn.utils.rnn.pack_padded_sequence(embedded, inputs_length)
+
+        # Get current hidden state from inputs word and last hidden state
+        outputs, hidden_state = self.rnn(embedded, hidden_state)
+
+        if inputs_length is not None:
+            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
+
+            outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         h_attn_output = None
         h_attn_weights = None
         if h_encoder_outputs is not None and h_decoder_lengths is not None:
-            h_attn_output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_decoder_lengths)
+            h_attn_output, h_attn_weights = self.h_attn(outputs, h_encoder_outputs, h_decoder_lengths)
 
         if h_attn_output is not None:
-            output = self.linear(h_attn_output)
+            outputs = self.linear(h_attn_output)
         else:
-            output = self.linear(output)
+            outputs = self.linear(outputs)
 
         # log softmax
-        output = self.softmax(output)
+        outputs = self.softmax(outputs)
 
-        return output, hidden_state, h_attn_weights
+        return outputs, hidden_state, h_attn_weights

@@ -77,7 +77,7 @@ def train_epochs(model,
         log_accuracy_total = 0
         for load in range(1, max_load + 1):
             # load data
-            decoder_inputs, decoder_targets, \
+            decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
             f_ids_inputs, f_ids_inputs_length, facts_texts, \
@@ -91,6 +91,7 @@ def train_epochs(model,
                                    h_inputs_position,
                                    decoder_inputs,
                                    decoder_targets,
+                                   decoder_inputs_length,
                                    f_embedded_inputs,
                                    f_embedded_inputs_length,
                                    f_ids_inputs,
@@ -159,6 +160,7 @@ def train(model,
           h_inputs_position,
           decoder_inputs,
           decoder_targets,
+          decoder_inputs_length,
           f_embedded_inputs,
           f_embedded_inputs_length,
           f_ids_inputs,
@@ -177,6 +179,7 @@ def train(model,
         h_inputs_length,
         h_inputs_position,
         decoder_inputs,
+        decoder_inputs_length,
         f_embedded_inputs,
         f_embedded_inputs_length,
         f_ids_inputs,
@@ -237,7 +240,7 @@ def evaluate(model,
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            decoder_inputs, decoder_targets, \
+            decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
             f_ids_inputs, f_ids_inputs_length, facts_texts, \
@@ -260,12 +263,12 @@ def evaluate(model,
             )
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            decoder_outputs_argmax=torch.argmax(decoder_outputs, dim=2)
-            accuracy=compute_accuracy(decoder_outputs_argmax, decoder_targets)
+            decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
+            accuracy = compute_accuracy(decoder_outputs_argmax, decoder_targets)
 
             #  Compute loss
-            decoder_outputs=decoder_outputs.view(-1, decoder_outputs.shape[-1])
-            decoder_targets=decoder_targets.view(-1)
+            decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
+            decoder_targets = decoder_targets.view(-1)
 
             loss=criterion(decoder_outputs,
                              decoder_targets)
@@ -284,13 +287,12 @@ def decode(model, dataset, vocab):
     with torch.no_grad():
         for load in range(1, max_load + 1):
 
-            decoder_inputs, decoder_targets, \
+            decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
             f_ids_inputs, f_ids_inputs_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
 
-            # train and get cur loss
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
             decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
