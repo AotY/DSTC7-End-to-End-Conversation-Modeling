@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=2
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -16,7 +16,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.7 \
+    --dropout 0.6 \
     --c_max_len 35 \
     --r_max_len 35 \
     --min_len 3 \
@@ -34,7 +34,7 @@ python train_kg_model.py \
     --max_norm 20.0 \
     --epochs 15 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
     --log_interval 30 \
@@ -44,7 +44,7 @@ python train_kg_model.py \
     --test_split 0.06 \
     --start_epoch 1 \
     --task train \
-    --model_type kg \
+    --model_type seq2seq \
     --share_embedding \
     # --checkpoint models/checkpoint.epoch-7_seq2seq_4_sum.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
