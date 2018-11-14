@@ -6,8 +6,15 @@ data/
 misc/*.txt
 *.txt
 
+### log
+logs/
+kg_logs/
+lv_logs/
+
 ### models
 models/
+kg_models/
+lv_models/
 
 ### Python template
 # Byte-compiled / optimized / DLL files

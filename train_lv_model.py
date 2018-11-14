@@ -355,7 +355,7 @@ def kl_anneal_function(**kwargs):
     """ Returns the weight of for calculating the weighted KL Divergence."""
     if kwargs['kl_anneal'] == 'logistic':
         """ https://en.wikipedia.org/wiki/Logistic_function """
-        weight = float(1 / (1 + np.exp(-kwargs['k']*(kwargs['global_step']- kwargs['x0']))))
+        weight = float(1 / (1 + np.exp(-kwargs['kla_k'] * (kwargs['global_step'] - kwargs['kla_x0']))))
     elif kwargs['kl_anneal'] == 'step':
         weight = kwargs['epoch'] / kwargs['denom']
 

@@ -38,7 +38,7 @@ python train_kg_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 30 \
-    --log_path ./logs/{}_{}_{}_{}.log \
+    --log_path ./kg_logs/{}_{}_{}_{}.log \
     --model_path ./kg_models \
     --eval_split 0.0007 \
     --test_split 0.06 \
@@ -46,7 +46,7 @@ python train_kg_model.py \
     --task train \
     --model_type kg \
     --share_embedding
-    --checkpoint models/checkpoint.epoch-1_kg_4_self_attn.pth
+    --checkpoint kg_models/checkpoint.epoch-1_kg_4_self_attn.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \
