@@ -11,7 +11,8 @@
 import torch
 import torch.nn as nn
 
-from modules.utils import init_wt_normal, init_linear_wt, init_lstm_orth, init_gru_orth
+from modules.utils import init_wt_normal, init_linear_wt
+from modules.utils import init_lstm_orth, init_gru_orth
 from modules.attention import Attention
 from modules.utils import rnn_factory
 
@@ -70,6 +71,8 @@ class LuongAttnDecoder(nn.Module):
 
         if tied and self.embedding_size == hidden_size:
             self.linear.weight = self.embedding.weight
+        else:
+            init_linear_wt(self.linear)
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
