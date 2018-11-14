@@ -451,8 +451,9 @@ class Dataset:
 
                 if facts_texts is not None and len(facts_texts) > 0:
                     topk_facts = facts_texts[i]
-                    for fi, fact_text in enumerate(topk_facts):
-                        f.write('Fact %d:\t %s\n' % (fi, fact_text))
+                    if topk_facts is not None:
+                        for fi, fact_text in enumerate(topk_facts):
+                            f.write('Fact %d:\t %s\n' % (fi, fact_text))
 
                 f.write('---------------------------------\n')
 
