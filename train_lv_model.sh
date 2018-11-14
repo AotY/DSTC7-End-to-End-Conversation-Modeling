@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=5
 
 python train_lv_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -43,7 +43,7 @@ python train_lv_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 30 \
-    --log_path ./logs/{}_{}_{}_{}.log \
+    --log_path ./lv_logs/{}_{}_{}_{}.log \
     --model_path ./lv_models \
     --eval_split 0.0007 \
     --test_split 0.06 \

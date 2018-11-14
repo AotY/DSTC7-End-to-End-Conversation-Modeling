@@ -156,7 +156,7 @@ def beam_decode(
                 next_decoder_input,
                 next_decoder_hidden_state,
                 next_h_encoder_outputs,
-                next_h_decoder_length
+                next_h_decoder_length,
                 next_z
             )
 
