@@ -521,7 +521,8 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
+        #  filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
+        filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
         fasttext = None
         wiki_dict = None
         if not os.path.exists(filename):
