@@ -242,8 +242,8 @@ class Dataset:
                                             dtype=torch.long,
                                             device=self.device)
 
-                f_ids_input_length = torch.zeros(self.f_topk,
-                                                 device=torch.long,
+                f_ids_input_length = torch.ones(self.f_topk,
+                                                 dtype=torch.long,
                                                  device=self.device)
 
                 topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
@@ -252,7 +252,7 @@ class Dataset:
                     for fj, id in enumerate(ids):
                         f_ids_input[fj, fi] = id
 
-                f_ids_inputs.append(f_intput_ids)
+                f_ids_inputs.append(f_ids_input)
                 f_ids_inputs_length.append(f_ids_input_length)
 
                 if topk_facts_embedded.size(0) < self.f_topk:
@@ -344,18 +344,18 @@ class Dataset:
                                 distances.append(distance)
                             else:
                                 distances.append(np.inf)
+                        distances = np.array(distances)
 
                         # sorted
                         sorted_indexes = np.argsort(distances)
                         topk_indexes = sorted_indexes[:f_topk]
                         topk_distances = distances[topk_indexes]
 
-                        topk_indexes_list = topk_indexes.tolist()
-                        topk_facts_words = [facts_words[topi] for topi in topk_indexes_list]
+                        topk_facts_words = [facts_words[topi] for topi in topk_indexes]
                         topk_facts_text = [' '.join(fact_words) for fact_words in topk_facts_words]
 
                         topk_facts_embedded = []
-                        for words, distance in zip(topk_facts_words, distances):
+                        for words, distance in zip(topk_facts_words, topk_distances):
                             #  fact_embedded = torch.zeros(pre_embedding_size)
                             fact_embedded = list()
                             fact_distance = []
@@ -366,15 +366,15 @@ class Dataset:
                                     word_embedded = torch.tensor(fasttext.get_vector(word), device=self.device).view(-1)
                                     #  fact_embedded.add_(word_embedded)
                                     fact_embedded.append(word_embedded)
-                                    fact_distance.append(distance)
+                                    fact_distance.append(-distance)
                                     count += 1.0
                                 except KeyError:
                                     continue
 
-                            if count != 0:
+                            if count > 0:
                                 #  fact_embedded = torch.div(fact_embedded, count)
                                 fact_embedded = torch.stack(fact_embedded, dim=0) # [topk, embedding_size]
-                                fact_distance = torch.FloatTensor(fact_distance, device=self.device).view(1, -1)
+                                fact_distance = torch.tensor(fact_distance, device=self.device).view(1, -1)
 
                                 fact_weight = torch.softmax(fact_distance, dim=1)
                                 fact_embedded = torch.mm(fact_weight, fact_embedded) # [1, embedding_size]
