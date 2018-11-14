@@ -178,6 +178,7 @@ class Dataset:
         decoder_targets = torch.zeros((self.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
+
         decoder_inputs_length = list()
 
         conversation_texts = list()
@@ -235,8 +236,8 @@ class Dataset:
                 decoder_inputs[r + 1, i] = token_id
                 decoder_targets[r, i] = token_id
 
-            decoder_targets[r + 1, i] = self.vocab.eosid
-            decoder_inputs_length.append(r + 1)
+            decoder_targets[len(response_ids), i] = self.vocab.eosid
+            decoder_inputs_length.append(len(response_ids) + 1)
 
             if self.model_type == 'kg':
                 topk_facts_embedded, topk_facts_text = self.assembel_facts(hash_value)
@@ -251,7 +252,8 @@ class Dataset:
 
                 if topk_facts_embedded is not None:
                     topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
-                    for fi, ids in enumerate(topk_facts_ids):
+                    for fi, ids in enumerate(topk_facts_ids[:self.f_topk]):
+                        ids = ids[-min(self.f_max_len, len(ids)):]
                         f_ids_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
                             f_ids_input[fj, fi] = id

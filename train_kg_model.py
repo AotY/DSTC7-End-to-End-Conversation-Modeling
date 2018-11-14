@@ -341,13 +341,14 @@ def compute_accuracy(decoder_outputs_argmax, decoder_targets):
     decoder_targets: [seq_len, batch_size]
     """
     #  print('---------------------->\n')
-    #  print(decoder_outputs_argmax)
-    #  print(decoder_targets)
+    #  print(decoder_outputs_argmax.shape)
+    #  print(decoder_targets.shape)
 
     match_tensor = (decoder_outputs_argmax == decoder_targets).long()
-    decoder_mask=(decoder_targets != 0).long()
 
-    accuracy_tensor=match_tensor * decoder_mask
+    decoder_mask = (decoder_targets != 0).long()
+
+    accuracy_tensor = match_tensor * decoder_mask
 
     accuracy = float(torch.sum(accuracy_tensor)) / float(torch.sum(decoder_mask))
 
