@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 export CUDA_VISIBLE_DEVICES=3
 
-python train_kg_model.py \
+python train_lv_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_seq2seq.60004.dict \
@@ -13,6 +13,11 @@ python train_kg_model.py \
     --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
     --rnn_type GRU \
     --hidden_size 512 \
+    --latent_size 128 \
+    --kl_anneal logistic \
+    --kla_denom 10 \
+    --kla_k 0.00025 \
+    --kla_x0 15000 \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
@@ -39,14 +44,14 @@ python train_kg_model.py \
     --device cuda \
     --log_interval 30 \
     --log_path ./logs/{}_{}_{}_{}.log \
-    --model_path ./kg_models \
+    --model_path ./lv_models \
     --eval_split 0.0007 \
     --test_split 0.06 \
     --start_epoch 1 \
     --task train \
-    --model_type kg \
+    --model_type seq2seq \
     --share_embedding
-    --checkpoint models/checkpoint.epoch-1_kg_4_self_attn.pth
+    # --checkpoint lv_models/checkpoint.epoch-7_seq2seq_4_sum.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \

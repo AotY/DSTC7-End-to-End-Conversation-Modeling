@@ -104,6 +104,33 @@ def model_opt(parser):
                        default=300,
                        help='number of hidden units per layer')
 
+    group.add_argument('--latent_size',
+                       type=int,
+                       default=300,
+                       help='number of hidden units per layer')
+
+    group.add_argument("--kl_anneal", 
+                       type=str,
+                       default='',
+                       help="KL Annealing function, select 'logistic' or 'step'.")
+
+    group.add_argument("--kla_denom",
+                       type=int,
+                       default=10,
+                       help="For 'step' KL Annealing: Epoch denominator.")
+
+    group.add_argument("--kla_k",
+                       type=float,
+                       default=0.00025,
+                       help="For 'logistic' KL Annealing: Steepness of Annealing function")
+
+    group.add_argument("--kla_x0",
+                       type=int,
+                       default=15000,
+                       help="For 'logistic' KL Annealing: Midpoint of Annealing function (i.e. weight=0.5)")
+
+
+
     group.add_argument('--num_layers',
                        type=int,
                        help='number of layers')

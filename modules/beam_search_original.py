@@ -83,7 +83,8 @@ def beam_decode(
     eosid,
     r_max_len,
     vocab_size,
-    device):
+    device,
+    z=None):
 
     """
     Args:
@@ -101,6 +102,8 @@ def beam_decode(
         if h_decoder_lengths is not None:
             init_h_encoder_outputs = h_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [num, 1, hidden_size]
             init_h_decoder_length = h_decoder_lengths[bi].view(1)
+        if z is not None:
+            init_z = z[:, bi, :].unsqueeze(1).contiguous() #[num_layers, 1, latent_size]
 
         if rnn_type == 'GRU':
             init_decoder_hidden_state = decoder_hidden_state[:, bi, :].unsqueeze(1).contiguous()  # [layers, 1, hidden_size]
@@ -116,6 +119,7 @@ def beam_decode(
             init_decoder_hidden_state,
             init_h_encoder_outputs,
             init_h_decoder_length,
+            init_z
         ) # output: [1, 1, vocab_size], hidden_sate: [num_layers, 1, hidden_size]
 
         log_probs, indices = output.topk(beam_width, dim=2) # [1, 1, beam_width]
@@ -142,6 +146,9 @@ def beam_decode(
             next_h_encoder_outputs = _inflate(init_h_encoder_outputs, beam_width, dim=1)
             next_h_decoder_length = _inflate(init_h_decoder_length, beam_width, dim=0)
 
+        if z is not None:
+            next_z = _inflate(init_z, beam_width, dim=1)
+
         res = []
 
         for ri in range(r_max_len):
@@ -150,6 +157,7 @@ def beam_decode(
                 next_decoder_hidden_state,
                 next_h_encoder_outputs,
                 next_h_decoder_length
+                next_z
             )
 
             # squeeze
@@ -201,6 +209,9 @@ def beam_decode(
                 if h_decoder_lengths is not None:
                     next_h_encoder_outputs = next_h_encoder_outputs.index_select(1, indices_select)
                     next_h_decoder_length = next_h_decoder_length.index_select(0, indices_select)
+
+                if z is not None:
+                    next_z  = next_z.index_select(1, indices_select)
             else:
                 next_decoder_hidden_state = hidden_states
 

@@ -28,13 +28,15 @@ class LuongAttnDecoder(nn.Module):
                  tied,
                  turn_type,
                  attn_type,
-                 device):
+                 device,
+                 latent_size=0):
 
         super(LuongAttnDecoder, self).__init__()
 
         self.vocab_size = vocab_size
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
+        self.latent_size = latent_size
         self.num_layers = num_layers
         self.attn_type = attn_type
 
@@ -53,7 +55,7 @@ class LuongAttnDecoder(nn.Module):
         self.rnn = rnn_factory(
             rnn_type,
             input_size=self.embedding_size,
-            hidden_size=hidden_size,
+            hidden_size=hidden_size + latent_size,
             num_layers=num_layers,
             dropout=dropout
         )
@@ -66,13 +68,13 @@ class LuongAttnDecoder(nn.Module):
         if self.turn_type == 'weight':
             self.h_attn = Attention(hidden_size)
 
-        # linear
-        self.linear = nn.Linear(hidden_size, vocab_size)
+        # out_linear
+        self.out_linear = nn.out_linear(hidden_size + latent_size, vocab_size)
 
         if tied and self.embedding_size == hidden_size:
-            self.linear.weight = self.embedding.weight
+            self.out_linear.weight = self.embedding.weight
         else:
-            init_linear_wt(self.linear)
+            init_linear_wt(self.out_linear)
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
@@ -82,12 +84,14 @@ class LuongAttnDecoder(nn.Module):
                 hidden_state,
                 h_encoder_outputs=None,
                 h_decoder_lengths=None,
-                inputs_length=None):
+                inputs_length=None,
+                z=None):
         '''
 		Args:
 			inputs: [1, batch_size] or [max_len, batch_size]
 			hidden_state: [num_layers, batch_size, hidden_size]
             inputs_length: [batch_size, ] or [1, ]
+            z: for latent variable model. [num_layers, batch_size, latent_size]
 
 			h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
             h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
@@ -108,6 +112,9 @@ class LuongAttnDecoder(nn.Module):
             embedded = nn.utils.rnn.pack_padded_sequence(embedded, inputs_length)
 
         # Get current hidden state from inputs word and last hidden state
+        if z is not None:
+            hidden_state = torch.cat((hidden_state, z), dim=2)
+
         outputs, hidden_state = self.rnn(embedded, hidden_state)
 
         if inputs_length is not None:
@@ -120,9 +127,9 @@ class LuongAttnDecoder(nn.Module):
             h_attn_output, h_attn_weights = self.h_attn(outputs, h_encoder_outputs, h_decoder_lengths)
 
         if h_attn_output is not None:
-            outputs = self.linear(h_attn_output)
+            outputs = self.out_linear(h_attn_output)
         else:
-            outputs = self.linear(outputs)
+            outputs = self.out_linear(outputs)
 
         # log softmax
         outputs = self.softmax(outputs)

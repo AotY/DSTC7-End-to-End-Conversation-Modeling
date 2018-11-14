@@ -23,7 +23,7 @@ from modules.early_stopping import EarlyStopping
 from gensim.models import KeyedVectors
 
 from misc.vocab import Vocab
-from kg_model import KGModel
+from lv import LV
 from misc.dataset import Dataset
 from train_opt import data_set_opt, model_opt, train_opt
 
@@ -44,7 +44,8 @@ opt = parser.parse_args()
 
 # logger file
 time_str = time.strftime('%Y-%m-%d_%H:%M')
-opt.log_path = opt.log_path.format(opt.model_type, time_str, opt.turn_num, opt.turn_type)
+opt.log_path = opt.log_path.format(
+    opt.model_type, time_str, opt.turn_num, opt.turn_type)
 logger.info('log_path: {}'.format(opt.log_path))
 
 device = torch.device(opt.device)
@@ -59,8 +60,10 @@ if opt.seed:
 if opt.turn_type == 'concat':
     opt.c_max_len = opt.c_max_len + opt.turn_num
 
+logger.info('LV model')
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
+
 
 def train_epochs(model,
                  dataset,
@@ -78,13 +81,15 @@ def train_epochs(model,
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
-            f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
+                conversation_texts, response_texts, \
+                f_embedded_inputs, f_embedded_inputs_length, \
+                f_ids_inputs, f_ids_inputs_length, facts_texts, \
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                    'train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
+                                   epoch,
                                    h_inputs,
                                    h_turns_length,
                                    h_inputs_length,
@@ -106,17 +111,12 @@ def train_epochs(model,
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
                 logger_str = '\ntrain ---> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % (epoch, timeSince(start, load / max_load),
-                                                                                load, load / max_load * 100, log_loss_avg,
-                                                                                log_accuracy_avg, math.exp(log_loss_avg))
+                                                                                                     load, load / max_load * 100, log_loss_avg,
+                                                                                                     log_accuracy_avg, math.exp(log_loss_avg))
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
                 log_accuracy_total = 0
-
-                #  logger.info('---------generate-------------')
-                #  decode(model, dataset, vocab)
-
-        #  optimizer.update(log_loss_avg, epoch)
 
         # save model of each epoch
         save_state = {
@@ -137,7 +137,8 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '\nevaluate ---> loss: %.4f acc: %.4f ppl: %.4f' % (evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
+        logger_str = '\nevaluate ---> loss: %.4f acc: %.4f ppl: %.4f' % (
+            evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
         logger.info(logger_str)
         save_logger(logger_str)
 
@@ -151,9 +152,8 @@ def train_epochs(model,
             sys.exit(0)
 
 
-''' start traing '''
-
 def train(model,
+          epoch,
           h_inputs,
           h_turns_length,
           h_inputs_length,
@@ -173,12 +173,13 @@ def train(model,
     model.train()
 
     # [max_len, batch_size, vocab_size]
-    decoder_outputs = model(
+    decoder_outputs, mean, logvar = model(
         h_inputs,
         h_turns_length,
         h_inputs_length,
         h_inputs_position,
         decoder_inputs,
+        decoder_targets,
         decoder_inputs_length,
         f_embedded_inputs,
         f_embedded_inputs_length,
@@ -205,15 +206,23 @@ def train(model,
     decoder_targets = decoder_targets.view(-1)
 
     # compute loss
-    #  print(decoder_outputs.shape)
-    loss = criterion(decoder_outputs, decoder_targets)
-    #  print(loss)
+    nll_loss = criterion(decoder_outputs, decoder_targets)
+
+    kl_weighted_loss, kl_weight, kl_loss = kl_loss_fn(
+        mean,
+        logvar,
+        kl_anneal=opt.kl_anneal,
+        global_step=epoch,
+        epoch=epoch,
+        kla_k=opt.kla_k,
+        kla_x0=opt.kla_x0,
+        denom=opt.kla_denom
+    )
+
+    loss = nll_loss + kl_weighted_loss
 
     # backward
     loss.backward()
-
-    # clip gradients
-    #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_norm)
 
     # optimizer
     optimizer.step_and_update_lr()
@@ -223,9 +232,11 @@ def train(model,
 
     return return_loss, accuracy
 
+
 '''
 evaluate model.
 '''
+
 
 def evaluate(model,
              dataset,
@@ -233,27 +244,28 @@ def evaluate(model,
 
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    loss_total=0
-    accuracy_total=0
-    max_load=int(np.ceil(dataset.n_eval / opt.batch_size))
+    loss_total = 0
+    accuracy_total = 0
+    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
     dataset.reset_data('test')
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
-            f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
+                conversation_texts, response_texts, \
+                f_embedded_inputs, f_embedded_inputs_length, \
+                f_ids_inputs, f_ids_inputs_length, facts_texts, \
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                    'test', opt.batch_size)
 
             # train and get cur loss
-            decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            decoder_outputs=model.evaluate(
+            decoder_outputs, _, _ = model(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
                 h_inputs_position,
-                decoder_input,
+                decoder_inputs,
+                decoder_targets,
                 f_embedded_inputs,
                 f_embedded_inputs_length,
                 f_ids_inputs,
@@ -264,13 +276,15 @@ def evaluate(model,
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
             decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-            accuracy = compute_accuracy(decoder_outputs_argmax, decoder_targets)
+            accuracy = compute_accuracy(
+                decoder_outputs_argmax, decoder_targets)
 
             #  Compute loss
-            decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
+            decoder_outputs = decoder_outputs.view(-1,
+                                                   decoder_outputs.shape[-1])
             decoder_targets = decoder_targets.view(-1)
 
-            loss=criterion(decoder_outputs,
+            loss = criterion(decoder_outputs,
                              decoder_targets)
 
             loss_total += loss.item()
@@ -288,15 +302,17 @@ def decode(model, dataset, vocab):
         for load in range(1, max_load + 1):
 
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
-            f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
+                conversation_texts, response_texts, \
+                f_embedded_inputs, f_embedded_inputs_length, \
+                f_ids_inputs, f_ids_inputs_length, facts_texts, \
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                    'eval', opt.batch_size)
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
-            decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            greedy_outputs, beam_outputs = model.decode(
+            decoder_input = torch.ones(
+                (1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
+            greedy_outputs, beam_outputs = model.inference(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
@@ -313,12 +329,11 @@ def decode(model, dataset, vocab):
                 opt.beam_width,
                 opt.best_n)
 
-            #  print(beam_outputs)
             # generate sentence, and save to file
             # [max_length, batch_size]
             greedy_texts = dataset.generating_texts(greedy_outputs,
-                                                   opt.batch_size,
-                                                   'greedy')
+                                                    opt.batch_size,
+                                                    'greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   opt.batch_size,
@@ -330,27 +345,46 @@ def decode(model, dataset, vocab):
                                          response_texts,
                                          greedy_texts,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
+                                         os.path.join(opt.save_path, 'generated/generated_%s_%s_%s_%d_%s.txt' % (
+                                             opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
 
+
+def kl_anneal_function(**kwargs):
+    """ Returns the weight of for calculating the weighted KL Divergence."""
+    if kwargs['kl_anneal'] == 'logistic':
+        """ https://en.wikipedia.org/wiki/Logistic_function """
+        weight = float(1 / (1 + np.exp(-kwargs['k']*(kwargs['global_step']- kwargs['x0']))))
+    elif kwargs['kl_anneal'] == 'step':
+        weight = kwargs['epoch'] / kwargs['denom']
+
+    return weight
+
+def kl_loss_fn(mean, logvar, **kwargs):
+    """Calculate the ELBO, consiting of the Negative Log Likelihood and KL Divergence. """
+
+    kl_loss = -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
+
+    kl_weight = kl_anneal_function(**kwargs)
+
+    kl_weighted_loss = kl_weight * kl_loss
+
+    return kl_weighted_loss, kl_weight, kl_loss
 
 
 def compute_accuracy(decoder_outputs_argmax, decoder_targets):
     """
     decoder_targets: [seq_len, batch_size]
     """
-    #  print('---------------------->\n')
-    #  print(decoder_outputs_argmax.shape)
-    #  print(decoder_targets.shape)
-
     match_tensor = (decoder_outputs_argmax == decoder_targets).long()
 
     decoder_mask = (decoder_targets != 0).long()
 
     accuracy_tensor = match_tensor * decoder_mask
 
-    accuracy = float(torch.sum(accuracy_tensor)) / float(torch.sum(decoder_mask))
+    accuracy = float(torch.sum(accuracy_tensor)) / \
+        float(torch.sum(decoder_mask))
 
     return accuracy
 
@@ -362,24 +396,13 @@ def save_logger(logger_str):
     with open(opt.log_path, 'a', encoding='utf-8') as f:
         f.write(logger_str)
 
-def build_optimizer(model):
-    #  optim = torch.optim.Adam(
-        #  model.parameters(),
-        #  lr=opt.lr,
-        #  betas=(0.9, 0.999)
-    #  )
-    #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
-    #  optimizer = Optimizer(
-        #  optim,
-        #  opt.max_norm
-    #  )
-    #  optimizer.set_scheduler(scheduler)
 
+def build_optimizer(model):
     optimizer = ScheduledOptimizer(
         torch.optim.Adam(
             filter(lambda x: x.requires_grad, model.parameters()),
             betas=(0.9, 0.98), eps=1e-09),
-        opt.hidden_size, 
+        opt.hidden_size,
         opt.n_warmup_steps,
         opt.max_norm
     )
@@ -394,83 +417,66 @@ def build_criterion(padid):
 
     return criterion
 
-def cal_loss(pred, gold, smoothing, padid=0):
-    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
-
-    gold = gold.contiguous().view(-1)
-
-    if smoothing:
-        eps = 0.1
-        n_class = pred.size(1)
-
-        one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
-        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
-        log_prb = F.log_softmax(pred, dim=1)
-
-        non_pad_mask = gold.ne(padid)
-        loss = -(one_hot * log_prb).sum(dim=1)
-        loss = loss.masked_select(non_pad_mask).sum()  # average later
-    else:
-        loss = F.cross_entropy(pred, gold, ignore_index=padid, reduction='sum')
-
-    return loss
-
 def build_model(vocab_size, padid):
     logger.info('Building model...')
 
     pre_trained_weight = None
     if opt.pre_trained_embedding and os.path.exists(opt.pre_trained_embedding):
         logger.info('load pre trained embedding...')
-        pre_trained_weight = torch.from_numpy(np.load(opt.pre_trained_embedding))
+        pre_trained_weight = torch.from_numpy(
+            np.load(opt.pre_trained_embedding))
 
-    model = KGModel(
-                opt.model_type,
-                vocab_size,
-                opt.c_max_len,
-                opt.pre_embedding_size,
-                opt.embedding_size,
-                opt.share_embedding,
-                opt.rnn_type,
-                opt.hidden_size,
-                opt.num_layers,
-                opt.encoder_num_layers,
-                opt.decoder_num_layers,
-                opt.bidirectional,
-				opt.turn_num,
-				opt.turn_type,
-				opt.decoder_type,
-                opt.attn_type,
-                opt.dropout,
-                padid,
-                opt.tied,
-                device,
-                pre_trained_weight
-        )
+    model = LV(
+        opt.model_type,
+        vocab_size,
+        opt.c_max_len,
+        opt.pre_embedding_size,
+        opt.embedding_size,
+        opt.share_embedding,
+        opt.rnn_type,
+        opt.hidden_size,
+        opt.latent_size,
+        opt.num_layers,
+        opt.encoder_num_layers,
+        opt.decoder_num_layers,
+        opt.bidirectional,
+        opt.turn_num,
+        opt.turn_type,
+        opt.decoder_type,
+        opt.attn_type,
+        opt.dropout,
+        padid,
+        opt.tied,
+        device,
+        pre_trained_weight
+    )
 
     model = model.to(device)
 
     print(model)
     return model
 
+
 def build_dataset(vocab):
     dataset = Dataset(
-                opt.model_type,
-                opt.pair_path,
-                opt.c_max_len,
-                opt.r_max_len,
-                opt.min_len,
-                opt.f_max_len,
-                opt.f_topk,
-                vocab,
-                opt.save_path,
-                opt.turn_num,
-                opt.min_turn,
-                opt.turn_type,
-                opt.eval_split,  # how many hold out as eval data
-                opt.test_split,
-                opt.batch_size,
-                device,
-                logger)
+        opt.model_type,
+        opt.pair_path,
+        opt.c_max_len,
+        opt.r_max_len,
+        opt.min_len,
+        opt.f_max_len,
+        opt.f_topk,
+        vocab,
+        opt.save_path,
+        opt.turn_num,
+        opt.min_turn,
+        opt.turn_type,
+        opt.eval_split,  # how many hold out as eval data
+        opt.test_split,
+        opt.batch_size,
+        device,
+        logger
+    )
 
     return dataset
 
@@ -487,25 +493,28 @@ def save_checkpoint(state, is_best, filename):
     if is_best:
         shutil.copy(filename, 'model_best_%s.pth' % opt.model_type)
 
+
 def load_fasttext_model(vec_file):
     fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
     return fasttext
 
+
 def load_checkpoint(filename):
-    checkpoint=torch.load(filename)
+    checkpoint = torch.load(filename)
     return checkpoint
 
+
 def asMinutes(s):
-    m=math.floor(s / 60)
+    m = math.floor(s / 60)
     s -= m * 60
     return '%dm %ds' % (m, s)
 
 
 def timeSince(since, percent):
-    now=time.time()
-    s=now - since
-    es=s / (percent)
-    rs=es - s
+    now = time.time()
+    s = now - since
+    es = s / (percent)
+    rs = es - s
     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
 
 
@@ -563,7 +572,8 @@ if __name__ == '__main__':
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
-        logger_str = '\nevaluate ---------------------------------> loss: %.4f ppl: %.4f' % (loss, ppl)
+        logger_str = '\nevaluate ---------------------------------> loss: %.4f ppl: %.4f' % (
+            loss, ppl)
         logger.info(logger_str)
 
     if opt.task == 'train':
@@ -575,8 +585,8 @@ if __name__ == '__main__':
                      early_stopping=early_stopping)
     elif opt.task == 'eval':
         evaluate(model,
-                dataset,
-                criterion)
+                 dataset,
+                 criterion)
     elif opt.task == 'decode':
         decode(model, dataset, vocab)
     else:

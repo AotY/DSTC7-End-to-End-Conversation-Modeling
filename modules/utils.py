@@ -12,6 +12,7 @@ import torch.nn as nn
     Utils
 """
 
+
 # orthogonal initialization
 def init_gru_orth(model, gain=1):
     model.reset_parameters()
@@ -30,9 +31,9 @@ def init_lstm_orth(model, gain=1):
         hh_b[l // 4 : l // 2].data.fill_(1.0)
 
 def init_linear_wt(linear):
-    init_wt_normal(linear.weight, linear.out_features)
+    init_wt_normal(linear.weight, linear.in_features)
     if linear.bias is not None:
-        init_wt_normal(linear.bias, linear.out_features)
+        init_wt_normal(linear.bias, linear.in_features)
 
 def init_wt_normal(weight, dim=512):
     weight.data.normal_(mean=0, std=np.sqrt(2.0 / dim))
