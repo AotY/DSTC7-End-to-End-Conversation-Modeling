@@ -23,7 +23,6 @@ class LV(nn.Module):
     generating responses on both conversation history and external "facts", allowing the model
     to be versatile and applicable in an open-domain setting.
     '''
-
     def __init__(self,
                  model_type,
                  vocab_size,
@@ -138,19 +137,18 @@ class LV(nn.Module):
                 init_wt_normal(decoder_embedding.weight,
                                decoder_embedding.embedding_dim)
 
-        self.decoder = self.build_decoder(
-            decoder_type,
-            vocab_size,
-            decoder_embedding,
-            rnn_type,
-            hidden_size,
-            num_layers,
-            dropout,
-            tied,
-            turn_type,
-            attn_type,
-            device
-        )
+        self.decoder = LuongAttnDecoder(vocab_size,
+                                   decoder_embedding,
+                                   rnn_type,
+                                   hidden_size,
+                                   num_layers,
+                                   dropout,
+                                   tied,
+                                   turn_type,
+                                   attn_type,
+                                   device,
+                                   latent_size)
+
 
     def forward(self,
                 h_inputs,
@@ -378,30 +376,3 @@ class LV(nn.Module):
         u_ = u_.transpose(0, 1).contiguous()
         return u_
 
-    """build decoder"""
-
-    def build_decoder(self,
-                      decoder_type,
-                      vocab_size,
-                      embedding,
-                      rnn_type,
-                      hidden_size,
-                      num_layers,
-                      dropout,
-                      tied,
-                      turn_type,
-                      attn_type,
-                      device):
-
-        decoder = LuongAttnDecoder(vocab_size,
-                                   embedding,
-                                   rnn_type,
-                                   hidden_size,
-                                   num_layers,
-                                   dropout,
-                                   tied,
-                                   turn_type,
-                                   attn_type,
-                                   device)
-
-        return decoder

@@ -68,8 +68,12 @@ class LuongAttnDecoder(nn.Module):
         if self.turn_type == 'weight':
             self.h_attn = Attention(hidden_size)
 
+        if latent_size > 0:
+            self.latent_linear = nn.Linear(hidden_size + latent_size, hidden_size)
+            init_linear_wt(self.latent_linear)
+
         # out_linear
-        self.out_linear = nn.out_linear(hidden_size + latent_size, vocab_size)
+        self.out_linear = nn.Linear(hidden_size, vocab_size)
 
         if tied and self.embedding_size == hidden_size:
             self.out_linear.weight = self.embedding.weight
@@ -121,14 +125,18 @@ class LuongAttnDecoder(nn.Module):
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
-        h_attn_output = None
+        h_attn_outputs = None
         h_attn_weights = None
         if h_encoder_outputs is not None and h_decoder_lengths is not None:
-            h_attn_output, h_attn_weights = self.h_attn(outputs, h_encoder_outputs, h_decoder_lengths)
+            h_attn_outputs, h_attn_weights = self.h_attn(outputs, h_encoder_outputs, h_decoder_lengths)
 
-        if h_attn_output is not None:
-            outputs = self.out_linear(h_attn_output)
+        if h_attn_outputs is not None:
+            if self.latent_size > 0:
+                outputs = self.latent_linear(h_attn_outputs)
+            outputs = self.out_linear(h_attn_outputs)
         else:
+            if self.latent_size > 0:
+                outputs = self.latent_linear(outputs)
             outputs = self.out_linear(outputs)
 
         # log softmax
