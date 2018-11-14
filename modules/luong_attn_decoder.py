@@ -11,7 +11,7 @@
 import torch
 import torch.nn as nn
 
-from modules.utils import init_wt_normal, init_linear_wt
+from modules.utils import init_linear_wt
 from modules.utils import init_lstm_orth, init_gru_orth
 from modules.attention import Attention
 from modules.utils import rnn_factory
@@ -112,7 +112,6 @@ class LuongAttnDecoder(nn.Module):
 
         if inputs_length is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         h_attn_output = None
