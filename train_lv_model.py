@@ -122,6 +122,7 @@ def train_epochs(model,
         save_state = {
             'loss': log_loss_avg,
             'ppl': math.exp(log_loss_avg),
+            'acc': log_accuracy_avg,
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.optimizer.state_dict()
@@ -572,8 +573,9 @@ if __name__ == '__main__':
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
-        logger_str = '\nevaluate ---------------------------------> loss: %.4f ppl: %.4f' % (
-            loss, ppl)
+        acc = checkpoint['acc']
+        logger_str = '\nevaluate ---------------> loss: %.4f acc: %.4f ppl: %.4f' % (
+            loss, acc, ppl)
         logger.info(logger_str)
 
     if opt.task == 'train':
