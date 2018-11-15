@@ -180,6 +180,7 @@ class KGModel(nn.Module):
                 f_embedded_inputs_length,
                 f_ids_inputs,
                 f_ids_inputs_length,
+                f_topks_length,
                 batch_size,
                 r_max_len,
                 teacher_forcing_ratio):
@@ -191,6 +192,9 @@ class KGModel(nn.Module):
 
             decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
+            f_ids_inputs: [f_max_len, batch_size, topk]
+            f_ids_inputs_length: [f_max_len, batch_size, topk]
+            f_topks_length: [batch_size]
             f_embedded_inputs: [batch_size, r_max_len, topk]
             f_embedded_inputs_length: [batch_size]
         '''
@@ -214,6 +218,7 @@ class KGModel(nn.Module):
                                                   f_embedded_inputs_length,
                                                   f_ids_inputs,
                                                   f_ids_inputs_length,
+                                                  f_topks_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -260,6 +265,7 @@ class KGModel(nn.Module):
                  f_embedded_inputs_length,
                  f_ids_inputs,
                  f_ids_inputs_length,
+                 f_topks_length,
                  r_max_len,
                  batch_size):
         '''
@@ -285,6 +291,7 @@ class KGModel(nn.Module):
                                                   f_embedded_inputs_length,
                                                   f_ids_inputs,
                                                   f_ids_inputs_length,
+                                                  f_topks_length,
                                                   decoder_hidden_state,
                                                   batch_size)
 
@@ -316,6 +323,7 @@ class KGModel(nn.Module):
                f_embedded_inputs_length,
                f_ids_inputs,
                f_ids_inputs_length,
+               f_topks_length,
                decode_type,
                r_max_len,
                eosid,
@@ -342,6 +350,7 @@ class KGModel(nn.Module):
                                                   f_embedded_inputs_length,
                                                   f_ids_inputs,
                                                   f_ids_inputs_length,
+                                                  f_topks_length,
                                                   decoder_hidden_state,
                                                   batch_size)
         # decoder
@@ -453,13 +462,13 @@ class KGModel(nn.Module):
                 session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # [1, batch_size, hidden_size]
                 return session_outputs, session_hidden_state, h_turns_length
 
-
     def f_forward(self,
                   f_embedded_inputs,
                   f_embedded_inputs_length,
                   f_ids_inputs,
                   f_ids_inputs_length,
-                  hidden_state,
+                  f_topks_length,
+                  decoder_hidden_state,
                   batch_size):
         """
         Args:
@@ -470,30 +479,54 @@ class KGModel(nn.Module):
             -hidden_state: [num_layers, batch_size, hidden_size]
         """
 
+        f_outputs = list()
+        for bi in range(batch_size):
+            f_ids_input = f_ids_inputs[:, bi, :] # [f_max_len, topk]
+            f_ids_input_length = f_ids_inputs_length[bi, :] # [topk]
+
+            outputs, hidden_state = self.self_attn_encoder(
+                f_ids_input,
+                f_ids_input_length
+            ) # [1, topk, hidden_size]
+
+            outputs = outputs.transpose(0, 1) # [topk, 1, hidden_size]
+
+            f_topk_length = f_topks_length[bi].view(1)
+            session_outputs, session_hidden_state = self.session_encoder(
+                outputs,
+                f_topk_length
+            ) # [topk, 1, hidden_size]
+
+            f_outputs.append(session_outputs.squeeze(1))
+
+        f_outputs = torch.stack(f_outputs, dim=0) # [batch_size, topk, hidden_size]
+
         # [batch_size, topk, embedding_size] -> [batch_size, topk, hidden_size]
-        if self.pre_embedding_size != self.hidden_size:
-            f_embedded_inputs = self.f_embedded_linear(f_embedded_inputs)
+        #  if self.pre_embedding_size != self.hidden_size:
+            #  f_embedded_inputs = self.f_embedded_linear(f_embedded_inputs)
 
         # M [batch_size, topk, hidden_size]
-        fM = self.fact_linearA(f_embedded_inputs)
+        fM = self.fact_linearA(f_outputs)
 
         # C [batch_size, topk, hidden_size]
-        fC = self.fact_linearC(f_embedded_inputs)
+        fC = self.fact_linearC(f_outputs)
 
         # [batch_size, num_layers, topk]
-        tmpP = torch.bmm(hidden_state.transpose(0, 1), fM.transpose(1, 2))
+        tmpP = torch.bmm(decoder_hidden_state.transpose(0, 1), fM.transpose(1, 2))
 
-        mask = sequence_mask(f_embedded_inputs_length, max_len=tmpP.size(-1))
+        mask = sequence_mask(f_topks_length, max_len=tmpP.size(-1))
         mask = mask.unsqueeze(1)  # Make it broadcastable.
         tmpP.masked_fill_(1 - mask, -float('inf'))
 
         P = F.softmax(tmpP, dim=2)
 
         o = torch.bmm(P, fC)  # [batch_size, num_layers, hidden_size]
-        u_ = torch.add(o, hidden_state.transpose(0, 1))
+
+        u_ = torch.add(o, decoder_hidden_state.transpose(0, 1))
 
         # [num_layers, batch_size, hidden_size]
         u_ = u_.transpose(0, 1).contiguous()
+
         return u_
 
     """build decoder"""
@@ -549,4 +582,3 @@ class KGModel(nn.Module):
             )
 
         return decoder
-
