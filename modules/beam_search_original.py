@@ -99,6 +99,7 @@ def beam_decode(
 
         init_h_encoder_outputs = None
         init_h_decoder_length = None
+        init_z = None
         if h_decoder_lengths is not None:
             init_h_encoder_outputs = h_encoder_outputs[:, bi, :].unsqueeze(1).contiguous()  # [num, 1, hidden_size]
             init_h_decoder_length = h_decoder_lengths[bi].view(1)
@@ -146,6 +147,7 @@ def beam_decode(
             next_h_encoder_outputs = _inflate(init_h_encoder_outputs, beam_width, dim=1)
             next_h_decoder_length = _inflate(init_h_decoder_length, beam_width, dim=0)
 
+        next_z = None
         if z is not None:
             next_z = _inflate(init_z, beam_width, dim=1)
 

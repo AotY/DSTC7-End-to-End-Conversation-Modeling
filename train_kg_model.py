@@ -331,7 +331,7 @@ def decode(model, dataset, vocab):
                                          response_texts,
                                          greedy_texts,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/generated_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
+                                         os.path.join(opt.save_path, 'generated/kg_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
 
@@ -529,7 +529,7 @@ if __name__ == '__main__':
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
         #  filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
-        filename = os.path.join(opt.save_path, 'topk_facts_embedded.pkl')
+        filename = os.path.join(opt.save_path, 'topk_facts_embedded.rake.pkl')
         fasttext = None
         wiki_dict = None
         if not os.path.exists(filename):

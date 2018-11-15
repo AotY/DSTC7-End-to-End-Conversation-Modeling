@@ -262,8 +262,8 @@ class Dataset:
                 f_ids_inputs_length.append(f_ids_input_length)
 
                 if topk_facts_embedded is not None:
+                    topk_facts_embedded = topk_facts_embedded.squeeze(1)
                     if topk_facts_embedded.size(0) < self.f_topk:
-                        #  tmp_tensor = torch.zeros((self.f_topk, topk_facts_embedded.size(1)))
                         tmp_tensor = torch.zeros((self.f_topk, self.pre_embedding_size))
                         tmp_tensor[:topk_facts_embedded.size(0)] = topk_facts_embedded
                     elif topk_facts_embedded.size(0) >= self.f_topk:
@@ -291,7 +291,7 @@ class Dataset:
         decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long, device=self.device) #[batch_size]
 
         if self.model_type == 'kg':
-            f_embedded_inputs=torch.stack(f_embedded_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
+            f_embedded_inputs = torch.stack(f_embedded_inputs, dim=0) #[batch_size, topk, pre_embedding_size]
             f_embedded_inputs_length = torch.tensor(f_embedded_inputs_length, dtype=torch.long, device=self.device)
 
             f_ids_inputs = torch.stack(f_ids_inputs, dim=1) # [f_max_len, batch_size, f_topk]

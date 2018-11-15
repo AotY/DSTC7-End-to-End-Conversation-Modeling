@@ -267,12 +267,13 @@ def evaluate(model,
                 h_inputs_position,
                 decoder_inputs,
                 decoder_targets,
+                decoder_inputs_length,
                 f_embedded_inputs,
                 f_embedded_inputs_length,
                 f_ids_inputs,
                 f_ids_inputs_length,
+                opt.batch_size,
                 opt.r_max_len,
-                opt.batch_size
             )
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
@@ -313,7 +314,7 @@ def decode(model, dataset, vocab):
             # beam_search: [batch_sizes, best_n, len]
             decoder_input = torch.ones(
                 (1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
-            greedy_outputs, beam_outputs = model.inference(
+            greedy_outputs, beam_outputs = model.decode(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
@@ -346,7 +347,7 @@ def decode(model, dataset, vocab):
                                          response_texts,
                                          greedy_texts,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/generated_%s_%s_%s_%d_%s.txt' % (
+                                         os.path.join(opt.save_path, 'generated/lv_%s_%s_%s_%d_%s.txt' % (
                                              opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
