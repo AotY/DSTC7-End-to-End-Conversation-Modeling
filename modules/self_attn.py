@@ -71,7 +71,7 @@ class SelfAttentive(nn.Module):
         init_wt_normal(self.Ws1)
         init_wt_normal(self.Ws2)
 
-    def forward(self, inputs, lengths):
+    def forward(self, inputs, lengths=None):
         """
         Args:
             inputs: [max_len, batch_size]

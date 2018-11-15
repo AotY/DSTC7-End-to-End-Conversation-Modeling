@@ -28,7 +28,7 @@ python train_kg_model.py \
     --best_n 10 \
     --attn_type concat \
     --f_max_len 50 \
-    --f_topk 7 \
+    --f_topk 5 \
     --lr 0.001 \
     --n_warmup_steps 3000 \
     --max_norm 15.0 \
