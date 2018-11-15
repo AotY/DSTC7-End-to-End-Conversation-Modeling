@@ -50,8 +50,8 @@ python train_lv_model.py \
     --start_epoch 1 \
     --task train \
     --model_type seq2seq \
-    --share_embedding
-    # --checkpoint lv_models/checkpoint.epoch-7_seq2seq_4_sum.pth
+    --share_embedding \
+    --checkpoint lv_models/checkpoint.epoch-1_seq2seq_4_self_attn.pth \
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \

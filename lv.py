@@ -164,7 +164,7 @@ class LV(nn.Module):
                 f_ids_inputs_length,
                 batch_size,
                 r_max_len,
-                teacher_forcing_ratio):
+                teacher_forcing_ratio=1.0):
         '''
         input:
             h_inputs: # [max_len, batch_size, turn_num]
@@ -227,7 +227,7 @@ class LV(nn.Module):
 
     '''inference'''
 
-    def inference(self,
+    def decode(self,
                   h_inputs,
                   h_turns_length,
                   h_inputs_length,
