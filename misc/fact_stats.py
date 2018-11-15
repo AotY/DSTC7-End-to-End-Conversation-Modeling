@@ -64,7 +64,7 @@ def wiki_stats(facts_path):
     wiki_table_count = 0
 
     is_wiki = False
-    last_domain = None
+    last_domain = 'j5bmm'
     maybe_table = False
 
     table_filename = './wiki_table.txt'
@@ -84,6 +84,9 @@ def wiki_stats(facts_path):
     wiki_reference_dict = {}
     abstract_count = 0
 
+    facts_p_dict = {}
+    ps = []
+
     with open(facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
@@ -91,11 +94,18 @@ def wiki_stats(facts_path):
                 continue
 
             parts = line.split('\t')
-
             subreddit_name = parts[0]
             conversation_id = parts[1]
             domain_name = parts[2]
             fact = parts[3]
+
+            if fact.startswith('<p>'):
+                p = BeautifulSoup(fact, 'lxml').text
+                p = re.sub(r'\[ [\d|\w]+ ]', '', p)
+                p_words = tokenizer.tokenize(p)
+                if len(p_words) < 5 or len(p_words) > 120:
+                    continue
+                ps.append(' '.join(p_words))
 
             if fact.startswith('<title>'):
                 title_count += 1
@@ -119,8 +129,6 @@ def wiki_stats(facts_path):
 
                 references = []
                 maybe_refenrence = False
-
-                last_domain = domain_name
 
             if is_wiki and domain_name == last_domain:
                 if fact.find('jump to : navigation , search') != -1:
@@ -180,6 +188,8 @@ def wiki_stats(facts_path):
                             table.append(fact)
 
             if domain_name != last_domain or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
+                facts_p_dict[conversation_id] = ps
+                ps = []
                 if len(h2s) > 0:
                     wiki_h2_dict[conversation_id] = h2s
                     h2_count += 1
@@ -208,6 +218,8 @@ def wiki_stats(facts_path):
                 maybe_abstract = False
                 references = []
 
+            last_domain = domain_name
+
     table_file.close()
     reference_file.close()
     abstract_file.close()
@@ -224,6 +236,8 @@ def wiki_stats(facts_path):
 
     print('abstract count: %d' % abstract_count)
     print('abstract ratio: %.4f' % (abstract_count / wiki_count))
+
+    pickle.dump(facts_p_dict, open('./../data/facts_p_dict.pkl', 'wb'))
 
     pickle.dump(wiki_table_dict, open('./../data/wiki_table_dict.pkl', 'wb'))
     pickle.dump(wiki_h2_dict, open('./../data/wiki_h2_dict.pkl', 'wb'))
@@ -259,6 +273,7 @@ def wiki_stats(facts_path):
 
     pickle.dump(wiki_dict, open('./../data/wiki_dict.pkl', 'wb'))
     wiki_dict_file.close()
+
 
 
     return wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict
