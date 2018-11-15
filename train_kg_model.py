@@ -80,7 +80,7 @@ def train_epochs(model,
             decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, facts_texts, \
+            f_ids_inputs, f_ids_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
 
             # train and get cur loss
@@ -96,6 +96,7 @@ def train_epochs(model,
                                    f_embedded_inputs_length,
                                    f_ids_inputs,
                                    f_ids_inputs_length,
+                                   f_topks_length,
                                    optimizer,
                                    criterion,
                                    vocab)
@@ -166,6 +167,7 @@ def train(model,
           f_embedded_inputs_length,
           f_ids_inputs,
           f_ids_inputs_length,
+          f_topks_length,
           optimizer,
           criterion,
           vocab):
@@ -185,6 +187,7 @@ def train(model,
         f_embedded_inputs_length,
         f_ids_inputs,
         f_ids_inputs_length,
+        f_topks_length,
         opt.batch_size,
         opt.r_max_len,
         opt.teacher_forcing_ratio
@@ -208,13 +211,9 @@ def train(model,
     # compute loss
     #  print(decoder_outputs.shape)
     loss = criterion(decoder_outputs, decoder_targets)
-    #  print(loss)
 
     # backward
     loss.backward()
-
-    # clip gradients
-    #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_norm)
 
     # optimizer
     optimizer.step_and_update_lr()
@@ -244,7 +243,7 @@ def evaluate(model,
             decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, facts_texts, \
+            f_ids_inputs, f_ids_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
@@ -259,6 +258,7 @@ def evaluate(model,
                 f_embedded_inputs_length,
                 f_ids_inputs,
                 f_ids_inputs_length,
+                f_topks_length,
                 opt.r_max_len,
                 opt.batch_size
             )
@@ -291,7 +291,7 @@ def decode(model, dataset, vocab):
             decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
             f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, facts_texts, \
+            f_ids_inputs, f_ids_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
 
             # greedy: [batch_size, r_max_len]
@@ -307,6 +307,7 @@ def decode(model, dataset, vocab):
                 f_embedded_inputs_length,
                 f_ids_inputs,
                 f_ids_inputs_length,
+                f_topks_length,
                 opt.decode_type,
                 opt.r_max_len,
                 vocab.eosid,

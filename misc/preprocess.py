@@ -423,8 +423,8 @@ if __name__ == '__main__':
         #  stat_frequency(responses, ['responses'], 0, 0, logger)
 
         # share a vocab
-        datas = conversations + responses
-        datas_name = ['conversations', 'responses']
+        #  datas = conversations + responses
+        #  datas_name = ['conversations', 'responses']
 
         #  read facts
         raw_facts, facts, facts_hash_values, \
@@ -452,8 +452,8 @@ if __name__ == '__main__':
         #  save_distribution(facts_length_distribution, 'facts')
         #  stat_frequency(facts, ['facts'], 0, 0, logger)
 
-        #  datas = conversations + responses + facts
-        #  datas_name = ['conversations', 'responses', 'facts']
+        datas = conversations + responses + facts
+        datas_name = ['conversations', 'responses', 'facts']
 
         sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
             datas, datas_name, opt.min_count, opt.vocab_size, logger)
