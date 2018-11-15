@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=7
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -31,7 +31,7 @@ python train_kg_model.py \
     --f_topk 7 \
     --lr 0.001 \
     --n_warmup_steps 3000 \
-    --max_norm 20.0 \
+    --max_norm 15.0 \
     --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
@@ -45,8 +45,8 @@ python train_kg_model.py \
     --start_epoch 1 \
     --task train \
     --model_type kg \
-    --share_embedding
-    --checkpoint kg_models/checkpoint.epoch-1_kg_4_self_attn.pth
+    --share_embedding \
+    # --checkpoint kg_models/checkpoint.epoch-1_kg_4_self_attn.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \
