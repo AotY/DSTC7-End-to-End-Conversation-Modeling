@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_seq2seq.60004.dict \
+    --vocab_path data/vocab_word2idx_kg.60004.dict \
     --turn_num 4 \
     --min_turn 2 \
     --turn_type self_attn \
@@ -26,7 +26,7 @@ python train_kg_model.py \
     --decode_type beam_search \
     --beam_width 32 \
     --best_n 10 \
-    --attn_type concat \
+    --attn_type dot \
     --f_max_len 50 \
     --f_topk 5 \
     --lr 0.001 \
@@ -38,15 +38,15 @@ python train_kg_model.py \
     --seed 7 \
     --device cuda \
     --log_interval 30 \
-    --log_path ./kg_logs/{}_{}_{}_{}.log \
-    --model_path ./kg_models \
+    --log_path ./logs/{}_{}_{}_{}.log \
+    --model_path ./models \
     --eval_split 0.0007 \
     --test_split 0.06 \
     --start_epoch 1 \
-    --task train \
-    --model_type kg \
+    --task decode \
+    --model_type seq2seq \
     --share_embedding \
-    # --checkpoint kg_models/checkpoint.epoch-1_kg_4_self_attn.pth
+    --checkpoint models/checkpoint.epoch-5_seq2seq_4_self_attn.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \
