@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.utils import rnn_factory
-from modules.utils import init_wt_normal, init_linear_wt
+from modules.utils import init_wt_unif, init_linear_wt
 from modules.utils import init_gru_orth, init_lstm_orth
 from modules.utils import sequence_mask
 
@@ -68,8 +68,8 @@ class SelfAttentive(nn.Module):
         self.Ws1 = nn.Parameter(torch.Tensor(1, mlp_input_size, self.bidirection_num * self.hidden_size))
         self.Ws2 = nn.Parameter(torch.Tensor(1, attn_hops, mlp_input_size))
 
-        init_wt_normal(self.Ws1)
-        init_wt_normal(self.Ws2)
+        init_wt_unif(self.Ws1)
+        init_wt_unif(self.Ws2)
 
     def forward(self, inputs, lengths=None):
         """

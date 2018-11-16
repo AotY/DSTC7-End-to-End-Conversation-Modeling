@@ -436,9 +436,12 @@ class Dataset:
                 sentence_embedded.append(word_embedded)
             except KeyError:
                 continue
-        sentence_embedded = torch.stack(sentence_embedded, dim=0) # [len, pre_embedding_size]
 
-        mean_sentence_embedded = sentence_embedded.mean(dim=0) # [pre_embedding_size]
+        if len(sentence_embedded) > 0:
+            sentence_embedded = torch.stack(sentence_embedded, dim=0) # [len, pre_embedding_size]
+            mean_sentence_embedded = sentence_embedded.mean(dim=0) # [pre_embedding_size]
+        else:
+            mean_sentence_embedded = torch.zeros(self.pre_embedding_size, device=self.device)
         return mean_sentence_embedded
 
     def get_facts_weight(self, facts):
