@@ -553,7 +553,8 @@ if __name__ == '__main__':
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
-        acc = checkpoint['acc']
+        #  acc = checkpoint['acc']
+        acc = 0.0
         logger_str = '\nevaluate ---------------> loss: %.4f acc: %.4f ppl: %.4f' % (
             loss, acc, ppl)
         logger.info(logger_str)

@@ -67,8 +67,6 @@ class Beam(object):
         """
         prediction = list()
 
-        # import ipdb
-        # ipdb.set_trace()
         # Initialize for length of top-k sequences
         length = [[self.max_len] * self.beam_width for _ in range(self.batch_size)]
 
@@ -78,6 +76,7 @@ class Beam(object):
 
         # Initialize sequence scores
         top_k_score = top_k_score.clone()
+        #  print("top_k_score: ", top_k_score.shape)
 
         n_eos_in_batch = [0] * self.batch_size
 
@@ -97,7 +96,11 @@ class Beam(object):
 
             # Indices of ended sequences
             # [< batch_size x beam]
-            eos_indices = self.token_ids[t].data.eq(self.eosid).nonzero()
+            #  print('token_ids[t]: ', self.token_ids[t].shape)
+            #  print(self.token_ids[t])
+
+            eos_indices = self.token_ids[t].eq(self.eosid).nonzero()
+            #  print('eos_indics: ', eos_indices.shape)
 
             # For each batch_size, every time we see an EOS in the backtracking process,
             # If not all sequences are ended
@@ -105,7 +108,7 @@ class Beam(object):
             # if all sequences are ended
             #    lowest scored ended sequence <- detected ended sequence
             if eos_indices.dim() > 0:
-                # Loop over all EOS at current step
+                # Loop over all eosid at current step
                 for i in range(eos_indices.size(0) - 1, -1, -1):
                     # absolute index of detected ended sequence
                     eos_idx = eos_indices[i, 0].item()
@@ -156,6 +159,4 @@ class Beam(object):
         prediction = torch.stack(prediction, 2)
 
         return prediction, final_score, length
-
-
 

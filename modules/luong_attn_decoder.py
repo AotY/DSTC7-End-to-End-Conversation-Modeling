@@ -72,13 +72,13 @@ class LuongAttnDecoder(nn.Module):
             self.latent_linear = nn.Linear(hidden_size + latent_size, hidden_size)
             init_linear_wt(self.latent_linear)
 
-        # out_linear
-        self.out_linear = nn.Linear(hidden_size, vocab_size)
+        # linear
+        self.linear = nn.Linear(hidden_size, vocab_size)
 
         if tied and self.embedding_size == hidden_size:
-            self.out_linear.weight = self.embedding.weight
+            self.linear.weight = self.embedding.weight
         else:
-            init_linear_wt(self.out_linear)
+            init_linear_wt(self.linear)
 
         # log softmax
         self.softmax = nn.LogSoftmax(dim=2)
@@ -100,8 +100,9 @@ class LuongAttnDecoder(nn.Module):
 			h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
             h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
         '''
-        print(inputs.shape)
-        print(inputs_length)
+        #  print("input: ", inputs.shape)
+        #  print("hidden_state: ", hidden_state.shape)
+        #  print(inputs_length)
         if inputs_length is not None:
             # sort inputs_length
             inputs_length, sorted_indexes = torch.sort(inputs_length, dim=0, descending=True)
@@ -135,11 +136,11 @@ class LuongAttnDecoder(nn.Module):
         if h_attn_outputs is not None:
             if self.latent_size > 0:
                 outputs = self.latent_linear(h_attn_outputs)
-            outputs = self.out_linear(h_attn_outputs)
+            outputs = self.linear(h_attn_outputs)
         else:
             if self.latent_size > 0:
                 outputs = self.latent_linear(outputs)
-            outputs = self.out_linear(outputs)
+            outputs = self.linear(outputs)
 
         # log softmax
         outputs = self.softmax(outputs)
