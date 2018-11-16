@@ -198,7 +198,7 @@ class KGModel(nn.Module):
             f_embedded_inputs_length: [batch_size]
         '''
 
-        h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
+        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
@@ -229,7 +229,7 @@ class KGModel(nn.Module):
             decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
                                                                                decoder_hidden_state,
                                                                                h_encoder_outputs,
-                                                                               h_decoder_lengths,
+                                                                               h_encoder_lengths,
                                                                                decoder_inputs_length)
             return decoder_outputs
 
@@ -241,7 +241,7 @@ class KGModel(nn.Module):
                                                                                   decoder_hidden_state,
                                                                                   None,
                                                                                   h_encoder_outputs,
-                                                                                  h_decoder_lengths)
+                                                                                  h_encoder_lengths)
 
                 decoder_outputs.append(decoder_output)
                 decoder_input = torch.argmax(
@@ -271,7 +271,7 @@ class KGModel(nn.Module):
         c_encoder_inputs: [seq_len, batch_size], maybe [r_max_len, 1]
         decoder_input: [1, batch_size], maybe: [sos * 1]
         '''
-        h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
+        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
@@ -300,7 +300,7 @@ class KGModel(nn.Module):
             decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
                                                                    decoder_hidden_state,
                                                                    h_encoder_outputs,
-                                                                   h_decoder_lengths)
+                                                                   h_encoder_lengths)
 
             decoder_input = torch.argmax(
                 decoder_output, dim=2).detach()  # [1, batch_size]
@@ -330,7 +330,7 @@ class KGModel(nn.Module):
                beam_width,
                best_n):
 
-        h_encoder_outputs, h_encoder_hidden_state, h_decoder_lengths = self.h_forward(
+        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
@@ -362,7 +362,7 @@ class KGModel(nn.Module):
             decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
                                                                               decoder_hidden_state,
                                                                               h_encoder_outputs,
-                                                                              h_decoder_lengths)
+                                                                              h_encoder_lengths)
 
             input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
             greedy_outputs.append(input)
@@ -378,7 +378,7 @@ class KGModel(nn.Module):
         beam_outputs, _, _ = self.beam_decode(
             decoder_hidden_state,
             h_encoder_outputs,
-            h_decoder_lengths,
+            h_encoder_lengths,
             r_max_len,
             beam_width,
             batch_size,
@@ -390,9 +390,9 @@ class KGModel(nn.Module):
         return greedy_outputs, beam_outputs
 
     def beam_decode(self,
-                    decoder_hidden_state=None,
+                    hidden_state=None,
                     h_encoder_outputs=None,
-                    h_decoder_lengths=None,
+                    h_encoder_lengths=None,
                     r_max_len=35,
                     beam_width=8,
                     batch_size=128,
@@ -400,26 +400,27 @@ class KGModel(nn.Module):
                     eosid=3):
         """
         Args:
-            decoder_hidden_state : [num_layers, batch_size, hidden_size] (optional)
-            h_encoder_outputs : [batch_size, max_len, hidden_size]
-            h_decoder_lengths : [batch_size] (optional)
+            hidden_state : [num_layers, batch_size, hidden_size] (optional)
+            h_encoder_outputs : [max_len, batch_size, hidden_size]
+            h_encoder_lengths : [batch_size] (optional)
+
         Return:
-            output   : [batch_size, seq_len]
+            prediction: [batch_size, beam, max_len]
         """
-        #  print('decoder_hidden_state: ', decoder_hidden_state.shape)
+        #  print('hidden_state: ', hidden_state.shape)
         # [1, batch_size x beam_width]
         input = torch.ones((1, batch_size * beam_width), dtype=torch.long, device=self.device) * sosid
         #  print("input: ", input.shape)
 
         # [num_layers, batch_size x beam_width, hidden_size]
-        hidden_state = decoder_hidden_state.repeat(1, beam_width, 1)
+        hidden_state = hidden_state.repeat(1, beam_width, 1)
         #  print('hidden_state: ', hidden_state.shape)
 
         if h_encoder_outputs is not None:
             h_encoder_outputs = h_encoder_outputs.repeat(1, beam_width, 1)
-            h_decoder_lengths = h_decoder_lengths.repeat(beam_width)
+            h_encoder_lengths = h_encoder_lengths.repeat(beam_width)
             #  print('h_encoder_outputs: ', h_encoder_outputs.shape)
-            #  print(h_decoder_lengths)
+            #  print(h_encoder_lengths)
             pass
 
         # batch_position [batch_size]
@@ -453,8 +454,8 @@ class KGModel(nn.Module):
             # h: [num_layers, batch_size x beam_width, hidden_size]
             output, hidden_state, _ = self.decoder(input,
                                                    hidden_state,
-                                                   h_encoder_outputs=h_encoder_outputs,
-                                                   h_decoder_lengths=h_decoder_lengths)
+                                                   h_encoder_outputs,
+                                                   h_encoder_lengths)
 
             # output: [1, batch_size * beam_width, vocab_size]
             output = output.squeeze(0)
