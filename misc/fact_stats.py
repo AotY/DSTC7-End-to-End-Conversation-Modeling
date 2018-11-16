@@ -373,14 +373,18 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
     save_f.close()
 
 
-def p_stats(facts_path):
+def facts_p_stats(facts_path):
     total_p = 0
     p_count_dict = Counter()
     p_len_dict = Counter()
     facts_p_dict = {}
     with open(facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
-            _, conversation_id, _, fact = line.rstrip().split('\t')
+            line = line.rstrip()
+            if not bool(line):
+                continue
+
+            _, conversation_id, _, fact = line.split('\t')
 
             if p_count_dict.get(conversation_id, 0) == 0:
                 p_count_dict[conversation_id] = 0
@@ -401,6 +405,10 @@ def p_stats(facts_path):
 
     print('total p: %d' % total_p)
     print('avg p: %.4f' % (total_p / len(p_count_dict)))
+    """
+    total p: 577087
+    avg p: 29.7437
+    """
 
     save_distribution(p_count_dict, 'facts_p_count')
     save_distribution(p_len_dict, 'facts_p_len')
@@ -412,12 +420,13 @@ def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[0])
     with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
-            f.write('%d\t%d\n' % (i, j))
+            f.write('%s\t%s\n' % (str(i), str(j)))
 
 if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
-    wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
+    #  wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
+    facts_p_stats(facts_path)
 
     # similarity words
     #  vec_file = '/home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin'
