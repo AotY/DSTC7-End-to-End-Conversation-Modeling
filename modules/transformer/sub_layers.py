@@ -63,7 +63,7 @@ class  MultiHeadAttention(nn.Module):
         sz_b, len_k, _ = k.size()
         sz_b, len_v, _ = v.size()
 
-        q = self.q_linear(q).view(sz_b, len_q, self.n_head, self.k_dim)
+        q = self.q_linear(q).view(sz_b, len_q, self.n_head, self.k_dim) #[16, 35, 8 * 32]
         k = self.k_linear(k).view(sz_b, len_k, self.n_head, self.k_dim)
         v = self.v_linear(v).view(sz_b, len_v, self.n_head, self.v_dim)
         #  print('q size: ', q.shape)
@@ -78,7 +78,7 @@ class  MultiHeadAttention(nn.Module):
         #  print('v size: ', v.shape)
 
         mask = mask.repeat(self.n_head, 1, 1) # (n*b) x .. x ..
-
+ #[16, 35, 8 * 32]
         output, sdp_attn_weight = self.sdp_attn(q, k, v, mask=mask)
 
         output = output.view(self.n_head, sz_b, len_q, self.v_dim)
