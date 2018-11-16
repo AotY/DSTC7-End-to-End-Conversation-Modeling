@@ -45,11 +45,11 @@ python train_kg_model.py \
     --test_split 0.06 \
     --start_epoch 1 \
     --model_type kg \
+    --task decode \
     --share_embedding \
     # --checkpoint models/checkpoint.epoch-9_seq2seq_4_self_attn.pth \
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \
-    --task decode
 
 /
