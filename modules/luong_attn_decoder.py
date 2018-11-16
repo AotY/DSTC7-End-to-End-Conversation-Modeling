@@ -100,6 +100,8 @@ class LuongAttnDecoder(nn.Module):
 			h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
             h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
         '''
+        print(inputs.shape)
+        print(inputs_length)
         if inputs_length is not None:
             # sort inputs_length
             inputs_length, sorted_indexes = torch.sort(inputs_length, dim=0, descending=True)
