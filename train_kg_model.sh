@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -10,7 +10,7 @@ python train_kg_model.py \
     --turn_type self_attn \
     --embedding_size 512 \
     --pre_embedding_size 300 \
-    --fasttext_vec /home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin \
+    --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
     --hidden_size 512 \
     --num_layers 2 \
