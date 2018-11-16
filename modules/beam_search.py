@@ -6,7 +6,6 @@
 
 """
 Beam Search,
-Original method
 """
 import torch
 
@@ -14,6 +13,25 @@ from queue import Queue
 
 """
 Beam Node
+"""
+
+
+"""
+input = decoder_input
+beam_outputs = beam_decode(
+    self.decoder,
+    h_encoder_outputs,
+    h_decoder_lengths,
+    decoder_hidden_state,
+    input,
+    batch_size,
+    beam_width,
+    best_n,
+    eosid,
+    r_max_len,
+    self.vocab_size,
+    self.device
+)
 """
 
 def _inflate(tensor, times, dim):

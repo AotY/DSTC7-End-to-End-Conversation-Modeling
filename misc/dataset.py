@@ -495,10 +495,10 @@ class Dataset:
     def generating_texts(self, batch_utterances, batch_size, decode_type='greedy'):
         """
         decode_type == greedy:
-            batch_utterances: [batch_size, max_length]
+            batch_utterances: [batch_size, max_len]
             return: [batch_size]
         decode_type == 'beam_search':
-            batch_utterances: [batch_size, topk, len]
+            batch_utterances: [batch_size, topk, max_len]
             return: [batch_size, topk]
         """
 
