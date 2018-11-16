@@ -64,7 +64,7 @@ def wiki_stats(facts_path):
     wiki_table_count = 0
 
     is_wiki = False
-    last_domain = 'j5bmm'
+    last_conversation_id = 'j5bmm'
     maybe_table = False
 
     table_filename = './wiki_table.txt'
@@ -130,7 +130,7 @@ def wiki_stats(facts_path):
                 references = []
                 maybe_refenrence = False
 
-            if is_wiki and domain_name == last_domain:
+            if is_wiki and conversation_id == last_conversation_id:
                 if fact.find('jump to : navigation , search') != -1:
                     maybe_table = True
                     maybe_abstract = True
@@ -187,7 +187,7 @@ def wiki_stats(facts_path):
                             #  table.append(fact_words)
                             table.append(fact)
 
-            if domain_name != last_domain or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
+            if domain_name != last_conversation_id or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
                 facts_p_dict[conversation_id] = ps
                 ps = []
                 if len(h2s) > 0:
@@ -372,6 +372,47 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
 
     save_f.close()
 
+
+def p_stats(facts_path):
+    total_p = 0
+    p_count_dict = Counter()
+    p_len_dict = Counter()
+    facts_p_dict = {}
+    with open(facts_path, 'r', encoding='utf-8') as f:
+        for line in tqdm(f):
+            _, conversation_id, _, fact = line.rstrip().split('\t')
+
+            if p_count_dict.get(conversation_id, 0) == 0:
+                p_count_dict[conversation_id] = 0
+                facts_p_dict[conversation_id] = []
+
+            if fact.startswith('<p>'):
+                total_p += 1
+                p_count_dict[conversation_id] += 1
+                p_len_dict[len(fact.split())] = p_len_dict.get(len(fact.split()), 0) + 1
+
+                p = BeautifulSoup(fact, 'lxml').text
+                p = re.sub(r'\[ [\d|\w]+ ]', '', p)
+                p_words = tokenizer.tokenize(p)
+
+                if len(p_words) < 5 or len(p_words) > 130:
+                    continue
+                facts_p_dict[conversation_id].append(' '.join(p_words))
+
+    print('total p: %d' % total_p)
+    print('avg p: %.4f' % (total_p / len(p_count_dict)))
+
+    save_distribution(p_count_dict, 'facts_p_count')
+    save_distribution(p_len_dict, 'facts_p_len')
+
+    pickle.dump(facts_p_dict, open('./../data/facts_p_dict.pkl', 'wb'))
+
+
+def save_distribution(distribution, name):
+    distribution_list = sorted(distribution.items(), key=lambda item: item[0])
+    with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
+        for i, j in distribution_list:
+            f.write('%d\t%d\n' % (i, j))
 
 if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
