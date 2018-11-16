@@ -12,10 +12,9 @@ from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
 from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
-from modules.utils import init_lstm_orth, init_gru_orth
 from modules.utils import init_linear_wt, init_wt_normal
 from modules.utils import sequence_mask
-from modules.beam_search_original import beam_decode
+from modues.beam import Beam
 
 import modules.transformer.models as transformer_models
 
@@ -318,7 +317,6 @@ class KGModel(nn.Module):
                h_turns_length,
                h_inputs_length,
                h_inputs_position,
-               decoder_input,
                f_embedded_inputs,
                f_embedded_inputs_length,
                f_ids_inputs,
@@ -326,6 +324,7 @@ class KGModel(nn.Module):
                f_topks_length,
                decode_type,
                r_max_len,
+               sosid,
                eosid,
                batch_size,
                beam_width,
@@ -358,15 +357,14 @@ class KGModel(nn.Module):
         beam_outputs = None
         #  if decode_type == 'greedy':
         greedy_outputs = []
-        input = decoder_input
+        input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * sosid
         for i in range(r_max_len):
             decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
                                                                               decoder_hidden_state,
                                                                               h_encoder_outputs,
                                                                               h_decoder_lengths)
 
-            input = torch.argmax(
-                decoder_output, dim=2).detach()  # [1, batch_size]
+            input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == eosid:
@@ -376,24 +374,129 @@ class KGModel(nn.Module):
         # [len, batch_size]  -> [batch_size, len]
         greedy_outputs.transpose_(0, 1)
 
-        #  elif decode_type == 'beam_search':
-        input = decoder_input
-        beam_outputs = beam_decode(
-            self.decoder,
+        # prediction ([batch_size, topk, r_max_len])
+        beam_outputs, _, _ = self.beam_decode(
+            decoder_hidden_state,
             h_encoder_outputs,
             h_decoder_lengths,
-            decoder_hidden_state,
-            input,
-            batch_size,
             beam_width,
-            best_n,
-            eosid,
-            r_max_len,
-            self.vocab_size,
-            self.device
+            batch_size,
+            sosid,
+            eosid
         )
+        beam_outputs = beam_outputs.tolist()
 
         return greedy_outputs, beam_outputs
+
+    def beam_decode(self,
+                    decoder_hidden_state=None,
+                    h_encoder_outputs=None,
+                    h_decoder_lengths=None,
+                    r_max_len=35,
+                    beam_width=8,
+                    batch_size=128,
+                    sosid=2,
+                    eosid=3):
+        """
+        Args:
+            decoder_hidden_state : [num_layers, batch_size, hidden_size] (optional)
+            h_encoder_outputs : [batch_size, max_len, hidden_size]
+            h_decoder_lengths : [batch_size] (optional)
+        Return:
+            output   : [batch_size, seq_len]
+        """
+        # [1, batch_size x beam_width]
+        input = torch.LongTensor([sosid] * (batch_size * beam_width), device=self.device).view(1, -1)
+
+        # [num_layers, batch_size x beam_width, hidden_size]
+        hidden_state = decoder_hidden_state.repeat(1, self.beam_width, 1)
+
+        # batch_position [batch_size]
+        #   [0, beam_width, beam_width * 2, .., beam_width * (batch_size-1)]
+        #   Points where batch_size starts in [batch_size x beam_width] tensors
+        #   Ex. position_idx[5]: when 5-th batch_size starts
+        batch_position = torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_width
+
+        # Initialize scores of sequence
+        # [batch_size x beam_width]
+        # Ex. batch_size: 5, beam_width: 3
+        # [0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf]
+        score = torch.ones(batch_size * self.beam_width, device=self.device) * -float('inf')
+        score.index_fill_(0, torch.arange(0, batch_size, dtype=torch.long) * self.beam_width, 0.0)
+
+        # Initialize Beam that stores decisions for backtracking
+        beam = Beam(
+            batch_size,
+            self.hidden_size,
+            self.vocab_size,
+            beam_width,
+            r_max_len,
+            batch_position,
+            eosid
+        )
+
+        for i in range(r_max_len):
+            # x: [1, batch_size x beam_width]
+            # =>
+            # output: [1, batch_size x beam_width, vocab_size]
+            # h: [num_layers, batch_size x beam_width, hidden_size]
+            output, hidden_state, _ = self.decoder(input,
+                                                   hidden_state,
+                                                   h_encoder_outputs=h_encoder_outputs,
+                                                   h_decoder_lengths=h_decoder_lengths)
+
+            # output: [1, batch_size * beam_width, vocab_size]
+            score = score.view(-1, 1) + output.view(-1, self.vocab_size) # [batch_size * beam_width, vocab_size]
+
+            # Select `beam size` transitions output of `vocab size` combinations
+            # [batch_size x beam_width, vocab_size]
+            # => [batch_size, beam_width x vocab_size]
+            # Cutoff and retain candidates with top-k scores
+            # score: [batch_size, beam_width]
+            # top_k_idx: [batch_size, beam_width]
+            #       each element of top_k_idx [0 ~ beam x vocab)
+
+            score, top_k_idx = score.view(batch_size, -1).topk(beam_width, dim=1)
+
+            # Get token ids with remainder after dividing by top_k_idx
+            # Each element is among [0, vocab_size)
+            # Ex. Index of token 3 in beam 4
+            # (4 * vocab size) + 3 => 3
+            # input: [1, batch_size x beam_width]
+            input = (top_k_idx % self.vocab_size).view(1, -1)
+
+            # top-k-pointer [batch_size x beam_width]
+            #       Points top-k beam that scored best at current step
+            #       Later used as back-pointer at backtracking
+            #       Each element is beam index: 0 ~ beam_width
+            #                     + position index: 0 ~ beam_width x (batch_size-1)
+            beam_idx = top_k_idx / self.vocab_size  # [batch_size, beam_width]
+
+            top_k_pointer = (beam_idx + batch_position.unsqueeze(0)).view(-1)
+
+            # Select next h (size doesn't change)
+            # [num_layers, batch_size * beam_width, hidden_size]
+            hidden_state = hidden_state.index_select(1, top_k_pointer)
+
+            # Update sequence scores at beam
+            beam.update(score.clone(), top_k_pointer, input)  # , h)
+
+            # Erase scores for EOS so that they are not expanded
+            # [batch_size, beam_width]
+            eos_idx = input.data.eq(eosid).view(batch_size, beam_width)
+
+            if eos_idx.nonzero().dim() > 0:
+                score.data.masked_fill_(eos_idx, -float('inf'))
+
+        # prediction ([batch_size, k, r_max_len])
+        #     A list of Tensors containing predicted sequence
+        # final_score [batch_size, k]
+        #     A list containing the final scores for all top-k sequences
+        # length [batch_size, k]
+        #     A list specifying the length of each sequence in the top-k candidates
+        prediction, final_score, length = beam.backtrack()
+
+        return prediction, final_score, length
 
     def h_forward(self,
                   h_inputs,
