@@ -30,10 +30,23 @@ cover ratio: 0.3431
     total num: 166507978
     cover num: 160348172
     cover ratio: 0.9630
+
+kg 60004:
+    unique word: 514445
+    total num: 256787112
+    cover num: 248868534
+    cover ratio: 0.9692
 """
 
-def vocab_cover_stats(pair_path, vocab=None):
+def vocab_cover_stats(pair_path, facts_path=None, vocab=None):
     unique_words = Counter()
+    if facts_path is not None:
+        with open(facts_path, 'r', encoding='utf-8') as f:
+            for line in tqdm(f):
+                _, _, _, fact = line.rstrip().split('\t')
+                unique_words.update(fact.split())
+
+
     with open(pair_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             _, conversation, response, hash_value = line.split('SPLITTOKEN')
@@ -67,8 +80,9 @@ def vocab_cover_stats(pair_path, vocab=None):
 
 if __name__ == '__main__':
     pair_path = './../data/conversations_responses.pair.txt'
+    facts_path = './../data/facts.txt'
     vocab = Vocab()
-    vocab.load('./../data/vocab_word2idx_seq2seq.50004.dict')
+    vocab.load('./../data/vocab_word2idx_kg.60004.dict')
 
-    vocab_cover_stats(pair_path, vocab)
+    vocab_cover_stats(pair_path, facts_path, vocab)
 
