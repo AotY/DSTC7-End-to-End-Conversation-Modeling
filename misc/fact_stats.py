@@ -237,6 +237,7 @@ def wiki_stats(facts_path):
     print('abstract count: %d' % abstract_count)
     print('abstract ratio: %.4f' % (abstract_count / wiki_count))
 
+    print('facts_p_dict len: %d' % len(facts_p_dict))
     pickle.dump(facts_p_dict, open('./../data/facts_p_dict.pkl', 'wb'))
 
     pickle.dump(wiki_table_dict, open('./../data/wiki_table_dict.pkl', 'wb'))

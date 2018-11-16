@@ -355,16 +355,16 @@ class Dataset:
                         #  rake.extract_keywords_from_text(conversation)
                         #  conversation_keywords = rake.get_ranked_phrases()
                         #  print('conversation_keywords: {}'.format(conversation_keywords))
-                        conversation_embedded = self.get_sentence_embedded(conversation.split())
+                        conversation_embedded = self.get_sentence_embedded(conversation.split(), fasttext)
 
                         #  distances = []
 
                         # tokenizer
-                        facts_words = [tokenizer.tokenize(fact.rstrip()) for fact in facts]
+                        facts_words = [tokenizer.tokenize(fact) for fact in facts]
 
                         facts_embedded = list()
                         for fact_words in facts_words:
-                            fact_embedded = self.get_sentence_embedded(fact_words)
+                            fact_embedded = self.get_sentence_embedded(fact_words, fasttext)
                             facts_embedded.append(fact_embedded)
 
                             """
@@ -374,7 +374,7 @@ class Dataset:
                             else:
                                 distances.append(np.inf)
                             """
-                        fact_embedded = torch.stack(facts_embedded, dim=0)
+                        facts_embedded = torch.stack(facts_embedded, dim=0)
                         similarities = F.cosine_similarity(conversation_embedded.view(1, -1), facts_embedded) # [len]
 
                         #  distances = np.array(distances)
@@ -385,7 +385,7 @@ class Dataset:
                         topk_indexes = sorted_indexes[:f_topk]
                         #  topk_distances = distances[topk_indexes]
 
-                        topk_facts_words = [facts_words[topi] for topi in topk_indexes]
+                        topk_facts_words = [facts_words[topi] for topi in topk_indexes.tolist()]
                         topk_facts_text = [' '.join(fact_words) for fact_words in topk_facts_words]
 
                         topk_facts_embedded_dict[hash_value]=(None, topk_facts_text)
@@ -438,10 +438,8 @@ class Dataset:
                 continue
         sentence_embedded = torch.stack(sentence_embedded, dim=0) # [len, pre_embedding_size]
 
-        mean_sentence_embedded = torch.mean(dim=0) # [pre_embedding_size]
+        mean_sentence_embedded = sentence_embedded.mean(dim=0) # [pre_embedding_size]
         return mean_sentence_embedded
-
-
 
     def get_facts_weight(self, facts):
         """ facts: [[w_n] * size]"""
