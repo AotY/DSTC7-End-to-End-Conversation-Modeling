@@ -14,7 +14,7 @@ from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_linear_wt, init_wt_normal
 from modules.utils import sequence_mask
-from modues.beam import Beam
+from modules.beam import Beam
 
 import modules.transformer.models as transformer_models
 
@@ -379,6 +379,7 @@ class KGModel(nn.Module):
             decoder_hidden_state,
             h_encoder_outputs,
             h_decoder_lengths,
+            r_max_len,
             beam_width,
             batch_size,
             sosid,
@@ -405,14 +406,24 @@ class KGModel(nn.Module):
         Return:
             output   : [batch_size, seq_len]
         """
+        #  print('decoder_hidden_state: ', decoder_hidden_state.shape)
         # [1, batch_size x beam_width]
-        input = torch.LongTensor([sosid] * (batch_size * beam_width), device=self.device).view(1, -1)
+        input = torch.ones((1, batch_size * beam_width), dtype=torch.long, device=self.device) * sosid
+        #  print("input: ", input.shape)
 
         # [num_layers, batch_size x beam_width, hidden_size]
-        hidden_state = decoder_hidden_state.repeat(1, self.beam_width, 1)
+        hidden_state = decoder_hidden_state.repeat(1, beam_width, 1)
+        #  print('hidden_state: ', hidden_state.shape)
+
+        if h_encoder_outputs is not None:
+            h_encoder_outputs = h_encoder_outputs.repeat(1, beam_width, 1)
+            h_decoder_lengths = h_decoder_lengths.repeat(beam_width)
+            #  print('h_encoder_outputs: ', h_encoder_outputs.shape)
+            #  print(h_decoder_lengths)
+            pass
 
         # batch_position [batch_size]
-        #   [0, beam_width, beam_width * 2, .., beam_width * (batch_size-1)]
+        #   [0, 1 * beam_width, 2 * 2 * beam_width, .., (batch_size-1) * beam_width]
         #   Points where batch_size starts in [batch_size x beam_width] tensors
         #   Ex. position_idx[5]: when 5-th batch_size starts
         batch_position = torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_width
@@ -421,8 +432,8 @@ class KGModel(nn.Module):
         # [batch_size x beam_width]
         # Ex. batch_size: 5, beam_width: 3
         # [0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf]
-        score = torch.ones(batch_size * self.beam_width, device=self.device) * -float('inf')
-        score.index_fill_(0, torch.arange(0, batch_size, dtype=torch.long) * self.beam_width, 0.0)
+        score = torch.ones(batch_size * beam_width, device=self.device) * -float('inf')
+        score.index_fill_(0, torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_width, 0.0)
 
         # Initialize Beam that stores decisions for backtracking
         beam = Beam(
@@ -446,7 +457,9 @@ class KGModel(nn.Module):
                                                    h_decoder_lengths=h_decoder_lengths)
 
             # output: [1, batch_size * beam_width, vocab_size]
-            score = score.view(-1, 1) + output.view(-1, self.vocab_size) # [batch_size * beam_width, vocab_size]
+            output = output.squeeze(0)
+            score = score.view(-1, 1) + output # [batch_size * beam_width, vocab_size]
+            #  print('score: ', score.shape)
 
             # Select `beam size` transitions output of `vocab size` combinations
             # [batch_size x beam_width, vocab_size]
@@ -471,19 +484,25 @@ class KGModel(nn.Module):
             #       Each element is beam index: 0 ~ beam_width
             #                     + position index: 0 ~ beam_width x (batch_size-1)
             beam_idx = top_k_idx / self.vocab_size  # [batch_size, beam_width]
+            #  print('beam_idx: ', beam_idx.shape)
 
-            top_k_pointer = (beam_idx + batch_position.unsqueeze(0)).view(-1)
+            #  print('batch_position: ', batch_position.shape)
+
+            top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
+            #  print('top_k_pointer: ', top_k_pointer.shape)
 
             # Select next h (size doesn't change)
             # [num_layers, batch_size * beam_width, hidden_size]
             hidden_state = hidden_state.index_select(1, top_k_pointer)
+            #  print('hidden_state: ', hidden_state.shape)
 
             # Update sequence scores at beam
-            beam.update(score.clone(), top_k_pointer, input)  # , h)
+            beam.update(score.clone(), top_k_pointer, input.view(-1))
 
             # Erase scores for EOS so that they are not expanded
             # [batch_size, beam_width]
             eos_idx = input.data.eq(eosid).view(batch_size, beam_width)
+            #  print('eos_idx: ', eos_idx.shape)
 
             if eos_idx.nonzero().dim() > 0:
                 score.data.masked_fill_(eos_idx, -float('inf'))

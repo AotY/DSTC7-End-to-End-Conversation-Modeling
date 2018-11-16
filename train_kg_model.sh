@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export CUDA_LAUNCH_BLOCKING=1
 export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
@@ -24,8 +25,8 @@ python train_kg_model.py \
     --tied \
 	--decoder_type luong \
     --decode_type beam_search \
-    --beam_width 32 \
-    --best_n 10 \
+    --beam_width 8 \
+    --best_n 3 \
     --attn_type dot \
     --f_max_len 50 \
     --f_topk 5 \
@@ -40,13 +41,13 @@ python train_kg_model.py \
     --log_interval 30 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.0007 \
+    --eval_split 0.0005 \
     --test_split 0.06 \
     --start_epoch 1 \
     --task decode \
     --model_type seq2seq \
     --share_embedding \
-    --checkpoint models/checkpoint.epoch-5_seq2seq_4_self_attn.pth
+    --checkpoint models/checkpoint.epoch-9_seq2seq_4_self_attn.pth
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
     # --h_max_len 35 \
     # --max_len 35 \
