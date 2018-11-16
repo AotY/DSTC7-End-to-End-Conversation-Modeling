@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modules.optim import Optimizer, ScheduledOptimizer
+from modules.optim import ScheduledOptimizer
 from modules.early_stopping import EarlyStopping
 
 from gensim.models import KeyedVectors
@@ -296,13 +296,11 @@ def decode(model, dataset, vocab):
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
-            decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             greedy_outputs, beam_outputs = model.decode(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
                 h_inputs_position,
-                decoder_input,
                 f_embedded_inputs,
                 f_embedded_inputs_length,
                 f_ids_inputs,
@@ -310,6 +308,7 @@ def decode(model, dataset, vocab):
                 f_topks_length,
                 opt.decode_type,
                 opt.r_max_len,
+                vocab.sosid,
                 vocab.eosid,
                 opt.batch_size,
                 opt.beam_width,
@@ -365,18 +364,7 @@ def save_logger(logger_str):
         f.write(logger_str)
 
 def build_optimizer(model):
-    #  optim = torch.optim.Adam(
-        #  model.parameters(),
-        #  lr=opt.lr,
-        #  betas=(0.9, 0.999)
-    #  )
     #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
-    #  optimizer = Optimizer(
-        #  optim,
-        #  opt.max_norm
-    #  )
-    #  optimizer.set_scheduler(scheduler)
-
     optimizer = ScheduledOptimizer(
         torch.optim.Adam(
             filter(lambda x: x.requires_grad, model.parameters()),
