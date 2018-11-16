@@ -530,12 +530,12 @@ if __name__ == '__main__':
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
         #  filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
-        filename = os.path.join(opt.save_path, 'topk_facts_embedded.rake.pkl')
+        filename = os.path.join(opt.save_path, 'topk_facts_p_embedded.pkl')
         fasttext = None
         wiki_dict = None
         if not os.path.exists(filename):
             fasttext = load_fasttext_model(opt.fasttext_vec)
-            wiki_dict = pickle.load(open('./data/wiki_dict.pkl', 'rb'))
+            wiki_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
 
         dataset.build_similarity_facts_offline(
             wiki_dict,
