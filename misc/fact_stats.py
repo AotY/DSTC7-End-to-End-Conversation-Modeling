@@ -106,26 +106,28 @@ def wiki_stats(facts_path):
                     wiki_count += 1
 
                     is_wiki = True
+
+                    table = []
+                    maybe_table = False
+                    h2s = []
+
+                    abstracts = []
+                    maybe_abstract = False
+
+                    references = []
+                    maybe_refenrence = False
+
+                    last_conversation_id = conversation_id
                 else:
                     is_wiki = False
-
-                table = []
-                maybe_table = False
-                h2s = []
-
-                abstracts = []
-                maybe_abstract = False
-
-                references = []
-                maybe_refenrence = False
 
                 continue
 
             if is_wiki and conversation_id == last_conversation_id:
+
                 if fact.find('jump to : navigation , search') != -1:
                     maybe_table = True
                     maybe_abstract = True
-                    continue
 
                 if fact.find('<h2>') != -1:
                     #  h2s.append(fact)
@@ -142,12 +144,10 @@ def wiki_stats(facts_path):
                 if fact.startswith('<h2> references') or fact.startswith('<h2> notes') \
                         or fact.startswith('<h2> see also'):
                     maybe_refenrence = True
-                    maybe_abstract = False
 
                 if fact.startswith('<h2> external') or fact.startswith('<h2> navigation') or \
                         fact.startswith('<h2> further'):
                     maybe_refenrence = False
-                    maybe_abstract = False
 
                 if fact.find('<p>') != -1 and maybe_abstract:
                     soup = BeautifulSoup(fact, 'lxml')
@@ -182,35 +182,34 @@ def wiki_stats(facts_path):
                             #  table.append(fact)
 
             if conversation_id != last_conversation_id or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
-                if len(h2s) > 0:
-                    wiki_h2_dict[conversation_id] = h2s
-                    h2_count += 1
+                if is_wiki:
+                    if len(h2s) > 0:
+                        wiki_h2_dict[conversation_id] = h2s
+                        h2_count += 1
 
-                if len(references) > 0:
-                    wiki_reference_dict[conversation_id] = references
-                    for reference in references:
-                        reference_file.write(reference + '\n')
-                reference_file.write('----------------\n')
+                    if len(references) > 0:
+                        wiki_reference_dict[conversation_id] = references
+                        for reference in references:
+                            reference_file.write(reference + '\n')
+                    reference_file.write('----------------\n')
 
-                if len(abstracts) > 0:
-                    wiki_abstract_dict[conversation_id] = abstracts
-                    abstract_count += 1
+                    if len(abstracts) > 0:
+                        wiki_abstract_dict[conversation_id] = abstracts
+                        abstract_count += 1
 
-                    for abstract in abstracts:
-                        abstract_file.write(abstract + '\n')
-                abstract_file.write('----------------\n')
+                        for abstract in abstracts:
+                            abstract_file.write(abstract + '\n')
+                    abstract_file.write('----------------\n')
 
-                is_wiki = False
-                domain_name = None
-                maybe_table = False
-                table = []
-                h2s = []
-                abstracts = []
-                maybe_refenrence = False
-                maybe_abstract = False
-                references = []
+                    is_wiki = False
+                    maybe_table = False
+                    table = []
+                    h2s = []
+                    abstracts = []
+                    maybe_refenrence = False
+                    maybe_abstract = False
+                    references = []
 
-            last_conversation_id = conversation_id
 
     table_file.close()
     reference_file.close()
@@ -405,7 +404,7 @@ def facts_p_stats(facts_path):
 
 
 def save_distribution(distribution, name):
-    distribution_list = sorted(distribution.items(), key=lambda item: item[1])
+    distribution_list = sorted(distribution.items(), key=lambda item: item[1], reverse=True)
     with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
@@ -413,12 +412,13 @@ def save_distribution(distribution, name):
 if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
-    facts_p_stats(facts_path)
 
     wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
     #  similarity words
     vec_file = '/home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin'
     fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
     conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
+
+    facts_p_stats(facts_path)
 
     print('stats finishing...')
