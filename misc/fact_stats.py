@@ -84,9 +84,6 @@ def wiki_stats(facts_path):
     wiki_reference_dict = {}
     abstract_count = 0
 
-    facts_p_dict = {}
-    ps = []
-
     with open(facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
@@ -98,14 +95,6 @@ def wiki_stats(facts_path):
             conversation_id = parts[1]
             domain_name = parts[2]
             fact = parts[3]
-
-            if fact.startswith('<p>'):
-                p = BeautifulSoup(fact, 'lxml').text
-                p = re.sub(r'\[ [\d|\w]+ ]', '', p)
-                p_words = tokenizer.tokenize(p)
-                if len(p_words) < 5 or len(p_words) > 120:
-                    continue
-                ps.append(' '.join(p_words))
 
             if fact.startswith('<title>'):
                 title_count += 1
@@ -130,6 +119,8 @@ def wiki_stats(facts_path):
                 references = []
                 maybe_refenrence = False
 
+                continue
+
             if is_wiki and conversation_id == last_conversation_id:
                 if fact.find('jump to : navigation , search') != -1:
                     maybe_table = True
@@ -145,15 +136,18 @@ def wiki_stats(facts_path):
 
                 if fact.startswith('1.') or fact.startswith('2.') or fact.startswith('3.') or fact.startswith('4.') or \
                         fact.startswith('5.') or fact.startswith('6.') or fact.endswith('early life') or \
-                        fact.endswith('see also'):
+                        fact.endswith('see also') or fact.find('external links') != -1:
                     maybe_abstract = False
 
-                if fact.startswith('<h2> references') or fact.startswith('<h2> notes'):
+                if fact.startswith('<h2> references') or fact.startswith('<h2> notes') \
+                        or fact.startswith('<h2> see also'):
                     maybe_refenrence = True
+                    maybe_abstract = False
 
                 if fact.startswith('<h2> external') or fact.startswith('<h2> navigation') or \
                         fact.startswith('<h2> further'):
                     maybe_refenrence = False
+                    maybe_abstract = False
 
                 if fact.find('<p>') != -1 and maybe_abstract:
                     #  soup = BeautifulSoup(fact, 'lxml')
@@ -187,9 +181,7 @@ def wiki_stats(facts_path):
                             #  table.append(fact_words)
                             table.append(fact)
 
-            if domain_name != last_conversation_id or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
-                facts_p_dict[conversation_id] = ps
-                ps = []
+            if conversation_id != last_conversation_id or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
                 if len(h2s) > 0:
                     wiki_h2_dict[conversation_id] = h2s
                     h2_count += 1
@@ -218,7 +210,7 @@ def wiki_stats(facts_path):
                 maybe_abstract = False
                 references = []
 
-            last_domain = domain_name
+            last_conversation_id = conversation_id
 
     table_file.close()
     reference_file.close()
@@ -236,9 +228,6 @@ def wiki_stats(facts_path):
 
     print('abstract count: %d' % abstract_count)
     print('abstract ratio: %.4f' % (abstract_count / wiki_count))
-
-    print('facts_p_dict len: %d' % len(facts_p_dict))
-    pickle.dump(facts_p_dict, open('./../data/facts_p_dict.pkl', 'wb'))
 
     pickle.dump(wiki_table_dict, open('./../data/wiki_table_dict.pkl', 'wb'))
     pickle.dump(wiki_h2_dict, open('./../data/wiki_h2_dict.pkl', 'wb'))
@@ -274,7 +263,6 @@ def wiki_stats(facts_path):
 
     pickle.dump(wiki_dict, open('./../data/wiki_dict.pkl', 'wb'))
     wiki_dict_file.close()
-
 
 
     return wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict
@@ -417,7 +405,7 @@ def facts_p_stats(facts_path):
 
 
 def save_distribution(distribution, name):
-    distribution_list = sorted(distribution.items(), key=lambda item: item[0])
+    distribution_list = sorted(distribution.items(), key=lambda item: item[1])
     with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
@@ -425,13 +413,11 @@ def save_distribution(distribution, name):
 if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
-    #  wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
     facts_p_stats(facts_path)
 
-    # similarity words
-    #  vec_file = '/home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin'
-    #  fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
-    #  conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
-
-
+    wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
+    #  similarity words
+    vec_file = '/home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin'
+    fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
+    conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
 
