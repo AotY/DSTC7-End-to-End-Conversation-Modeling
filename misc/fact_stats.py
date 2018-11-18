@@ -128,11 +128,11 @@ def wiki_stats(facts_path):
                     continue
 
                 if fact.find('<h2>') != -1:
-                    h2s.append(fact)
-                    #  soup = BeautifulSoup(fact, 'lxml')
-                    #  h2 = soup.text.replace('[ edit ]', '').strip()
-                    #  h2_words = remove_stop_words(tokenizer.tokenize(h2))
-                    #  h2s.append(h2_words)
+                    #  h2s.append(fact)
+                    soup = BeautifulSoup(fact, 'lxml')
+                    h2 = soup.text.replace('[ edit ]', '').strip()
+                    h2_words = remove_stop_words(tokenizer.tokenize(h2))
+                    h2s.append(h2_words)
 
                 if fact.startswith('1.') or fact.startswith('2.') or fact.startswith('3.') or fact.startswith('4.') or \
                         fact.startswith('5.') or fact.startswith('6.') or fact.endswith('early life') or \
@@ -150,20 +150,20 @@ def wiki_stats(facts_path):
                     maybe_abstract = False
 
                 if fact.find('<p>') != -1 and maybe_abstract:
-                    #  soup = BeautifulSoup(fact, 'lxml')
-                    #  abstract = soup.text.strip()
-                    #  abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
-                    #  abstracts.append(abstract_words)
-                    abstracts.append(fact)
+                    soup = BeautifulSoup(fact, 'lxml')
+                    abstract = soup.text.strip()
+                    abstract_words = remove_stop_words(tokenizer.tokenize(abstract))
+                    abstracts.append(abstract_words)
+                    #  abstracts.append(fact)
 
                 if fact.startswith('^') and maybe_refenrence:
                     reference = fact.strip()
                     parts = re.findall(r'".+"', reference)
                     if len(parts) > 0:
                         reference = ' '.join(parts).replace('"', '')
-                        #  refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
-                        #  references.append(refenrence_words)
-                        references.append(reference)
+                        refenrence_words = remove_stop_words(tokenizer.tokenize(reference))
+                        references.append(refenrence_words)
+                        #  references.append(reference)
 
                 if maybe_table:
                     if fact.find('<p>') != -1 or fact.find('<h2>') != -1:
@@ -177,9 +177,9 @@ def wiki_stats(facts_path):
                     else:
                         if len(fact) > 3:
                             table_file.write(fact + '\n')
-                            #  fact_words = remove_stop_words(tokenizer.tokenize(fact))
-                            #  table.append(fact_words)
-                            table.append(fact)
+                            fact_words = remove_stop_words(tokenizer.tokenize(fact))
+                            table.append(fact_words)
+                            #  table.append(fact)
 
             if conversation_id != last_conversation_id or fact.startswith('<h2> navigation') or fact.startswith('<h2> external'):
                 if len(h2s) > 0:
@@ -417,7 +417,8 @@ if __name__ == '__main__':
 
     wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
     #  similarity words
-    vec_file = '/home/taoqing/Research/data/wiki-news-300d-1M-subword.vec.bin'
+    vec_file = '/home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin'
     fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
     conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
 
+    print('stats finishing...')
