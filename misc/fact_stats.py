@@ -54,7 +54,7 @@ tokenizer = Tokenizer()
 
 def remove_stop_words(words):
     words = [word for word in words if word not in stopWords]
-    words = [word for word in words if word not in punctuations]
+    #  words = [word for word in words if word not in punctuations]
     return words
 
 
@@ -190,7 +190,7 @@ def wiki_stats(facts_path):
                     if len(references) > 0:
                         wiki_reference_dict[conversation_id] = references
                         for reference in references:
-                            reference_file.write(reference + '\n')
+                            reference_file.write(' '.join(reference) + '\n')
                     reference_file.write('----------------\n')
 
                     if len(abstracts) > 0:
@@ -198,7 +198,7 @@ def wiki_stats(facts_path):
                         abstract_count += 1
 
                         for abstract in abstracts:
-                            abstract_file.write(abstract + '\n')
+                            abstract_file.write(' '.join(abstract) + '\n')
                     abstract_file.write('----------------\n')
 
                     is_wiki = False
@@ -242,13 +242,14 @@ def wiki_stats(facts_path):
         texts = []
 
         if table is not None:
-            texts.extend([text for text in table if len(text) > 3])
+            texts.extend([' '.join(words) for words in table if len(words) > 1])
 
         if reference is not None:
-            texts.extend([text for text in reference if len(text) > 3])
+            texts.extend([' '.join(words) for words in reference if len(words) > 1])
 
         if abstract is not None:
-            for line in abstract:
+            for words in abstract:
+                text = ' '.join(words)
                 for text in line.split('.'):
                     if len(text) > 3:
                         texts.append(text)
