@@ -244,8 +244,7 @@ class KGModel(nn.Module):
                                                                                   h_encoder_lengths)
 
                 decoder_outputs.append(decoder_output)
-                decoder_input = torch.argmax(
-                    decoder_output, dim=2).detach().view(1, -1)
+                decoder_input = torch.argmax(decoder_output, dim=2).detach().view(1, -1)
 
             # [r_max_len, batch_size, vocab_size]
             decoder_outputs = torch.cat(decoder_outputs, dim=0)
@@ -582,7 +581,7 @@ class KGModel(nn.Module):
                 return session_outputs, session_hidden_state, h_turns_length
             elif self.turn_type == 'self_attn':
                 stack_outputs = torch.cat(stack_outputs, dim=0) # [turn_num, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # [1, batch_size, hidden_size]
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length) # session_hidden_state: [1, batch_size, hidden_size]
                 return session_outputs, session_hidden_state, h_turns_length
 
     def f_forward(self,
