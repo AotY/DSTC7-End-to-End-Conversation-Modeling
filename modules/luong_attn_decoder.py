@@ -80,8 +80,8 @@ class LuongAttnDecoder(nn.Module):
         else:
             init_linear_wt(self.linear)
 
-        # log softmax
-        self.softmax = nn.LogSoftmax(dim=2)
+        # log_softmax
+        self.log_softmax = nn.LogSoftmax(dim=2)
 
     def forward(self,
                 inputs,
@@ -142,7 +142,7 @@ class LuongAttnDecoder(nn.Module):
                 outputs = self.latent_linear(outputs)
             outputs = self.linear(outputs)
 
-        # log softmax
-        outputs = self.softmax(outputs)
+        # log log_softmax
+        outputs = self.log_softmax(outputs)
 
         return outputs, hidden_state, h_attn_weights
