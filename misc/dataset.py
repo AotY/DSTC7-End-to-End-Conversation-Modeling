@@ -83,23 +83,34 @@ class Dataset:
                         continue
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) < self.min_len:
+                    if len(response_ids) < self.min_len or len(response_ids) > self.r_max_len + 50:
                         continue
 
-                    response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
+                    #  response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
+                    response_ids = response_ids[:min(self.r_max_len - 1, len(response_ids))]
 
                     # conversation split by EOS, START
                     if conversation.startswith('start eos'):
                         conversation = conversation[10:]
                         history_conversations = self.parser_conversations(conversation)
+                        if len(history_conversations) > 2:
+                            history_conversations = history_conversations[1:]
                     elif conversation.startswith('eos'):
+                        conversation = conversation[4:]
+                        history_conversations = self.parser_conversations(conversation)
+                    elif conversation.startswith('... eos'):
+                        conversation = conversation[7:]
+                        history_conversations = self.parser_conversations(conversation)
+                    elif conversation.startswith('... '):
                         conversation = conversation[4:]
                         history_conversations = self.parser_conversations(conversation)
                     else:
                         history_conversations = self.parser_conversations(conversation)
 
-                    if history_conversations is None:
+                    if history_conversations is None or len(history_conversations) < self.min_turn:
                         continue
+
+                    history_conversations = history_conversations[-min(self.turn_num, len(history_conversations)):]
 
                     raw_conversation = conversation
 
@@ -145,12 +156,6 @@ class Dataset:
     def parser_conversations(self, conversation):
         history_conversations = conversation.split('eos')
         history_conversations = [history for history in history_conversations if len(history.split()) >= self.min_len]
-
-        if len(history_conversations) < self.min_turn:
-            return None
-
-        history_conversations = history_conversations[-min(self.turn_num, len(history_conversations)):]
-
         return history_conversations
 
     def reset_data(self, task):
@@ -179,7 +184,6 @@ class Dataset:
         decoder_targets = torch.zeros((self.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
-
         decoder_inputs_length = list()
 
         conversation_texts = list()
@@ -188,6 +192,7 @@ class Dataset:
         # facts
         f_embedded_inputs = list()
         f_embedded_inputs_length = list()
+
         facts_texts = list()
 
         f_ids_inputs = list()
@@ -207,30 +212,29 @@ class Dataset:
             h_inputs_lenght.append(list([1]) * self.turn_num)
             h_turns_length.append(len(h_conversations_ids))
 
-            if len(h_conversations_ids) > 0:
-                h_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+            h_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+            if self.turn_type == 'transformer':
+                h_position = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+
+            for j, ids in enumerate(h_conversations_ids):
+                h_inputs_lenght[i][j] = len(ids)
+
+                tmp_i = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
                 if self.turn_type == 'transformer':
-                    h_position = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+                    tmp_p = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
 
-                for j, ids in enumerate(h_conversations_ids):
-                    h_inputs_lenght[i][j] = len(ids)
-
-                    tmp_i = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
-                    tmp_h = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
-                    for k, id in enumerate(ids):
-                        tmp_i[k] = id
-                        if self.turn_type == 'transformer':
-                            h_position[k] = k + 1
-
-                    h_input[:, j] = tmp_i
+                for k, id in enumerate(ids):
+                    tmp_i[k] = id
                     if self.turn_type == 'transformer':
-                        h_position[:, j] = tmp_h
+                        tmp_p[k] = k + 1
 
-                h_inputs.append(h_input)
+                h_input[:, j] = tmp_i
                 if self.turn_type == 'transformer':
-                    h_inputs_position.append(h_position)
-                    #  print(h_position)
-                #  print(h_input)
+                    h_position[:, j] = tmp_p
+
+            h_inputs.append(h_input)
+            if self.turn_type == 'transformer':
+                h_inputs_position.append(h_position)
 
             # decoder_inputs
             decoder_inputs[0, i] = self.vocab.sosid
@@ -282,7 +286,6 @@ class Dataset:
                     f_embedded_inputs.append(tmp_tensor)
 
                     f_embedded_inputs_length.append(topk_facts_embedded.size(0))
-
 
         h_inputs = torch.stack(h_inputs, dim=1) # [max_len, batch_size, turn_num]
         if self.turn_type == 'transformer':
