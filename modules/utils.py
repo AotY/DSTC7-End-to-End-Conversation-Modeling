@@ -13,6 +13,12 @@ import torch.nn as nn
 """
 
 
+def to_device(x, gpu_id=0, async=False):
+    """Tensor => Variable"""
+    if torch.cuda.is_available():
+        x = x.cuda(gpu_id, async)
+    return x
+
 # orthogonal initialization
 def init_gru_orth(model, gain=1):
     model.reset_parameters()
@@ -41,17 +47,49 @@ def init_wt_normal(weight, dim=512):
 def init_wt_unif(weight, dim=512):
     weight.data.uniform_(-np.sqrt(3.0 / dim), np.sqrt(3.0 / dim))
 
-def sequence_mask(lengths, max_len=None):
+def sequence_mask(sequence_length, max_len=None):
     """
-    Creates a boolean mask from sequence lengths.
+    Args:
+        sequence_length (Variable, LongTensor) [batch_size]
+            - list of sequence length of each batch
+        max_len (int)
+    Return:
+        masks (bool): [batch_size, max_len]
+            - True if current sequence is valid (not padded), False otherwise
+    Ex.
+    sequence length: [3, 2, 1]
+    seq_length_expand
+    [[3, 3, 3],
+     [2, 2, 2]
+     [1, 1, 1]]
+    seq_range_expand
+    [[0, 1, 2]
+     [0, 1, 2],
+     [0, 1, 2]]
+    masks
+    [[True, True, True],
+     [True, True, False],
+     [True, False, False]]
     """
-    batch_size = lengths.numel() # elements number
-    max_len = max_len or lengths.max() # max_len
-    return (torch.arange(0, max_len)
-            .type_as(lengths)
-            .repeat((batch_size, 1))
-            .lt(lengths.unsqueeze(1)))
+    if max_len is None:
+        max_len = sequence_length.max()
 
+    batch_size = sequence_length.size(0)
+
+    # [max_len]
+    seq_range = torch.arange(0, max_len).long()  # [0, 1, ... max_len-1]
+
+    # [batch_size, max_len]
+    seq_range_expand = seq_range.unsqueeze(0).expand(batch_size, max_len)
+    seq_range_expand = to_device(seq_range_expand)
+
+    # [batch_size, max_len]
+    seq_length_expand = sequence_length.unsqueeze(1).expand_as(seq_range_expand)
+
+    # [batch_size, max_len]
+    masks = seq_range_expand < seq_length_expand
+
+    return masks
 
 def rnn_factory(rnn_type, **kwargs):
     # Use pytorch version when available.
@@ -60,40 +98,6 @@ def rnn_factory(rnn_type, **kwargs):
     else:
         raise ValueError("{} is not valid, ".format(rnn_type))
 
-
-def compute_recall_ks(probas):
-    recall_k = {}
-    if isinstance(probas, list):
-        probas = probas
-    elif isinstance(probas, torch.Tensor):
-        probas = probas.numpy().tolist()
-    else:
-        print("")
-    for group_size in [2, 5, 10]:
-        recall_k[group_size] = {}
-        print('group_size: %d' % group_size)
-        for k in [1, 2, 5]:
-            if k < group_size:
-                recall_k[group_size][k] = recall(probas, k, group_size)
-                print('recall@%d' % k, recall_k[group_size][k])
-    return recall_k
-
-
-def recall(probas, k, group_size):
-    test_size = 10
-    n_batches = len(probas) // test_size
-    n_correct = 0
-    for i in range(n_batches):
-        batch = np.array(probas[i * test_size:(i + 1) * test_size])[:group_size]
-        try:
-            indices = np.argpartition(batch.reshape((-1,)), -k)[-k:]
-        except:
-            print(batch, k, group_size)
-        # indices = np.argpartition(batch, k)[:k]
-        if 0 in indices:
-            n_correct += 1
-    print(n_correct, len(probas), test_size)
-    return n_correct * 1.0 / (len(probas) / test_size)
 
 
 if __name__ == '__main__':
