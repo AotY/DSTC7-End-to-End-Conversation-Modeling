@@ -17,27 +17,15 @@ def data_set_opt(parser):
                        type=str,
                        help='location of save vocab dict file. ')
 
-    group.add_argument('--min_len',
-                       type=int,
-                       help="Ignores all words with total frequency lower than this.")
-
     group.add_argument('--f_max_len',
                        type=int,
                        help='clip fact by max_len.')
 
-    #  group.add_argument('--max_len',
-                       #  type=int,
-                       #  help="tokens after the first max_seq_len tokens will be discarded.")
-
-    #  group.add_argument('--h_max_len',
-                       #  type=int,
-                       #  help="history conversation max len.")
-
-    group.add_argument('--c_max_len',
+    group.add_argument('--min_unroll',
                        type=int,
-                       help="cur conversation max len.")
+                       help="Ignores all words with total frequency lower than this.")
 
-    group.add_argument('--r_max_len',
+    group.add_argument('--max_unroll',
                        type=int,
                        help='response max len.')
 
@@ -95,21 +83,26 @@ def model_opt(parser):
                        type=str,
                        help='1 million word vectors trained with subword infomation on Wikipedia 2017, UMBC webbase corpus and statmt.org news dataset (16B tokens).')
 
-    group.add_argument('--rnn_type',
+    group.add_argument('--rnn',
                        type=str,
                        help='LSTM | GRU')
 
-    group.add_argument('--hidden_size',
+    group.add_argument('--encoder_hidden_size',
                        type=int,
                        default=300,
-                       help='number of hidden units per layer')
+                       help='number of encoder_hidden units per layer')
+
+    group.add_argument('--decoder_hidden_size',
+                       type=int,
+                       default=300,
+                       help='number of decoder_hidden units per layer')
 
     group.add_argument('--latent_size',
                        type=int,
                        default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument("--kl_anneal", 
+    group.add_argument("--kl_anneal",
                        type=str,
                        default='',
                        help="KL Annealing function, select 'logistic' or 'step'.")
@@ -128,12 +121,6 @@ def model_opt(parser):
                        type=int,
                        default=15000,
                        help="For 'logistic' KL Annealing: Midpoint of Annealing function (i.e. weight=0.5)")
-
-
-
-    group.add_argument('--num_layers',
-                       type=int,
-                       help='number of layers')
 
     group.add_argument('--encoder_num_layers',
                        type=int,
@@ -182,17 +169,30 @@ def model_opt(parser):
                        type=str,
                        help='greedy | beam_search')
 
-    group.add_argument('--decoder_type',
-                       type=str,
-                       help='normal | bahdanau | luong')
-
-    group.add_argument('--beam_width',
+    group.add_argument('--beam_size',
                        type=int,
-                       help='The greater the beam width, the fewer states are pruned. ')
+                       help='The greater the beam size, the fewer states are pruned. ')
 
     group.add_argument('--best_n',
                        type=int,
                        help='best partial solutions are kept as candidates.')
+
+    group.add_argument('--sample',
+                       action='store_true',
+                       help='if false, use beam search for decoding')
+
+    group.add_argument('--temperature', type=float, default=1.0)
+
+
+    '''VAE model'''
+    group.add_argument('--z_sent_size', type=int, default=100)
+    group.add_argument('--z_conv_size', type=int, default=100)
+    group.add_argument('--word_drop', type=float, default=0.0,
+                        help='only applied to variational models')
+    group.add_argument('--kl_threshold', type=float, default=0.0)
+    group.add_argument('--kl_annealing_iter', type=int, default=25000)
+    group.add_argument('--importance_sample', type=int, default=100)
+    group.add_argument('--sentence_drop', type=float, default=0.0)
 
 
 def train_opt(parser):
@@ -204,8 +204,8 @@ def train_opt(parser):
 
     group.add_argument('--n_warmup_steps', type=int, default=3000,
                        help='warm up step.')
-    
-    group.add_argument('--max_norm',
+
+    group.add_argument('--clip',
                        type=float,
                        default=100.0,
                        help='max norm of the gradients.')

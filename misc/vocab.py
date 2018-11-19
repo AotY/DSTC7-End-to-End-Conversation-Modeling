@@ -3,7 +3,6 @@
     Manage Vocabulary,
         1), Build Vocabulary
         2), save and load vocabulary
-        3),
 """
 from __future__ import division
 from __future__ import print_function
@@ -16,6 +15,11 @@ PAD = '<pad>'
 UNK = '<unk>'
 SOS = '<sos>'
 EOS = '<eos>'
+
+PAD_ID = 0
+UNK_ID = 1
+SOS_ID = 2
+EOS_ID = 3
 
 class Vocab(object):
     def __init__(self):
@@ -30,7 +34,8 @@ class Vocab(object):
         self.word2idx[SOS] = 2
         self.word2idx[EOS] = 3
 
-    def get_vocab_size(self):
+    @property
+    def size(self):
         return len(self.word2idx)
 
     '''word to id '''
