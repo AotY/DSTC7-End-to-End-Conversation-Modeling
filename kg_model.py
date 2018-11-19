@@ -408,7 +408,7 @@ class KGModel(nn.Module):
         """
         #  print('hidden_state: ', hidden_state.shape)
         # [1, batch_size x beam_width]
-        input = torch.ones((1, batch_size * beam_width), dtype=torch.long, device=self.device) * sosid
+        input = torch.ones(batch_size * beam_width, dtype=torch.long, device=self.device) * sosid
         #  print("input: ", input.shape)
 
         # [num_layers, batch_size x beam_width, hidden_size]
@@ -420,7 +420,6 @@ class KGModel(nn.Module):
             h_encoder_lengths = h_encoder_lengths.repeat(beam_width)
             #  print('h_encoder_outputs: ', h_encoder_outputs.shape)
             #  print(h_encoder_lengths)
-            pass
 
         # batch_position [batch_size]
         #   [0, 1 * beam_width, 2 * 2 * beam_width, .., (batch_size-1) * beam_width]
@@ -451,17 +450,18 @@ class KGModel(nn.Module):
             # =>
             # output: [1, batch_size x beam_width, vocab_size]
             # h: [num_layers, batch_size x beam_width, hidden_size]
-            output, hidden_state, _ = self.decoder(input,
+            output, hidden_state, _ = self.decoder(input.view(1, -1).contiguous(),
                                                    hidden_state,
                                                    h_encoder_outputs,
                                                    h_encoder_lengths)
 
             # output: [1, batch_size * beam_width, vocab_size]
-            output = output.squeeze(0)
-            score = score.view(-1, 1) + output # [batch_size * beam_width, vocab_size]
+            log_prob = output.squeeze(0) # [batch_size * beam_width, vocab_size]
+            score = score.view(-1, 1) + log_prob # [batch_size * beam_width, vocab_size]
             #  print('score: ', score.shape)
 
-            # Select `beam size` transitions output of `vocab size` combinations
+            # Select `beam size` transitions out of `vocab size` combinations
+
             # [batch_size x beam_width, vocab_size]
             # => [batch_size, beam_width x vocab_size]
             # Cutoff and retain candidates with top-k scores
@@ -476,7 +476,7 @@ class KGModel(nn.Module):
             # Ex. Index of token 3 in beam 4
             # (4 * vocab size) + 3 => 3
             # input: [1, batch_size x beam_width]
-            input = (top_k_idx % self.vocab_size).view(1, -1)
+            input = (top_k_idx % self.vocab_size).view(-1)
 
             # top-k-pointer [batch_size x beam_width]
             #       Points top-k beam that scored best at current step
@@ -486,9 +486,8 @@ class KGModel(nn.Module):
             beam_idx = top_k_idx / self.vocab_size  # [batch_size, beam_width]
             #  print('beam_idx: ', beam_idx.shape)
 
-            #  print('batch_position: ', batch_position.shape)
-
-            top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
+            # beam_idx: [batch_size, beam_width], batch_position: [batch_size]
+            top_k_pointer = (beam_idx + batch_position.view(1, -1)).view(-1)
             #  print('top_k_pointer: ', top_k_pointer.shape)
 
             # Select next h (size doesn't change)
@@ -497,7 +496,7 @@ class KGModel(nn.Module):
             #  print('hidden_state: ', hidden_state.shape)
 
             # Update sequence scores at beam
-            beam.update(score.clone(), top_k_pointer, input.view(-1))
+            beam.update(score.clone(), top_k_pointer, input)
 
             # Erase scores for EOS so that they are not expanded
             # [batch_size, beam_width]
