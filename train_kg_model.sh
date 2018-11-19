@@ -7,7 +7,7 @@ python train_kg_model.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
     --turn_num 4 \
-    --min_turn 2 \
+    --min_turn 1 \
     --turn_type self_attn \
     --embedding_size 512 \
     --pre_embedding_size 300 \
@@ -42,9 +42,9 @@ python train_kg_model.py \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0005 \
-    --test_split 0.06 \
+    --test_split 0.07 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task decode \
     --share_embedding \
     # --checkpoint models/checkpoint.epoch-9_seq2seq_4_self_attn.pth \
