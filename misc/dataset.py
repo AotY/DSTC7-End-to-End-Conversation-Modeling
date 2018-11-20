@@ -154,24 +154,24 @@ class Dataset:
             self.reset_data(task)
             cur_indicator=batch_size
 
-        input_sentences = []
-        target_sentences = []
+        input_sentences = list()
+        target_sentences = list()
 
-        input_sentence_length = []
-        target_sentence_length = []
+        input_sentence_length = list()
+        target_sentence_length = list()
 
-        input_conversation_length = []
-        conversation_texts = []
+        input_conversation_length = list()
+        conversation_texts = list()
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         for i, (_, sentence_texts, sentence_ids, sentence_lengths, hash_value) in enumerate(batch_data):
-            input_sentences.append(sentence_ids[:-1])
-            target_sentences.append(sentence_ids[1:])
+            input_sentences.extend(sentence_ids[:-1])
+            target_sentences.extend(sentence_ids[1:])
 
-            input_sentence_length.append(sentence_lengths[:-1])
-            target_sentence_length.append(sentence_lengths[1:])
+            input_sentence_length.extend(sentence_lengths[:-1])
+            target_sentence_length.extend(sentence_lengths[1:])
 
-            input_conversation_length.append(len(input_sentences))
+            input_conversation_length.append(len(sentence_ids) - 1)
 
             conversation_texts.append(sentence_texts)
 
@@ -180,8 +180,6 @@ class Dataset:
         input_sentence_length = to_device(torch.LongTensor(input_sentence_length))
         target_sentence_length = to_device(torch.LongTensor(target_sentence_length))
         input_conversation_length = to_device(torch.LongTensor(input_conversation_length))
-
-        self._indicator_dict[task] = cur_indicator
 
         return input_sentences, target_sentences, \
                 input_sentence_length, target_sentence_length, \

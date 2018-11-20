@@ -34,7 +34,7 @@ class FeedForward(nn.Module):
 
     def forward(self, input):
         output = input
-        for linear in self.Linears:
+        for linear in self.linears:
             output = linear(output)
             output = self.activation(output)
 

@@ -59,6 +59,7 @@ class StackedLSTMCell(nn.Module):
 
 class StackedGRUCell(nn.Module):
     def __init__(self, num_layers, input_size, hidden_size, dropout=0.5):
+        super(StackedGRUCell, self).__init__()
         self.dropout= nn.Dropout(dropout)
         self.num_layers = num_layers
 

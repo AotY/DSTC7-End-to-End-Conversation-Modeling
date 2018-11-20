@@ -13,10 +13,10 @@ import torch.nn as nn
 """
 
 
-def to_device(x, gpu_id=0, async=False):
+def to_device(x, gpu_id=0, non_blocking=False):
     """Tensor => Variable"""
     if torch.cuda.is_available():
-        x = x.cuda(gpu_id, async)
+        x = x.cuda(gpu_id, non_blocking)
     return x
 
 # orthogonal initialization

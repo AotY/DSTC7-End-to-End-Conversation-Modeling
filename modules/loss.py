@@ -8,7 +8,10 @@
 mask cross entropy
 https://github.com/ctr4si/A-Hierarchical-Latent-Structure-for-Variational-Conversation-Modeling/blob/master/model/layers/loss.py
 """
-
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from modules.utils import sequence_mask
 
 
 # https://gist.github.com/jihunchoi/f1434a77df9db1bb337417854b398df1
