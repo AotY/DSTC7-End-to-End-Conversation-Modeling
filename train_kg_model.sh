@@ -8,7 +8,6 @@ python train_kg_model.py \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
     --turn_num 5 \
     --min_turn 1 \
-    --turn_type self_attn \
     --embedding_size 512 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
@@ -16,10 +15,9 @@ python train_kg_model.py \
     --encoder_hidden_size 512 \
     --decoder_hidden_size 512 \
     --context_size 1024 \
-    --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.6 \
+    --dropout 0.5 \
     --max_unroll 35 \
     --min_unroll 3 \
     --bidirectional \

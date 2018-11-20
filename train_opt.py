@@ -97,6 +97,10 @@ def model_opt(parser):
                        default=300,
                        help='number of decoder_hidden units per layer')
 
+    group.add_argument('--context_size', type=int, default=1000)
+
+    group.add_argument('--activation', type=str, default='Tanh')
+
     group.add_argument('--latent_size',
                        type=int,
                        default=300,

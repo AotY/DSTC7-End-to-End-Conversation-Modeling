@@ -27,7 +27,7 @@ class FeedForward(nn.Module):
 
         self.activation = getattr(nn, activation)()
         n_inputs = [input_size] + [hidden_size] * (num_layers - 1)
-        n_outputs = [hidden_size] * (num_layers - 1) = [output_size]
+        n_outputs = [hidden_size] * (num_layers - 1) + [output_size]
 
         self.linears = nn.ModuleList(
             [nn.Linear(n_in, n_out, bias=bias) for n_in, n_out in zip(n_inputs, n_outputs)])
