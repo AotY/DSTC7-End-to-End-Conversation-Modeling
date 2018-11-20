@@ -357,14 +357,14 @@ class KGModel(nn.Module):
         greedy_outputs = []
         input = torch.ones((1, batch_size), dtype=torch.long,
                            device=self.device) * sosid
+        """
         for i in range(r_max_len):
             decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
                                                                               decoder_hidden_state,
                                                                               h_encoder_outputs,
                                                                               h_encoder_lengths)
 
-            input = torch.argmax(
-                decoder_output, dim=2).detach()  # [1, batch_size]
+            input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == eosid:
@@ -374,8 +374,9 @@ class KGModel(nn.Module):
         # [len, batch_size]  -> [batch_size, len]
         greedy_outputs.transpose_(0, 1)
 
-        # prediction ([batch_size, topk, r_max_len])
         """
+        # prediction ([batch_size, topk, r_max_len])
+
         beam_outputs, _, _ = self.beam_decode(
             decoder_hidden_state,
             h_encoder_outputs,
@@ -387,6 +388,7 @@ class KGModel(nn.Module):
             eosid
         )
         beam_outputs = beam_outputs.tolist()
+        print(beam_outputs[0])
 
         """
         ss, trans, words = self.batch_bs(
@@ -397,12 +399,9 @@ class KGModel(nn.Module):
             r_max_len,
             batch_size
         )
+        """
 
-        cands, cand_score = self.beam_back(ss, trans, words)
-        print(cands)
-        print(cand_score)
-
-        greedy_outputs = cands
+        #  cands, cand_score = self.beam_back(trans, words, ss)
 
         return greedy_outputs, beam_outputs
 
@@ -415,8 +414,10 @@ class KGModel(nn.Module):
 
         new_memory_bank = enc_memory.unsqueeze(2).expand(-1, -1, beam_k, -1) # [max_len, batch_size, beam_k, hidden_size]
         new_memory_bank = new_memory_bank.contiguous().view(enc_memory.size(0), -1, enc_memory.size(-1)) # [max_len, batch_size * beam_k, hidden_size]
+
         new_state = enc_state.unsqueeze(2).expand(-1, -1, beam_k, -1) ## [num_layers, batch_size, beam_k, hidden_size]
         new_state = new_state.contiguous().view(enc_state.size(0), -1, enc_state.size(-1)) # [num_layers, batch_size * beam_k, hidden_size]
+
         new_memory_len = enc_memory_length.unsqueeze(0).expand(beam_k, -1)# [beam_k, batch_size]
 
         next_w = torch.LongTensor(np.ones((1, beam_k * batch_size)).astype('int32')).to(self.device) # [1, beam_k * batch_size]
@@ -431,10 +432,11 @@ class KGModel(nn.Module):
         ss = []
 
         for i in range(max_len):
-            dec_outputs, next_state, _ = self.decoder(next_w, next_state, new_memory_bank, new_memory_len)
-            # dec_outputs: [1, batch_size * batch_size, vocab_size]
+            dec_outputs, next_state, _ = self.decoder(next_w, next_state, None, None)
+            #  print(dec_outputs.shape)
+            # dec_outputs: [1, batch_size * beam_k, vocab_size]
             #  next_p = F.log_softmax(model.generator(dec_outputs.squeeze(0)), dim=1)
-            next_p = dec_outputs
+            next_p = dec_outputs.squeeze(0) # [batch_size * beam_k, vocab_size]
 
             if i < 2:
                 next_p.data.index_fill_(-1, torch.LongTensor([2]).cuda(), -float('inf'))
@@ -447,7 +449,8 @@ class KGModel(nn.Module):
             scores, topk_index = new_score.topk(beam_k, dim=1)
 
             next_w = (topk_index % vocab_size).view(1, -1)
-            trans_inds = topk_index / vocab_size
+            trans_inds = (topk_index // vocab_size).long()
+            #  print(trans_inds)
             words.append(next_w.clone())
             trans.append(trans_inds.clone())
             ss.append(scores.clone())
@@ -455,8 +458,7 @@ class KGModel(nn.Module):
             # get next state
             tmp_range = (torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_k).unsqueeze(1).expand(-1, beam_k).contiguous().view(-1)
             h_index = (trans_inds.view(-1) + tmp_range).long()
-            next_hidden = next_state.hidden[0].index_select(1, h_index)
-            #  next_state = model.decoder.init_decoder_state(query, new_memory_bank, next_hidden)
+            next_state = next_state.index_select(1, h_index)
 
             eos_idx = next_w .data.eq(0).view(batch_size, beam_k)
             if eos_idx.nonzero().dim() > 0:
@@ -492,6 +494,10 @@ class KGModel(nn.Module):
         words = [ws.view(sample_num, -1).data.cpu().numpy() for ws in words]
         scores = [s.view(sample_num, -1).data.cpu().numpy() for s in scores]
 
+        #  print('trans:', trans)
+        #  print('words:', words)
+        #  print('scores:', scores)
+
         for s_idx in range(sample_num):
             samples, parent, ss = ( None, None, None )
             for t in range(len(words)-1, -1, -1):
@@ -500,6 +506,8 @@ class KGModel(nn.Module):
                     parent = [trans[t][s_idx].tolist()]
                     ss = scores[t][s_idx].tolist()
                 else:
+                    #  print('s_idx:', s_idx)
+                    #  print('parent:', parent)
                     ws = words[t][s_idx][parent[-1]].tolist()
                     ws_parent = trans[t][s_idx][parent[-1]].tolist()
                     ex_ws_idx = (words[t][s_idx] == 0)
@@ -545,7 +553,7 @@ class KGModel(nn.Module):
         Return:
             prediction: [batch_size, beam, max_len]
         '''
-        print(h_encoder_lengths)
+        #  print(h_encoder_lengths)
         #  print('hidden_state: ', hidden_state.shape)
         # [1, batch_size x beam_width]
         input = torch.ones(batch_size * beam_width,
