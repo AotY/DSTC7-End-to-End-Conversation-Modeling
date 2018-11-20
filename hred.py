@@ -79,8 +79,8 @@ class HRED(nn.Module):
                 - eval: [batch_size, seq_len]
         """
         #  print(input_sentences.shape)
-        #  print(input_sentence_length.shape)
-        #  print(input_conversation_length.shape)
+        #  print(input_sentence_length)
+        #  print(input_conversation_length)
 
         num_sentences = input_sentences.size(0)
         c_max_len = input_conversation_length.data.max().item()
@@ -89,12 +89,12 @@ class HRED(nn.Module):
         # encoder_hidden: [num_layers * direction, num_sentences, hidden_size]
         encoder_outputs, encoder_hidden = self.encoder(input_sentences,
                                                        input_sentence_length)
-        print(encoder_outputs.shape)
-        print(encoder_hidden.shape)
+        #  print(encoder_outputs.shape)
+        #  print(encoder_hidden.shape)
 
         # encoder_hidden: [num_sentences, num_layers * direction * hidden_size]
         encoder_hidden = encoder_hidden.transpose(1, 0).contiguous().view(num_sentences, -1)
-        print(encoder_hidden.shape)
+        #  print(encoder_hidden.shape)
 
         # pad and pack encoder_hidden
         tmp_lengths = torch.cat((to_device(input_conversation_length.data.new(1).zero_()), input_conversation_length[:-1]))
@@ -103,7 +103,7 @@ class HRED(nn.Module):
         # encoder_hidden: [batch_size, c_max_len, num_layers * direction * hidden_size]
         encoder_hidden = torch.stack([pad(encoder_hidden.narrow(0, s, l), c_max_len)
                                       for s, l in zip(start.data.tolist(), input_conversation_length.data.tolist())], 0)
-        print(encoder_hidden.shape)
+        #  print(encoder_hidden.shape)
 
         # context_outputs: [batch_size, c_max_len, context_size]
         context_outputs, context_last_hidden = self.context_encoder(encoder_hidden,

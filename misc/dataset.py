@@ -94,7 +94,7 @@ class Dataset:
                     sentence_lengths = []
                     for s in sentences:
                         ids = self.vocab.words_to_id(s.split(' '))
-                        ids = ids[:min(opt.min_unroll - 1, len(ids))]
+                        ids = ids[:min(opt.max_unroll - 1, len(ids))]
                         #  ids.insert(0, SOS_ID)
                         ids.append(EOS_ID)
                         sentence_lengths.append(len(ids))
@@ -107,6 +107,7 @@ class Dataset:
                     sentence_ids.append(response_ids)
                     sentence_lengths.append(response_len)
                     sentence_texts.append(' '.join(self.vocab.ids_to_word(response_ids)))
+                    #  print(sentence_lengths)
 
                     datas.append((conversation_id, sentence_texts, sentence_ids, sentence_lengths, hash_value))
 

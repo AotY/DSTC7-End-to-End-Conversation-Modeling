@@ -30,7 +30,7 @@ python train_kg_model.py \
     --n_warmup_steps 3000 \
     --clip 5.0 \
     --epochs 15 \
-    --batch_size 128 \
+    --batch_size 64 \
     --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \

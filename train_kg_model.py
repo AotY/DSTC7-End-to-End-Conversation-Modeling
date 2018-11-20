@@ -102,18 +102,18 @@ def train_epochs(model,
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
                 logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % (epoch, timeSince(start, load / max_load),
                                                                                                     load, load / max_load * 100, log_loss_avg,
-                                                                                                    log_accuracy_avg, math.exp(log_loss_avg))
+                                                                                                    log_accuracy_avg, 0.0) # math.exp(log_loss_avg))
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
                 log_accuracy_total = 0
 
-                generate(model, dataset, vocab)
+                #  generate(model, dataset, vocab)
 
         # save model of each epoch
         save_state = {
             'loss': log_loss_avg,
-            'ppl': math.exp(log_loss_avg),
+            #  'ppl': math.exp(log_loss_avg),
             'acc': log_accuracy_avg,
             'epoch': epoch,
             'state_dict': model.state_dict(),
@@ -172,7 +172,9 @@ def train(model,
         target_sentences,
         decode=False
     )
-    print('sentence_logits: ', sentence_logits.shape)
+
+    # [num_sentences, max_unroll, vocab_size)
+    #  print('sentence_logits: ', sentence_logits.shape)
 
     optimizer.zero_grad()
 
@@ -183,7 +185,7 @@ def train(model,
         target_sentences,
         target_sentence_length
     )
-    print('batch_loss: ', batch_loss)
+    #  print('batch_loss: ', batch_loss)
 
     # decoder_outputs -> [max_length, batch_size, vocab_sizes]
     #  decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
@@ -453,7 +455,7 @@ if __name__ == '__main__':
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
         acc = checkpoint['acc']
-        logger_str = '\nevaluate -----> loss: %.4f acc: %.4f ppl: %.4f' % (
+        logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (
             loss, acc, ppl)
         logger.info(logger_str)
 
