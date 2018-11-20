@@ -78,7 +78,12 @@ class Dataset:
             datas = []
             with open(pair_path, 'r', encoding='utf-8') as f:
                 for line in f:
-                    conversation_id, conversation, response, hash_value = line.rstrip().split('SPLITTOKEN')
+                    line = line.rstrip()
+                    if not bool(line):
+                        continue
+
+                    print('line:', line)
+                    conversation_id, conversation, response, hash_value = line.split('SPLITTOKEN')
                     if not bool(conversation) or not bool(response):
                         continue
 
