@@ -4,7 +4,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-#  import numpy as np
+import numpy as np
 
 from modules.simple_encoder import SimpleEncoder
 from modules.self_attn import SelfAttentive
@@ -262,8 +262,6 @@ class KGModel(nn.Module):
                  h_inputs_length,
                  h_inputs_position,
                  decoder_input,
-                 f_embedded_inputs,
-                 f_embedded_inputs_length,
                  f_inputs,
                  f_inputs_length,
                  f_topks_length,
@@ -289,8 +287,7 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_embedded_inputs,
-                                                  f_embedded_inputs_length,
+            decoder_hidden_state = self.f_forward(
                                                   f_inputs,
                                                   f_inputs_length,
                                                   f_topks_length,
@@ -320,8 +317,6 @@ class KGModel(nn.Module):
                h_turns_length,
                h_inputs_length,
                h_inputs_position,
-               f_embedded_inputs,
-               f_embedded_inputs_length,
                f_inputs,
                f_inputs_length,
                f_topks_length,
@@ -349,8 +344,7 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_embedded_inputs,
-                                                  f_embedded_inputs_length,
+            decoder_hidden_state = self.f_forward(
                                                   f_inputs,
                                                   f_inputs_length,
                                                   f_topks_length,
@@ -381,6 +375,7 @@ class KGModel(nn.Module):
         greedy_outputs.transpose_(0, 1)
 
         # prediction ([batch_size, topk, r_max_len])
+        """
         beam_outputs, _, _ = self.beam_decode(
             decoder_hidden_state,
             h_encoder_outputs,
@@ -393,9 +388,24 @@ class KGModel(nn.Module):
         )
         beam_outputs = beam_outputs.tolist()
 
+        """
+        ss, trans, words = self.batch_bs(
+            decoder_hidden_state,
+            h_encoder_outputs,
+            h_encoder_lengths,
+            beam_width,
+            r_max_len,
+            batch_size
+        )
+
+        cands, cand_score = self.beam_back(ss, trans, words)
+        print(cands)
+        print(cand_score)
+
+        greedy_outputs = cands
+
         return greedy_outputs, beam_outputs
 
-    """
     def batch_bs(self, enc_state, enc_memory, enc_memory_length, beam_k=10, max_len=35, batch_size=128):
         '''
         enc_state: [num_layers, batch_size, hidden_size]
@@ -409,11 +419,10 @@ class KGModel(nn.Module):
         new_state = new_state.contiguous().view(enc_state.size(0), -1, enc_state.size(-1)) # [num_layers, batch_size * beam_k, hidden_size]
         new_memory_len = enc_memory_length.unsqueeze(0).expand(beam_k, -1)# [beam_k, batch_size]
 
-        next_w = torch.LongTensor(np.ones((1, beam_k * batch_size)).astype('int32')).to(self.device)
-        #  next_state = self.decoder.init_decoder_state(query, new_memory_bank, new_state)
+        next_w = torch.LongTensor(np.ones((1, beam_k * batch_size)).astype('int32')).to(self.device) # [1, beam_k * batch_size]
         next_state = new_state
 
-        scores = torch.ones((batch_size, beam_k)) * -float('inf')
+        scores = torch.ones((batch_size, beam_k)) * -float('inf') # [batch_size, beam_k]
         scores.index_fill_(1, torch.LongTensor([0]), 0.0)
         scores = scores.to(self.device)
 
@@ -423,7 +432,9 @@ class KGModel(nn.Module):
 
         for i in range(max_len):
             dec_outputs, next_state, _ = self.decoder(next_w, next_state, new_memory_bank, new_memory_len)
-            next_p = F.log_softmax(model.generator(dec_outputs.squeeze(0)), dim=1)
+            # dec_outputs: [1, batch_size * batch_size, vocab_size]
+            #  next_p = F.log_softmax(model.generator(dec_outputs.squeeze(0)), dim=1)
+            next_p = dec_outputs
 
             if i < 2:
                 next_p.data.index_fill_(-1, torch.LongTensor([2]).cuda(), -float('inf'))
@@ -442,7 +453,8 @@ class KGModel(nn.Module):
             ss.append(scores.clone())
 
             # get next state
-            h_index = (trans_inds.view(-1) + Variable( torch.arange(0, batch_size) * beam_k).long().cuda().unsqueeze(1).expand(-1, beam_k).contiguous().view(-1)).long()
+            tmp_range = (torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_k).unsqueeze(1).expand(-1, beam_k).contiguous().view(-1)
+            h_index = (trans_inds.view(-1) + tmp_range).long()
             next_hidden = next_state.hidden[0].index_select(1, h_index)
             #  next_state = model.decoder.init_decoder_state(query, new_memory_bank, next_hidden)
 
@@ -465,7 +477,7 @@ class KGModel(nn.Module):
             hyps.append(hyp)
         return hyps
 
-    def decode_beam(self, trans, words, scores, n_best=10):
+    def beam_back(self, trans, words, scores, n_best=10):
         '''
         Args:
             trans
@@ -514,7 +526,6 @@ class KGModel(nn.Module):
             cand_score.append(ss[sample_idx])
 
         return cands, cand_score
-    """
 
     def beam_decode(self,
                     hidden_state=None,
@@ -623,7 +634,9 @@ class KGModel(nn.Module):
             #  print('beam_idx: ', beam_idx.shape)
 
             # beam_idx: [batch_size, beam_width], batch_position: [batch_size]
-            top_k_pointer = (beam_idx + batch_position.view(1, -1)).view(-1)
+            #  print('beam_idx: ', beam_idx.shape)
+            #  print('batch_position: ', batch_position.shape)
+            top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
             #  print('top_k_pointer: ', top_k_pointer.shape)
 
             # Select next h (size doesn't change)
