@@ -351,7 +351,7 @@ class Dataset:
                     f.write('> %s\n' % sentence)
 
                 for i, text in enumerate(beam_text):
-                    f.write('beam %d > %s\n' % (i, text))
+                    f.write('beam %d : %s\n' % (i, text))
 
                 f.write('---------------------------------\n')
 

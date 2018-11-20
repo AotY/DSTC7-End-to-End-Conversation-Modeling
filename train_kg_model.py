@@ -214,7 +214,7 @@ def evaluate(model,
     model.eval()
     loss_total = 0
     accuracy_total = 0
-    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
+    max_load = int(np.ceil(dataset.n_test / opt.batch_size))
     dataset.reset_data('test')
     with torch.no_grad():
         for load in range(1, max_load + 1):
@@ -280,12 +280,13 @@ def generate(model, dataset, vocab):
                                                   opt.batch_size,
                                                   'beam_search')
             # save sentences
+            save_path = os.path.join(opt.save_path, 'generated/%s_%s.txt' % (
+                    opt.model_type, time_str))
+
             dataset.save_generated_texts(
                 conversation_texts,
                 beam_texts,
-                os.path.join(opt.save_path, 'generated/%s_%s.txt' % (
-                    opt.model_type, time_str)),
-                opt.decode_type
+                filename=save_path
             )
 
 
