@@ -79,8 +79,7 @@ def train_epochs(model,
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
-            f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, f_topks_length, facts_texts, \
+            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
 
             # train and get cur loss
@@ -92,10 +91,8 @@ def train_epochs(model,
                                    decoder_inputs,
                                    decoder_targets,
                                    decoder_inputs_length,
-                                   f_embedded_inputs,
-                                   f_embedded_inputs_length,
-                                   f_ids_inputs,
-                                   f_ids_inputs_length,
+                                   f_inputs,
+                                   f_inputs_length,
                                    f_topks_length,
                                    optimizer,
                                    criterion,
@@ -163,10 +160,8 @@ def train(model,
           decoder_inputs,
           decoder_targets,
           decoder_inputs_length,
-          f_embedded_inputs,
-          f_embedded_inputs_length,
-          f_ids_inputs,
-          f_ids_inputs_length,
+          f_inputs,
+          f_inputs_length,
           f_topks_length,
           optimizer,
           criterion,
@@ -183,10 +178,8 @@ def train(model,
         h_inputs_position,
         decoder_inputs,
         decoder_inputs_length,
-        f_embedded_inputs,
-        f_embedded_inputs_length,
-        f_ids_inputs,
-        f_ids_inputs_length,
+        f_inputs,
+        f_inputs_length,
         f_topks_length,
         opt.batch_size,
         opt.r_max_len,
@@ -242,8 +235,7 @@ def evaluate(model,
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
-            f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, f_topks_length, facts_texts, \
+            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
@@ -254,10 +246,8 @@ def evaluate(model,
                 h_inputs_length,
                 h_inputs_position,
                 decoder_input,
-                f_embedded_inputs,
-                f_embedded_inputs_length,
-                f_ids_inputs,
-                f_ids_inputs_length,
+                f_inputs,
+                f_inputs_length,
                 f_topks_length,
                 opt.r_max_len,
                 opt.batch_size
@@ -287,11 +277,9 @@ def decode(model, dataset, vocab):
     max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
-
             decoder_inputs, decoder_targets, decoder_inputs_length, \
             conversation_texts, response_texts, \
-            f_embedded_inputs, f_embedded_inputs_length, \
-            f_ids_inputs, f_ids_inputs_length, f_topks_length, facts_texts, \
+            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
 
             # greedy: [batch_size, r_max_len]
@@ -301,10 +289,8 @@ def decode(model, dataset, vocab):
                 h_turns_length,
                 h_inputs_length,
                 h_inputs_position,
-                f_embedded_inputs,
-                f_embedded_inputs_length,
-                f_ids_inputs,
-                f_ids_inputs_length,
+                f_inputs,
+                f_inputs_length,
                 f_topks_length,
                 opt.decode_type,
                 opt.r_max_len,
@@ -518,18 +504,15 @@ if __name__ == '__main__':
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
         #  filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
-        filename = os.path.join(opt.save_path, 'topk_facts_p_embedded.pkl')
+        filename = os.path.join(opt.save_path, 'facts_topk_phrases.pkl')
         fasttext = None
         wiki_dict = None
         if not os.path.exists(filename):
-            fasttext = load_fasttext_model(opt.fasttext_vec)
+            #  fasttext = load_fasttext_model(opt.fasttext_vec)
             wiki_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
 
         dataset.build_similarity_facts_offline(
             wiki_dict,
-            fasttext,
-            opt.pre_embedding_size,
-            opt.f_topk,
             filename
         )
 
