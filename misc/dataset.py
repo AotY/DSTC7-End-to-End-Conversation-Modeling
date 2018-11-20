@@ -181,6 +181,8 @@ class Dataset:
         target_sentence_length = to_device(torch.LongTensor(target_sentence_length))
         input_conversation_length = to_device(torch.LongTensor(input_conversation_length))
 
+        self._indicator_dict[task] = cur_indicator
+
         return input_sentences, target_sentences, \
                 input_sentence_length, target_sentence_length, \
                 input_conversation_length, conversation_texts

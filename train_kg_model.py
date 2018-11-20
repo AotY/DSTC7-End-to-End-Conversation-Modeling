@@ -172,6 +172,7 @@ def train(model,
         target_sentences,
         decode=False
     )
+    print('sentence_logits: ', sentence_logits.shape)
 
     optimizer.zero_grad()
 
@@ -182,6 +183,7 @@ def train(model,
         target_sentences,
         target_sentence_length
     )
+    print('batch_loss: ', batch_loss)
 
     # decoder_outputs -> [max_length, batch_size, vocab_sizes]
     #  decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
@@ -325,8 +327,9 @@ def build_optimizer(model):
 
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
+    #  criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
     #  criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
+    criterion = None
 
     return criterion
 

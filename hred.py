@@ -78,6 +78,10 @@ class HRED(nn.Module):
                 - train: [batch_size, seq_len, vocab_size]
                 - eval: [batch_size, seq_len]
         """
+        print(input_sentences.shape)
+        print(input_sentence_length.shape)
+        print(input_conversation_length.shape)
+        
         num_sentences = input_sentences.size(0)
         c_max_len = input_conversation_length.data.max().item()
 
