@@ -26,9 +26,7 @@ class LuongAttnDecoder(nn.Module):
                  num_layers,
                  dropout,
                  tied,
-                 turn_type,
-                 attn_type,
-                 device,
+                 device='cuda',
                  latent_size=0):
 
         super(LuongAttnDecoder, self).__init__()
@@ -38,9 +36,6 @@ class LuongAttnDecoder(nn.Module):
         self.hidden_size = hidden_size
         self.latent_size = latent_size
         self.num_layers = num_layers
-        self.attn_type = attn_type
-
-        self.turn_type = turn_type
 
         # embedding
         self.embedding = embedding
@@ -51,6 +46,9 @@ class LuongAttnDecoder(nn.Module):
 
         # h_attn
         self.h_attn = Attention(hidden_size)
+
+        # f_attn
+        self.f_attn = Attention(hidden_size)
 
         self.rnn = rnn_factory(
             rnn_type,
@@ -64,9 +62,6 @@ class LuongAttnDecoder(nn.Module):
             init_lstm_orth(self.rnn)
         else:
             init_gru_orth(self.rnn)
-
-        if self.turn_type == 'weight':
-            self.h_attn = Attention(hidden_size)
 
         if latent_size > 0:
             self.latent_linear = nn.Linear(hidden_size + latent_size, hidden_size)
@@ -86,19 +81,25 @@ class LuongAttnDecoder(nn.Module):
     def forward(self,
                 inputs,
                 hidden_state,
-                h_encoder_outputs=None,
-                h_decoder_lengths=None,
                 inputs_length=None,
+                h_encoder_outputs=None,
+                h_encoder_lengths=None,
+                f_encoder_outputs=None,
+                f_encoder_lengths=None,
                 z=None):
         '''
 		Args:
 			inputs: [1, batch_size]
 			hidden_state: [num_layers, batch_size, hidden_size]
             inputs_length: [batch_size, ] or [1, ]
-            z: for latent variable model. [num_layers, batch_size, latent_size]
 
 			h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
-            h_decoder_lengths: [batch_size] * turn_num or [batch_size] * max_len
+            h_encoder_lengths: [batch_size]
+
+			f_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
+            f_encoder_lengths: [batch_size]
+
+            z: for latent variable model. [num_layers, batch_size, latent_size]
         '''
         #  print("input: ", inputs.shape)
         #  print("hidden_state: ", hidden_state.shape)
@@ -128,21 +129,19 @@ class LuongAttnDecoder(nn.Module):
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
-        h_attn_outputs = None
-        h_attn_weights = None
-        if h_encoder_outputs is not None and h_decoder_lengths is not None:
-            h_attn_outputs, h_attn_weights = self.h_attn(outputs, h_encoder_outputs, h_decoder_lengths)
+        attn_weights = None
+        if h_encoder_outputs is not None and h_encoder_lengths is not None:
+            outputs, attn_weights = self.h_attn(outputs, h_encoder_outputs, h_encoder_lengths)
 
-        if h_attn_outputs is not None:
-            if self.latent_size > 0:
-                outputs = self.latent_linear(h_attn_outputs)
-            outputs = self.linear(h_attn_outputs)
-        else:
-            if self.latent_size > 0:
-                outputs = self.latent_linear(outputs)
-            outputs = self.linear(outputs)
+        if f_encoder_outputs is not None and f_encoder_lengths is not None:
+            outputs, attn_weights = self.f_attn(outputs, f_encoder_outputs, f_encoder_lengths)
+
+        if self.latent_size > 0:
+            outputs = self.latent_linear(outputs)
+
+        outputs = self.linear(outputs)
 
         # log log_softmax
         outputs = self.log_softmax(outputs)
 
-        return outputs, hidden_state, h_attn_weights
+        return outputs, hidden_state, attn_weights

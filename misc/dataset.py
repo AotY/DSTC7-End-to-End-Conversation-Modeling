@@ -252,11 +252,11 @@ class Dataset:
             if self.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(conversation_id, None)
 
-                f_ids_input = torch.zeros((self.f_max_len, self.f_topk),
+                f_input = torch.zeros((self.f_max_len, self.f_topk),
                                             dtype=torch.long,
                                             device=self.device)
 
-                f_ids_input_length = torch.ones(self.f_topk,
+                f_input_length = torch.ones(self.f_topk,
                                                  dtype=torch.long,
                                                  device=self.device)
 
@@ -265,14 +265,14 @@ class Dataset:
                     f_topks_length.append(min(len(topk_facts_ids), self.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.f_topk]):
                         ids = ids[-min(self.f_max_len, len(ids)):]
-                        f_ids_input_length[fi] = len(ids)
+                        f_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
-                            f_ids_input[fj, fi] = id
+                            f_input[fj, fi] = id
                 else:
                     f_topks_length.append(1)
 
-                f_inputs.append(f_ids_input)
-                f_inputs_length.append(f_ids_input_length)
+                f_inputs.append(f_input)
+                f_inputs_length.append(f_input_length)
 
                 facts_texts.append(topk_facts_text)
 
@@ -405,12 +405,9 @@ class Dataset:
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
                 best_n_ids = batch_utterances[bi]
-                #  print('best_n_ids: {}'.format(best_n_ids))
                 best_n_texts=[]
                 for ids in best_n_ids:
-                    #  print('ids: {}'.format(ids))
                     text = self.vocab.ids_to_text(ids)
-                    #  print('text: {}'.format(text))
                     best_n_texts.append(text)
                 batch_generated_texts.append(best_n_texts)
 
