@@ -60,7 +60,7 @@ class Dataset:
                     if len(response_ids) < opt.min_unroll or len(response_ids) > opt.max_unroll + 50:
                         continue
 
-                    response_ids = response_ids[:min(self.r_max_len - 1, len(response_ids))]
+                    response_ids = response_ids[:min(opt.max_unroll - 1, len(response_ids))]
                     #  response_ids.insert(0, SOS_ID)
                     response_ids.append(EOS_ID)
                     response_len = len(response_ids)
@@ -84,10 +84,10 @@ class Dataset:
                     else:
                         sentences = self.parser_conversation(context)
 
-                    if sentences is None or len(sentences) < self.min_turn:
+                    if sentences is None or len(sentences) < opt.min_turn:
                         continue
 
-                    sentences = sentences[-min(self.turn_num, len(sentences)):]
+                    sentences = sentences[-min(opt.turn_num, len(sentences)):]
 
                     sentence_texts = []
                     sentence_ids = []

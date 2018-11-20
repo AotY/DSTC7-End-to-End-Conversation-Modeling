@@ -23,7 +23,7 @@ from modules.early_stopping import EarlyStopping
 from gensim.models import KeyedVectors
 
 from misc.vocab import Vocab
-from kg_model import KGModel
+#  from kg_model import KGModel
 from hred import HRED
 from misc.dataset import Dataset
 from train_opt import data_set_opt, model_opt, train_opt
@@ -59,8 +59,8 @@ if opt.seed:
     torch.manual_seed(opt.seed)
 
 # update max_len
-if opt.turn_type == 'concat':
-    opt.max_unroll = opt.max_unroll * opt.turn_num
+#  if opt.turn_type == 'concat':
+    #  opt.max_unroll = opt.max_unroll * opt.turn_num
 
 logger.info('max_unroll: %d' % opt.max_unroll)
 
