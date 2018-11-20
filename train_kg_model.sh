@@ -17,7 +17,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.6 \
+    --dropout 0.5 \
     --c_max_len 35 \
     --r_max_len 35 \
     --min_len 3 \
@@ -27,12 +27,11 @@ python train_kg_model.py \
     --decode_type beam_search \
     --beam_width 8 \
     --best_n 3 \
-    --attn_type dot \
-    --f_max_len 50 \
-    --f_topk 5 \
+    --f_max_len 20 \
+    --f_topk 25 \
     --lr 0.001 \
     --n_warmup_steps 3000 \
-    --max_norm 15.0 \
+    --max_norm 5.0 \
     --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
