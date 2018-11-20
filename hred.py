@@ -26,7 +26,7 @@ class HRED(nn.Module):
         self.encoder = EncoderRNN(config.vocab_size,
                                   config.embedding_size,
                                   config.encoder_hidden_size,
-                                  config.rnn,
+                                  nn.LSTM if config.rnn == 'LSTM' else nn.GRU,
                                   config.encoder_num_layers,
                                   config.bidirectional,
                                   config.dropout)
@@ -79,7 +79,7 @@ class HRED(nn.Module):
                 - eval: [batch_size, seq_len]
         """
         num_sentences = input_sentences.size(0)
-        max_len = input_conversation_length.data.max().item()
+        c_max_len = input_conversation_length.data.max().item()
 
         # encoder_outputs: [num_sentences, max_source_length, hidden_size * direction]
         # encoder_hidden: [num_layers * direction, num_sentences, hidden_size]
@@ -91,13 +91,13 @@ class HRED(nn.Module):
 
         # pad and pack encoder_hidden
         tmp_lengths = torch.cat((to_device(input_conversation_length.data.new(1).zero_()), input_conversation_length[:-1]))
-        start = torch.cumsum(tmp_lengths, 0)
+        start = torch.cumsum(tmp_lengths, 0) # [batch_size]
 
-        # encoder_hidden: [batch_size, max_len, num_layers * direction * hidden_size]
-        encoder_hidden = torch.stack([pad(encoder_hidden.narrow(0, s, l), max_len)
+        # encoder_hidden: [batch_size, c_max_len, num_layers * direction * hidden_size]
+        encoder_hidden = torch.stack([pad(encoder_hidden.narrow(0, s, l), c_max_len)
                                       for s, l in zip(start.data.tolist(), input_conversation_length.data.tolist())], 0)
 
-        # context_outputs: [batch_size, max_len, context_size]
+        # context_outputs: [batch_size, c_max_len, context_size]
         context_outputs, context_last_hidden = self.context_encoder(encoder_hidden,
                                                                     input_conversation_length)
 

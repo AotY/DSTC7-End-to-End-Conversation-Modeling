@@ -11,8 +11,7 @@ from modules.utils import to_device
 def pad(tensor, length):
     if isinstance(tensor, torch.Tensor):
         if length > tensor.size(0):
-            return torch.cat([tensor,
-                              to_device(torch.zeros(length - tensor.size(0), *tensor.size()[1:]))])
+            return torch.cat([tensor, to_device(torch.zeros(length - tensor.size(0), *tensor.size()[1:]))], dim=0)
         else:
             return tensor
 

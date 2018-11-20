@@ -186,12 +186,18 @@ def model_opt(parser):
 
     '''VAE model'''
     group.add_argument('--z_sent_size', type=int, default=100)
+
     group.add_argument('--z_conv_size', type=int, default=100)
+
     group.add_argument('--word_drop', type=float, default=0.0,
                         help='only applied to variational models')
+
     group.add_argument('--kl_threshold', type=float, default=0.0)
+
     group.add_argument('--kl_annealing_iter', type=int, default=25000)
+
     group.add_argument('--importance_sample', type=int, default=100)
+
     group.add_argument('--sentence_drop', type=float, default=0.0)
 
 
