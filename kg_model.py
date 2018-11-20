@@ -404,7 +404,8 @@ class KGModel(nn.Module):
         new_memory_len = enc_memory_length.unsqueeze(0).expand(beam_k, -1)# [beam_k, batch_size]
 
         next_w = torch.LongTensor(np.ones((1, beam_k * batch_size)).astype('int32')).to(self.device)
-        next_state = self.decoder.init_decoder_state(query, new_memory_bank, new_state)
+        #  next_state = self.decoder.init_decoder_state(query, new_memory_bank, new_state)
+        next_state = new_state
 
         scores = torch.ones((batch_size, beam_k)) * -float('inf')
         scores.index_fill_(1, torch.LongTensor([0]), 0.0)
@@ -420,6 +421,7 @@ class KGModel(nn.Module):
 
             if i < 2:
                 next_p.data.index_fill_(-1, torch.LongTensor([2]).cuda(), -float('inf'))
+
             next_p.data.index_fill_(-1, torch.LongTensor([3]).cuda(), -float('inf'))
 
             vocab_size = next_p.size(-1)
@@ -427,7 +429,6 @@ class KGModel(nn.Module):
             new_score = new_score.view(batch_size, -1)
             scores, topk_index = new_score.topk(beam_k, dim=1)
 
-            #
             next_w = (topk_index % vocab_size).view(1, -1)
             trans_inds = topk_index / vocab_size
             words.append(next_w.clone())
@@ -437,8 +438,8 @@ class KGModel(nn.Module):
             # get next state
             h_index = (trans_inds.view(-1) + Variable( torch.arange(0, batch_size) * beam_k).long().cuda().unsqueeze(1).expand(-1, beam_k).contiguous().view(-1)).long()
             next_hidden = next_state.hidden[0].index_select(1, h_index)
-            next_state = model.decoder.init_decoder_state(query, new_memory_bank, next_hidden)
-            #
+            #  next_state = model.decoder.init_decoder_state(query, new_memory_bank, next_hidden)
+
             eos_idx = next_w .data.eq(0).view(batch_size, beam_k)
             if eos_idx.nonzero().dim() > 0:
                 scores.data.masked_fill_(eos_idx, -float('-inf'))
