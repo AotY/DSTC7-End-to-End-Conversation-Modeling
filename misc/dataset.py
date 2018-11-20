@@ -82,7 +82,8 @@ class Dataset:
                     if not bool(line):
                         continue
 
-                    conversation_id, conversation, response, hash_value, _, _ = line.rstrip().split('\t')
+                    #  print('line: %s' % line)
+                    conversation_id, conversation, response, hash_value, score, turn = line.split('\t')
 
                     if not bool(conversation) or not bool(response):
                         continue
@@ -206,7 +207,7 @@ class Dataset:
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         """sort batch_data, by turn num"""
         batch_data = sorted(batch_data, key=lambda item: len(item[2]), reverse=True)
-        for i, (conversation_id, conversation_text, h_conversations_ids, response_ids, hash_value, score, turn) in enumerate(batch_data):
+        for i, (conversation_id, conversation_text, h_conversations_ids, response_ids, hash_value) in enumerate(batch_data):
             # ids to word
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
             response_texts.append(response_text)
