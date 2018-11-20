@@ -235,7 +235,7 @@ def evaluate(model,
     model.eval()
     loss_total=0
     accuracy_total=0
-    max_load=int(np.ceil(dataset.n_eval / opt.batch_size))
+    max_load=int(np.ceil(dataset.n_test / opt.batch_size))
     dataset.reset_data('test')
     with torch.no_grad():
         for load in range(1, max_load + 1):

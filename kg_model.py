@@ -4,6 +4,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from modules.simple_encoder import SimpleEncoder
 from modules.self_attn import SelfAttentive
@@ -388,6 +389,126 @@ class KGModel(nn.Module):
 
         return greedy_outputs, beam_outputs
 
+    """
+    def batch_bs(self, enc_state, enc_memory, enc_memory_length, beam_k=10, max_len=35, batch_size=128):
+        '''
+        enc_state: [num_layers, batch_size, hidden_size]
+        enc_memory: [max_len, batch_size, hidden_size]
+        enc_memory_length: [batch_size]
+        '''
+
+        new_memory_bank = enc_memory.unsqueeze(2).expand(-1, -1, beam_k, -1) # [max_len, batch_size, beam_k, hidden_size]
+        new_memory_bank = new_memory_bank.contiguous().view(enc_memory.size(0), -1, enc_memory.size(-1)) # [max_len, batch_size * beam_k, hidden_size]
+        new_state = enc_state.unsqueeze(2).expand(-1, -1, beam_k, -1) ## [num_layers, batch_size, beam_k, hidden_size]
+        new_state = new_state.contiguous().view(enc_state.size(0), -1, enc_state.size(-1)) # [num_layers, batch_size * beam_k, hidden_size]
+        new_memory_len = enc_memory_length.unsqueeze(0).expand(beam_k, -1)# [beam_k, batch_size]
+
+        next_w = torch.LongTensor(np.ones((1, beam_k * batch_size)).astype('int32')).to(self.device)
+        next_state = self.decoder.init_decoder_state(query, new_memory_bank, new_state)
+
+        scores = torch.ones((batch_size, beam_k)) * -float('inf')
+        scores.index_fill_(1, torch.LongTensor([0]), 0.0)
+        scores = scores.to(self.device)
+
+        trans = []
+        words = []
+        ss = []
+
+        for i in range(max_len):
+            dec_outputs, next_state, _ = self.decoder(next_w, next_state, new_memory_bank, new_memory_len)
+            next_p = F.log_softmax(model.generator(dec_outputs.squeeze(0)), dim=1)
+
+            if i < 2:
+                next_p.data.index_fill_(-1, torch.LongTensor([2]).cuda(), -float('inf'))
+            next_p.data.index_fill_(-1, torch.LongTensor([3]).cuda(), -float('inf'))
+
+            vocab_size = next_p.size(-1)
+            new_score = scores.unsqueeze(-1).expand(-1, -1, vocab_size) + next_p.view(batch_size, beam_k, -1)
+            new_score = new_score.view(batch_size, -1)
+            scores, topk_index = new_score.topk(beam_k, dim=1)
+
+            #
+            next_w = (topk_index % vocab_size).view(1, -1)
+            trans_inds = topk_index / vocab_size
+            words.append(next_w.clone())
+            trans.append(trans_inds.clone())
+            ss.append(scores.clone())
+
+            # get next state
+            h_index = (trans_inds.view(-1) + Variable( torch.arange(0, batch_size) * beam_k).long().cuda().unsqueeze(1).expand(-1, beam_k).contiguous().view(-1)).long()
+            next_hidden = next_state.hidden[0].index_select(1, h_index)
+            next_state = model.decoder.init_decoder_state(query, new_memory_bank, next_hidden)
+            #
+            eos_idx = next_w .data.eq(0).view(batch_size, beam_k)
+            if eos_idx.nonzero().dim() > 0:
+                scores.data.masked_fill_(eos_idx, -float('-inf'))
+
+        return ss, trans, words
+
+    def get_hyp(self, samples, sample_idx):
+        #
+        hyps = []
+        for idx in sample_idx:
+            hyp = []
+            for ws in samples[::-1]:
+                try:
+                    hyp.append(ws[idx])
+                except IndexError:
+                    break
+            hyps.append(hyp)
+        return hyps
+
+    def decode_beam(self, trans, words, scores, n_best=10):
+        '''
+        Args:
+            trans
+            words
+            scores
+        '''
+        sample_num = trans[0].size(0)
+        cands = []
+        cand_score = []
+
+        trans = [tran.view(sample_num, -1).data.cpu().numpy() for tran in trans]
+        words = [ws.view(sample_num, -1).data.cpu().numpy() for ws in words]
+        scores = [s.view(sample_num, -1).data.cpu().numpy() for s in scores]
+
+        for s_idx in range(sample_num):
+            samples, parent, ss = ( None, None, None )
+            for t in range(len(words)-1, -1, -1):
+                if samples is None:
+                    samples = [words[t][s_idx].tolist()]
+                    parent = [trans[t][s_idx].tolist()]
+                    ss = scores[t][s_idx].tolist()
+                else:
+                    ws = words[t][s_idx][parent[-1]].tolist()
+                    ws_parent = trans[t][s_idx][parent[-1]].tolist()
+                    ex_ws_idx = (words[t][s_idx] == 0)
+                    ex_ws = words[t][s_idx][ex_ws_idx].tolist()
+                    ex_ws_parent = trans[t][s_idx][ex_ws_idx].tolist()
+                    ex_scores = scores[t][s_idx][ex_ws_idx].tolist()
+                    for w, w_parent, w_score in zip(ex_ws, ex_ws_parent, ex_scores):
+                        if w not in ws:
+                            ws.append(w)
+                            ws_parent.append(w_parent)
+                            #  ss.append(w_scores)
+                            ss.append(w_score)
+                        else:
+                            w_idx = ws.index(w)
+                            ss[w_idx] = w_score
+                    samples.append( ws )
+                    parent.append( ws_parent )
+            # rank
+            ss = np.asarray(ss)
+            sample_idx = np.argsort(ss)[::-1][:n_best]
+            #
+            hyps = self.get_hyp(samples, sample_idx)
+            cands.append(hyps)
+            cand_score.append(ss[sample_idx])
+
+        return cands, cand_score
+    """
+
     def beam_decode(self,
                     hidden_state=None,
                     h_encoder_outputs=None,
@@ -397,7 +518,7 @@ class KGModel(nn.Module):
                     batch_size=128,
                     sosid=2,
                     eosid=3):
-        """
+        '''
         Args:
             hidden_state : [num_layers, batch_size, hidden_size] (optional)
             h_encoder_outputs : [max_len, batch_size, hidden_size]
@@ -405,7 +526,8 @@ class KGModel(nn.Module):
 
         Return:
             prediction: [batch_size, beam, max_len]
-        """
+        '''
+        print(h_encoder_lengths)
         #  print('hidden_state: ', hidden_state.shape)
         # [1, batch_size x beam_width]
         input = torch.ones(batch_size * beam_width, dtype=torch.long, device=self.device) * sosid
