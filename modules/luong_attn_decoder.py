@@ -92,7 +92,7 @@ class LuongAttnDecoder(nn.Module):
                 z=None):
         '''
 		Args:
-			inputs: [1, batch_size] or [max_len, batch_size]
+			inputs: [1, batch_size]
 			hidden_state: [num_layers, batch_size, hidden_size]
             inputs_length: [batch_size, ] or [1, ]
             z: for latent variable model. [num_layers, batch_size, latent_size]
