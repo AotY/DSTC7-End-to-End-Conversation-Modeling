@@ -4,14 +4,13 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 
 from modules.simple_encoder import SimpleEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
-from modules.decoder import Decoder
+#  from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
-from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
+#  from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_linear_wt, init_wt_normal
 from modules.utils import sequence_mask
@@ -262,8 +261,6 @@ class KGModel(nn.Module):
                  h_inputs_length,
                  h_inputs_position,
                  decoder_input,
-                 f_embedded_inputs,
-                 f_embedded_inputs_length,
                  f_inputs,
                  f_inputs_length,
                  f_topks_length,
@@ -289,8 +286,7 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_embedded_inputs,
-                                                  f_embedded_inputs_length,
+            decoder_hidden_state = self.f_forward(
                                                   f_inputs,
                                                   f_inputs_length,
                                                   f_topks_length,
@@ -320,8 +316,6 @@ class KGModel(nn.Module):
                h_turns_length,
                h_inputs_length,
                h_inputs_position,
-               f_embedded_inputs,
-               f_embedded_inputs_length,
                f_inputs,
                f_inputs_length,
                f_topks_length,
@@ -349,8 +343,7 @@ class KGModel(nn.Module):
 
         # fact encoder
         if self.model_type == 'kg':
-            decoder_hidden_state = self.f_forward(f_embedded_inputs,
-                                                  f_embedded_inputs_length,
+            decoder_hidden_state = self.f_forward(
                                                   f_inputs,
                                                   f_inputs_length,
                                                   f_topks_length,
@@ -623,7 +616,9 @@ class KGModel(nn.Module):
             #  print('beam_idx: ', beam_idx.shape)
 
             # beam_idx: [batch_size, beam_width], batch_position: [batch_size]
-            top_k_pointer = (beam_idx + batch_position.view(1, -1)).view(-1)
+            #  print('beam_idx: ', beam_idx.shape)
+            #  print('batch_position: ', batch_position.shape)
+            top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
             #  print('top_k_pointer: ', top_k_pointer.shape)
 
             # Select next h (size doesn't change)
