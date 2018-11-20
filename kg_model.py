@@ -4,14 +4,14 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
+#  import numpy as np
 
 from modules.simple_encoder import SimpleEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
-from modules.decoder import Decoder
+#  from modules.decoder import Decoder
 from modules.reduce_state import ReduceState
-from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
+#  from modules.bahdanau_attn_decoder import BahdanauAttnDecoder
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.utils import init_linear_wt, init_wt_normal
 from modules.utils import sequence_mask
