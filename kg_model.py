@@ -62,23 +62,23 @@ class KGModel(nn.Module):
         self.decoder_type = decoder_type
         self.device = device
 
-        encoder_embedding = nn.Embedding(
+        self.encoder_embedding = nn.Embedding(
             vocab_size,
             embedding_size,
             padid
         )
 
         if pre_trained_weight is not None:
-            encoder_embedding.weight.data.copy_(pre_trained_weight)
+            self.encoder_embedding.weight.data.copy_(pre_trained_weight)
         else:
-            init_wt_normal(encoder_embedding.weight,
-                           encoder_embedding.embedding_dim)
+            init_wt_normal(self.encoder_embedding.weight,
+                           self.encoder_embedding.embedding_dim)
 
         # h_encoder
         if turn_type == 'transformer':
             self.transformer_encoder = transformer_models.Encoder(
                 c_max_len,
-                encoder_embedding,
+                self.encoder_embedding,
                 num_layers=6,
                 num_head=8,
                 k_dim=64,
@@ -90,7 +90,7 @@ class KGModel(nn.Module):
             )
         elif turn_type == 'self_attn':
             self.self_attn_encoder = SelfAttentive(
-                encoder_embedding,
+                self.encoder_embedding,
                 rnn_type,
                 num_layers,
                 bidirectional,
@@ -98,13 +98,15 @@ class KGModel(nn.Module):
                 dropout=dropout
             )
 
+        """
         self.simple_encoder = SimpleEncoder(vocab_size,
-                                            encoder_embedding,
+                                            self.encoder_embedding,
                                             rnn_type,
                                             hidden_size,
                                             encoder_num_layers,
                                             bidirectional,
                                             dropout)
+        """
 
         if turn_type != 'none' or turn_type != 'concat':
             if turn_type == 'c_concat':
@@ -124,7 +126,7 @@ class KGModel(nn.Module):
         self.reduce_state = ReduceState(rnn_type)
 
         if share_embedding:
-            decoder_embedding = encoder_embedding
+            decoder_embedding = self.encoder_embedding
         else:
             decoder_embedding = nn.Embedding(
                 vocab_size,
@@ -191,12 +193,15 @@ class KGModel(nn.Module):
         # fact encoder
         f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, None
         if self.model_type == 'kg':
+            """
             f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
                 f_inputs,
                 f_inputs_length,
                 f_topks_length,
             )
             decoder_hidden_state += f_encoder_hidden_state
+            """
+            f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
@@ -650,3 +655,15 @@ class KGModel(nn.Module):
         f_hidden_states = torch.stack(f_hidden_states, dim=0).mean(0) # [num_layes, batch_size, hidden_size]
 
         return f_outputs, f_hidden_states, f_topks_length
+
+    def f_embedding(self, f_inputs):
+        """
+        f_inputs: [topk, max_len, batch_size]
+        f_inputs_length: [topk, batch_size]
+        f_topks_length: [batch_size]
+        """
+        embedded = self.encoder_embedding(f_inputs) # [topk, max_len, batch_size, embedding_size]
+        embedded = embedded.mean(dim=1) # [topk, batch_size, embedding_size]
+
+        return embedded
+
