@@ -252,7 +252,7 @@ class Dataset:
             if self.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(conversation_id, None)
                 #  print(topk_facts_text)
-                f_input = torch.zeros((self.f_max_len, self.f_topk),
+                f_input = torch.zeros((self.f_topk, self.f_max_len),
                                             dtype=torch.long,
                                             device=self.device)
 
@@ -267,7 +267,7 @@ class Dataset:
                         ids = ids[:min(self.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
-                            f_input[fj, fi] = id
+                            f_input[fi, fj] = id
                 else:
                     f_topks_length.append(1)
 
@@ -286,8 +286,8 @@ class Dataset:
         decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long, device=self.device) #[batch_size]
 
         if self.model_type == 'kg':
-            f_inputs = torch.stack(f_inputs, dim=1) # [f_max_len, batch_size, f_topk]
-            f_inputs_length = torch.stack(f_inputs_length, dim=0) # [batch_size, f_topk]
+            f_inputs = torch.stack(f_inputs, dim=2) # [topk, max_len, batch_size]
+            f_inputs_length = torch.stack(f_inputs_length, dim=1) # [f_topk, batch_size]
 
             f_topks_length = torch.tensor(f_topks_length, dtype=torch.long, device=self.device)
 
