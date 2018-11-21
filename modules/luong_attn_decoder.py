@@ -4,9 +4,6 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-
-"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,6 +16,7 @@ from modules.utils import rnn_factory
 
 class LuongAttnDecoder(nn.Module):
     def __init__(self,
+                 model_type,
                  vocab_size,
                  embedding,
                  rnn_type,
@@ -26,7 +24,6 @@ class LuongAttnDecoder(nn.Module):
                  num_layers,
                  dropout,
                  tied,
-                 device='cuda',
                  latent_size=0):
 
         super(LuongAttnDecoder, self).__init__()
@@ -48,14 +45,15 @@ class LuongAttnDecoder(nn.Module):
         self.h_attn = Attention(hidden_size)
 
         # f_attn
-        #  self.f_attn = Attention(hidden_size)
-        self.f_linearA = nn.Linear(self.embedding_size,
-                                   self.hidden_size + latent_size)
+        if model_type == 'kg':
+            #  self.f_attn = Attention(hidden_size)
+            self.f_linearA = nn.Linear(self.embedding_size,
+                                    self.hidden_size + latent_size)
 
-        self.f_linearC = nn.Linear(self.embedding_size,
-                                   self.hidden_size + latent_size)
-        init_linear_wt(self.f_linearA)
-        init_linear_wt(self.f_linearC)
+            self.f_linearC = nn.Linear(self.embedding_size,
+                                    self.hidden_size + latent_size)
+            init_linear_wt(self.f_linearA)
+            init_linear_wt(self.f_linearC)
 
         self.rnn = rnn_factory(
             rnn_type,
@@ -152,7 +150,6 @@ class LuongAttnDecoder(nn.Module):
         if f_encoder_outputs is not None:
             #  output, f_attn_weights = self.f_attn(output, f_encoder_outputs, f_encoder_lengths)
             output = self.f_forward(output, f_encoder_outputs)
-            #  print('output: ', output)
 
         if self.latent_size > 0:
             output = self.latent_linear(output)

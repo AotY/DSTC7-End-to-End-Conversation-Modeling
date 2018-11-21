@@ -140,6 +140,7 @@ class KGModel(nn.Module):
                                decoder_embedding.embedding_dim)
 
         self.decoder = LuongAttnDecoder(
+            model_type,
             vocab_size,
             decoder_embedding,
             rnn_type,
@@ -147,7 +148,6 @@ class KGModel(nn.Module):
             num_layers,
             dropout,
             tied,
-            device
         )
 
     def forward(self,
@@ -270,11 +270,12 @@ class KGModel(nn.Module):
         # fact encoder
         f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, None
         if self.model_type == 'kg':
-            f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
-                f_inputs,
-                f_inputs_length,
-                f_topks_length,
-            )
+            #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
+                #  f_inputs,
+                #  f_inputs_length,
+                #  f_topks_length,
+            #  )
+            f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
         decoder_outputs = []
@@ -329,11 +330,12 @@ class KGModel(nn.Module):
         # fact encoder
         f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, None
         if self.model_type == 'kg':
-            f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
-                f_inputs,
-                f_inputs_length,
-                f_topks_length,
-            )
+            #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
+                #  f_inputs,
+                #  f_inputs_length,
+                #  f_topks_length,
+            #  )
+            f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
         greedy_outputs = self.greedy_decode(decoder_hidden_state,
@@ -663,6 +665,7 @@ class KGModel(nn.Module):
         f_topks_length: [batch_size]
         ignore padding_idx
         """
+        #  print(f_inputs.shape)
         f_embedded = list() # [topk, batch_size, embedding_size]
         for i in range(f_inputs.size(0)):
             batch_embedded = list()
@@ -670,8 +673,9 @@ class KGModel(nn.Module):
                 sentence = f_inputs[i, :, j].view(-1).contiguous() # [max_len]
                 nonzero_count = sentence.nonzero().numel()
                 embedded = self.encoder_embedding(sentence)
+                embedded = embedded.sum(dim=0)
                 if nonzero_count != 0:
-                    embedded = embedded.sum(dim=0) / nonzero_count  # [embedding_size]
+                    embedded = embedded / nonzero_count  # [embedding_size]
 
                 batch_embedded.append(embedded)
 
@@ -680,7 +684,7 @@ class KGModel(nn.Module):
             f_embedded.append(batch_embedded)
 
         f_embedded = torch.stack(f_embedded, dim=0) # [topk, batch_size, embedding_size]
-        print(f_embedded.shape)
+        #  print(f_embedded.shape)
 
         """
         f_embedded = self.encoder_embedding(f_inputs) # [topk, max_len, batch_size, embedding_size]
