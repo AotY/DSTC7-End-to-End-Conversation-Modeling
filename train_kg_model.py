@@ -202,8 +202,8 @@ def train(model,
     loss.backward()
 
     # optimizer
-    #  optimizer.step_and_update_lr()
-    _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_grad_norm)
+    optimizer.step_and_update_lr()
+    #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_grad_norm)
 
     optimizer.step()
 
@@ -344,22 +344,22 @@ def save_logger(logger_str):
 
 def build_optimizer(model):
     #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
-    #  optimizer = ScheduledOptimizer(
-        #  torch.optim.Adam(
-            #  model.parameters(),
-            #  betas=(0.9, 0.98), eps=1e-09),
-        #  opt.hidden_size,
-        #  opt.n_warmup_steps,
-        #  opt.lr,
-        #  opt.max_grad_norm
-    #  )
-
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        opt.lr,
-        betas=(0.9, 0.98),
-        eps=1e-09
+    optimizer = ScheduledOptimizer(
+        torch.optim.Adam(
+            model.parameters(),
+            betas=(0.9, 0.98), eps=1e-09),
+        opt.hidden_size,
+        n_warmup_steps=opt.n_warmup_steps,
+        init_lr=opt.lr,
+        max_grad_norm=opt.max_grad_norm
     )
+
+    #  optimizer = torch.optim.Adam(
+        #  model.parameters(),
+        #  opt.lr,
+        #  betas=(0.9, 0.98),
+        #  eps=1e-09
+    #  )
 
     return optimizer
 

@@ -31,7 +31,7 @@ python train_kg_model.py \
     --f_topk 20 \
     --lr 0.001 \
     --n_warmup_steps 3000 \
-    --max_grad_norm 0.5 \
+    --max_grad_norm 1.0 \
     --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
@@ -43,7 +43,7 @@ python train_kg_model.py \
     --eval_split 0.0005 \
     --test_split 0.07 \
     --start_epoch 1 \
-    --model_type seq2seq \
+    --model_type kg \
     --task train \
     --share_embedding \
     # --checkpoint models/checkpoint.epoch-3_seq2seq_4_self_attn.pth \
