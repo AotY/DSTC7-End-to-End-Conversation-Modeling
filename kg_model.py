@@ -98,14 +98,13 @@ class KGModel(nn.Module):
                 hidden_size,
                 dropout=dropout
             )
-        else:
-            self.simple_encoder = SimpleEncoder(vocab_size,
-                                                encoder_embedding,
-                                                rnn_type,
-                                                hidden_size,
-                                                encoder_num_layers,
-                                                bidirectional,
-                                                dropout)
+        self.simple_encoder = SimpleEncoder(vocab_size,
+                                            encoder_embedding,
+                                            rnn_type,
+                                            hidden_size,
+                                            encoder_num_layers,
+                                            bidirectional,
+                                            dropout)
 
         if turn_type != 'none' or turn_type != 'concat':
             if turn_type == 'c_concat':
@@ -648,44 +647,17 @@ class KGModel(nn.Module):
 
             # output: [1, batch_size, hidden_size]
             # hidden_state: [num_layers * bidirection_num, batch_size, hidden_size // 2]
-            output, hidden_state = self.self_attn_encoder(
-                f_input,
-                f_input_length
-            )
-            #  print(f_input_length)
-            #  print(output)
+            #  output, hidden_state = self.self_attn_encoder(
+                #  f_input,
+                #  f_input_length
+            #  )
+
+            outputs, hidden_state = self.simple_encoder(f_input, f_inputs_length)
+            output = outputs[-1]
 
             f_outputs.append(output)
 
         f_outputs = torch.stack(f_outputs, dim=0)  # [topk, batch_size, hidden_size]
+        print(f_outputs.shape)
 
         return f_outputs, f_topks_length
-
-"""
-        # [batch_size, topk, hidden_size]
-        f_outputs = torch.stack(f_outputs, dim=0)
-
-        # M [batch_size, topk, hidden_size]
-        fM = self.fact_linearA(f_outputs)
-
-        # C [batch_size, topk, hidden_size]
-        fC = self.fact_linearC(f_outputs)
-
-        # [batch_size, num_layers, topk]
-        tmpP = torch.bmm(decoder_hidden_state.transpose(
-            0, 1), fM.transpose(1, 2))
-
-        mask = sequence_mask(f_topks_length, max_len=tmpP.size(-1))
-        mask = mask.unsqueeze(1)  # Make it broadcastable.
-        tmpP.masked_fill_(1 - mask, -float('inf'))
-
-        P = F.softmax(tmpP, dim=2)
-
-        o = torch.bmm(P, fC)  # [batch_size, num_layers, hidden_size]
-
-        u_ = torch.add(o, decoder_hidden_state.transpose(0, 1))
-
-        # [num_layers, batch_size, hidden_size]
-        u_ = u_.transpose(0, 1).contiguous()
-
-"""

@@ -252,7 +252,6 @@ class Dataset:
             if self.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(conversation_id, None)
                 #  print(topk_facts_text)
-
                 f_input = torch.zeros((self.f_max_len, self.f_topk),
                                             dtype=torch.long,
                                             device=self.device)
