@@ -27,13 +27,13 @@ python train_kg_model.py \
     --decode_type beam_search \
     --beam_width 8 \
     --best_n 3 \
-    --f_max_len 10 \
-    --f_topk 20 \
+    --f_max_len 8 \
+    --f_topk 10 \
     --lr 0.001 \
     --n_warmup_steps 3000 \
     --max_grad_norm 1.0 \
     --epochs 15 \
-    --batch_size 128 \
+    --batch_size 64 \
     --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
