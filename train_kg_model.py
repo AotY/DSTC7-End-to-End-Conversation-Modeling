@@ -201,9 +201,9 @@ def train(model,
     # backward
     loss.backward()
 
-    for p, n in zip(model.simple_encoder.rnn.parameters(), model.simple_encoder.rnn._all_weights[0]):
-        if n[:6] == 'weight':
-            print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
+    #  for p, n in zip(model.simple_encoder.rnn.parameters(), model.simple_encoder.rnn._all_weights[0]):
+        #  if n[:6] == 'weight':
+            #  print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
     for p, n in zip(model.self_attn_encoder.rnn.parameters(), model.self_attn_encoder.rnn._all_weights[0]):
         if n[:6] == 'weight':

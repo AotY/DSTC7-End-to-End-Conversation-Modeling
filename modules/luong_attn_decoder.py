@@ -166,11 +166,15 @@ class LuongAttnDecoder(nn.Module):
         return output, hidden_state, None
 
     def f_forward(self, output, f_encoder_outputs):
+        """
+        output: [1, batch_size, hidden_size]
+        f_encoder_outputs: [topk, batch_size, embedding_size]
+        """
         # M [batch_size, topk, hidden_size]
-        fM = self.f_linearA(f_encoder_outputs)
+        fM = self.f_linearA(f_encoder_outputs.transpose(0, 1))
 
         # C [batch_size, topk, hidden_size]
-        fC = self.f_linearC(f_encoder_outputs)
+        fC = self.f_linearC(f_encoder_outputs.transpose(0, 1))
 
         # [batch_size, num_layers, topk]
         tmpP = torch.bmm(output.transpose(0, 1), fM.transpose(1, 2))
