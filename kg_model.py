@@ -661,9 +661,29 @@ class KGModel(nn.Module):
         f_inputs: [topk, max_len, batch_size]
         f_inputs_length: [topk, batch_size]
         f_topks_length: [batch_size]
+        ignore padding_idx
         """
-        embedded = self.encoder_embedding(f_inputs) # [topk, max_len, batch_size, embedding_size]
-        embedded = embedded.mean(dim=1) # [topk, batch_size, embedding_size]
+        f_embedded = list() # [topk, batch_size, embedding_size]
+        for i in range(f_inputs.size(0)):
+            batch_embedded = list()
+            for j in range(f_inputs.size(2)):
+                sentence = f_inputs[i, :, j].view(-1).contiguous() # [max_len]
+                nonzero_count = sentence.nonzero().numel()
+                embedded = self.encoder_embedding(sentence)
+                if nonzero_count != 0:
+                    embedded = embedded.sum(dim=0) / nonzero_count  # [embedding_size]
 
-        return embedded
+                batch_embedded.append(embedded)
 
+            batch_embedded = torch.stack(batch_embedded, dim=0) # [batch_size, embedding_size]
+
+            f_embedded.append(batch_embedded)
+
+        f_embedded = torch.stack(f_embedded, dim=0) # [topk, batch_size, embedding_size]
+        print(f_embedded.shape)
+
+        """
+        f_embedded = self.encoder_embedding(f_inputs) # [topk, max_len, batch_size, embedding_size]
+        f_embedded = f_embedded.mean(dim=1) # [topk, batch_size, embedding_size]
+        """
+        return f_embedded
