@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -29,11 +29,10 @@ python train_kg_model.py \
     --best_n 3 \
     --f_max_len 10 \
     --f_topk 20 \
-    --lr 0.005 \
-    --n_warmup_steps 3000 \
+    --lr 0.001 \
     --max_grad_norm 1.0 \
     --epochs 15 \
-    --batch_size 64 \
+    --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \

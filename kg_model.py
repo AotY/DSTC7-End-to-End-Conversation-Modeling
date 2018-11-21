@@ -4,7 +4,6 @@ import random
 import torch
 import torch.nn as nn
 
-from modules.simple_encoder import SimpleEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
@@ -475,7 +474,6 @@ class KGModel(nn.Module):
             log_prob = output.squeeze(0)
             # [batch_size * beam_width, vocab_size]
             score = score.view(-1, 1) + log_prob
-            #  print('score: ', score.shape)
 
             # Select `beam size` transitions out of `vocab size` combinations
 
@@ -502,18 +500,15 @@ class KGModel(nn.Module):
             #       Each element is beam index: 0 ~ beam_width
             #                     + position index: 0 ~ beam_width x (batch_size-1)
             beam_idx = top_k_idx / self.vocab_size  # [batch_size, beam_width]
-            #  print('beam_idx: ', beam_idx.shape)
 
             # beam_idx: [batch_size, beam_width], batch_position: [batch_size]
             #  print('beam_idx: ', beam_idx.shape)
             #  print('batch_position: ', batch_position.shape)
             top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
-            #  print('top_k_pointer: ', top_k_pointer.shape)
 
             # Select next h (size doesn't change)
             # [num_layers, batch_size * beam_width, hidden_size]
             hidden_state = hidden_state.index_select(1, top_k_pointer)
-            #  print('hidden_state: ', hidden_state.shape)
 
             # Update sequence scores at beam
             beam.update(score.clone(), top_k_pointer, input)
@@ -521,7 +516,6 @@ class KGModel(nn.Module):
             # Erase scores for EOS so that they are not expanded
             # [batch_size, beam_width]
             eos_idx = input.data.eq(eosid).view(batch_size, beam_width)
-            #  print('eos_idx: ', eos_idx.shape)
 
             if eos_idx.nonzero().dim() > 0:
                 score.data.masked_fill_(eos_idx, -float('inf'))
@@ -670,12 +664,14 @@ class KGModel(nn.Module):
         for i in range(f_inputs.size(0)):
             batch_embedded = list()
             for j in range(f_inputs.size(2)):
-                sentence = f_inputs[i, :, j].view(-1).contiguous() # [max_len]
-                nonzero_count = sentence.nonzero().numel()
-                embedded = self.encoder_embedding(sentence)
+                fact = f_inputs[i, :, j].contiguous() # [max_len]
+                print('fact: ', fact.shape)
+                nonzero_count = fact.nonzero().numel()
+                embedded = self.encoder_embedding(fact)
                 embedded = embedded.sum(dim=0)
                 if nonzero_count != 0:
                     embedded = embedded / nonzero_count  # [embedding_size]
+                print(embedded)
 
                 batch_embedded.append(embedded)
 
