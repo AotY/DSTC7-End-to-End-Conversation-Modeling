@@ -10,6 +10,7 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from modules.utils import init_linear_wt
 from modules.utils import init_lstm_orth, init_gru_orth
@@ -101,9 +102,11 @@ class LuongAttnDecoder(nn.Module):
 
             z: for latent variable model. [num_layers, batch_size, latent_size]
         '''
-        #  print("input: ", inputs.shape)
+        #  print("inputs: ", inputs.shape)
         #  print("hidden_state: ", hidden_state.shape)
-        #  print(inputs_length)
+        #  print("h_encoder_outputs: ", h_encoder_outputs)
+        #  print("f_encoder_outputs: ", f_encoder_outputs.shape)
+
         if inputs_length is not None:
             # sort inputs_length
             inputs_length, sorted_indexes = torch.sort(inputs_length, dim=0, descending=True)
@@ -123,25 +126,29 @@ class LuongAttnDecoder(nn.Module):
         if z is not None:
             hidden_state = torch.cat((hidden_state, z), dim=2)
 
-        outputs, hidden_state = self.rnn(embedded, hidden_state)
+        output, hidden_state = self.rnn(embedded, hidden_state)
 
         if inputs_length is not None:
-            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-            outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+            output, _ = nn.utils.rnn.pad_packed_sequence(output)
+            output = output.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
-        attn_weights = None
+        #  print('output: ', output)
+
         if h_encoder_outputs is not None and h_encoder_lengths is not None:
-            outputs, attn_weights = self.h_attn(outputs, h_encoder_outputs, h_encoder_lengths)
+            output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_encoder_lengths)
+            #  print('h_output: ', h_output)
 
         if f_encoder_outputs is not None and f_encoder_lengths is not None:
-            outputs, attn_weights = self.f_attn(outputs, f_encoder_outputs, f_encoder_lengths)
+            output, f_attn_weights = self.f_attn(output, f_encoder_outputs, f_encoder_lengths)
+            #  print('output: ', output)
 
         if self.latent_size > 0:
-            outputs = self.latent_linear(outputs)
+            output = self.latent_linear(output)
 
-        outputs = self.linear(outputs)
+        output = self.linear(output)
 
-        # log log_softmax
-        outputs = self.log_softmax(outputs)
+        # log_softmax
+        #  output = self.log_softmax(output)
+        output = F.log_softmax(output, dim=2)
 
-        return outputs, hidden_state, attn_weights
+        return output, hidden_state, None

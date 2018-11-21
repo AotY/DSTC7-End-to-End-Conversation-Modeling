@@ -180,9 +180,9 @@ def train(model,
         opt.r_max_len,
         opt.teacher_forcing_ratio
     )
+    #  print('decoder_outputs: ', decoder_outputs.shape)
 
     optimizer.zero_grad()
-    #  model.zero_grad()
 
     loss = 0
 
@@ -193,23 +193,21 @@ def train(model,
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
 
-    # , decoder_targets.shape[1])
     decoder_targets = decoder_targets.view(-1)
 
     # compute loss
-    #  print(decoder_outputs.shape)
     loss = criterion(decoder_outputs, decoder_targets)
 
     # backward
     loss.backward()
 
     # optimizer
-    optimizer.step_and_update_lr()
+    #  optimizer.step_and_update_lr()
+    _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_grad_norm)
 
-    return_loss = float(loss.item())
-    del loss
+    optimizer.step()
 
-    return return_loss, accuracy
+    return loss.item(), accuracy
 
 '''
 evaluate model.
@@ -346,13 +344,21 @@ def save_logger(logger_str):
 
 def build_optimizer(model):
     #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
-    optimizer = ScheduledOptimizer(
-        torch.optim.Adam(
-            filter(lambda x: x.requires_grad, model.parameters()),
-            betas=(0.9, 0.98), eps=1e-09),
-        opt.hidden_size,
-        opt.n_warmup_steps,
-        opt.max_norm
+    #  optimizer = ScheduledOptimizer(
+        #  torch.optim.Adam(
+            #  model.parameters(),
+            #  betas=(0.9, 0.98), eps=1e-09),
+        #  opt.hidden_size,
+        #  opt.n_warmup_steps,
+        #  opt.lr,
+        #  opt.max_grad_norm
+    #  )
+
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        opt.lr,
+        betas=(0.9, 0.98),
+        eps=1e-09
     )
 
     return optimizer

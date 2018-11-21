@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -27,11 +27,11 @@ python train_kg_model.py \
     --decode_type beam_search \
     --beam_width 8 \
     --best_n 3 \
-    --f_max_len 20 \
-    --f_topk 25 \
+    --f_max_len 10 \
+    --f_topk 20 \
     --lr 0.001 \
     --n_warmup_steps 3000 \
-    --max_norm 5.0 \
+    --max_grad_norm 0.5 \
     --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
@@ -43,7 +43,7 @@ python train_kg_model.py \
     --eval_split 0.0005 \
     --test_split 0.07 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task train \
     --share_embedding \
     # --checkpoint models/checkpoint.epoch-3_seq2seq_4_self_attn.pth \

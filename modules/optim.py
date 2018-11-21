@@ -13,6 +13,7 @@ import itertools
 import numpy as np
 
 import torch
+import torch.nn as nn
 
 """
 https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/transformer/Optim.py
@@ -20,14 +21,14 @@ https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/tr
 class ScheduledOptimizer:
     '''A simple wrapper class for learning rate scheduling'''
 
-    def __init__(self, optimizer, model_dim, n_warmup_steps, max_grad_norm=None):
+    def __init__(self, optimizer, model_dim, n_warmup_steps, init_lr=None, max_grad_norm=None):
         self.optimizer = optimizer
         self.n_warmup_steps = n_warmup_steps
         self.n_current_steps = 0
         self.max_grad_norm = max_grad_norm
-        self.init_lr = np.power(model_dim, -0.5)
+        self.init_lr = init_lr or np.power(model_dim, -0.8)
         self.scheduler = None
-        
+
     def set_scheduler(self, scheduler):
         """ Set the learning rate scheduler.
         Args:
@@ -38,12 +39,11 @@ class ScheduledOptimizer:
 
     def step_and_update_lr(self):
         "Step with the inner optimizer"
-        self._update_learning_rate()
-        self.optimizer.step()
+        #  self._update_learning_rate()
 
         if self.max_grad_norm > 0:
             params = itertools.chain.from_iterable([group['params'] for group in self.optimizer.param_groups])
-            torch.nn.utils.clip_grad_norm_(params, self.max_grad_norm)
+            _ = nn.utils.clip_grad_norm_(params, self.max_grad_norm)
 
         self.optimizer.step()
 
