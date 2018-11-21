@@ -120,9 +120,8 @@ class KGModel(nn.Module):
                     bidirectional,
                     dropout,
                 )
-            else:
-                pass
 
+        """
         # fact encoder
         if model_type == 'kg':
             if pre_embedding_size != hidden_size:
@@ -136,6 +135,7 @@ class KGModel(nn.Module):
             # ci = C * ri
             self.fact_linearC = nn.Linear(hidden_size, hidden_size)
             init_linear_wt(self.fact_linearC)
+        """
 
         # encoder hidden_state -> decoder hidden_state
         self.reduce_state = ReduceState(rnn_type)
@@ -582,6 +582,7 @@ class KGModel(nn.Module):
                     inputs_length = h_inputs_length[:, ti]  # [batch_size]
                     outputs, hidden_state = self.self_attn_encoder(
                         inputs, inputs_length)
+                    outputs = outputs.unsqueeze(0)
                 else:
                     inputs_length = h_inputs_length[:, ti]  # [batch_size]
                     outputs, hidden_state = self.simple_encoder(
@@ -645,16 +646,18 @@ class KGModel(nn.Module):
             f_input = f_inputs[:, :, i]  # [max_len, batch_size]
             f_input_length = f_inputs_length[:, i]  # [batch_size]
 
-            # outputs: [1, batch_size, hidden_size]
+            # output: [1, batch_size, hidden_size]
             # hidden_state: [num_layers * bidirection_num, batch_size, hidden_size // 2]
             output, hidden_state = self.self_attn_encoder(
                 f_input,
                 f_input_length
             )
+            #  print(f_input_length)
+            #  print(output)
 
             f_outputs.append(output)
 
-        f_outputs = torch.cat(f_outputs, dim=0)  # [topk, batch_size, hidden_size]
+        f_outputs = torch.stack(f_outputs, dim=0)  # [topk, batch_size, hidden_size]
 
         return f_outputs, f_topks_length
 

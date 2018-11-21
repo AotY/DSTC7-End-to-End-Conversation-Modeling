@@ -205,9 +205,9 @@ def train_opt(parser):
     group.add_argument('--n_warmup_steps', type=int, default=3000,
                        help='warm up step.')
     
-    group.add_argument('--max_norm',
+    group.add_argument('--max_grad_norm',
                        type=float,
-                       default=100.0,
+                       default=0.8,
                        help='max norm of the gradients.')
 
     group.add_argument('--epochs', type=int, default=5,

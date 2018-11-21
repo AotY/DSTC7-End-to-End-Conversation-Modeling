@@ -251,20 +251,21 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(conversation_id, None)
+                #  print(topk_facts_text)
 
                 f_input = torch.zeros((self.f_max_len, self.f_topk),
                                             dtype=torch.long,
                                             device=self.device)
 
                 f_input_length = torch.ones(self.f_topk,
-                                                 dtype=torch.long,
-                                                 device=self.device)
+                                            dtype=torch.long,
+                                            device=self.device)
 
                 if topk_facts_text is not None:
                     topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
                     f_topks_length.append(min(len(topk_facts_ids), self.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.f_topk]):
-                        ids = ids[-min(self.f_max_len, len(ids)):]
+                        ids = ids[:min(self.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
                             f_input[fj, fi] = id
@@ -286,9 +287,8 @@ class Dataset:
         decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long, device=self.device) #[batch_size]
 
         if self.model_type == 'kg':
-            if len(f_inputs) > 0:
-                f_inputs = torch.stack(f_inputs, dim=1) # [f_max_len, batch_size, f_topk]
-                f_inputs_length = torch.stack(f_inputs_length, dim=0) # [batch_size, f_topk]
+            f_inputs = torch.stack(f_inputs, dim=1) # [f_max_len, batch_size, f_topk]
+            f_inputs_length = torch.stack(f_inputs_length, dim=0) # [batch_size, f_topk]
 
             f_topks_length = torch.tensor(f_topks_length, dtype=torch.long, device=self.device)
 

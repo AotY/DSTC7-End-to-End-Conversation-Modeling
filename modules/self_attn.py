@@ -76,14 +76,17 @@ class SelfAttentive(nn.Module):
         Args:
             inputs: [max_len, batch_size]
         return:
-            outputs: [1, batch_size, mlp_output_size]
+            outputs: [batch_size, mlp_output_size]
         """
         max_len, batch_size = inputs.size()
+        #  print(inputs)
 
         embedded = self.embedding(inputs)
+        #  print(embedded)
         embedded = self.dropout(embedded)
 
         outputs, hidden_state = self.rnn(embedded) # outputs: [max_len, batch_size, hidden_size]
+        #  print('outputs: ', outputs)
 
         A = torch.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]
@@ -91,16 +94,15 @@ class SelfAttentive(nn.Module):
         # mask
         if lengths is not None:
             mask = sequence_mask(lengths, max_len=A.size(-1)) #mask: [batch_size, max_len)
-            mask = mask.unsqueeze(1)  # Make it broadcastable. # [batch_size, 1, max_len]
+            mask = mask.unsqueeze(1).repeat(1, self.attn_hops, 1)  # Make it broadcastable. # [batch_size, 1, max_len]
             A.data.masked_fill_(1 - mask, -float('inf')) # [batch_size, 1, max_len]
 
         A = F.softmax(A, dim=2) # [batch_size, attn_hops, max_len]
+        #  print('A: ', A)
 
         M = torch.bmm(A, outputs.transpose(0, 1)) # [batch_size, attn_hops, hidden_size]
         M = M.view(batch_size, -1) # [batch_size, attn_hops * hidden_size]
 
-        outputs = torch.relu(self.fc1(M)) # [batch_size, mlp_output_size]
+        output = torch.relu(self.fc1(M)) # [batch_size, mlp_output_size]
 
-        outputs = outputs.unsqueeze(0).contiguous() # [1, batch_size, mlp_output_size]
-
-        return outputs, hidden_state
+        return output, hidden_state
