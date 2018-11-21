@@ -167,22 +167,20 @@ class LuongAttnDecoder(nn.Module):
         output: [1, batch_size, hidden_size]
         f_encoder_outputs: [topk, batch_size, embedding_size]
         """
-        # M [batch_size, topk, hidden_size]
-        fM = self.f_linearA(f_encoder_outputs.transpose(0, 1))
+        # K [batch_size, topk, hidden_size]
+        fK = self.f_linearA(f_encoder_outputs.transpose(0, 1))
 
-        # C [batch_size, topk, hidden_size]
-        fC = self.f_linearC(f_encoder_outputs.transpose(0, 1))
+        # V [batch_size, topk, hidden_size]
+        fV = self.f_linearC(f_encoder_outputs.transpose(0, 1))
 
-        # [batch_size, num_layers, topk]
-        tmpP = torch.bmm(output.transpose(0, 1), fM.transpose(1, 2))
+        # [batch_size, 1, topk]
+        weights = torch.bmm(output.transpose(0, 1), fK.transpose(1, 2))
 
-        P = F.softmax(tmpP, dim=2)
+        weights = F.softmax(weights, dim=2)
 
-        o = torch.bmm(P, fC)  # [batch_size, num_layers, hidden_size]
+        o = torch.bmm(weights, fV)  # [batch_size, 1, hidden_size]
 
-        u_ = torch.add(o, output.transpose(0, 1))
+        # [1, batch_size, hidden_size]
+        output = torch.add(o.transpose(0, 1), output)
 
-        # [num_layers, batch_size, hidden_size]
-        u_ = u_.transpose(0, 1).contiguous()
-
-        return u_
+        return output
