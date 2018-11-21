@@ -75,6 +75,9 @@ def train_epochs(model,
         dataset.reset_data('train')
         log_loss_total = 0
         log_accuracy_total = 0
+
+        # lr update
+        optimizer.update()
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
@@ -205,12 +208,12 @@ def train(model,
         #  if n[:6] == 'weight':
             #  print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
-    for p, n in zip(model.self_attn_encoder.rnn.parameters(), model.self_attn_encoder.rnn._all_weights[0]):
-        if n[:6] == 'weight':
-            print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
+    #  for p, n in zip(model.self_attn_encoder.rnn.parameters(), model.self_attn_encoder.rnn._all_weights[0]):
+        #  if n[:6] == 'weight':
+            #  print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
     # optimizer
-    optimizer.step_and_update_lr()
+    optimizer.step()
     #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_grad_norm)
     #  optimizer.step()
 
@@ -350,23 +353,20 @@ def save_logger(logger_str):
         f.write(logger_str)
 
 def build_optimizer(model):
-    #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=7, gamma=0.17)
-    optimizer = ScheduledOptimizer(
-        torch.optim.Adam(
+    optim = torch.optim.Adam(
             model.parameters(),
-            betas=(0.9, 0.98), eps=1e-09),
-        opt.hidden_size,
-        n_warmup_steps=opt.n_warmup_steps,
-        init_lr=opt.lr,
-        max_grad_norm=opt.max_grad_norm
+            opt.lr,
+            betas=(0.9, 0.98),
+            eps=1e-09
     )
 
-    #  optimizer = torch.optim.Adam(
-        #  model.parameters(),
-        #  opt.lr,
-        #  betas=(0.9, 0.98),
-        #  eps=1e-09
-    #  )
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.5)
+
+    optimizer = ScheduledOptimizer(
+        optim,
+        scheduler,
+        opt.max_grad_norm
+    )
 
     return optimizer
 
