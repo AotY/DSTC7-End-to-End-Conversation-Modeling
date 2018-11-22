@@ -70,7 +70,7 @@ def train_epochs(model,
                  early_stopping):
 
     start = time.time()
-    max_load = int(np.ceil(dataset.n_train / opt.batch_size))
+    max_load = int(np.ceil(dataset._size_dict['train'] / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
         dataset.reset_data('train')
         log_loss_total = 0
@@ -78,10 +78,11 @@ def train_epochs(model,
 
         # lr update
         optimizer.update()
+
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
+            context_texts, response_texts, \
             f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
 
@@ -229,15 +230,15 @@ def evaluate(model,
 
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    loss_total=0
-    accuracy_total=0
-    max_load=int(np.ceil(dataset.n_test / opt.batch_size))
+    loss_total = 0
+    accuracy_total = 0
+    max_load = int(np.ceil(dataset._size_dict['test'] / opt.batch_size))
     dataset.reset_data('test')
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
+            context_texts, response_texts, \
             f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
 
@@ -277,11 +278,11 @@ def decode(model, dataset, vocab):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     dataset.reset_data('eval')
-    max_load = int(np.ceil(dataset.n_eval / opt.batch_size))
+    max_load = int(np.ceil(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
+            context_texts, response_texts, \
             f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
 
@@ -303,7 +304,6 @@ def decode(model, dataset, vocab):
                 opt.beam_width,
                 opt.best_n)
 
-            #  print(beam_outputs)
             # generate sentence, and save to file
             # [max_length, batch_size]
             greedy_texts = dataset.generating_texts(greedy_outputs,
@@ -316,15 +316,13 @@ def decode(model, dataset, vocab):
             #  print(beam_texts)
 
             # save sentences
-            dataset.save_generated_texts(conversation_texts,
+            dataset.save_generated_texts(context_texts,
                                          response_texts,
                                          greedy_texts,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/kg_%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
+                                         os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
-
-
 
 def compute_accuracy(decoder_outputs_argmax, decoder_targets):
     """
@@ -534,7 +532,7 @@ if __name__ == '__main__':
     early_stopping = EarlyStopping(
         type='min',
         min_delta=0.001,
-        patience=3
+        patience=2
     )
 
     '''if load checkpoint'''

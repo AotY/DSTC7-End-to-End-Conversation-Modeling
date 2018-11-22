@@ -5,17 +5,14 @@ import os
 import pickle
 
 import torch
-import torch.nn.functional as F
 import numpy as np
 
 #  from summa import keywords # for keyword extraction
 from rake_nltk import Rake
 from misc import es_helper
-#  from embedding.embedding_score import get_topk_facts
 
 from misc.url_tags_weight import tag_weight_dict
 from misc.url_tags_weight import default_weight
-from misc.utils import Tokenizer
 
 
 class Dataset:
@@ -72,7 +69,7 @@ class Dataset:
                       batch_size)
 
     def read_txt(self, save_path, pair_path, eval_split, test_split, batch_size):
-        _data_dict_path = os.path.join(save_path, '_data_dict.%s.pkl' % self.turn_type)
+        _data_dict_path = os.path.join(save_path, '_data_dict.%s.%s.pkl' % (self.turn_type, self.turn_num))
         if not os.path.exists(_data_dict_path):
             # load source-target pairs, tokenized
             datas = []
@@ -82,10 +79,9 @@ class Dataset:
                     if not bool(line):
                         continue
 
-                    #  print('line: %s' % line)
-                    conversation_id, conversation, response, hash_value, score, turn = line.split('\t')
+                    conversation_id, context, response, hash_value, score, turn = line.split('\t')
 
-                    if not bool(conversation) or not bool(response):
+                    if not bool(context) or not bool(response):
                         continue
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
@@ -95,63 +91,71 @@ class Dataset:
                     #  response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
                     response_ids = response_ids[:min(self.r_max_len - 1, len(response_ids))]
 
-                    # conversation split by EOS, START
-                    if conversation.startswith('start eos'):
-                        conversation = conversation[10:]
-                        history_conversations = self.parser_conversations(conversation)
-                        if len(history_conversations) > 2:
-                            history_conversations = history_conversations[1:]
-                    elif conversation.startswith('eos'):
-                        conversation = conversation[4:]
-                        history_conversations = self.parser_conversations(conversation)
-                    elif conversation.startswith('... eos'):
-                        conversation = conversation[7:]
-                        history_conversations = self.parser_conversations(conversation)
-                    elif conversation.startswith('... '):
-                        conversation = conversation[4:]
-                        history_conversations = self.parser_conversations(conversation)
+                    # context split by EOS, START
+                    if context.startswith('start eos'):
+                        context = context[10:]
+                        sentences = self.parser_conversations(context)
+                        if len(sentences) > 2:
+                            sentences = sentences[1:]
+                    elif context.startswith('eos'):
+                        context = context[4:]
+                        sentences = self.parser_conversations(context)
+                    elif context.startswith('... eos'):
+                        context = context[7:]
+                        sentences = self.parser_conversations(context)
+                    elif context.startswith('... '):
+                        context = context[4:]
+                        sentences = self.parser_conversations(context)
                     else:
-                        history_conversations = self.parser_conversations(conversation)
+                        sentences = self.parser_conversations(context)
 
-                    if history_conversations is None or len(history_conversations) < self.min_turn:
+                    if sentences is None or len(sentences) < self.min_turn:
                         continue
 
-                    history_conversations = history_conversations[-min(self.turn_num, len(history_conversations)):]
-
-                    raw_conversation = conversation
+                    sentences = sentences[-min(self.turn_num, len(sentences)):]
 
                     if self.turn_type == 'concat':
-                        conversation = ' '.join(history_conversations)
-                        history_conversations = [conversation]
+                        context = ' '.join(sentences)
+                        sentences = [context]
                     elif self.turn_type == 'none':
-                        conversation = history_conversations[-1]
-                        history_conversations = [conversation]
+                        context = sentences[-1]
+                        sentences = [context]
 
-                    h_conversations_ids = []
-                    for history in history_conversations:
-                        history_ids = self.vocab.words_to_id(history.split(' '))
-                        history_ids = history_ids[-min(self.c_max_len, len(history_ids)):]
-                        h_conversations_ids.append(history_ids)
+                    sentences_text = []
 
-                    datas.append((conversation_id, raw_conversation, h_conversations_ids, response_ids, hash_value))
+                    sentences_ids = []
+                    for sentence in sentences:
+                        sentence_ids = self.vocab.words_to_id(sentence.split(' '))
+                        sentence_ids = sentence_ids[-min(self.c_max_len, len(sentence_ids)):]
+                        sentences_ids.append(sentence_ids)
+                        sentences_text.append(' '.join(self.vocab.ids_to_word(sentence_ids)))
+
+                    datas.append((conversation_id, sentences_text, sentences_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
-            self.n_train = int(len(datas) * (1. - eval_split - test_split))
-            self.n_eval = max(int(len(datas) * eval_split), batch_size)
-            self.n_test = len(datas) - self.n_train - self.n_eval
+            n_train = int(len(datas) * (1. - eval_split - test_split))
+            n_eval = max(int(len(datas) * eval_split), batch_size)
+            n_test = len(datas) - self.n_train - self.n_eval
+            self._size_dict = {
+                'train': n_train,
+                'eval': n_eval,
+                'test': n_test
+            }
 
             self._data_dict = {
-                'train': datas[0: self.n_train],
-                'eval': datas[self.n_train: (self.n_train + self.n_eval)],
-                'test': datas[self.n_train + self.n_eval: ]
+                'train': datas[0: n_train],
+                'eval': datas[n_train: (n_train + n_eval)],
+                'test': datas[n_train + n_eval: ]
             }
             pickle.dump(self._data_dict, open(_data_dict_path, 'wb'))
         else:
             self._data_dict = pickle.load(open(_data_dict_path, 'rb'))
-            self.n_train = len(self._data_dict['train'])
-            self.n_test = len(self._data_dict['test'])
-            self.n_eval = len(self._data_dict['eval'])
+            self._size_dict = {
+                'train': len(self._data_dict['train']),
+                'eval': len(self._data_dict['eval']),
+                'test': len(self._data_dict['test'])
+            }
 
         self._indicator_dict = {
             'train': 0,
@@ -159,22 +163,22 @@ class Dataset:
             'test': 0
         }
 
-    def parser_conversations(self, conversation):
-        history_conversations = conversation.split('eos')
-        history_conversations = [history for history in history_conversations if len(history.split()) >= self.min_len]
-        return history_conversations
+    def parser_conversations(self, context):
+        sentences = context.split('eos')
+        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.min_len]
+        return sentences
 
     def reset_data(self, task):
         np.random.shuffle(self._data_dict[task])
         self._indicator_dict[task] = 0
 
     def load_data(self, task, batch_size):
-        task_len=len(self._data_dict[task])
+        task_len = len(self._data_dict[task])
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
 
         cur_indicator = self._indicator_dict[task] + batch_size
-        if cur_indicator > task_len:
+        if cur_indicator > self._size_dict[task]:
             self.reset_data(task)
             cur_indicator = batch_size
 
@@ -194,7 +198,7 @@ class Dataset:
 
         decoder_inputs_length = list()
 
-        conversation_texts = list()
+        context_texts = list()
         response_texts = list()
 
         # facts
@@ -207,21 +211,21 @@ class Dataset:
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         """sort batch_data, by turn num"""
         batch_data = sorted(batch_data, key=lambda item: len(item[2]), reverse=True)
-        for i, (conversation_id, conversation_text, h_conversations_ids, response_ids, hash_value) in enumerate(batch_data):
-            # ids to word
+        for i, (conversation_id, sentences_text, sentences_ids, response_ids, hash_value) in enumerate(batch_data):
+
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
             response_texts.append(response_text)
-            conversation_texts.append(conversation_text)
+            context_texts.append(sentences_text)
 
-			# history inputs
+            # h inputs
             h_inputs_lenght.append(list([1]) * self.turn_num)
-            h_turns_length.append(len(h_conversations_ids))
+            h_turns_length.append(len(sentences_ids))
 
             h_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
             if self.turn_type == 'transformer':
                 h_position = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
 
-            for j, ids in enumerate(h_conversations_ids):
+            for j, ids in enumerate(sentences_ids):
                 h_inputs_lenght[i][j] = len(ids)
 
                 tmp_i = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
@@ -251,7 +255,6 @@ class Dataset:
 
             if self.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(conversation_id, None)
-                #  print(topk_facts_text)
                 f_input = torch.zeros((self.f_topk, self.f_max_len),
                                             dtype=torch.long,
                                             device=self.device)
@@ -295,7 +298,7 @@ class Dataset:
         self._indicator_dict[task] = cur_indicator
 
         return decoder_inputs, decoder_targets, decoder_inputs_length, \
-            conversation_texts, response_texts, \
+            context_texts, response_texts, \
             f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_lenght, h_inputs_position
 
@@ -307,7 +310,10 @@ class Dataset:
         if os.path.exists(filename):
             self.facts_topk_phrases = pickle.load(open(filename, 'rb'))
         else:
-            r = Rake()
+            r = Rake(
+                min_length=1,
+                max_length=self.f_max + 10
+            )
             facts_topk_phrases = {}
             for conversation_id, ps in facts_dict.items():
                 r.extract_keywords_from_sentences(ps)
@@ -358,7 +364,7 @@ class Dataset:
 
 
     def save_generated_texts(self,
-                             conversation_texts,
+                             context_texts,
                              response_texts,
                              greedy_texts,
                              beam_texts,
@@ -368,42 +374,42 @@ class Dataset:
 
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for i, (conversation, response, greedy_text, beam_text) in enumerate(zip(conversation_texts, response_texts, greedy_texts, beam_texts)):
-                f.write('Conversation:\t %s\n' % conversation)
-                f.write('Response:\t %s\n' % response)
+            for i, (sentences, response, greedy_text, beam_text) in enumerate(zip(context_texts, response_texts, greedy_texts, beam_texts)):
+                for sentence in sentences:
+                    f.write('> %s\n' % sentence)
 
-                f.write('greedy:\t %s\n' % greedy_text)
+                f.write('gold: %s\n' % response)
+
+                f.write('greedy: %s\n' % greedy_text)
 
                 for i, best_text in enumerate(beam_text):
-                    #  print('best_text: {}'.format(best_text))
-                    f.write('beam %d:\t %s\n' % (i, best_text))
+                    f.write('beam %d: %s\n' % (i, best_text))
 
                 if facts_texts is not None and len(facts_texts) > 0:
                     topk_facts = facts_texts[i]
                     if topk_facts is not None:
                         for fi, fact_text in enumerate(topk_facts):
-                            f.write('Fact %d:\t %s\n' % (fi, fact_text))
-
+                            f.write('fact %d: %s\n' % (fi, fact_text))
                 f.write('---------------------------------\n')
 
-    def generating_texts(self, batch_utterances, batch_size, decode_type='greedy'):
+    def generating_texts(self, outputs, batch_size, decode_type='greedy'):
         """
         decode_type == greedy:
-            batch_utterances: [batch_size, max_len]
+            outputs: [batch_size, max_len]
             return: [batch_size]
         decode_type == 'beam_search':
-            batch_utterances: [batch_size, topk, max_len]
+            outputs: [batch_size, topk, max_len]
             return: [batch_size, topk]
         """
 
         batch_generated_texts=[]
         if decode_type == 'greedy':
             for bi in range(batch_size):
-                text=self.vocab.ids_to_text(batch_utterances[bi].tolist())
+                text=self.vocab.ids_to_text(outputs[bi].tolist())
                 batch_generated_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
-                best_n_ids = batch_utterances[bi]
+                best_n_ids = outputs[bi]
                 best_n_texts=[]
                 for ids in best_n_ids:
                     text = self.vocab.ids_to_text(ids)
