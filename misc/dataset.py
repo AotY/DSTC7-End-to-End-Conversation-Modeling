@@ -136,7 +136,7 @@ class Dataset:
             # train-eval split
             n_train = int(len(datas) * (1. - eval_split - test_split))
             n_eval = max(int(len(datas) * eval_split), batch_size)
-            n_test = len(datas) - self.n_train - self.n_eval
+            n_test = len(datas) - n_train - n_eval
             self._size_dict = {
                 'train': n_train,
                 'eval': n_eval,
