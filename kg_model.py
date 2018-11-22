@@ -23,6 +23,7 @@ class KGModel(nn.Module):
     generating responses on both conversation history and external "facts", allowing the model
     to be versatile and applicable in an open-domain setting.
     '''
+
     def __init__(self,
                  model_type,
                  vocab_size,
@@ -185,7 +186,8 @@ class KGModel(nn.Module):
         )
 
         if h_encoder_hidden_state is None:
-            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(0).repeat(self.decoder_num_layers, 1, 1)
+            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(
+                0).repeat(self.decoder_num_layers, 1, 1)
         else:
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
@@ -203,38 +205,38 @@ class KGModel(nn.Module):
             f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
-        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+        decoder_input = decoder_inputs[0].view(1, -1)
+        decoder_outputs = []
+        for i in range(1, r_max_len):
+            decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
+                                                                   decoder_hidden_state,
+                                                                   None,
+                                                                   h_encoder_outputs,
+                                                                   h_encoder_lengths,
+                                                                   f_encoder_outputs,
+                                                                   f_encoder_lengths)
 
-        if use_teacher_forcing:
-            decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
-                                                                               decoder_hidden_state,
-                                                                               decoder_inputs_length,
-                                                                               h_encoder_outputs,
-                                                                               h_encoder_lengths,
-                                                                               f_encoder_outputs,
-                                                                               f_encoder_lengths)
-            return decoder_outputs
+            use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
-        else:
-            decoder_outputs = []
-            decoder_input = decoder_inputs[0].view(1, -1)
-            for i in range(r_max_len):
-                decoder_output, decoder_hidden_state, attn_weights = self.decoder(decoder_input,
-                                                                                  decoder_hidden_state,
-                                                                                  None,
-                                                                                  h_encoder_outputs,
-                                                                                  h_encoder_lengths,
-                                                                                  f_encoder_outputs,
-                                                                                  f_encoder_lengths)
-
-                decoder_outputs.append(decoder_output)
+            if use_teacher_forcing:
+                decoder_input = decoder_inputs[i].view(1, -1)
+            else:
                 decoder_input = torch.argmax(
                     decoder_output, dim=2).detach().view(1, -1)
 
-            # [r_max_len, batch_size, vocab_size]
-            decoder_outputs = torch.cat(decoder_outputs, dim=0)
+            decoder_outputs.append(decoder_output)
+        decoder_outputs = torch.cat(decoder_outputs, dim=0)
 
-            return decoder_outputs
+        """
+        decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
+                                                                            decoder_hidden_state,
+                                                                            decoder_inputs_length,
+                                                                            h_encoder_outputs,
+                                                                            h_encoder_lengths,
+                                                                            f_encoder_outputs,
+                                                                            f_encoder_lengths)
+        """
+        return decoder_outputs
 
     '''evaluate'''
 
@@ -376,7 +378,8 @@ class KGModel(nn.Module):
                       eosid):
 
         greedy_outputs = []
-        input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * sosid
+        input = torch.ones((1, batch_size), dtype=torch.long,
+                           device=self.device) * sosid
         for i in range(r_max_len):
             decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
                                                                               decoder_hidden_state,
@@ -386,7 +389,8 @@ class KGModel(nn.Module):
                                                                               f_encoder_outputs,
                                                                               f_encoder_lengths)
 
-            input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
+            input = torch.argmax(
+                decoder_output, dim=2).detach()  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == eosid:
@@ -397,7 +401,6 @@ class KGModel(nn.Module):
         greedy_outputs.transpose_(0, 1)
 
         return greedy_outputs
-
 
     def beam_decode(self,
                     hidden_state=None,
@@ -420,7 +423,8 @@ class KGModel(nn.Module):
             prediction: [batch_size, beam, max_len]
         '''
         # [1, batch_size x beam_width]
-        input = torch.ones(batch_size * beam_width, dtype=torch.long, device=self.device) * sosid
+        input = torch.ones(batch_size * beam_width,
+                           dtype=torch.long, device=self.device) * sosid
 
         # [num_layers, batch_size x beam_width, hidden_size]
         hidden_state = hidden_state.repeat(1, beam_width, 1)
@@ -440,7 +444,8 @@ class KGModel(nn.Module):
         # [batch_size x beam_width]
         # Ex. batch_size: 5, beam_width: 3
         # [0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf]
-        score = torch.ones(batch_size * beam_width, device=self.device) * -float('inf')
+        score = torch.ones(batch_size * beam_width,
+                           device=self.device) * -float('inf')
 
         score.index_fill_(0, torch.arange(
             0, batch_size, dtype=torch.long, device=self.device) * beam_width, 0.0)
@@ -640,15 +645,18 @@ class KGModel(nn.Module):
             )
             """
 
-            outputs, hidden_state = self.simple_encoder(f_input, f_input_length)
+            outputs, hidden_state = self.simple_encoder(
+                f_input, f_input_length)
             output = outputs[-1]
 
             hidden_state = self.reduce_state(hidden_state)
             f_hidden_states.append(hidden_state)
             f_outputs.append(output)
 
-        f_outputs = torch.stack(f_outputs, dim=0)  # [topk, batch_size, hidden_size]
-        f_hidden_states = torch.stack(f_hidden_states, dim=0).mean(0) # [num_layes, batch_size, hidden_size]
+        # [topk, batch_size, hidden_size]
+        f_outputs = torch.stack(f_outputs, dim=0)
+        f_hidden_states = torch.stack(f_hidden_states, dim=0).mean(
+            0)  # [num_layes, batch_size, hidden_size]
 
         return f_outputs, f_hidden_states, f_topks_length
 
@@ -660,11 +668,11 @@ class KGModel(nn.Module):
         ignore padding_idx
         """
         #  print(f_inputs.shape)
-        f_embedded = list() # [topk, batch_size, embedding_size]
+        f_embedded = list()  # [topk, batch_size, embedding_size]
         for i in range(f_inputs.size(0)):
             batch_embedded = list()
             for j in range(f_inputs.size(2)):
-                fact = f_inputs[i, :, j].contiguous() # [max_len]
+                fact = f_inputs[i, :, j].contiguous()  # [max_len]
                 nonzero_count = fact.nonzero().numel()
                 embedded = self.encoder_embedding(fact)
                 embedded = embedded.sum(dim=0)
@@ -674,11 +682,13 @@ class KGModel(nn.Module):
 
                 batch_embedded.append(embedded)
 
-            batch_embedded = torch.stack(batch_embedded, dim=0) # [batch_size, embedding_size]
+            # [batch_size, embedding_size]
+            batch_embedded = torch.stack(batch_embedded, dim=0)
 
             f_embedded.append(batch_embedded)
 
-        f_embedded = torch.stack(f_embedded, dim=0) # [topk, batch_size, embedding_size]
+        # [topk, batch_size, embedding_size]
+        f_embedded = torch.stack(f_embedded, dim=0)
         #  print(f_embedded.shape)
 
         """

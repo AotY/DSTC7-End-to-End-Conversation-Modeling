@@ -33,7 +33,7 @@ python train_kg_model.py \
     --max_grad_norm 1.0 \
     --epochs 15 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.5 \
     --seed 7 \
     --device cuda \
     --log_interval 30 \
