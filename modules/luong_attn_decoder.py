@@ -137,9 +137,7 @@ class LuongAttnDecoder(nn.Module):
             output = output.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         if h_encoder_outputs is not None and h_encoder_lengths is not None:
-            output, h_attn_weights = self.h_attn(
-                output, h_encoder_outputs, h_encoder_lengths)
-            #  print('h_output: ', h_output)
+            output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_encoder_lengths)
 
         if f_encoder_outputs is not None:
             #  output, f_attn_weights = self.f_attn(output, f_encoder_outputs, f_encoder_lengths)
