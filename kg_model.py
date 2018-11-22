@@ -665,13 +665,12 @@ class KGModel(nn.Module):
             batch_embedded = list()
             for j in range(f_inputs.size(2)):
                 fact = f_inputs[i, :, j].contiguous() # [max_len]
-                print('fact: ', fact.shape)
                 nonzero_count = fact.nonzero().numel()
                 embedded = self.encoder_embedding(fact)
                 embedded = embedded.sum(dim=0)
                 if nonzero_count != 0:
                     embedded = embedded / nonzero_count  # [embedding_size]
-                print(embedded)
+                #  print(embedded)
 
                 batch_embedded.append(embedded)
 
