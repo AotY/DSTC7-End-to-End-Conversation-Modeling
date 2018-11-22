@@ -57,7 +57,7 @@ class Attention(nn.Module):
 
         if lengths is not None:
             mask = sequence_mask(lengths, max_len=attn.size(-1)) # mask: [batch_size, in_len]
-            mask = mask.unsqueeze(1).expanded(1, output_len, 1)  # Make it broadcastable.
+            mask = mask.unsqueeze(1).repeat(1, output_len, 1)  # Make it broadcastable.
             attn.data.masked_fill_(1 - mask, -float('inf'))
 
         # [batch, out_len, in_len]
