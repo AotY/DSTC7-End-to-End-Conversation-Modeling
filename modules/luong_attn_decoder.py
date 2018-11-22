@@ -94,15 +94,15 @@ class LuongAttnDecoder(nn.Module):
                 f_encoder_lengths=None,
                 z=None):
         '''
-                Args:
-                        inputs: [1, batch_size]
-                        hidden_state: [num_layers, batch_size, hidden_size]
+        Args:
+            inputs: [1, batch_size] or [max_len, batch_size]
+            hidden_state: [num_layers, batch_size, hidden_size]
             inputs_length: [batch_size, ] or [1, ]
 
-                        h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
+            h_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
             h_encoder_lengths: [batch_size]
 
-                        f_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
+            f_encoder_outputs: [turn_num, batch_size, hidden_size] or [1, batch_size, hidden_size]
             f_encoder_lengths: [batch_size]
 
             z: for latent variable model. [num_layers, batch_size, latent_size]
@@ -114,11 +114,9 @@ class LuongAttnDecoder(nn.Module):
 
         if inputs_length is not None:
             # sort inputs_length
-            inputs_length, sorted_indexes = torch.sort(
-                inputs_length, dim=0, descending=True)
+            inputs_length, sorted_indexes = torch.sort(inputs_length, dim=0, descending=True)
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
-
             inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
 
         # embedded
@@ -126,8 +124,7 @@ class LuongAttnDecoder(nn.Module):
         embedded = self.dropout(embedded)
 
         if inputs_length is not None:
-            embedded = nn.utils.rnn.pack_padded_sequence(
-                embedded, inputs_length)
+            embedded = nn.utils.rnn.pack_padded_sequence(embedded, inputs_length)
 
         # Get current hidden state from inputs word and last hidden state
         if z is not None:
@@ -137,10 +134,7 @@ class LuongAttnDecoder(nn.Module):
 
         if inputs_length is not None:
             output, _ = nn.utils.rnn.pad_packed_sequence(output)
-            output = output.transpose(
-                0, 1)[restore_indexes].transpose(0, 1).contiguous()
-
-        #  print('output: ', output)
+            output = output.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         if h_encoder_outputs is not None and h_encoder_lengths is not None:
             output, h_attn_weights = self.h_attn(

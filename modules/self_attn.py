@@ -75,30 +75,39 @@ class SelfAttentive(nn.Module):
         """
         Args:
             inputs: [max_len, batch_size]
+            length: [batch_size]
         return:
             outputs: [batch_size, mlp_output_size]
         """
         max_len, batch_size = inputs.size()
-        #  print(inputs)
+
+        if lengths is not None:
+            lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
+            _, restore_indexes = torch.sort(sorted_indexes, dim=0)
+            inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
 
         embedded = self.embedding(inputs)
-        #  print(embedded)
         embedded = self.dropout(embedded)
 
+        if lengths is not None:
+            embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths)
+
         outputs, hidden_state = self.rnn(embedded) # outputs: [max_len, batch_size, hidden_size]
-        #  print('outputs: ', outputs)
+
+        if lengths is not None:
+            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
+            outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         A = torch.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]
 
         # mask
         if lengths is not None:
-            mask = sequence_mask(lengths, max_len=A.size(-1)) #mask: [batch_size, max_len)
-            mask = mask.unsqueeze(1).repeat(1, self.attn_hops, 1)  # Make it broadcastable. # [batch_size, 1, max_len]
-            A.data.masked_fill_(1 - mask, -float('inf')) # [batch_size, 1, max_len]
+            mask = sequence_mask(lengths, max_len=A.size(-1)) #mask: [batch_size, max_len]
+            mask = mask.unsqueeze(1).repeat(1, self.attn_hops, 1)  # Make it broadcastable.
+            A.data.masked_fill_(1 - mask, -float('inf'))
 
         A = F.softmax(A, dim=2) # [batch_size, attn_hops, max_len]
-        #  print('A: ', A)
 
         M = torch.bmm(A, outputs.transpose(0, 1)) # [batch_size, attn_hops, hidden_size]
         M = M.view(batch_size, -1) # [batch_size, attn_hops * hidden_size]
