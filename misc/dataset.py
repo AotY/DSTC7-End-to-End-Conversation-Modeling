@@ -24,7 +24,6 @@ class Dataset:
         * SOS and EOS are top 2 tokens
         * dictionary ordered by frequency
         """
-
     def __init__(self,
                  config,
                  vocab,
@@ -42,19 +41,14 @@ class Dataset:
         self._data_dict = {}
         self._indicator_dict = {}
 
-        self.read_txt(save_path,
-                      pair_path,
-                      eval_split,
-                      test_split,
-                      batch_size)
+        self.read_txt()
 
-    def read_txt(self, save_path, pair_path, eval_split, test_split, batch_size):
-        _data_dict_path = os.path.join(save_path, '_data_dict.%s.%s.pkl' % (self.turn_type, self.turn_num))
+    def read_txt(self):
+        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s.%s.pkl' % (self.config.turn_type, self.config.turn_num))
         if not os.path.exists(_data_dict_path):
-            # load source-target pairs, tokenized
             datas = []
-            with open(pair_path, 'r', encoding='utf-8') as f:
-                for line in f:
+            with open(self.config.pair_path, 'r', encoding='utf-8') as f:
+                for line in tqdm(f):
                     line = line.rstrip()
                     if not bool(line):
                         continue
@@ -65,11 +59,11 @@ class Dataset:
                         continue
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) < self.min_len or len(response_ids) > self.r_max_len + 50:
+                    if len(response_ids) < self.config.min_len or len(response_ids) > self.config.r_max_len + 50:
                         continue
 
                     #  response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
-                    response_ids = response_ids[:min(self.r_max_len - 1, len(response_ids))]
+                    response_ids = response_ids[:min(self.config.r_max_len - 1, len(response_ids))]
 
                     # context split by EOS, START
                     if context.startswith('start eos'):
@@ -89,15 +83,15 @@ class Dataset:
                     else:
                         sentences = self.parser_conversations(context)
 
-                    if sentences is None or len(sentences) < self.min_turn:
+                    if sentences is None or len(sentences) < self.config.min_turn:
                         continue
 
-                    sentences = sentences[-min(self.turn_num, len(sentences)):]
+                    sentences = sentences[-min(self.config.turn_num, len(sentences)):]
 
-                    if self.turn_type == 'concat':
+                    if self.config.turn_type == 'concat':
                         context = ' '.join(sentences)
                         sentences = [context]
-                    elif self.turn_type == 'none':
+                    elif self.config.turn_type == 'none':
                         context = sentences[-1]
                         sentences = [context]
 
@@ -106,7 +100,7 @@ class Dataset:
                     sentences_ids = []
                     for sentence in sentences:
                         sentence_ids = self.vocab.words_to_id(sentence.split(' '))
-                        sentence_ids = sentence_ids[-min(self.c_max_len, len(sentence_ids)):]
+                        sentence_ids = sentence_ids[-min(self.config.c_max_len, len(sentence_ids)):]
                         sentences_ids.append(sentence_ids)
                         sentences_text.append(' '.join(self.vocab.ids_to_word(sentence_ids)))
 
@@ -114,8 +108,8 @@ class Dataset:
 
             np.random.shuffle(datas)
             # train-eval split
-            n_train = int(len(datas) * (1. - eval_split - test_split))
-            n_eval = max(int(len(datas) * eval_split), batch_size)
+            n_train = int(len(datas) * (1. - self.config.eval_split - self.config.test_split))
+            n_eval = max(int(len(datas) * self.config.eval_split), self.config.batch_size)
             n_test = len(datas) - n_train - n_eval
             self._size_dict = {
                 'train': n_train,
@@ -145,7 +139,7 @@ class Dataset:
 
     def parser_conversations(self, context):
         sentences = context.split('eos')
-        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.min_len]
+        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
         return sentences
 
     def reset_data(self, task, shuffle=True):
@@ -169,11 +163,11 @@ class Dataset:
 
         h_turns_length = list()
 
-        decoder_inputs = torch.zeros((self.r_max_len, batch_size),
+        decoder_inputs = torch.zeros((self.config.r_max_len, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
 
-        decoder_targets = torch.zeros((self.r_max_len, batch_size),
+        decoder_targets = torch.zeros((self.config.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
 
@@ -199,31 +193,31 @@ class Dataset:
             context_texts.append(sentences_text)
 
             # h inputs
-            h_inputs_lenght.append(list([1]) * self.turn_num)
+            h_inputs_lenght.append(list([1]) * self.config.turn_num)
             h_turns_length.append(len(sentences_ids))
 
-            h_input = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
-            if self.turn_type == 'transformer':
-                h_position = torch.zeros((self.c_max_len, self.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+            h_input = torch.zeros((self.config.c_max_len, self.config.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
+            if self.config.turn_type == 'transformer':
+                h_position = torch.zeros((self.config.c_max_len, self.config.turn_num), dtype=torch.long).to(self.device) #[max_len, turn_num]
 
             for j, ids in enumerate(sentences_ids):
                 h_inputs_lenght[i][j] = len(ids)
 
-                tmp_i = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
-                if self.turn_type == 'transformer':
-                    tmp_p = torch.zeros(self.c_max_len, dtype=torch.long, device=self.device)
+                tmp_i = torch.zeros(self.config.c_max_len, dtype=torch.long, device=self.device)
+                if self.config.turn_type == 'transformer':
+                    tmp_p = torch.zeros(self.config.c_max_len, dtype=torch.long, device=self.device)
 
                 for k, id in enumerate(ids):
                     tmp_i[k] = id
-                    if self.turn_type == 'transformer':
+                    if self.config.turn_type == 'transformer':
                         tmp_p[k] = k + 1
 
                 h_input[:, j] = tmp_i
-                if self.turn_type == 'transformer':
+                if self.config.turn_type == 'transformer':
                     h_position[:, j] = tmp_p
 
             h_inputs.append(h_input)
-            if self.turn_type == 'transformer':
+            if self.config.turn_type == 'transformer':
                 h_inputs_position.append(h_position)
 
             # decoder_inputs
@@ -234,21 +228,21 @@ class Dataset:
             decoder_targets[len(response_ids), i] = self.vocab.eosid
             decoder_inputs_length.append(len(response_ids) + 1)
 
-            if self.model_type == 'kg':
+            if self.config.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(conversation_id, None)
-                f_input = torch.zeros((self.f_topk, self.f_max_len),
+                f_input = torch.zeros((self.config.f_topk, self.config.f_max_len),
                                             dtype=torch.long,
                                             device=self.device)
 
-                f_input_length = torch.ones(self.f_topk,
+                f_input_length = torch.ones(self.config.f_topk,
                                             dtype=torch.long,
                                             device=self.device)
 
                 if topk_facts_text is not None:
                     topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
-                    f_topks_length.append(min(len(topk_facts_ids), self.f_topk))
-                    for fi, ids in enumerate(topk_facts_ids[:self.f_topk]):
-                        ids = ids[:min(self.f_max_len, len(ids))]
+                    f_topks_length.append(min(len(topk_facts_ids), self.config.f_topk))
+                    for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
+                        ids = ids[:min(self.config.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
                             f_input[fi, fj] = id
@@ -261,7 +255,7 @@ class Dataset:
                 facts_texts.append(topk_facts_text)
 
         h_inputs = torch.stack(h_inputs, dim=1) # [max_len, batch_size, turn_num]
-        if self.turn_type == 'transformer':
+        if self.config.turn_type == 'transformer':
             h_inputs_position = torch.stack(h_inputs_position, dim=1) # [max_len, batch_size, turn_num]
 
         h_turns_length = torch.tensor(h_turns_length, dtype=torch.long, device=self.device)
@@ -269,7 +263,7 @@ class Dataset:
 
         decoder_inputs_length = torch.tensor(decoder_inputs_length, dtype=torch.long, device=self.device) #[batch_size]
 
-        if self.model_type == 'kg':
+        if self.config.model_type == 'kg':
             f_inputs = torch.stack(f_inputs, dim=2) # [topk, max_len, batch_size]
             f_inputs_length = torch.stack(f_inputs_length, dim=1) # [f_topk, batch_size]
 
@@ -292,8 +286,8 @@ class Dataset:
             self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
         else:
             r = Rake(
-                min_length=self.min_len,
-                max_length=self.f_max + 20
+                min_length=self.config.min_len,
+                max_length=self.config.f_max + 20
             )
             ranked_phrase_dict = {}
             ranked_phrase_embedded_didct = {}
@@ -336,7 +330,7 @@ class Dataset:
                         sum_scores.append(scores)
                     sum_scores = torch.stack(sum_scores) # [len(sentences), len(phrase_embeddeds)]
                     sum_socre = sum_scores.sum(dim=0) # [len(phrase_embeddeds)]
-                    _, indexs = sum_socre.topk(self.f_topk, dim=0)
+                    _, indexs = sum_socre.topk(self.config.f_topk, dim=0)
                     facts = list()
                     phrases = ranked_phrase_dict[conversation_id]
                     for index in indexs.tolist():
@@ -361,7 +355,7 @@ class Dataset:
         facts_weight=[]
         new_facts=[]
         for fact in facts:
-            if len(fact) < self.min_len:
+            if len(fact) < self.config.min_len:
                 continue
             fact_str = " ".join(fact)
             fact_weight=default_weight
@@ -371,11 +365,11 @@ class Dataset:
                     fact_str=fact_str.replace(tag, '')
                     fact_str=fact_str.replace(tag[0] + '/' + tag[1:], '')
 
-            if len(fact_str.split(" ")) >= self.min_len:
+            if len(fact_str.split(" ")) >= self.config.min_len:
                 new_facts.append(fact_str)
                 facts_weight.append(fact_weight)
 
-        return new_facts,  facts_weight
+        return new_facts, facts_weight
 
 
     def save_generated_texts(self,
