@@ -44,7 +44,8 @@ opt = parser.parse_args()
 
 # logger file
 time_str = time.strftime('%Y_%m_%d_%H:%M')
-opt.log_path = opt.log_path.format(opt.model_type, time_str, opt.turn_num, opt.turn_type)
+opt.log_path = opt.log_path.format(
+    opt.model_type, time_str, opt.turn_num, opt.turn_type)
 logger.info('log_path: {}'.format(opt.log_path))
 
 device = torch.device(opt.device)
@@ -59,6 +60,7 @@ if opt.turn_type == 'concat':
 
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
+
 
 def train_epochs(model,
                  dataset,
@@ -80,9 +82,10 @@ def train_epochs(model,
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            context_texts, response_texts, \
-            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('train', opt.batch_size)
+                context_texts, response_texts, \
+                f_inputs, f_inputs_length, f_topks_length, facts_texts, \
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                    'train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
@@ -105,8 +108,8 @@ def train_epochs(model,
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
                 logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % (epoch, timeSince(start, load / max_load),
-                                                                                load, load / max_load * 100, log_loss_avg,
-                                                                                log_accuracy_avg, math.exp(log_loss_avg))
+                                                                                                    load, load / max_load * 100, log_loss_avg,
+                                                                                                    log_accuracy_avg, math.exp(log_loss_avg))
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
@@ -132,7 +135,8 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
+        logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (
+            evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
         logger.info(logger_str)
         save_logger(logger_str)
 
@@ -147,6 +151,7 @@ def train_epochs(model,
 
 
 ''' start traing '''
+
 
 def train(model,
           h_inputs,
@@ -199,12 +204,12 @@ def train(model,
     loss.backward()
 
     #  for p, n in zip(model.simple_encoder.rnn.parameters(), model.simple_encoder.rnn._all_weights[0]):
-        #  if n[:6] == 'weight':
-            #  print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
+    #  if n[:6] == 'weight':
+    #  print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
     #  for p, n in zip(model.self_attn_encoder.rnn.parameters(), model.self_attn_encoder.rnn._all_weights[0]):
-        #  if n[:6] == 'weight':
-            #  print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
+    #  if n[:6] == 'weight':
+    #  print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
     # optimizer
     optimizer.step()
@@ -213,9 +218,11 @@ def train(model,
 
     return loss.item(), accuracy
 
+
 '''
 evaluate model.
 '''
+
 
 def evaluate(model,
              dataset,
@@ -225,18 +232,19 @@ def evaluate(model,
     model.eval()
     loss_total = 0
     accuracy_total = 0
-    max_load = int(np.ceil(dataset._size_dict['test'] / opt.batch_size))
+    max_load = int(np.floor(dataset._size_dict['test'] / opt.batch_size))
     dataset.reset_data('test', False)
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            context_texts, response_texts, \
-            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
+                context_texts, response_texts, \
+                f_inputs, f_inputs_length, f_topks_length, facts_texts, \
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                    'test', opt.batch_size)
 
             # train and get cur loss
-            decoder_outputs=model.evaluate(
+            decoder_outputs = model.evaluate(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
@@ -248,13 +256,15 @@ def evaluate(model,
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
             decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-            accuracy = compute_accuracy(decoder_outputs_argmax, decoder_targets)
+            accuracy = compute_accuracy(
+                decoder_outputs_argmax, decoder_targets)
 
             #  Compute loss
-            decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
+            decoder_outputs = decoder_outputs.view(-1,
+                                                   decoder_outputs.shape[-1])
             decoder_targets = decoder_targets.view(-1)
 
-            loss=criterion(decoder_outputs,
+            loss = criterion(decoder_outputs,
                              decoder_targets)
 
             loss_total += loss.item()
@@ -267,13 +277,14 @@ def decode(model, dataset):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     dataset.reset_data('eval', False)
-    max_load = int(np.ceil(dataset._size_dict['eval'] / opt.batch_size))
+    max_load = int(np.floor(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-            context_texts, response_texts, \
-            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('eval', opt.batch_size)
+                context_texts, response_texts, \
+                f_inputs, f_inputs_length, f_topks_length, facts_texts, \
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                    'eval', opt.batch_size)
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
@@ -289,8 +300,8 @@ def decode(model, dataset):
             # generate sentence, and save to file
             # [max_length, batch_size]
             greedy_texts = dataset.generating_texts(greedy_outputs,
-                                                   opt.batch_size,
-                                                   'greedy')
+                                                    opt.batch_size,
+                                                    'greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   opt.batch_size,
@@ -302,9 +313,11 @@ def decode(model, dataset):
                                          response_texts,
                                          greedy_texts,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
+                                         os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
+                                             opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
+
 
 def compute_accuracy(decoder_outputs_argmax, decoder_targets):
     """
@@ -320,7 +333,8 @@ def compute_accuracy(decoder_outputs_argmax, decoder_targets):
 
     accuracy_tensor = match_tensor * decoder_mask
 
-    accuracy = float(torch.sum(accuracy_tensor)) / float(torch.sum(decoder_mask))
+    accuracy = float(torch.sum(accuracy_tensor)) / \
+        float(torch.sum(decoder_mask))
 
     return accuracy
 
@@ -332,12 +346,13 @@ def save_logger(logger_str):
     with open(opt.log_path, 'a', encoding='utf-8') as f:
         f.write(logger_str)
 
+
 def build_optimizer(model):
     optim = torch.optim.Adam(
-            model.parameters(),
-            opt.lr,
-            betas=(0.9, 0.98),
-            eps=1e-09
+        model.parameters(),
+        opt.lr,
+        betas=(0.9, 0.98),
+        eps=1e-09
     )
 
     scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.5)
@@ -357,6 +372,7 @@ def build_criterion(padid):
     #  criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
 
     return criterion
+
 
 def cal_loss(pred, gold, smoothing, padid=0):
     ''' Calculate cross entropy loss, apply label smoothing if needed. '''
@@ -379,19 +395,22 @@ def cal_loss(pred, gold, smoothing, padid=0):
 
     return loss
 
+
 def load_fasttext_embedding(fasttext, vocab):
     words_embedded = list()
     for id, word in sorted(vocab.idx2word.items(), key=lambda item: item[0]):
         try:
-            word_embedded = fasttext[word]
+            word_embedded = torch.from_numpy(fasttext[word])
         except KeyError:
             word_embedded = torch.rand(opt.pre_embedding_size)
 
         word_embedded = word_embedded.to(device)
         words_embedded.append(word_embedded)
+    # [vocab_size, pre_embedding_size]
     words_embedded = torch.stack(words_embedded)
 
     return words_embedded
+
 
 def build_model(vocab, pre_trained_weight=None):
     logger.info('Building model...')
@@ -402,23 +421,24 @@ def build_model(vocab, pre_trained_weight=None):
             pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
 
     model = KGModel(
-                opt,
-                vocab,
-                device,
-                pre_trained_weight,
-        )
+        opt,
+        vocab,
+        device,
+        pre_trained_weight,
+    )
 
     model = model.to(device)
 
     print(model)
     return model
 
+
 def build_dataset(vocab):
     dataset = Dataset(
-                opt,
-                vocab,
-                device,
-                logger)
+        opt,
+        vocab,
+        device,
+        logger)
 
     return dataset
 
@@ -435,25 +455,28 @@ def save_checkpoint(state, is_best, filename):
     if is_best:
         shutil.copy(filename, 'model_best_%s.pth' % opt.model_type)
 
+
 def load_fasttext_model(vec_file):
     fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
     return fasttext
 
+
 def load_checkpoint(filename):
-    checkpoint=torch.load(filename)
+    checkpoint = torch.load(filename)
     return checkpoint
 
+
 def asMinutes(s):
-    m=math.floor(s / 60)
+    m = math.floor(s / 60)
     s -= m * 60
     return '%dm %ds' % (m, s)
 
 
 def timeSince(since, percent):
-    now=time.time()
-    s=now - since
-    es=s / (percent)
-    rs=es - s
+    now = time.time()
+    s = now - since
+    es = s / (percent)
+    rs = es - s
     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
 
 
@@ -482,19 +505,23 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % 'embedding')
+        offline_filename = os.path.join(
+            opt.save_path, 'facts_topk_phrases.%s.pkl' % 'embedding')
         facts_dict = None
         if not os.path.exists(offline_filename):
             facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
 
-        embedding = nn.Embedding.from_pretrained(pre_trained_weight)
-        with torch.no_grad():
-            dataset.build_similarity_facts_offline(
-                facts_dict,
-                offline_filename,
-                embedding,
-            )
-        del embedding
+        if not os.path.exists(offline_filename):
+            embedding = nn.Embedding.from_pretrained(pre_trained_weight)
+            with torch.no_grad():
+                dataset.build_similarity_facts_offline(
+                    facts_dict,
+                    offline_filename,
+                    embedding,
+                )
+            del embedding
+        else:
+            dataset.load_similarity_facts(offline_filename)
 
     model = build_model(vocab, pre_trained_weight)
 
@@ -531,8 +558,8 @@ if __name__ == '__main__':
                      early_stopping=early_stopping)
     elif opt.task == 'eval':
         evaluate(model,
-                dataset,
-                criterion)
+                 dataset,
+                 criterion)
     elif opt.task == 'decode':
         decode(model, dataset, vocab)
     else:

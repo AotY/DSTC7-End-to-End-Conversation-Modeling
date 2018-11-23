@@ -4,6 +4,7 @@ import random
 import torch
 import torch.nn as nn
 
+from module.normal_encoder import NormalEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
@@ -49,6 +50,11 @@ class KGModel(nn.Module):
             )
             init_wt_normal(self.encoder_embedding.weight,
                            self.encoder_embedding.embedding_dim)
+
+        self.normal_encoder = NormalEncoder(
+            config,
+            self.encoder_embedding,
+        )
 
         # h_encoder
         if config.turn_type == 'transformer':
@@ -104,9 +110,9 @@ class KGModel(nn.Module):
                 f_topks_length):
         '''
         input:
-            h_inputs: # [max_len, batch_size, turn_num]
+            h_inputs: # [turn_num, max_len, batch_size]
+            h_inputs_length: [turn_num, batch_size]
             h_turns_length: [batch_size]
-            h_inputs_length: [batch_size, turn_num]
 
             decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
@@ -130,10 +136,10 @@ class KGModel(nn.Module):
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
         # fact encoder
-        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
+        f_encoder_outputs, f_encoder_lengths = None, f_topks_length
         if self.config.model_type == 'kg':
             """
-            f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
+            f_encoder_outputs = self.f_forward(
                 f_inputs,
                 f_inputs_length,
                 f_topks_length,
@@ -159,7 +165,6 @@ class KGModel(nn.Module):
 
             decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
                                                                    decoder_hidden_state,
-                                                                   None,
                                                                    h_encoder_outputs,
                                                                    h_encoder_lengths,
                                                                    f_encoder_outputs,
@@ -187,6 +192,9 @@ class KGModel(nn.Module):
                  f_inputs_length,
                  f_topks_length):
         '''
+        h_inputs: # [turn_num, max_len, batch_size]
+        h_inputs_length: [turn_num, batch_size]
+        h_turns_length: [batch_size]
         c_encoder_inputs: [seq_len, batch_size], maybe [r_max_len, 1]
         decoder_input: [1, batch_size], maybe: [sos * 1]
         '''
@@ -204,13 +212,16 @@ class KGModel(nn.Module):
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
         # fact encoder
-        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
+        f_encoder_outputs, f_encoder_lengths = None, f_topks_length
         if self.config.model_type == 'kg':
-            #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
-                #  f_inputs,
-                #  f_inputs_length,
-                #  f_topks_length,
-            #  )
+            """
+            f_encoder_outputs = self.f_forward(
+                f_inputs,
+                f_inputs_length,
+                f_topks_length,
+            )
+            decoder_hidden_state += f_encoder_hidden_state
+            """
             f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
@@ -219,7 +230,6 @@ class KGModel(nn.Module):
         for i in range(self.config.r_max_len):
             decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
                                                                    decoder_hidden_state,
-                                                                   None,
                                                                    h_encoder_outputs,
                                                                    h_encoder_lengths,
                                                                    f_encoder_outputs,
@@ -257,13 +267,16 @@ class KGModel(nn.Module):
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
         # f encoder
-        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
+        f_encoder_outputs, f_encoder_lengths = None, f_topks_length
         if self.config.model_type == 'kg':
-            #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
-                #  f_inputs,
-                #  f_inputs_length,
-                #  f_topks_length,
-            #  )
+            """
+            f_encoder_outputs = self.f_forward(
+                f_inputs,
+                f_inputs_length,
+                f_topks_length,
+            )
+            decoder_hidden_state += f_encoder_hidden_state
+            """
             f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
@@ -294,12 +307,11 @@ class KGModel(nn.Module):
                       f_encoder_lengths):
 
         greedy_outputs = []
-        input = torch.ones((1, batch_size), dtype=torch.long,
+        input = torch.ones((1, self.config.batch_size), dtype=torch.long,
                            device=self.device) * self.vocab.sosid
-        for i in range(r_max_len):
+        for i in range(self.config.r_max_len):
             output, hidden_state, attn_weights = self.decoder(input,
                                                               hidden_state,
-                                                              None,
                                                               h_encoder_outputs,
                                                               h_encoder_lengths,
                                                               f_encoder_outputs,
@@ -332,6 +344,7 @@ class KGModel(nn.Module):
         Return:
             prediction: [batch_size, beam, max_len]
         '''
+        batch_size, beam_size = self.config.batch_size, self.config.beam_size
         # [1, batch_size x beam_size]
         input = torch.ones(batch_size * beam_size,
                            dtype=torch.long, device=self.device) * self.vocab.sosid
@@ -356,17 +369,15 @@ class KGModel(nn.Module):
         # Initialize Beam that stores decisions for backtracking
         beam = Beam(
             batch_size,
-            self.config.vocab_size,
             self.config.beam_size,
             self.config.r_max_len,
             batch_position,
             self.vocab.eosid
         )
 
-        for i in range(r_max_len):
+        for i in range(self.config.r_max_len):
             output, hidden_state, _ = self.decoder(input.view(1, -1),
                                                    hidden_state,
-                                                   None,
                                                    h_encoder_outputs,
                                                    h_encoder_lengths,
                                                    f_encoder_outputs,
@@ -394,6 +405,7 @@ class KGModel(nn.Module):
             # [num_layers, batch_size * beam_size, hidden_size]
             hidden_state = hidden_state.index_select(1, top_k_pointer)
 
+            """
             if h_encoder_outputs is not None:
                 h_encoder_outputs = h_encoder_outputs.index_select(1, top_k_pointer)
                 h_encoder_lengths = h_encoder_lengths.index_select(0, top_k_pointer)
@@ -401,13 +413,14 @@ class KGModel(nn.Module):
             if f_encoder_outputs is not None:
                 f_encoder_outputs = f_encoder_outputs.index_select(1, top_k_pointer)
                 f_encoder_lengths = f_encoder_lengths.index_select(0, top_k_pointer)
+            """
 
             # Update sequence scores at beam
             beam.update(score.clone(), top_k_pointer, input)
 
             # Erase scores for EOS so that they are not expanded
             # [batch_size, beam_size]
-            eos_idx = input.data.eq(eosid).view(batch_size, beam_size)
+            eos_idx = input.data.eq(self.vocab.eosid).view(batch_size, beam_size)
 
             if eos_idx.nonzero().dim() > 0:
                 score.data.masked_fill_(eos_idx, -float('inf'))
@@ -423,39 +436,34 @@ class KGModel(nn.Module):
                   h_inputs_position):
         """history forward
         Args:
-            h_inputs: # [max_len, batch_size, turn_num]
+            h_inputs: # [turn_num, max_len, batch_size]
+            h_inputs_length: [turn_num, batch_size]
             h_turns_length: [batch_size]
-            h_inputs_length: [batch_size, turn_num]
         turn_type:
         """
         if self.config.turn_type == 'concat' or self.config.turn_type == 'none':
-            inputs = h_inputs[:, :, 0]  # [max_len, batch_size]
-            inputs_length = h_inputs_length[:, 0]
+            inputs = h_inputs[0, :, :]  # [max_len, batch_size]
+            inputs_length = h_inputs_length[0, :]
 
             # [max_len, batch_size, hidden_size]
-            outputs, hidden_state = self.simple_encoder(inputs, inputs_length)
+            outputs, hidden_state = self.normal_encoder(inputs, inputs_length)
             return outputs, hidden_state, inputs_length
         else:
-            stack_outputs = []
-            #  stack_hidden_states = []
+            stack_outputs = list()
             for ti in range(self.config.turn_num):
-                inputs = h_inputs[:, :, ti]  # [max_len, batch_size]
-
+                inputs = h_inputs[ti, :, :]  # [max_len, batch_size]
                 if self.config.turn_type == 'transformer':
-                    inputs_position = h_inputs_position[:, :, ti]
-                    outputs = self.transformer_encoder(
-                        inputs.transpose(0, 1), inputs_position.transpose(0, 1))
-                    #  print('transformer: ', outputs.shape) # [batch_size, max_len, hidden_size]
+                    inputs_position = h_inputs_position[ti, :, :] # [max_len, batch_size]
+                    outputs = self.transformer_encoder(inputs.transpose(0, 1), inputs_position.transpose(0, 1))
+                    # [batch_size, max_len, hidden_size]
                     outputs = outputs.transpose(0, 1)
                 elif self.config.turn_type == 'self_attn':
-                    inputs_length = h_inputs_length[:, ti]  # [batch_size]
-                    outputs, hidden_state = self.self_attn_encoder(
-                        inputs, inputs_length)
-                    outputs = outputs.unsqueeze(0)
+                    inputs_length = h_inputs_length[ti, :]  # [batch_size]
+                    outputs, hidden_state = self.self_attn_encoder(inputs, inputs_length)
+                    outputs = outputs.unsqueeze(0) # [1, batch_size, hidden_size]
                 else:
-                    inputs_length = h_inputs_length[:, ti]  # [batch_size]
-                    outputs, hidden_state = self.simple_encoder(
-                        inputs, inputs_length)
+                    inputs_length = h_inputs_length[ti, :]  # [batch_size]
+                    outputs, hidden_state = self.normal_encoder(inputs, inputs_length)
 
                 stack_outputs.append(outputs[-1].unsqueeze(0))
 
@@ -484,18 +492,14 @@ class KGModel(nn.Module):
             elif self.config.turn_type == 'transformer':
                 # [turn_num, batch_size, hidden_size]
                 stack_outputs = torch.cat(stack_outputs, dim=0)
-                #  print('stack_outputs shape: ', stack_outputs.shape)
-                #  print(h_turns_length)
                 session_outputs, session_hidden_state = self.session_encoder(
                     stack_outputs, h_turns_length)  # [1, batch_size, hidden_size]
-                #  print(session_outputs.shape)
-                #  print(session_hidden_state.shape)
                 return session_outputs, session_hidden_state, h_turns_length
             elif self.config.turn_type == 'self_attn':
                 # [turn_num, batch_size, hidden_size]
                 stack_outputs = torch.cat(stack_outputs, dim=0)
-                session_outputs, session_hidden_state = self.session_encoder(
-                    stack_outputs, h_turns_length)  # session_hidden_state: [num_layers, batch_size, hidden_size]
+                # session_hidden_state: [num_layers, batch_size, hidden_size]
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length)
                 return session_outputs, session_hidden_state, h_turns_length
 
     def f_forward(self,
@@ -510,7 +514,6 @@ class KGModel(nn.Module):
             -hidden_state: [num_layers, batch_size, hidden_size]
         """
         f_outputs = list()
-        f_hidden_states = list()
         for i in range(f_inputs.size(0)):
             f_input = f_inputs[i, :, :]  # [max_len, batch_size]
             f_input_length = f_inputs_length[i, :]  # [batch_size]
@@ -518,27 +521,15 @@ class KGModel(nn.Module):
             #  output: [1, batch_size, hidden_size]
             #  hidden_state: [num_layers * bidirection_num, batch_size, hidden_size // 2]
 
-            """
-            output, hidden_state = self.self_attn_encoder(
-                f_input,
-                f_input_length
-            )
-            """
-
-            outputs, hidden_state = self.simple_encoder(
-                f_input, f_input_length)
+            outputs, hidden_state = self.normal_encoder(f_input, f_input_length)
             output = outputs[-1]
 
-            hidden_state = self.reduce_state(hidden_state)
-            f_hidden_states.append(hidden_state)
             f_outputs.append(output)
 
         # [topk, batch_size, hidden_size]
         f_outputs = torch.stack(f_outputs, dim=0)
-        f_hidden_states = torch.stack(f_hidden_states, dim=0).mean(
-            0)  # [num_layes, batch_size, hidden_size]
 
-        return f_outputs, f_hidden_states, f_topks_length
+        return f_outputs
 
     def f_embedding(self, f_inputs):
         """
@@ -547,18 +538,16 @@ class KGModel(nn.Module):
         f_topks_length: [batch_size]
         ignore padding_idx
         """
-        #  print(f_inputs.shape)
         f_embedded = list()  # [topk, batch_size, embedding_size]
         for i in range(f_inputs.size(0)):
             batch_embedded = list()
             for j in range(f_inputs.size(2)):
-                fact = f_inputs[i, :, j].contiguous()  # [max_len]
-                nonzero_count = fact.nonzero().numel()
-                embedded = self.encoder_embedding(fact)
+                ids = f_inputs[i, :, j].contiguous()  # [max_len]
+                nonzero_count = ids.nonzero().numel()
+                embedded = self.encoder_embedding(ids)
                 embedded = embedded.sum(dim=0)
                 if nonzero_count != 0:
                     embedded = embedded / nonzero_count  # [embedding_size]
-                #  print(embedded)
 
                 batch_embedded.append(embedded)
 
@@ -569,7 +558,6 @@ class KGModel(nn.Module):
 
         # [topk, batch_size, embedding_size]
         f_embedded = torch.stack(f_embedded, dim=0)
-        #  print(f_embedded.shape)
 
         """
         f_embedded = self.encoder_embedding(f_inputs) # [topk, max_len, batch_size, embedding_size]

@@ -15,7 +15,6 @@ import torch
 class Beam(object):
     def __init__(self,
                  batch_size,
-                 vocab_size,
                  beam_size,
                  max_len,
                  batch_position,
@@ -23,7 +22,6 @@ class Beam(object):
 
         """Beam class for beam search"""
         self.batch_size = batch_size
-        self.vocab_size = vocab_size
         self.beam_size = beam_size
         self.max_len = max_len
         self.eosid = eosid
