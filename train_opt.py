@@ -84,8 +84,8 @@ def model_opt(parser):
                        help='pre embedding size for dialog encoder.')
 
     group.add_argument('--pre_trained_embedding',
-                       type=str,
-                       help='pre trained word embedded.')
+                       action='store_true',
+                       help='using pre_trained word embedded.')
 
     group.add_argument('--share_embedding',
                        action='store_true',

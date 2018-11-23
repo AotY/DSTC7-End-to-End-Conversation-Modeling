@@ -43,7 +43,7 @@ train_opt(parser)
 opt = parser.parse_args()
 
 # logger file
-time_str = time.strftime('%Y-%m-%d_%H:%M')
+time_str = time.strftime('%Y_%m_%d_%H:%M')
 opt.log_path = opt.log_path.format(opt.model_type, time_str, opt.turn_num, opt.turn_type)
 logger.info('log_path: {}'.format(opt.log_path))
 
@@ -126,7 +126,7 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_path, 'checkpoint.epoch-%d_%s_%d_%s.pth' % (epoch, opt.model_type, opt.turn_num, opt.turn_type)))
+                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' % (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
@@ -394,17 +394,33 @@ def cal_loss(pred, gold, smoothing, padid=0):
 
     return loss
 
-def build_model(vocab_size, padid):
+def load_fasttext_embedding(fasttext, vocab):
+    words_embedded = list()
+    for id, word in sorted(vocab.idx2word.items(), key=lambda item: item[0]):
+        try:
+            word_embedded = fasttext[word]
+        except KeyError:
+            word_embedded = torch.rand(opt.pre_embedding_size)
+
+        word_embedded = word_embedded.to(device)
+        words_embedded.append(word_embedded)
+    words_embedded = torch.stack(words_embedded)
+
+    return words_embedded
+
+def build_model(vocab, fasttext=None):
     logger.info('Building model...')
 
     pre_trained_weight = None
-    if opt.pre_trained_embedding and os.path.exists(opt.pre_trained_embedding):
+    if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
         logger.info('load pre trained embedding...')
-        pre_trained_weight = torch.from_numpy(np.load(opt.pre_trained_embedding))
+        if fasttext is None:
+            fasttext = load_fasttext_model(opt.fasttext_vec)
+        pre_trained_weight = load_fasttext_embedding(fasttext, vocab, opt.pre_embedding_size)
 
     model = KGModel(
                 opt.model_type,
-                vocab_size,
+                vocab.size,
                 opt.c_max_len,
                 opt.pre_embedding_size,
                 opt.embedding_size,
@@ -420,7 +436,7 @@ def build_model(vocab_size, padid):
 				opt.decoder_type,
                 opt.attn_type,
                 opt.dropout,
-                padid,
+                vocab.padid,
                 opt.tied,
                 device,
                 pre_trained_weight,
@@ -500,16 +516,16 @@ if __name__ == '__main__':
     vocab = Vocab()
     #  vocab.load(opt.vocab_path.format(opt.model_type))
     vocab.load(opt.vocab_path)
-    vocab_size = vocab.get_vocab_size()
-    logger.info("vocab_size -----------------> %d" % vocab_size)
+    vocab_size = vocab.size
+    logger.info("vocab_size --> %d" % vocab_size)
 
     dataset = build_dataset(vocab)
 
+    fasttext = None
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
         #  filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
         filename = os.path.join(opt.save_path, 'facts_topk_phrases.pkl')
-        fasttext = None
         wiki_dict = None
         if not os.path.exists(filename):
             #  fasttext = load_fasttext_model(opt.fasttext_vec)
@@ -520,7 +536,7 @@ if __name__ == '__main__':
             filename
         )
 
-    model = build_model(vocab_size, vocab.padid)
+    model = build_model(vocab, fasttext)
 
     # Build optimizer.
     optimizer = build_optimizer(model)
@@ -540,9 +556,9 @@ if __name__ == '__main__':
         opt.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
-        #  acc = checkpoint['acc']
-        acc = 0.0
-        logger_str = '\nevaluate ---------------> loss: %.4f acc: %.4f ppl: %.4f' % (
+        acc = checkpoint['acc']
+        #  acc = 0.0
+        logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (
             loss, acc, ppl)
         logger.info(logger_str)
 

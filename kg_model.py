@@ -65,16 +65,15 @@ class KGModel(nn.Module):
         self.teacher_forcing_ratio = teacher_forcing_ratio
         self.forward_step = 0
 
-        self.encoder_embedding = nn.Embedding(
-            vocab_size,
-            embedding_size,
-            padid
-        )
-        #  self.encoder_embedding = encoder_embedding
-
         if pre_trained_weight is not None:
-            self.encoder_embedding.weight.data.copy_(pre_trained_weight)
+            self.encoder_embedding = nn.Embedding.from_pretrained(pre_trained_weight)
+            self.encoder_embedding.padding_idx = padid
         else:
+            self.encoder_embedding = nn.Embedding(
+                vocab_size,
+                embedding_size,
+                padid
+            )
             init_wt_normal(self.encoder_embedding.weight,
                            self.encoder_embedding.embedding_dim)
 
@@ -102,16 +101,6 @@ class KGModel(nn.Module):
                 dropout=dropout
             )
 
-        """
-        self.simple_encoder = SimpleEncoder(vocab_size,
-                                            self.encoder_embedding,
-                                            rnn_type,
-                                            hidden_size,
-                                            encoder_num_layers,
-                                            bidirectional,
-                                            dropout)
-        """
-
         if turn_type != 'none' or turn_type != 'concat':
             if turn_type == 'c_concat':
                 self.c_concat_linear = nn.Linear(
@@ -137,11 +126,8 @@ class KGModel(nn.Module):
                 embedding_size,
                 padid
             )
-            if pre_trained_weight is not None:
-                decoder_embedding.weight.data.copy_(pre_trained_weight)
-            else:
-                init_wt_normal(decoder_embedding.weight,
-                               decoder_embedding.embedding_dim)
+            init_wt_normal(decoder_embedding.weight,
+                            decoder_embedding.embedding_dim)
 
         self.decoder = LuongAttnDecoder(
             model_type,
@@ -488,6 +474,7 @@ class KGModel(nn.Module):
 
             # [num_layers, batch_size * beam_width, hidden_size]
             hidden_state = hidden_state.index_select(1, top_k_pointer)
+
             if h_encoder_outputs is not None:
                 h_encoder_outputs = h_encoder_outputs.index_select(1, top_k_pointer)
                 h_encoder_lengths = h_encoder_lengths.index_select(0, top_k_pointer)

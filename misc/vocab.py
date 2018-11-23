@@ -30,7 +30,8 @@ class Vocab(object):
         self.word2idx[SOS] = 2
         self.word2idx[EOS] = 3
 
-    def get_vocab_size(self):
+    @property
+    def size(self):
         return len(self.word2idx)
 
     '''word to id '''
