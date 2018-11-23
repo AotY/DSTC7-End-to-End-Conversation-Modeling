@@ -398,13 +398,13 @@ def load_fasttext_embedding(fasttext, vocab):
     words_embedded = list()
     for id, word in sorted(vocab.idx2word.items(), key=lambda item: item[0]):
         try:
-            word_embedded = fasttext[word]
+            word_embedded = torch.from_numpy(fasttext[word])
         except KeyError:
             word_embedded = torch.rand(opt.pre_embedding_size)
 
         word_embedded = word_embedded.to(device)
         words_embedded.append(word_embedded)
-    words_embedded = torch.stack(words_embedded)
+    words_embedded = torch.stack(words_embedded) # [vocab_size, pre_embedding_size]
 
     return words_embedded
 
@@ -416,7 +416,7 @@ def build_model(vocab, fasttext=None):
         logger.info('load pre trained embedding...')
         if fasttext is None:
             fasttext = load_fasttext_model(opt.fasttext_vec)
-        pre_trained_weight = load_fasttext_embedding(fasttext, vocab, opt.pre_embedding_size)
+        pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
 
     model = KGModel(
                 opt.model_type,
