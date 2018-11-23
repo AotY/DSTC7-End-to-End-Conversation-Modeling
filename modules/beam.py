@@ -37,6 +37,7 @@ class Beam(object):
         self.batch_position = batch_position
 
         self.log_probs = list()  # [(batch_size*k, vocab_size)] * sequence_length
+
         self.scores = list()  # [(batch_size*k)] * sequence_length
         self.back_pointers = list()  # [(batch_size*k)] * sequence_length
         self.token_ids = list()  # [(batch_size*k)] * sequence_length
@@ -49,8 +50,13 @@ class Beam(object):
             'sequence': None,
         }
 
-    def update(self, score, back_pointer, token_id):  # , h):
-        """Append intermediate top-k candidates to beam at each step"""
+    def update(self, score, back_pointer, token_id):
+        """
+        Append intermediate top-k candidates to beam at each step
+            score: [batch_size, beam_width]
+            back_pointer: [batch_size * beam_width]
+            token_id: [batch_size * beam_width]
+        """
         self.scores.append(score)
         self.back_pointers.append(back_pointer)
         self.token_ids.append(token_id)
@@ -96,11 +102,8 @@ class Beam(object):
 
             # Indices of ended sequences
             # [< batch_size x beam]
-            #  print('token_ids[t]: ', self.token_ids[t].shape)
-            #  print(self.token_ids[t])
 
             eos_indices = self.token_ids[t].eq(self.eosid).nonzero()
-            #  print('eos_indics: ', eos_indices.shape)
 
             # For each batch_size, every time we see an EOS in the backtracking process,
             # If not all sequences are ended

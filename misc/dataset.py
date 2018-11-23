@@ -48,7 +48,7 @@ class Dataset:
         self.f_max_len = f_max_len
         self.f_topk = f_topk
         self.vocab = vocab
-        self.vocab_size = vocab.get_vocab_size()
+        self.vocab_size = vocab.size
         self.turn_num = turn_num
         self.min_turn = min_turn
         self.turn_type = turn_type

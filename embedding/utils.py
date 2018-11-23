@@ -17,8 +17,8 @@ buid vocab embedding from word2vec
 
 
 def build_vocab_word2vec(word2vec_model, vocab, vec_file, embedding_dim, binary, save_vec_file, logger):
-
     vocab_size = vocab.get_vocab_size()
+
     # init
     vocab_embedded = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))
 
@@ -81,7 +81,7 @@ buid vocab embedding from glove
 def build_vocab_glove(vocab, glove_file, embedding_dim, binary,
                       pre_trained_vocab_embedding_file):
 
-    vocab_size = vocab.get_vocab_size()
+    vocab_size = vocab.size
 
     # init
     vocab_embedded = np.random.uniform(-0.25, 0.25, (vocab_size, embedding_dim))

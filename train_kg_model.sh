@@ -6,10 +6,10 @@ python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
-    --turn_num 4 \
+    --turn_num 5 \
     --min_turn 1 \
     --turn_type self_attn \
-    --embedding_size 512 \
+    --embedding_size 300 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
@@ -42,10 +42,10 @@ python train_kg_model.py \
     --eval_split 0.0005 \
     --test_split 0.07 \
     --start_epoch 1 \
-    --model_type seq2seq \
-    --task decode \
+    --model_type kg \
+    --task train \
     --share_embedding \
-    --checkpoint models/checkpoint.epoch-1_kg_4_self_attn.pth1 \
-    # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
+    --pre_trained_embedding \
+    # --checkpoint models/checkpoint.epoch-1_kg_4_self_attn.pth1 \
 
 /
