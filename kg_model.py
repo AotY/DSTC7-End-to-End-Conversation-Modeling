@@ -475,6 +475,7 @@ class KGModel(nn.Module):
             # [num_layers, batch_size * beam_width, hidden_size]
             hidden_state = hidden_state.index_select(1, top_k_pointer)
 
+            """
             if h_encoder_outputs is not None:
                 h_encoder_outputs = h_encoder_outputs.index_select(1, top_k_pointer)
                 h_encoder_lengths = h_encoder_lengths.index_select(0, top_k_pointer)
@@ -482,6 +483,7 @@ class KGModel(nn.Module):
             if f_encoder_outputs is not None:
                 f_encoder_outputs = f_encoder_outputs.index_select(1, top_k_pointer)
                 f_encoder_lengths = f_encoder_lengths.index_select(0, top_k_pointer)
+            """
 
             # Update sequence scores at beam
             beam.update(score.clone(), top_k_pointer, input)
