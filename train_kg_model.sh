@@ -36,7 +36,7 @@ python train_kg_model.py \
     --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
-    --seed 7 \
+    --seed 19 \
     --device cuda \
     --log_interval 30 \
     --log_path ./logs/{}_{}_{}_{}.log \

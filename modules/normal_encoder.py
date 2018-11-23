@@ -5,7 +5,7 @@
 # Distributed under terms of the MIT license.
 
 """
-Encoder based on lstm
+Normal Encoder.
 """
 import torch
 import torch.nn as nn
@@ -14,43 +14,35 @@ from modules.utils import rnn_factory
 from modules.utils import init_wt_normal, init_linear_wt
 from modules.utils import init_gru_orth, init_lstm_orth
 
-class SimpleEncoder(nn.Module):
+class NormalEncoder(nn.Module):
     def __init__(self,
-                 vocab_size,
-                 embedding,
-                 rnn_type,
-                 hidden_size,
-                 num_layers=2,
-                 bidirectional=True,
-                 dropout=0.0):
+                 config,
+                 embedding):
 
-        super(SimpleEncoder, self).__init__()
-
-        self.vocab_size = vocab_size
-        self.embedding_size = embedding.embedding_dim
-        self.rnn_type = rnn_type
-        self.num_layers = num_layers
-
-        self.bidirection_num = 2 if bidirectional else 1
-        self.hidden_size = hidden_size // self.bidirection_num
+        super(NormalEncoder, self).__init__()
 
         # embedding
         self.embedding = embedding
+        self.embedding_size = embedding.embedding_dim
+
+        self.bidirection_num = 2 if config.bidirectional else 1
+        self.hidden_size = config.hidden_size // self.bidirection_num
+
 
         # dropout
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(config.dropout)
 
         # rnn
         self.rnn = rnn_factory(
-            rnn_type,
+            config.rnn_type,
             input_size=self.embedding_size,
-            hidden_size=self.hidden_size,
-            num_layers=num_layers,
-            bidirectional=bidirectional,
-            dropout=dropout
+            hidden_size=config.hidden_size,
+            num_layers=config.num_layers,
+            bidirectional=config.bidirectional,
+            dropout=config.dropout
         )
 
-        if rnn_type == 'LSTM':
+        if config.rnn_type == 'LSTM':
             init_lstm_orth(self.rnn)
         else:
             init_gru_orth(self.rnn)
