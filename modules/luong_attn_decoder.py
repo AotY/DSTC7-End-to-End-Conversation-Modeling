@@ -45,15 +45,15 @@ class LuongAttnDecoder(nn.Module):
         self.h_attn = Attention(hidden_size)
 
         # f_attn
-        if model_type == 'kg':
-            #  self.f_attn = Attention(hidden_size)
-            self.f_linearA = nn.Linear(self.embedding_size,
-                                    self.hidden_size + latent_size)
+        #  if model_type == 'kg':
+        #  self.f_attn = Attention(hidden_size)
+        self.f_linearA = nn.Linear(self.embedding_size,
+                                self.hidden_size + latent_size)
 
-            self.f_linearC = nn.Linear(self.embedding_size,
-                                    self.hidden_size + latent_size)
-            init_linear_wt(self.f_linearA)
-            init_linear_wt(self.f_linearC)
+        self.f_linearC = nn.Linear(self.embedding_size,
+                                self.hidden_size + latent_size)
+        init_linear_wt(self.f_linearA)
+        init_linear_wt(self.f_linearC)
 
         self.rnn = rnn_factory(
             rnn_type,
