@@ -375,9 +375,10 @@ class Dataset:
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
             for i, (sentences, response, greedy_text, beam_text) in enumerate(zip(context_texts, response_texts, greedy_texts, beam_texts)):
-                for sentence in sentences:
-                    f.write('> %s\n' % sentence)
+                #  for sentence in sentences:
+                    #  f.write('> %s\n' % sentence)
 
+                f.write('> %s\n' % sentences)
                 f.write('gold: %s\n' % response)
 
                 f.write('greedy: %s\n' % greedy_text)

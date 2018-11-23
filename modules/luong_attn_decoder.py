@@ -154,16 +154,21 @@ class LuongAttnDecoder(nn.Module):
 
         return output, hidden_state, None
 
-    def f_forward(self, output, f_encoder_outputs):
+    def f_forward(self, output, f_encoder_outputs, f_encoder_lengths=None):
         """
         output: [1, batch_size, hidden_size]
         f_encoder_outputs: [topk, batch_size, embedding_size]
         """
+        #  print('output: ', output.shape)
+        #  print('f_encoder_outputs: ', f_encoder_outputs.shape)
         # K [batch_size, topk, hidden_size]
         fK = self.f_linearA(f_encoder_outputs.transpose(0, 1))
 
         # V [batch_size, topk, hidden_size]
         fV = self.f_linearC(f_encoder_outputs.transpose(0, 1))
+        #  print(fK.shape)
+        #  print(fV.shape)
+        #  print(output.shape)
 
         # [batch_size, 1, topk]
         weights = torch.bmm(output.transpose(0, 1), fK.transpose(1, 2))
