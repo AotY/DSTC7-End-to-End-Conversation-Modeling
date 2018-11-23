@@ -15,68 +15,53 @@ from modules.utils import rnn_factory
 
 
 class LuongAttnDecoder(nn.Module):
-    def __init__(self,
-                 model_type,
-                 vocab_size,
-                 embedding,
-                 rnn_type,
-                 hidden_size,
-                 num_layers,
-                 dropout,
-                 tied,
-                 latent_size=0):
+    def __init__(self, config, embedding):
 
         super(LuongAttnDecoder, self).__init__()
-
-        self.vocab_size = vocab_size
-        self.rnn_type = rnn_type
-        self.hidden_size = hidden_size
-        self.latent_size = latent_size
-        self.num_layers = num_layers
 
         # embedding
         self.embedding = embedding
         self.embedding_size = embedding.embedding_dim
 
         # dropout
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(config.dropout)
 
         # h_attn
-        self.h_attn = Attention(hidden_size)
+        self.h_attn = Attention(config.hidden_size)
 
         # f_attn
         #  if model_type == 'kg':
         #  self.f_attn = Attention(hidden_size)
-        self.f_linearA = nn.Linear(self.embedding_size,
-                                self.hidden_size + latent_size)
+        self.f_linearA = nn.Linear(self.embedding_size, config.hidden_size + config.latent_size)
 
-        self.f_linearC = nn.Linear(self.embedding_size,
-                                self.hidden_size + latent_size)
+        self.f_linearC = nn.Linear(self.embedding_size, config.hidden_size + config.latent_size)
+
+        self.f_concat_linear = nn.Linear(config.hidden_size * 2, config.hidden_size)
+
         init_linear_wt(self.f_linearA)
         init_linear_wt(self.f_linearC)
 
         self.rnn = rnn_factory(
-            rnn_type,
+            config.rnn_type,
             input_size=self.embedding_size,
-            hidden_size=hidden_size + latent_size,
-            num_layers=num_layers,
-            dropout=dropout
+            hidden_size=config.hidden_size + config.latent_size,
+            num_layers=config.num_layers,
+            dropout=config.dropout
         )
 
-        if rnn_type == 'LSTM':
+        if config.rnn_type == 'LSTM':
             init_lstm_orth(self.rnn)
         else:
             init_gru_orth(self.rnn)
 
-        if latent_size > 0:
-            self.latent_linear = nn.Linear(
-                hidden_size + latent_size, hidden_size)
+        if config.latent_size > 0:
+            self.latent_linear = nn.Linear(config.hidden_size + config.latent_size, config.hidden_size)
             init_linear_wt(self.latent_linear)
 
         # linear
-        self.linear = nn.Linear(hidden_size, vocab_size)
+        self.linear = nn.Linear(config.hidden_size, config.vocab_size)
 
-        if tied and self.embedding_size == hidden_size:
+        if config.tied and self.embedding_size == config.hidden_size:
             self.linear.weight = self.embedding.weight
         else:
             init_linear_wt(self.linear)
@@ -137,10 +122,11 @@ class LuongAttnDecoder(nn.Module):
             output = output.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         if h_encoder_outputs is not None and h_encoder_lengths is not None:
+            # output: [1, batch_size, 1 * hidden_size]
             output, h_attn_weights = self.h_attn(output, h_encoder_outputs, h_encoder_lengths)
 
         if f_encoder_outputs is not None:
-            #  output, f_attn_weights = self.f_attn(output, f_encoder_outputs, f_encoder_lengths)
+            # [1, batch_size, hidden_size]
             output = self.f_forward(output, f_encoder_outputs)
 
         if self.latent_size > 0:
@@ -175,9 +161,11 @@ class LuongAttnDecoder(nn.Module):
 
         weights = F.softmax(weights, dim=2)
 
-        o = torch.bmm(weights, fV)  # [batch_size, 1, hidden_size]
+        o = torch.bmm(weights, fV).transpose(0, 1)  # [1, batch_size, hidden_size]
 
-        # [1, batch_size, hidden_size]
-        output = torch.add(o.transpose(0, 1), output)
+        # [1, batch_size, 2 * hidden_size]
+        output = torch.cat((o, output), dim=2)
+
+        output = self.f_concat_linear(output)
 
         return output

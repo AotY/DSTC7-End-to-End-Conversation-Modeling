@@ -43,19 +43,13 @@ from collections import Counter
 
 from utils import Tokenizer
 from gensim.models import KeyedVectors
+from utils import remove_stop_words
 
 #  import es_helper
 #  es = es_helper.get_connection()
 
-stopWords = set(stopwords.words('english'))
-punctuations = list(string.punctuation)
-
 tokenizer = Tokenizer()
 
-def remove_stop_words(words):
-    words = [word for word in words if word not in stopWords]
-    #  words = [word for word in words if word not in punctuations]
-    return words
 
 
 def wiki_stats(facts_path):
@@ -414,11 +408,11 @@ if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
     conversation_path = '../data/conversations_responses.pair.txt'
 
-    wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
-    #  similarity words
-    vec_file = '/home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin'
-    fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
-    conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
+    #  wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
+    #  #  similarity words
+    #  vec_file = '/home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin'
+    #  fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
+    #  conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
 
     facts_p_stats(facts_path)
 

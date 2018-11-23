@@ -408,39 +408,19 @@ def load_fasttext_embedding(fasttext, vocab):
 
     return words_embedded
 
-def build_model(vocab, fasttext=None):
+def build_model(vocab, pre_trained_weight=None):
     logger.info('Building model...')
 
-    pre_trained_weight = None
-    if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
-        logger.info('load pre trained embedding...')
-        if fasttext is None:
+    if pre_trained_weight is None:
+        if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
             fasttext = load_fasttext_model(opt.fasttext_vec)
-        pre_trained_weight = load_fasttext_embedding(fasttext, vocab, opt.pre_embedding_size)
+            pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
 
     model = KGModel(
-                opt.model_type,
-                vocab.size,
-                opt.c_max_len,
-                opt.pre_embedding_size,
-                opt.embedding_size,
-                opt.share_embedding,
-                opt.rnn_type,
-                opt.hidden_size,
-                opt.num_layers,
-                opt.encoder_num_layers,
-                opt.decoder_num_layers,
-                opt.bidirectional,
-				opt.turn_num,
-				opt.turn_type,
-				opt.decoder_type,
-                opt.attn_type,
-                opt.dropout,
-                vocab.padid,
-                opt.tied,
+                opt,
+                vocab,
                 device,
                 pre_trained_weight,
-                opt.teacher_forcing_ratio
         )
 
     model = model.to(device)
@@ -450,21 +430,8 @@ def build_model(vocab, fasttext=None):
 
 def build_dataset(vocab):
     dataset = Dataset(
-                opt.model_type,
-                opt.pair_path,
-                opt.c_max_len,
-                opt.r_max_len,
-                opt.min_len,
-                opt.f_max_len,
-                opt.f_topk,
                 vocab,
-                opt.save_path,
-                opt.turn_num,
-                opt.min_turn,
-                opt.turn_type,
-                opt.eval_split,  # how many hold out as eval data
-                opt.test_split,
-                opt.batch_size,
+                opt,
                 device,
                 logger)
 
@@ -514,29 +481,37 @@ if __name__ == '__main__':
         checkpoint = None
 
     vocab = Vocab()
-    #  vocab.load(opt.vocab_path.format(opt.model_type))
     vocab.load(opt.vocab_path)
     vocab_size = vocab.size
-    logger.info("vocab_size --> %d" % vocab_size)
+    opt.vocab_size = int(vocab_size)
+    logger.info("vocab_size --> %d" % opt.vocab_size)
 
     dataset = build_dataset(vocab)
 
     fasttext = None
+    pre_trained_weight = None
+    if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
+        logger.info('load pre trained embedding...')
+        fasttext = load_fasttext_model(opt.fasttext_vec)
+        pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
+
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        #  filename = os.path.join(opt.save_path, 'topk_facts_embedded.%s.pkl' % 'rake')
-        filename = os.path.join(opt.save_path, 'facts_topk_phrases.pkl')
-        wiki_dict = None
-        if not os.path.exists(filename):
-            #  fasttext = load_fasttext_model(opt.fasttext_vec)
-            wiki_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
+        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % 'embedding')
+        facts_dict = None
+        if not os.path.exists(offline_filename):
+            facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
 
-        dataset.build_similarity_facts_offline(
-            wiki_dict,
-            filename
-        )
+        embedding = nn.Embedding.from_pretrained(pre_trained_weight)
+        with torch.no_grad():
+            dataset.build_similarity_facts_offline(
+                facts_dict,
+                offline_filename,
+                embedding,
+            )
+        del embedding
 
-    model = build_model(vocab, fasttext)
+    model = build_model(vocab, pre_trained_weight)
 
     # Build optimizer.
     optimizer = build_optimizer(model)

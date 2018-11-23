@@ -5,11 +5,14 @@ import os
 import pickle
 
 import torch
+import torch.nn as nn
 import numpy as np
+from tqdm import tqdm
 
 #  from summa import keywords # for keyword extraction
 from rake_nltk import Rake
 from misc import es_helper
+from misc.utils import remove_stop_words
 
 from misc.url_tags_weight import tag_weight_dict
 from misc.url_tags_weight import default_weight
@@ -23,36 +26,13 @@ class Dataset:
         """
 
     def __init__(self,
-                 model_type,
-                 pair_path,
-                 c_max_len,
-                 r_max_len,
-                 min_len,
-                 f_max_len,
-                 f_topk,
+                 config,
                  vocab,
-                 save_path,
-                 turn_num,
-                 min_turn,
-                 turn_type,
-                 eval_split,  # how many hold out as eval data
-                 test_split,
-                 batch_size,
                  device,
                  logger):
 
-        self.model_type = model_type
-        self.c_max_len = c_max_len
-        self.r_max_len = r_max_len
-        self.min_len = min_len
-        self.f_max_len = f_max_len
-        self.f_topk = f_topk
+        self.config = config
         self.vocab = vocab
-        self.vocab_size = vocab.size
-        self.turn_num = turn_num
-        self.min_turn = min_turn
-        self.turn_type = turn_type
-
         self.device = device
         self.logger = logger
 
@@ -305,42 +285,76 @@ class Dataset:
 
     def build_similarity_facts_offline(self,
                                       facts_dict=None,
-                                      filename=None,
-                                      fasttext=None,
-                                      pre_embedding_size=None):
-        if os.path.exists(filename):
-            self.facts_topk_phrases = pickle.load(open(filename, 'rb'))
+                                      offline_filename=None,
+                                       embedding=None):
+
+        if os.path.exists(offline_filename):
+            self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
         else:
             r = Rake(
-                min_length=1,
-                max_length=self.f_max + 10
+                min_length=self.min_len,
+                max_length=self.f_max + 20
             )
-            facts_topk_phrases = {}
+            ranked_phrase_dict = {}
+            ranked_phrase_embedded_didct = {}
             for conversation_id, ps in facts_dict.items():
+                if len(ps) == 0:
+                    continue
                 r.extract_keywords_from_sentences(ps)
-                phrases = r.get_ranked_phrases()[:self.f_topk]
+                phrases = r.get_ranked_phrases()
+                if len(phrases) == 0:
+                    continue
+                ranked_phrase_dict[conversation_id] = phrases
+                phrase_embeddeds = list()
+                for phrase in phrases:
+                    ids = self.vocab.words_to_id(phrase.split())
+                    mean_embedded = self.get_sentence_embedded(ids, embedding)
+                    phrase_embeddeds.append(mean_embedded)
+                #  phrase_embeddeds = torch.stack(phrase_embeddeds, dim=0) # [len(phrase), pre_embedding_size]
+                ranked_phrase_embedded_didct[conversation_id] = phrase_embeddeds
 
-                facts_topk_phrases[conversation_id] = phrases
+            # embedding match
+            cos = nn.CosineSimilarity(dim=0, eps=1e-6)
+            facts_topk_phrases = {}
+            for task, task_datas in self._data_dict.items():
+                for data in tqdm(task_datas):
+                    conversation_id, sentences_text, _, _, hash_value = data
+                    # [len(phrases), pre_embedding_size]
+                    phrase_embeddeds = ranked_phrase_embedded_didct.get(conversation_id, None)
+                    if phrase_embeddeds is None:
+                        continue
+
+                    sum_scores = list()
+                    for sentence in sentences_text:
+                        words = remove_stop_words(sentence.split())
+                        ids = self.vocab.words_to_id(words)
+                        mean_embedded = self.get_sentence_embedded(ids, embedding)
+                        scores = list()
+                        for phrase_embedded in phrase_embeddeds:
+                            scores.append(cos(mean_embedded, phrase_embedded))
+                        scores = torch.stack(scores, dim=0)
+                        sum_scores.append(scores)
+                    sum_scores = torch.stack(sum_scores) # [len(sentences), len(phrase_embeddeds)]
+                    sum_socre = sum_scores.sum(dim=0) # [len(phrase_embeddeds)]
+                    _, indexs = sum_socre.topk(self.f_topk, dim=0)
+                    facts = list()
+                    phrases = ranked_phrase_dict[conversation_id]
+                    for index in indexs.tolist():
+                        facts.append(phrases[index])
+
+                    facts_topk_phrases[hash_value] = phrases
 
             # save topk_facts_embedded_dict
-            pickle.dump(facts_topk_phrases, open(filename, 'wb'))
+            pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
             self.facts_topk_phrases = facts_topk_phrases
 
-    def get_sentence_embedded(self, words, fasttext):
-        sentence_embedded = list()
-        for word in words:
-            try:
-                word_embedded = torch.tensor(fasttext.get_vector(word), device=self.device).view(-1)
-                sentence_embedded.append(word_embedded)
-            except KeyError:
-                continue
 
-        if len(sentence_embedded) > 0:
-            sentence_embedded = torch.stack(sentence_embedded, dim=0) # [len, pre_embedding_size]
-            mean_sentence_embedded = sentence_embedded.mean(dim=0) # [pre_embedding_size]
-        else:
-            mean_sentence_embedded = torch.zeros(self.pre_embedding_size, device=self.device)
-        return mean_sentence_embedded
+    def get_sentence_embedded(self, ids, embedding):
+        ids = torch.LongTensor(ids).to(self.device)
+        embeddeds = embedding(ids) # [len(ids), pre_embedding_size]
+        mean_embedded = embeddeds.mean(dim=0) # [pre_embedding_size]
+
+        return mean_embedded
 
     def get_facts_weight(self, facts):
         """ facts: [[w_n] * size]"""
@@ -376,10 +390,10 @@ class Dataset:
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
             for i, (sentences, response, greedy_text, beam_text) in enumerate(zip(context_texts, response_texts, greedy_texts, beam_texts)):
-                #  for sentence in sentences:
-                    #  f.write('> %s\n' % sentence)
+                for sentence in sentences:
+                    f.write('> %s\n' % sentence)
 
-                f.write('> %s\n' % sentences)
+                #  f.write('> %s\n' % sentences)
                 f.write('gold: %s\n' % response)
 
                 f.write('greedy: %s\n' % greedy_text)
@@ -420,62 +434,3 @@ class Dataset:
 
         return batch_generated_texts
 
-
-
-
-
-
-"""
-            topk_facts_embedded_dict={}
-            with torch.no_grad():
-                for task, datas in self._data_dict.items():
-                    self.logger.info('computing similarity: %s ' % task)
-                    for conversation_id, conversation, _, _, hash_value in datas:
-                        if not bool(conversation) or not bool(hash_value):
-                            continue
-
-                        facts = facts_dict.get(conversation_id, None)
-
-                        if facts is None or len(facts) == 0:
-                            continue
-
-                        #  conversation_keywords = keywords.keywords(conversation, ratio=0.7, split=True)
-                        #  rake.extract_keywords_from_text(conversation)
-                        #  conversation_keywords = rake.get_ranked_phrases()
-                        #  print('conversation_keywords: {}'.format(conversation_keywords))
-                        conversation_embedded = self.get_sentence_embedded(conversation.split(), fasttext)
-
-                        #  distances = []
-
-                        # tokenizer
-                        facts_words = [tokenizer.tokenize(fact) for fact in facts]
-
-                        facts_embedded = list()
-                        for fact_words in facts_words:
-                            fact_embedded = self.get_sentence_embedded(fact_words, fasttext)
-                            facts_embedded.append(fact_embedded)
-
-                            '''
-                            if len(fact_words) != 0:
-                                distance = fasttext.wmdistance(' '.join(conversation_keywords), ' '.join(fact_words))
-                                distances.append(distance)
-                            else:
-                                distances.append(np.inf)
-                            '''
-
-                        facts_embedded = torch.stack(facts_embedded, dim=0)
-                        similarities = F.cosine_similarity(conversation_embedded.view(1, -1), facts_embedded) # [len]
-
-                        #  distances = np.array(distances)
-                        #  sorted_indexes = np.argsort(distances)
-
-                        _, sorted_indexes = similarities.sort(dim=0, descending=True)
-
-                        topk_indexes = sorted_indexes[:f_topk]
-                        #  topk_distances = distances[topk_indexes]
-
-                        topk_facts_words = [facts_words[topi] for topi in topk_indexes.tolist()]
-                        topk_facts_text = [' '.join(fact_words) for fact_words in topk_facts_words]
-
-                        topk_facts_embedded_dict[hash_value]=(None, topk_facts_text)
-"""

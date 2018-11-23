@@ -17,6 +17,11 @@ def data_set_opt(parser):
                        type=str,
                        help='location of save vocab dict file. ')
 
+    group.add_argument('--vocab_size',
+                       default=6e4,
+                       type=float,
+                       help="Limits the RAM during vocabulary building. Every 10 million word types need about 1GB of RAM.")
+
     group.add_argument('--min_len',
                        type=int,
                        help="Ignores all words with total frequency lower than this.")
@@ -106,10 +111,15 @@ def model_opt(parser):
 
     group.add_argument('--latent_size',
                        type=int,
+                       default=0,
+                       help='number of latent units per layer')
+
+    group.add_argument('--latent_size',
+                       type=int,
                        default=300,
                        help='number of hidden units per layer')
 
-    group.add_argument("--kl_anneal", 
+    group.add_argument("--kl_anneal",
                        type=str,
                        default='',
                        help="KL Annealing function, select 'logistic' or 'step'.")
@@ -186,7 +196,7 @@ def model_opt(parser):
                        type=str,
                        help='normal | bahdanau | luong')
 
-    group.add_argument('--beam_width',
+    group.add_argument('--beam_size',
                        type=int,
                        help='The greater the beam width, the fewer states are pruned. ')
 
@@ -204,7 +214,7 @@ def train_opt(parser):
 
     group.add_argument('--n_warmup_steps', type=int, default=3000,
                        help='warm up step.')
-    
+
     group.add_argument('--max_grad_norm',
                        type=float,
                        default=0.8,
