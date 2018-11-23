@@ -4,6 +4,8 @@
 Tokenize a reddit sequence.
 '''
 import re
+import string
+from nltk.corpus import stopwords
 #  from tokenizer import tokenizer
 from nltk.tokenize import TweetTokenizer
 from bs4 import BeautifulSoup
@@ -15,6 +17,14 @@ def is_english(text):
         return True
     except UnicodeEncodeError:
         return False
+
+stop_words = set(stopwords.words('english'))
+punctuations = list(string.punctuation)
+
+def remove_stop_words(words):
+    words = [word for word in words if word not in stop_words]
+    words = [word for word in words if word not in punctuations]
+    return words
 
 class Tokenizer:
     def __init__(self):

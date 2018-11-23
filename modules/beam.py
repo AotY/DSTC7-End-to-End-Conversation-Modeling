@@ -15,24 +15,22 @@ import torch
 class Beam(object):
     def __init__(self,
                  batch_size,
-                 hidden_size,
                  vocab_size,
-                 beam_width,
+                 beam_size,
                  max_len,
                  batch_position,
                  eosid=3):
 
         """Beam class for beam search"""
         self.batch_size = batch_size
-        self.hidden_size = hidden_size
         self.vocab_size = vocab_size
-        self.beam_width = beam_width
+        self.beam_size = beam_size
         self.max_len = max_len
         self.eosid = eosid
 
         # batch_position [batch_size]
-        #   [0, beam_width, beam_width * 2, .., beam_width * (batch_size-1)]
-        #   Points where batch_size starts in [batch_size x beam_width] tensors
+        #   [0, beam_size, beam_size * 2, .., beam_size * (batch_size-1)]
+        #   Points where batch_size starts in [batch_size x beam_size] tensors
         #   Ex. position_idx[5]: when 5-th batch_size starts
         self.batch_position = batch_position
 
@@ -53,9 +51,9 @@ class Beam(object):
     def update(self, score, back_pointer, token_id):
         """
         Append intermediate top-k candidates to beam at each step
-            score: [batch_size, beam_width]
-            back_pointer: [batch_size * beam_width]
-            token_id: [batch_size * beam_width]
+            score: [batch_size, beam_size]
+            back_pointer: [batch_size * beam_size]
+            token_id: [batch_size * beam_size]
         """
         self.scores.append(score)
         self.back_pointers.append(back_pointer)
@@ -74,11 +72,11 @@ class Beam(object):
         prediction = list()
 
         # Initialize for length of top-k sequences
-        length = [[self.max_len] * self.beam_width for _ in range(self.batch_size)]
+        length = [[self.max_len] * self.beam_size for _ in range(self.batch_size)]
 
         # Last step output of the beam are not sorted => sort here!
-        # Size not changed [batch_size size, beam_width]
-        top_k_score, top_k_idx = self.scores[-1].topk(self.beam_width, dim=1)
+        # Size not changed [batch_size size, beam_size]
+        top_k_score, top_k_idx = self.scores[-1].topk(self.beam_size, dim=1)
 
         # Initialize sequence scores
         top_k_score = top_k_score.clone()
@@ -102,6 +100,8 @@ class Beam(object):
 
             # Indices of ended sequences
             # [< batch_size x beam]
+            #  print('token_ids[t]: ', self.token_ids[t].shape)
+            #  print(self.token_ids[t])
 
             eos_indices = self.token_ids[t].eq(self.eosid).nonzero()
 
@@ -117,14 +117,14 @@ class Beam(object):
                     eos_idx = eos_indices[i, 0].item()
 
                     # At which batch_size EOS is located
-                    batch_idx = eos_idx // self.beam_width
-                    batch_start_idx = batch_idx * self.beam_width
+                    batch_idx = eos_idx // self.beam_size
+                    batch_start_idx = batch_idx * self.beam_size
 
-                    # if n_eos_in_batch[batch_idx] > self.beam_width:
+                    # if n_eos_in_batch[batch_idx] > self.beam_size:
 
                     # Index of sequence with lowest score
-                    _n_eos_in_batch = n_eos_in_batch[batch_idx] % self.beam_width
-                    beam_idx_to_be_replaced = self.beam_width - _n_eos_in_batch - 1
+                    _n_eos_in_batch = n_eos_in_batch[batch_idx] % self.beam_size
+                    beam_idx_to_be_replaced = self.beam_size - _n_eos_in_batch - 1
                     idx_to_be_replaced = batch_start_idx + beam_idx_to_be_replaced
 
                     # Replace old information with new sequence information
@@ -141,7 +141,7 @@ class Beam(object):
 
         # Sort and re-order again as the added ended sequences may change the order
         # [batch_size, beam]
-        top_k_score, top_k_idx = top_k_score.topk(self.beam_width, dim=1)
+        top_k_score, top_k_idx = top_k_score.topk(self.beam_size, dim=1)
         final_score = top_k_score.data
 
         for batch_idx in range(self.batch_size):
@@ -156,7 +156,7 @@ class Beam(object):
         # [batch_size, beam]
 
         prediction = [step.index_select(0, top_k_idx).view(
-            self.batch_size, self.beam_width) for step in reversed(prediction)]
+            self.batch_size, self.beam_size) for step in reversed(prediction)]
 
         # [batch_size, beam, max_len]
         prediction = torch.stack(prediction, 2)

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=4
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
+    --vocab_size 6e4 \
     --turn_num 5 \
     --min_turn 1 \
     --turn_type self_attn \
@@ -14,6 +15,7 @@ python train_kg_model.py \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
     --hidden_size 512 \
+    --latent_size 0 \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
@@ -25,10 +27,10 @@ python train_kg_model.py \
     --tied \
 	--decoder_type luong \
     --decode_type beam_search \
-    --beam_width 8 \
+    --beam_size 8 \
     --best_n 3 \
-    --f_max_len 10 \
-    --f_topk 25 \
+    --f_max_len 15 \
+    --f_topk 10 \
     --lr 0.001 \
     --max_grad_norm 1.0 \
     --epochs 15 \

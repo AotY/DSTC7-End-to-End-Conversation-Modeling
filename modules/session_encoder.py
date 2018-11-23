@@ -8,40 +8,30 @@
 Session encoder, for HRED model.
 """
 
-import math
 import torch
 import torch.nn as nn
 
 from modules.utils import rnn_factory
 from modules.utils import init_gru_orth, init_lstm_orth
-from modules.utils import init_wt_normal
 
 
 class SessionEncoder(nn.Module):
-    def __init__(self,
-                 rnn_type,
-                 hidden_size,
-                 num_layers,
-                 bidirectional=True,
-                 dropout=0.0):
+    def __init__(self, config):
         super(SessionEncoder, self).__init__()
 
-        self.rnn_type = rnn_type
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.bidirection_num = 2 if bidirectional else 1
+        self.bidirection_num = 2 if config.bidirectional else 1
 
         # rnn
         self.rnn = rnn_factory(
-            rnn_type,
-            input_size=self.hidden_size,
-            hidden_size=self.hidden_size // self.bidirection_num,
-            num_layers=num_layers,
-            bidirectional=bidirectional,
-            dropout=dropout
+            config.rnn_type,
+            input_size=config.hidden_size,
+            hidden_size=config.hidden_size // self.bidirection_num,
+            num_layers=config.num_layers,
+            bidirectional=config.bidirectional,
+            dropout=config.dropout
         )
 
-        if rnn_type == 'LSTM':
+        if config.rnn_type == 'LSTM':
             init_lstm_orth(self.rnn)
         else:
             init_gru_orth(self.rnn)
