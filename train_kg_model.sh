@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
-    --turn_num 5 \
+    --turn_num 4 \
     --min_turn 1 \
     --turn_type self_attn \
     --embedding_size 512 \
@@ -43,9 +43,9 @@ python train_kg_model.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type kg \
-    --task train \
+    --task decode \
     --share_embedding \
-    # --checkpoint models/checkpoint.epoch-3_seq2seq_4_self_attn.pth \
+    --checkpoint models/checkpoint.epoch-1_kg_4_self_attn.pth1 \
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
 
 /

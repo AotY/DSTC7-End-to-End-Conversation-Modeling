@@ -205,9 +205,18 @@ class KGModel(nn.Module):
             f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
-        decoder_input = decoder_inputs[0].view(1, -1)
         decoder_outputs = []
-        for i in range(1, r_max_len):
+        decoder_output = None
+        for i in range(0, r_max_len):
+            if i == 0:
+                decoder_input = decoder_inputs[i].view(1, -1)
+            else:
+                use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+                if use_teacher_forcing:
+                    decoder_input = decoder_inputs[i].view(1, -1)
+                else:
+                    decoder_input = torch.argmax(decoder_output, dim=2).detach().view(1, -1)
+
             decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
                                                                    decoder_hidden_state,
                                                                    None,
@@ -216,16 +225,10 @@ class KGModel(nn.Module):
                                                                    f_encoder_outputs,
                                                                    f_encoder_lengths)
 
-            use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-
-            if use_teacher_forcing:
-                decoder_input = decoder_inputs[i].view(1, -1)
-            else:
-                decoder_input = torch.argmax(
-                    decoder_output, dim=2).detach().view(1, -1)
-
             decoder_outputs.append(decoder_output)
+
         decoder_outputs = torch.cat(decoder_outputs, dim=0)
+        #  print('decoder_outputs: ', decoder_outputs.shape)
 
         """
         decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
@@ -329,7 +332,7 @@ class KGModel(nn.Module):
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
         # fact encoder
-        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, None
+        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
         if self.model_type == 'kg':
             #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
                 #  f_inputs,
@@ -378,8 +381,7 @@ class KGModel(nn.Module):
                       eosid):
 
         greedy_outputs = []
-        input = torch.ones((1, batch_size), dtype=torch.long,
-                           device=self.device) * sosid
+        input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * sosid
         for i in range(r_max_len):
             decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
                                                                               decoder_hidden_state,
@@ -389,16 +391,14 @@ class KGModel(nn.Module):
                                                                               f_encoder_outputs,
                                                                               f_encoder_lengths)
 
-            input = torch.argmax(
-                decoder_output, dim=2).detach()  # [1, batch_size]
+            input = torch.argmax(decoder_output, dim=2).detach().view(1, -1)  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == eosid:
                 break
 
-        greedy_outputs = torch.cat(greedy_outputs, dim=0)
         # [len, batch_size]  -> [batch_size, len]
-        greedy_outputs.transpose_(0, 1)
+        greedy_outputs = torch.cat(greedy_outputs, dim=0).transpose(0, 1)
 
         return greedy_outputs
 
@@ -432,6 +432,10 @@ class KGModel(nn.Module):
         if h_encoder_outputs is not None:
             h_encoder_outputs = h_encoder_outputs.repeat(1, beam_width, 1)
             h_encoder_lengths = h_encoder_lengths.repeat(beam_width)
+
+        if f_encoder_outputs is not None:
+            f_encoder_outputs = f_encoder_outputs.repeat(1, beam_width, 1)
+            f_encoder_lengths = f_encoder_lengths.repeat(beam_width)
 
         # batch_position [batch_size]
         #   [0, 1 * beam_width, 2 * 2 * beam_width, .., (batch_size-1) * beam_width]
