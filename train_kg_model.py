@@ -97,8 +97,7 @@ def train_epochs(model,
                                    f_inputs_length,
                                    f_topks_length,
                                    optimizer,
-                                   criterion,
-                                   vocab)
+                                   criterion)
 
             log_loss_total += float(loss)
             log_accuracy_total += accuracy
@@ -139,7 +138,7 @@ def train_epochs(model,
 
         # generate sentence
         logger.info('generate...')
-        decode(model, dataset, vocab)
+        decode(model, dataset)
 
         is_stop = early_stopping.step(evaluate_loss)
         if is_stop:
@@ -161,8 +160,7 @@ def train(model,
           f_inputs_length,
           f_topks_length,
           optimizer,
-          criterion,
-          vocab):
+          criterion):
 
     # Turn on training mode which enables dropout.
     model.train()
@@ -178,8 +176,6 @@ def train(model,
         f_inputs,
         f_inputs_length,
         f_topks_length,
-        opt.batch_size,
-        opt.r_max_len
     )
     #  print('decoder_outputs: ', decoder_outputs.shape)
 
@@ -240,18 +236,14 @@ def evaluate(model,
             h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data('test', opt.batch_size)
 
             # train and get cur loss
-            decoder_input = torch.ones((1, opt.batch_size), dtype=torch.long, device=device) * vocab.sosid
             decoder_outputs=model.evaluate(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
                 h_inputs_position,
-                decoder_input,
                 f_inputs,
                 f_inputs_length,
                 f_topks_length,
-                opt.r_max_len,
-                opt.batch_size
             )
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
@@ -271,7 +263,7 @@ def evaluate(model,
     return loss_total / max_load, accuracy_total / max_load
 
 
-def decode(model, dataset, vocab):
+def decode(model, dataset):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     dataset.reset_data('eval', False)
@@ -292,14 +284,7 @@ def decode(model, dataset, vocab):
                 h_inputs_position,
                 f_inputs,
                 f_inputs_length,
-                f_topks_length,
-                opt.decode_type,
-                opt.r_max_len,
-                vocab.sosid,
-                vocab.eosid,
-                opt.batch_size,
-                opt.beam_width,
-                opt.best_n)
+                f_topks_length)
 
             # generate sentence, and save to file
             # [max_length, batch_size]
@@ -430,8 +415,8 @@ def build_model(vocab, pre_trained_weight=None):
 
 def build_dataset(vocab):
     dataset = Dataset(
-                vocab,
                 opt,
+                vocab,
                 device,
                 logger)
 
