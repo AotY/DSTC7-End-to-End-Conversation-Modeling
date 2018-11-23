@@ -45,7 +45,8 @@ class KGModel(nn.Module):
                  padid,
                  tied,
                  device,
-                 pre_trained_weight=None):
+                 pre_trained_weight=None,
+                 teacher_forcing_ratio=1.0):
         super(KGModel, self).__init__()
 
         self.vocab_size = vocab_size
@@ -61,6 +62,8 @@ class KGModel(nn.Module):
         self.turn_type = turn_type
         self.decoder_type = decoder_type
         self.device = device
+        self.teacher_forcing_ratio = teacher_forcing_ratio
+        self.forward_step = 0
 
         self.encoder_embedding = nn.Embedding(
             vocab_size,
@@ -161,8 +164,7 @@ class KGModel(nn.Module):
                 f_inputs_length,
                 f_topks_length,
                 batch_size,
-                r_max_len,
-                teacher_forcing_ratio):
+                r_max_len):
         '''
         input:
             h_inputs: # [max_len, batch_size, turn_num]
@@ -192,7 +194,7 @@ class KGModel(nn.Module):
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
         # fact encoder
-        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, None
+        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
         if self.model_type == 'kg':
             """
             f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
@@ -207,15 +209,18 @@ class KGModel(nn.Module):
         # decoder
         decoder_outputs = []
         decoder_output = None
+        self.update_teacher_forcing_ratio()
         for i in range(0, r_max_len):
             if i == 0:
                 decoder_input = decoder_inputs[i].view(1, -1)
             else:
-                use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+                use_teacher_forcing = True if random.random(
+                ) < self.teacher_forcing_ratio else False
                 if use_teacher_forcing:
                     decoder_input = decoder_inputs[i].view(1, -1)
                 else:
-                    decoder_input = torch.argmax(decoder_output, dim=2).detach().view(1, -1)
+                    decoder_input = torch.argmax(
+                        decoder_output, dim=2).detach().view(1, -1)
 
             decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
                                                                    decoder_hidden_state,
@@ -228,18 +233,13 @@ class KGModel(nn.Module):
             decoder_outputs.append(decoder_output)
 
         decoder_outputs = torch.cat(decoder_outputs, dim=0)
-        #  print('decoder_outputs: ', decoder_outputs.shape)
-
-        """
-        decoder_outputs, decoder_hidden_state, attn_weights = self.decoder(decoder_inputs,
-                                                                            decoder_hidden_state,
-                                                                            decoder_inputs_length,
-                                                                            h_encoder_outputs,
-                                                                            h_encoder_lengths,
-                                                                            f_encoder_outputs,
-                                                                            f_encoder_lengths)
-        """
         return decoder_outputs
+
+    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.2):
+        self.forward_step += 1
+        update_t = self.teacher_forcing_ratio - \
+            eplison * (self.forward_step * eplison)
+        self.teacher_forcing_ratio = max(update_t, min_t)
 
     '''evaluate'''
 
@@ -267,12 +267,13 @@ class KGModel(nn.Module):
         )
 
         if h_encoder_hidden_state is None:
-            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(0).repeat(self.decoder_num_layers, 1, 1)
+            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(
+                0).repeat(self.decoder_num_layers, 1, 1)
         else:
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
         # fact encoder
-        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, None
+        f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
         if self.model_type == 'kg':
             #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
                 #  f_inputs,
@@ -292,7 +293,8 @@ class KGModel(nn.Module):
                                                                    f_encoder_outputs,
                                                                    f_encoder_lengths)
 
-            decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
+            decoder_input = torch.argmax(
+                decoder_output, dim=2).detach()  # [1, batch_size]
             decoder_outputs.append(decoder_output)
 
         decoder_outputs = torch.cat(decoder_outputs, dim=0)
@@ -331,7 +333,7 @@ class KGModel(nn.Module):
         else:
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
-        # fact encoder
+        # f encoder
         f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = None, None, f_topks_length
         if self.model_type == 'kg':
             #  f_encoder_outputs, f_encoder_hidden_state, f_encoder_lengths = self.f_forward(
@@ -342,16 +344,6 @@ class KGModel(nn.Module):
             f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
-        greedy_outputs = self.greedy_decode(decoder_hidden_state,
-                                            h_encoder_outputs,
-                                            h_encoder_lengths,
-                                            f_encoder_outputs,
-                                            f_encoder_lengths,
-                                            r_max_len,
-                                            batch_size,
-                                            sosid,
-                                            eosid)
-
         beam_outputs, _, _ = self.beam_decode(
             decoder_hidden_state,
             h_encoder_outputs,
@@ -364,13 +356,22 @@ class KGModel(nn.Module):
             sosid,
             eosid
         )
-
         beam_outputs = beam_outputs.tolist()
+
+        greedy_outputs = self.greedy_decode(decoder_hidden_state,
+                                            h_encoder_outputs,
+                                            h_encoder_lengths,
+                                            f_encoder_outputs,
+                                            f_encoder_lengths,
+                                            r_max_len,
+                                            batch_size,
+                                            sosid,
+                                            eosid)
 
         return greedy_outputs, beam_outputs
 
     def greedy_decode(self,
-                      decoder_hidden_state,
+                      hidden_state,
                       h_encoder_outputs,
                       h_encoder_lengths,
                       f_encoder_outputs,
@@ -381,17 +382,19 @@ class KGModel(nn.Module):
                       eosid):
 
         greedy_outputs = []
-        input = torch.ones((1, batch_size), dtype=torch.long, device=self.device) * sosid
+        input = torch.ones((1, batch_size), dtype=torch.long,
+                           device=self.device) * sosid
         for i in range(r_max_len):
-            decoder_output, decoder_hidden_state, attn_weights = self.decoder(input,
-                                                                              decoder_hidden_state,
-                                                                              None,
-                                                                              h_encoder_outputs,
-                                                                              h_encoder_lengths,
-                                                                              f_encoder_outputs,
-                                                                              f_encoder_lengths)
+            output, hidden_state, attn_weights = self.decoder(input,
+                                                              hidden_state,
+                                                              None,
+                                                              h_encoder_outputs,
+                                                              h_encoder_lengths,
+                                                              f_encoder_outputs,
+                                                              f_encoder_lengths)
 
-            input = torch.argmax(decoder_output, dim=2).detach().view(1, -1)  # [1, batch_size]
+            input = torch.argmax(output, dim=2).detach().view(
+                1, -1)  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == eosid:
@@ -437,22 +440,11 @@ class KGModel(nn.Module):
             f_encoder_outputs = f_encoder_outputs.repeat(1, beam_width, 1)
             f_encoder_lengths = f_encoder_lengths.repeat(beam_width)
 
-        # batch_position [batch_size]
-        #   [0, 1 * beam_width, 2 * 2 * beam_width, .., (batch_size-1) * beam_width]
-        #   Points where batch_size starts in [batch_size x beam_width] tensors
-        #   Ex. position_idx[5]: when 5-th batch_size starts
-        batch_position = torch.arange(
-            0, batch_size, dtype=torch.long, device=self.device) * beam_width
+        batch_position = torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_width
 
-        # Initialize scores of sequence
-        # [batch_size x beam_width]
-        # Ex. batch_size: 5, beam_width: 3
-        # [0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf, 0, -inf, -inf]
-        score = torch.ones(batch_size * beam_width,
-                           device=self.device) * -float('inf')
+        score = torch.ones(batch_size * beam_width, device=self.device) * -float('inf')
 
-        score.index_fill_(0, torch.arange(
-            0, batch_size, dtype=torch.long, device=self.device) * beam_width, 0.0)
+        score.index_fill_(0, torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_width, 0.0)
 
         # Initialize Beam that stores decisions for backtracking
         beam = Beam(
@@ -466,11 +458,7 @@ class KGModel(nn.Module):
         )
 
         for i in range(r_max_len):
-            # x: [1, batch_size x beam_width]
-            # =>
-            # output: [1, batch_size x beam_width, vocab_size]
-            # h: [num_layers, batch_size x beam_width, hidden_size]
-            output, hidden_state, _ = self.decoder(input.view(1, -1).contiguous(),
+            output, hidden_state, _ = self.decoder(input.view(1, -1),
                                                    hidden_state,
                                                    None,
                                                    h_encoder_outputs,
@@ -481,43 +469,31 @@ class KGModel(nn.Module):
             # output: [1, batch_size * beam_width, vocab_size]
             # [batch_size * beam_width, vocab_size]
             log_prob = output.squeeze(0)
+
             # [batch_size * beam_width, vocab_size]
             score = score.view(-1, 1) + log_prob
 
-            # Select `beam size` transitions out of `vocab size` combinations
+            # score [batch_size, beam_width]
+            score, top_k_idx = score.view(batch_size, -1).topk(beam_width, dim=1)
 
-            # [batch_size x beam_width, vocab_size]
-            # => [batch_size, beam_width x vocab_size]
-            # Cutoff and retain candidates with top-k scores
-            # score: [batch_size, beam_width]
-            # top_k_idx: [batch_size, beam_width]
-            #       each element of top_k_idx [0 ~ beam x vocab)
-
-            score, top_k_idx = score.view(
-                batch_size, -1).topk(beam_width, dim=1)
-
-            # Get token ids with remainder after dividing by top_k_idx
-            # Each element is among [0, vocab_size)
-            # Ex. Index of token 3 in beam 4
-            # (4 * vocab size) + 3 => 3
-            # input: [1, batch_size x beam_width]
+            # input: [batch_size x beam_width]
             input = (top_k_idx % self.vocab_size).view(-1)
 
-            # top-k-pointer [batch_size x beam_width]
-            #       Points top-k beam that scored best at current step
-            #       Later used as back-pointer at backtracking
-            #       Each element is beam index: 0 ~ beam_width
-            #                     + position index: 0 ~ beam_width x (batch_size-1)
+            # beam_idx: [batch_size, beam_width]
             beam_idx = top_k_idx / self.vocab_size  # [batch_size, beam_width]
 
-            # beam_idx: [batch_size, beam_width], batch_position: [batch_size]
-            #  print('beam_idx: ', beam_idx.shape)
-            #  print('batch_position: ', batch_position.shape)
+            # top_k_pointer: [batch_size * beam_width]
             top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
 
-            # Select next h (size doesn't change)
             # [num_layers, batch_size * beam_width, hidden_size]
             hidden_state = hidden_state.index_select(1, top_k_pointer)
+            if h_encoder_outputs is not None:
+                h_encoder_outputs = h_encoder_outputs.index_select(1, top_k_pointer)
+                h_encoder_lengths = h_encoder_lengths.index_select(1, top_k_pointer)
+
+            if f_encoder_outputs is not None:
+                f_encoder_outputs = f_encoder_outputs.index_select(1, top_k_pointer)
+                f_encoder_lengths = f_encoder_lengths.index_select(1, top_k_pointer)
 
             # Update sequence scores at beam
             beam.update(score.clone(), top_k_pointer, input)
@@ -529,12 +505,6 @@ class KGModel(nn.Module):
             if eos_idx.nonzero().dim() > 0:
                 score.data.masked_fill_(eos_idx, -float('inf'))
 
-        # prediction ([batch_size, k, r_max_len])
-        #     A list of Tensors containing predicted sequence
-        # final_score [batch_size, k]
-        #     A list containing the final scores for all top-k sequences
-        # length [batch_size, k]
-        #     A list specifying the length of each sequence in the top-k candidates
         prediction, final_score, length = beam.backtrack()
 
         return prediction, final_score, length

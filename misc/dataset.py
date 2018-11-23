@@ -168,8 +168,9 @@ class Dataset:
         sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.min_len]
         return sentences
 
-    def reset_data(self, task):
-        np.random.shuffle(self._data_dict[task])
+    def reset_data(self, task, shuffle=True):
+        if shuffle:
+            np.random.shuffle(self._data_dict[task])
         self._indicator_dict[task] = 0
 
     def load_data(self, task, batch_size):

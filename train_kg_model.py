@@ -50,8 +50,6 @@ logger.info('log_path: {}'.format(opt.log_path))
 device = torch.device(opt.device)
 logging.info("device: %s" % device)
 
-logging.info("teacher_forcing_ratio: %f" % opt.teacher_forcing_ratio)
-
 if opt.seed:
     torch.manual_seed(opt.seed)
 
@@ -181,8 +179,7 @@ def train(model,
         f_inputs_length,
         f_topks_length,
         opt.batch_size,
-        opt.r_max_len,
-        opt.teacher_forcing_ratio
+        opt.r_max_len
     )
     #  print('decoder_outputs: ', decoder_outputs.shape)
 
@@ -233,7 +230,7 @@ def evaluate(model,
     loss_total = 0
     accuracy_total = 0
     max_load = int(np.ceil(dataset._size_dict['test'] / opt.batch_size))
-    dataset.reset_data('test')
+    dataset.reset_data('test', False)
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
@@ -277,7 +274,7 @@ def evaluate(model,
 def decode(model, dataset, vocab):
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    dataset.reset_data('eval')
+    dataset.reset_data('eval', False)
     max_load = int(np.ceil(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
@@ -426,7 +423,8 @@ def build_model(vocab_size, padid):
                 padid,
                 opt.tied,
                 device,
-                pre_trained_weight
+                pre_trained_weight,
+                opt.teacher_forcing_ratio
         )
 
     model = model.to(device)

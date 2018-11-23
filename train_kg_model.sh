@@ -33,7 +33,7 @@ python train_kg_model.py \
     --max_grad_norm 1.0 \
     --epochs 15 \
     --batch_size 128 \
-    --teacher_forcing_ratio 0.5 \
+    --teacher_forcing_ratio 1.0 \
     --seed 7 \
     --device cuda \
     --log_interval 30 \
@@ -42,10 +42,10 @@ python train_kg_model.py \
     --eval_split 0.0005 \
     --test_split 0.07 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task decode \
     --share_embedding \
-    --checkpoint models/checkpoint.epoch-1_kg_4_self_attn.pth1 \
+    --checkpoint models/checkpoint.epoch-8_seq2seq_4_self_attn.pth \
     # --pre_trained_embedding data/fasttext_vec_for_vocab_seq2seq.60004.300d.npy \
 
 /
