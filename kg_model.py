@@ -4,7 +4,7 @@ import random
 import torch
 import torch.nn as nn
 
-from module.normal_encoder import NormalEncoder
+from modules.normal_encoder import NormalEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState

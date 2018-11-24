@@ -311,7 +311,7 @@ class Dataset:
                                        embedding=None):
         r = Rake(
             min_length=self.config.min_len,
-            max_length=self.config.f_max + 20
+            max_length=self.config.f_max_len + 20
         )
         ranked_phrase_dict = {}
         ranked_phrase_embedded_didct = {}

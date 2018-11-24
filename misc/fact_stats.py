@@ -381,8 +381,9 @@ def facts_p_stats(facts_path):
                 p = re.sub(r'\[ [\d|\w]+ ]', '', p)
                 p_words = tokenizer.tokenize(p)
 
-                if len(p_words) < 5 or len(p_words) > 130:
+                if len(p_words) < 5:
                     continue
+                p_words = p_words[:200]
                 facts_p_dict[conversation_id].append(' '.join(p_words))
 
     print('total p: %d' % total_p)

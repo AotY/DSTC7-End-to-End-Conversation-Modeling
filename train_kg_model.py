@@ -505,13 +505,11 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        offline_filename = os.path.join(
-            opt.save_path, 'facts_topk_phrases.%s.pkl' % 'embedding')
+        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % 'embedding')
         facts_dict = None
-        if not os.path.exists(offline_filename):
-            facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
 
         if not os.path.exists(offline_filename):
+            facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
             embedding = nn.Embedding.from_pretrained(pre_trained_weight)
             with torch.no_grad():
                 dataset.build_similarity_facts_offline(
