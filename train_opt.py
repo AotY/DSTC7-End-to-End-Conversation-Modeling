@@ -114,11 +114,6 @@ def model_opt(parser):
                        default=0,
                        help='number of latent units per layer')
 
-    group.add_argument('--latent_size',
-                       type=int,
-                       default=300,
-                       help='number of hidden units per layer')
-
     group.add_argument("--kl_anneal",
                        type=str,
                        default='',
