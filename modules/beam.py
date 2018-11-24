@@ -32,19 +32,9 @@ class Beam(object):
         #   Ex. position_idx[5]: when 5-th batch_size starts
         self.batch_position = batch_position
 
-        self.log_probs = list()  # [(batch_size*k, vocab_size)] * sequence_length
-
         self.scores = list()  # [(batch_size*k)] * sequence_length
         self.back_pointers = list()  # [(batch_size*k)] * sequence_length
         self.token_ids = list()  # [(batch_size*k)] * sequence_length
-
-        self.metadata = {
-            'inputs': None,
-            'output': None,
-            'scores': None,
-            'length': None,
-            'sequence': None,
-        }
 
     def update(self, score, back_pointer, token_id):
         """
@@ -60,16 +50,16 @@ class Beam(object):
     def backtrack(self):
         """Backtracks over batch_size to generate optimal k-sequences
         Returns:
-            prediction ([batch_size, k, max_len])
+            prediction ([batch_size, beam_size, max_len])
                 A list of Tensors containing predicted sequence
-            final_score [batch_size, k]
+            final_score [batch_size, beam_size]
                 A list containing the final scores for all top-k sequences
-            length [batch_size, k]
+            length [batch_size, beam_size]
                 A list specifying the length of each sequence in the top-k candidates
         """
         prediction = list()
 
-        # Initialize for length of top-k sequences
+        # Initialize for length of top-k sequences [batch_size, beam_size]
         length = [[self.max_len] * self.beam_size for _ in range(self.batch_size)]
 
         # Last step output of the beam are not sorted => sort here!
