@@ -51,10 +51,6 @@ class KGModel(nn.Module):
             init_wt_normal(self.encoder_embedding.weight,
                            self.encoder_embedding.embedding_dim)
 
-        self.normal_encoder = NormalEncoder(
-            config,
-            self.encoder_embedding,
-        )
 
         # h_encoder
         if config.turn_type == 'transformer':
@@ -74,6 +70,11 @@ class KGModel(nn.Module):
             self.self_attn_encoder = SelfAttentive(
                 config,
                 self.encoder_embedding
+            )
+        else:
+            self.normal_encoder = NormalEncoder(
+                config,
+                self.encoder_embedding,
             )
 
         if config.turn_type != 'none' or config.turn_type != 'concat':

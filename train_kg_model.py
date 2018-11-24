@@ -492,7 +492,7 @@ if __name__ == '__main__':
     vocab.load(opt.vocab_path)
     vocab_size = vocab.size
     opt.vocab_size = int(vocab_size)
-    logger.info("vocab_size --> %d" % opt.vocab_size)
+    logger.info("vocab_size: %d" % opt.vocab_size)
 
     dataset = build_dataset(vocab)
 
