@@ -45,6 +45,7 @@ class Dataset:
         self.read_txt()
 
     def read_txt(self):
+        self.logger.info('read data...')
         _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s.%s.pkl' % (
             self.config.turn_type, self.config.turn_num))
         if not os.path.exists(_data_dict_path):
@@ -55,8 +56,7 @@ class Dataset:
                     if not bool(line):
                         continue
 
-                    conversation_id, context, response, hash_value, score, turn = line.split(
-                        '\t')
+                    conversation_id, context, response, hash_value, score, turn = line.split('\t')
 
                     if not bool(context) or not bool(response):
                         continue
@@ -66,8 +66,7 @@ class Dataset:
                         continue
 
                     #  response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
-                    response_ids = response_ids[:min(
-                        self.config.r_max_len - 1, len(response_ids))]
+                    response_ids = response_ids[:min(self.config.r_max_len - 1, len(response_ids))]
 
                     # context split by EOS, START
                     if context.startswith('start eos'):

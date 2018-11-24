@@ -27,7 +27,7 @@ python train_kg_model.py \
     --tied \
 	--decoder_type luong \
     --decode_type beam_search \
-    --beam_size 8 \
+    --beam_size 10 \
     --best_n 3 \
     --f_max_len 15 \
     --f_topk 10 \
