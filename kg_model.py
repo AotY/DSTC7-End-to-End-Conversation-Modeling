@@ -307,18 +307,16 @@ class KGModel(nn.Module):
                       f_encoder_lengths):
 
         greedy_outputs = []
-        input = torch.ones((1, self.config.batch_size), dtype=torch.long,
-                           device=self.device) * self.vocab.sosid
+        input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * self.vocab.sosid
         for i in range(self.config.r_max_len):
-            output, hidden_state, attn_weights = self.decoder(input,
-                                                              hidden_state,
-                                                              h_encoder_outputs,
-                                                              h_encoder_lengths,
-                                                              f_encoder_outputs,
-                                                              f_encoder_lengths)
+            output, hidden_state, _ = self.decoder(input,
+                                                    hidden_state,
+                                                    h_encoder_outputs,
+                                                    h_encoder_lengths,
+                                                    f_encoder_outputs,
+                                                    f_encoder_lengths)
 
-            input = torch.argmax(output, dim=2).detach().view(
-                1, -1)  # [1, batch_size]
+            input = torch.argmax(output, dim=2).detach().view(1, -1)  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == self.vocab.eosid:
@@ -360,10 +358,10 @@ class KGModel(nn.Module):
             f_encoder_outputs = f_encoder_outputs.repeat(1, beam_size, 1)
             f_encoder_lengths = f_encoder_lengths.repeat(beam_size)
 
+        # [batch_size] [0, beam_size * 1, ..., beam_size * (batch_size - 1)]
         batch_position = torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_size
 
         score = torch.ones(batch_size * beam_size, device=self.device) * -float('inf')
-
         score.index_fill_(0, torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_size, 0.0)
 
         # Initialize Beam that stores decisions for backtracking
@@ -376,7 +374,7 @@ class KGModel(nn.Module):
         )
 
         for i in range(self.config.r_max_len):
-            output, hidden_state, _ = self.decoder(input.view(1, -1),
+            output, hidden_state, _ = self.decoder(input.unsqueeze(0).contiguous(),
                                                    hidden_state,
                                                    h_encoder_outputs,
                                                    h_encoder_lengths,
@@ -384,10 +382,11 @@ class KGModel(nn.Module):
                                                    f_encoder_lengths)
 
             # output: [1, batch_size * beam_size, vocab_size]
-            # [batch_size * beam_size, vocab_size]
-            log_prob = output.squeeze(0)
+            # -> [batch_size * beam_size, vocab_size]
+            log_prob = output[0]
+            print('log_prob: ', log_prob.shape)
 
-            # [batch_size * beam_size, vocab_size]
+            # score: [batch_size * beam_size, vocab_size]
             score = score.view(-1, 1) + log_prob
 
             # score [batch_size, beam_size]

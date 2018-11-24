@@ -118,8 +118,7 @@ class Beam(object):
                     # Replace old information with new sequence information
                     back_pointer[idx_to_be_replaced] = self.back_pointers[t][eos_idx].item()
                     token_id[idx_to_be_replaced] = self.token_ids[t][eos_idx].item()
-                    top_k_score[batch_idx,
-                                beam_idx_to_be_replaced] = self.scores[t].view(-1)[eos_idx].item()
+                    top_k_score[batch_idx, beam_idx_to_be_replaced] = self.scores[t].view(-1)[eos_idx].item()
                     length[batch_idx][beam_idx_to_be_replaced] = t + 1
 
                     n_eos_in_batch[batch_idx] += 1
