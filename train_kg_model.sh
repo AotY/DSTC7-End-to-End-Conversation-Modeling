@@ -10,10 +10,10 @@ python train_kg_model.py \
     --turn_num 4 \
     --min_turn 1 \
     --turn_type self_attn \
-    --embedding_size 300 \
     --pre_embedding_size 300 \
     --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
+    --embedding_size 300 \
     --hidden_size 512 \
     --latent_size 0 \
     --num_layers 2 \
