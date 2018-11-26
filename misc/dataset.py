@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+import re
 import os
 import pickle
 
@@ -308,10 +309,12 @@ class Dataset:
             self.logger.info('retrieval similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
                 conversation_id, sentences_text, _, _, hash_value = data
-                sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
+                #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
+                sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence) for sentence in sentences_text]
+                #  query_text = senteces_text[-1]
                 if len(sentences_text) >= 2 or len(sentences_text[0]) > self.config.f_max_len + 20:
                     r.extract_keywords_from_sentences(sentences_text)
-                    texts = r.get_ranked_phrases()[:self.config.f_topk]
+                    texts = r.get_ranked_phrases()
                     query_text = ' '.join(texts)
                 else:
                     query_text = ' '.join(sentences_text)
@@ -323,10 +326,18 @@ class Dataset:
                 phrases = []
                 for hit in hits[:self.config.f_topk]:
                     phrase = hit['_source']['text']
+                    id = hit['_source']['conversation_id']
+                    assert (conversation_id == id), "%s != %s" % (conversation_id, id)
                     phrases.append(phrase)
-                r.extract_keywords_from_sentences(phrases)
-                topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
-                #  print(topk_phrase)
+                #  r.extract_keywords_from_sentences(phrases)
+                #  topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
+                topk_phrase = phrases
+                #  for sentence in sentences_text:
+                    #  print(sentence)
+                print(conversation_id)
+                print("query: ", query_text)
+                for phrase in topk_phrase:
+                    print('>: ', phrase)
 
                 facts_topk_phrases[hash_value] = topk_phrase
 
