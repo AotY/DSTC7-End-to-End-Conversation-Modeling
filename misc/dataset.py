@@ -108,8 +108,7 @@ class Dataset:
                         sentences_text.append(
                             ' '.join(self.vocab.ids_to_word(sentence_ids)))
 
-                    datas.append((conversation_id, sentences_text,
-                                  sentences_ids, response_ids, hash_value))
+                    datas.append((conversation_id, sentences_text, sentences_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
