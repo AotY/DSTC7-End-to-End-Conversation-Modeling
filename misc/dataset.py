@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
-import re
 import os
 import pickle
 
@@ -250,10 +249,8 @@ class Dataset:
                                             device=self.device)
 
                 if topk_facts_text is not None:
-                    topk_facts_ids = [self.vocab.words_to_id(
-                        text.split(' ')) for text in topk_facts_text]
-                    f_topks_length.append(
-                        min(len(topk_facts_ids), self.config.f_topk))
+                    topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
+                    f_topks_length.append(min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
                         ids = ids[:min(self.config.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
@@ -311,10 +308,9 @@ class Dataset:
                 conversation_id, sentences_text, _, _, hash_value = data
                 #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
                 sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence) for sentence in sentences_text]
-                #  query_text = senteces_text[-1]
                 if len(sentences_text) >= 2 or len(sentences_text[0]) > self.config.f_max_len + 20:
                     r.extract_keywords_from_sentences(sentences_text)
-                    texts = r.get_ranked_phrases()
+                    texts = r.get_ranked_phrases()[:self.config.f_topk]
                     query_text = ' '.join(texts)
                 else:
                     query_text = ' '.join(sentences_text)
@@ -331,14 +327,8 @@ class Dataset:
                     phrases.append(phrase)
                 #  r.extract_keywords_from_sentences(phrases)
                 #  topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
+                #  print(topk_phrase)
                 topk_phrase = phrases
-                #  for sentence in sentences_text:
-                    #  print(sentence)
-                print(conversation_id)
-                print("query: ", query_text)
-                for phrase in topk_phrase:
-                    print('>: ', phrase)
-
                 facts_topk_phrases[hash_value] = topk_phrase
 
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
