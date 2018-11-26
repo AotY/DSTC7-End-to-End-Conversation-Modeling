@@ -509,12 +509,12 @@ if __name__ == '__main__':
 
         if not os.path.exists(offline_filename):
             facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
-            embedding = nn.Embedding.from_pretrained(pre_trained_weight)
+            embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=False)
             with torch.no_grad():
                 dataset.build_similarity_facts_offline(
                     facts_dict,
                     offline_filename,
-                    embedding,
+                    embedding=embedding,
                 )
             del embedding
         else:

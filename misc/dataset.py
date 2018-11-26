@@ -313,12 +313,12 @@ class Dataset:
             ranked_phrase_embedded_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_embedded_dict.pkl', 'rb'))
         except FileNotFoundError as e:
             r = Rake(
-                min_length=self.config.min_len,
-                max_length=self.config.f_max_len + 20
+                min_length=1,
+                max_length=self.config.f_max_len + 15
             )
             ranked_phrase_dict = {}
             ranked_phrase_embedded_dict = {}
-            for conversation_id, ps in facts_dict.items():
+            for conversation_id, ps in tqdm(facts_dict.items()):
                 if len(ps) == 0:
                     continue
                 r.extract_keywords_from_sentences(ps)
@@ -341,36 +341,48 @@ class Dataset:
         cos = nn.CosineSimilarity(dim=0, eps=1e-6)
         facts_topk_phrases = {}
         for task, task_datas in self._data_dict.items():
+            self.logger.info('build similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
                 conversation_id, sentences_text, _, _, hash_value = data
                 # [len(phrases), pre_embedding_size]
                 phrase_embeddeds = ranked_phrase_embedded_dict.get(conversation_id, None)
-                if phrase_embeddeds is None:
+                if phrase_embeddeds is None or len(phrase_embeddeds) == 0:
+                    continue
+                phrases = ranked_phrase_dict.get(conversation_id, None)
+                if phrases is None or len(phrases) == 0:
                     continue
 
                 sum_scores = list()
                 for sentence in sentences_text:
-                    words = remove_stop_words(sentence.split())
-                    ids = self.vocab.words_to_id(words)
-                    mean_embedded = self.get_sentence_embedded(
-                        ids, embedding)
+                    sentence_words = remove_stop_words(sentence.split())
+                    sentence_ids = self.vocab.words_to_id(sentence_words)
+                    mean_embedded = self.get_sentence_embedded(sentence_ids, embedding)
                     scores = list()
                     for phrase_embedded in phrase_embeddeds:
-                        scores.append(cos(mean_embedded, phrase_embedded))
+                        print(phrase_embedded.shape)
+                        print(mean_embedded.shape)
+                        scores.append(cos(mean_embedded.view(-1), phrase_embedded.view(-1)))
                     scores = torch.stack(scores, dim=0)
                     sum_scores.append(scores)
                 # [len(sentences), len(phrase_embeddeds)]
                 sum_scores = torch.stack(sum_scores)
+                print('sum_scores: ', sum_scores.shape)
                 # [len(phrase_embeddeds)]
                 sum_score = sum_scores.sum(dim=0)
-                _, indexs = sum_score.topk(min(self.config.f_topk, sum_score.numel()), dim=0)
+                _, indexes = sum_score.topk(min(self.config.f_topk, sum_score.size(0), dim=0)
 
                 topk_phrases = list()
-                phrases = ranked_phrase_dict[conversation_id]
-                for index in indexs.tolist():
+                print('phrases: %d' % len(phrases))
+                print('indexes: %d' % indexes.size(0))
+                for index in indexes.tolist():
+                    if index >= len(phrases):
+                        continue
                     topk_phrases.append(phrases[index])
 
                 facts_topk_phrases[hash_value] = phrases
+
+                del phrase_embeddeds
+                del phrases
 
         # save topk_facts_embedded_dict
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
@@ -380,7 +392,6 @@ class Dataset:
         ids = torch.LongTensor(ids).to(self.device)
         embeddeds = embedding(ids)  # [len(ids), pre_embedding_size]
         mean_embedded = embeddeds.mean(dim=0)  # [pre_embedding_size]
-
         return mean_embedded
 
     def get_facts_weight(self, facts):
