@@ -308,27 +308,34 @@ class Dataset:
                                        facts_dict=None,
                                        offline_filename=None,
                                        embedding=None):
-        r = Rake(
-            min_length=self.config.min_len,
-            max_length=self.config.f_max_len + 20
-        )
-        ranked_phrase_dict = {}
-        ranked_phrase_embedded_didct = {}
-        for conversation_id, ps in facts_dict.items():
-            if len(ps) == 0:
-                continue
-            r.extract_keywords_from_sentences(ps)
-            phrases = r.get_ranked_phrases()
-            if len(phrases) == 0:
-                continue
-            ranked_phrase_dict[conversation_id] = phrases
-            phrase_embeddeds = list()
-            for phrase in phrases:
-                ids = self.vocab.words_to_id(phrase.split())
-                mean_embedded = self.get_sentence_embedded(ids, embedding)
-                phrase_embeddeds.append(mean_embedded)
-            #  phrase_embeddeds = torch.stack(phrase_embeddeds, dim=0) # [len(phrase), pre_embedding_size]
-            ranked_phrase_embedded_didct[conversation_id] = phrase_embeddeds
+        try:
+            ranked_phrase_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_dict.pkl', 'rb'))
+            ranked_phrase_embedded_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_embedded_dict.pkl', 'rb'))
+        except FileNotFoundError as e:
+            r = Rake(
+                min_length=self.config.min_len,
+                max_length=self.config.f_max_len + 20
+            )
+            ranked_phrase_dict = {}
+            ranked_phrase_embedded_dict = {}
+            for conversation_id, ps in facts_dict.items():
+                if len(ps) == 0:
+                    continue
+                r.extract_keywords_from_sentences(ps)
+                phrases = r.get_ranked_phrases()
+                if len(phrases) == 0:
+                    continue
+                ranked_phrase_dict[conversation_id] = phrases
+                phrase_embeddeds = list()
+                for phrase in phrases:
+                    ids = self.vocab.words_to_id(phrase.split())
+                    mean_embedded = self.get_sentence_embedded(ids, embedding)
+                    phrase_embeddeds.append(mean_embedded)
+                #  phrase_embeddeds = torch.stack(phrase_embeddeds, dim=0) # [len(phrase), pre_embedding_size]
+                ranked_phrase_embedded_dict[conversation_id] = phrase_embeddeds
+
+            pickle.dump(ranked_phrase_dict, open(self.config.save_path + 'ranked_phrase_dict.pkl', 'wb'))
+            pickle.dump(ranked_phrase_embedded_dict, open(self.config.save_path + 'ranked_phrase_embedded_dict.pkl', 'wb'))
 
         # embedding match
         cos = nn.CosineSimilarity(dim=0, eps=1e-6)
@@ -337,7 +344,7 @@ class Dataset:
             for data in tqdm(task_datas):
                 conversation_id, sentences_text, _, _, hash_value = data
                 # [len(phrases), pre_embedding_size]
-                phrase_embeddeds = ranked_phrase_embedded_didct.get(conversation_id, None)
+                phrase_embeddeds = ranked_phrase_embedded_dict.get(conversation_id, None)
                 if phrase_embeddeds is None:
                     continue
 
@@ -355,12 +362,13 @@ class Dataset:
                 # [len(sentences), len(phrase_embeddeds)]
                 sum_scores = torch.stack(sum_scores)
                 # [len(phrase_embeddeds)]
-                sum_socre = sum_scores.sum(dim=0)
-                _, indexs = sum_socre.topk(self.config.f_topk, dim=0)
-                facts = list()
+                sum_score = sum_scores.sum(dim=0)
+                _, indexs = sum_score.topk(min(self.config.f_topk, sum_score.numel()), dim=0)
+
+                topk_phrases = list()
                 phrases = ranked_phrase_dict[conversation_id]
                 for index in indexs.tolist():
-                    facts.append(phrases[index])
+                    topk_phrases.append(phrases[index])
 
                 facts_topk_phrases[hash_value] = phrases
 
