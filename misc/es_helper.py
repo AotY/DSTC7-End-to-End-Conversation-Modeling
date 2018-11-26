@@ -15,8 +15,7 @@ def get_connection():
     es = Elasticsearch()
     return es
 
-
-def create_index(es, index, doc_type=None):
+def create_index(es, index):
     # ignore 400 cause by IndexAlreadyExistsException when creating an index
     es.indices.create(index=index, ignore=400)
 
@@ -25,15 +24,52 @@ def delete_index(es, index):
     result = es.indices.delete(index)
     return result
 
-def insert_to_es(es, body, index, doc_type):
-    '''insert item into es.'''
-    es.index(index=index, doc_type=doc_type, body=body)
+def close_index(es, index):
+    es.indices.close(index)
+
+def open_index(es, index):
+    es.indices.open(index)
+
+def put_settings(es, index, settings):
+    es.indices.put_settings(index=index, body=settings)
 
 def put_mapping(es, index, doc_type, mapping):
     es.indices.put_mapping(index=index, doc_type=doc_type, body=mapping)
 
-def put_settings(es, index, doc_type, settings):
-    es.indices.put_mapping(index=index, doc_type=doc_type, body=settings)
+def insert_to_es(es, index, doc_type, body):
+    '''insert item into es.'''
+    es.index(index=index, doc_type=doc_type, body=body)
+
+def search(es, index, doc_type, query_body):
+    result = es.search(index, doc_type, query_body)
+    hits = result['hits']['hits']
+    count = result['hits']['total']
+    return hits, count
+
+def assemble_search_fact_body(conversation_id, query_text):
+    query_body = {
+        'query': {
+            "bool": {
+                "must":{
+                    "match": {
+                        "conversation_id": conversation_id
+                    }
+                },
+                "should": [
+                    {
+                        "match": {
+                            "text": {
+                                "query": query_text
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    return query_body
+
 
 def search_response_score_turn(es, hash_value):
     query_body = {
