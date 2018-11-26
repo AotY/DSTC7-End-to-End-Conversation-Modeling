@@ -497,28 +497,35 @@ if __name__ == '__main__':
 
     fasttext = None
     pre_trained_weight = None
-    if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
+    if (opt.pre_trained_embedding or opt.offline_type == 'fasttext') and os.path.exists(opt.fasttext_vec)
         logger.info('load pre trained embedding...')
         fasttext = load_fasttext_model(opt.fasttext_vec)
         pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % 'embedding')
-        facts_dict = None
+        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
 
-        if not os.path.exists(offline_filename):
-            facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
-            embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=True)
-            with torch.no_grad():
-                dataset.build_similarity_facts_offline(
-                    facts_dict,
-                    offline_filename,
-                    embedding=embedding,
-                )
-            del embedding
-        else:
-            dataset.load_similarity_facts(offline_filename)
+        if opt.offline_type == 'elastic':
+            dataset.build_similarity_facts_offline(
+                offline_filename=offline_filename,
+            )
+        elif opt.offline_type == 'fasttext':
+            facts_dict = None
+            if not os.path.exists(offline_filename):
+                facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
+                embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=True)
+                with torch.no_grad():
+                    dataset.build_similarity_facts_offline(
+                        facts_dict,
+                        offline_filename,
+                        embedding=embedding,
+                    )
+                del embedding
+            else:
+                dataset.load_similarity_facts(offline_filename)
+        elif opt.offline_type == 'elmo':
+            pass
 
     model = build_model(vocab, pre_trained_weight)
     del fasttext
