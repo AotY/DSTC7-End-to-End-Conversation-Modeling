@@ -10,10 +10,8 @@ python train_kg_model.py \
     --turn_num 4 \
     --min_turn 1 \
     --turn_type self_attn \
-    --pre_embedding_size 300 \
-    --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     --rnn_type GRU \
-    --embedding_size 300 \
+    --embedding_size 512 \
     --hidden_size 512 \
     --latent_size 0 \
     --num_layers 2 \
@@ -47,7 +45,9 @@ python train_kg_model.py \
     --model_type kg \
     --task train \
     --share_embedding \
-    --pre_trained_embedding \
+    # --pre_embedding_size 300 \
+    # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
+    # --pre_trained_embedding \
     # --checkpoint models/checkpoint.epoch-1_kg_5_self_attn.pth \
 
 /

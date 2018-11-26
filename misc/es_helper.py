@@ -11,7 +11,6 @@ index = 'dstc-7'
 conversation_type = 'conversation'
 fact_type = 'fact'
 
-
 def get_connection():
     es = Elasticsearch()
     return es
@@ -21,17 +20,20 @@ def create_index(es, index, doc_type=None):
     # ignore 400 cause by IndexAlreadyExistsException when creating an index
     es.indices.create(index=index, ignore=400)
 
-
 def delete_index(es, index):
     '''delete index.'''
     result = es.indices.delete(index)
     return result
 
-
 def insert_to_es(es, body, index, doc_type):
     '''insert item into es.'''
     es.index(index=index, doc_type=doc_type, body=body)
 
+def put_mapping(es, index, doc_type, mapping):
+    es.indices.put_mapping(index=index, doc_type=doc_type, body=mapping)
+
+def put_settings(es, index, doc_type, settings):
+    es.indices.put_mapping(index=index, doc_type=doc_type, body=settings)
 
 def search_response_score_turn(es, hash_value):
     query_body = {
@@ -94,8 +96,6 @@ def search_conversation_id(es, hash_value):
     subreddit_name, conversation_id = hits[0]['_source']['subreddit_name'], hits[0]['_source']['conversation_id']
 
     return conversation_id
-
-
 
 
 def search_facts(es, hash_value):

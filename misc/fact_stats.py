@@ -380,10 +380,12 @@ def facts_p_stats(facts_path):
                 p = BeautifulSoup(fact, 'lxml').text
                 p = re.sub(r'\[ [\d|\w]+ ]', '', p)
                 p_words = tokenizer.tokenize(p)
+                # remove <number>, <url>
+                p_words = [word for word in p_words if word not in ['<number>', '<url>']]
 
                 if len(p_words) < 5:
                     continue
-                p_words = p_words[:200]
+                p_words = p_words[:250]
                 facts_p_dict[conversation_id].append(' '.join(p_words))
 
     print('total p: %d' % total_p)
@@ -398,6 +400,51 @@ def facts_p_stats(facts_path):
 
     pickle.dump(facts_p_dict, open('./../data/facts_p_dict.pkl', 'wb'))
 
+
+def facts_tag_stats(facts_path):
+    total_tag = 0
+    tag_count_dict = Counter()
+    tag_len_dict = Counter()
+    facts_tag_dict = {}
+    with open(facts_path, 'r', encoding='utf-8') as f:
+        for line in tqdm(f):
+            line = line.rstrip()
+            if not bool(line):
+                continue
+
+            _, conversation_id, _, fact = line.split('\t')
+
+            if tag_count_dict.get(conversation_id, 0) == 0:
+                tag_count_dict[conversation_id] = 0
+                facts_tag_dict[conversation_id] = []
+
+            if fact.startswith('<p>') or fact.startswith('<h2>') or fact.startswith('<h3>') or fact.startswith('<h4>'):
+                total_tag += 1
+                tag_count_dict[conversation_id] += 1
+                tag_len_dict[len(fact.split())] = tag_len_dict.get(len(fact.split()), 0) + 1
+
+                text = BeautifulSoup(fact, 'lxml').text
+                text = re.sub(r'\[ [\d|\w]+ ]', '', text)
+                words = tokenizer.tokenize(text)
+                # remove <number>, <url>
+                words = [word for word in words if word not in ['<number>', '<url>']]
+
+                if len(words) < 2:
+                    continue
+                words = words[:250]
+                facts_tag_dict[conversation_id].append(' '.join(words))
+
+    print('total tag: %d' % total_tag)
+    print('avg tag: %.4f' % (total_tag / len(tag_count_dict)))
+    """
+    total tag: 577087
+    avg tag: 29.7437
+    """
+
+    save_distribution(tag_count_dict, 'facts_tag_count')
+    save_distribution(tag_len_dict, 'facts_tag_len')
+
+    pickle.dump(facts_tag_dict, open('./../data/facts_tag_dict.pkl', 'wb'))
 
 def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[1], reverse=True)
@@ -415,6 +462,7 @@ if __name__ == '__main__':
     #  fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
     #  conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
 
+    facts_tag_stats(facts_path)
     facts_p_stats(facts_path)
 
     print('stats finishing...')

@@ -307,11 +307,14 @@ class Dataset:
     def build_similarity_facts_offline(self,
                                        facts_dict=None,
                                        offline_filename=None,
-                                       embedding=None):
+                                       embedding=None,
+                                       embedding_type='fasttext'):
+        ranked_phrase_dict_path = self.config.save_path + 'ranked_phrase_dict.%s.pkl' % embedding_type
+        ranked_phrase_embedded_dict_path = self.config.save_path + 'ranked_phrase_embedded_dict.%s.pkl' % embedding_type
         try:
             self.logger.info('load ranked phrase...')
-            ranked_phrase_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_dict.pkl', 'rb'))
-            ranked_phrase_embedded_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_embedded_dict.pkl', 'rb'))
+            ranked_phrase_dict = pickle.load(open(ranked_phrase_dict_path, 'rb'))
+            ranked_phrase_embedded_dict = pickle.load(open(ranked_phrase_embedded_dict_path, 'rb'))
         except FileNotFoundError as e:
             r = Rake(
                 min_length=1,
@@ -329,14 +332,18 @@ class Dataset:
                 ranked_phrase_dict[conversation_id] = phrases
                 phrase_embeddeds = list()
                 for phrase in phrases:
-                    ids = self.vocab.words_to_id(phrase.split())
-                    mean_embedded = self.get_sentence_embedded(ids, embedding)
+                    if embedding_type == 'fasttext':
+                        ids = self.vocab.words_to_id(phrase.split())
+                        mean_embedded = self.get_sentence_embedded(ids, embedding, embedding_type)
+                    elif embedding_type == 'elmo':
+                        mean_embedded = self.get_sentence_embedded(phrase.split(), embedding, embedding_type)
+
                     phrase_embeddeds.append(mean_embedded)
                 #  phrase_embeddeds = torch.stack(phrase_embeddeds, dim=0) # [len(phrase), pre_embedding_size]
                 ranked_phrase_embedded_dict[conversation_id] = phrase_embeddeds
 
-            pickle.dump(ranked_phrase_dict, open(self.config.save_path + 'ranked_phrase_dict.pkl', 'wb'))
-            pickle.dump(ranked_phrase_embedded_dict, open(self.config.save_path + 'ranked_phrase_embedded_dict.pkl', 'wb'))
+            pickle.dump(ranked_phrase_dict, open(ranked_phrase_dict_path, 'wb'))
+            pickle.dump(ranked_phrase_embedded_dict, open(ranked_phrase_embedded_dict_path, 'wb'))
 
         # embedding match
         cos = nn.CosineSimilarity(dim=0, eps=1e-6)
@@ -357,7 +364,7 @@ class Dataset:
                 for sentence in sentences_text:
                     sentence_words = remove_stop_words(sentence.split())
                     sentence_ids = self.vocab.words_to_id(sentence_words)
-                    mean_embedded = self.get_sentence_embedded(sentence_ids, embedding)
+                    mean_embedded = self.get_sentence_embedded(sentence_ids, embedding, embedding_type)
                     scores = list()
                     for phrase_embedded in phrase_embeddeds:
                         #  print(phrase_embedded.shape)
@@ -389,11 +396,20 @@ class Dataset:
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
         self.facts_topk_phrases = facts_topk_phrases
 
-    def get_sentence_embedded(self, ids, embedding):
-        ids = torch.LongTensor(ids).to(self.device)
-        embeddeds = embedding(ids)  # [len(ids), pre_embedding_size]
-        mean_embedded = embeddeds.mean(dim=0)  # [pre_embedding_size]
-        return mean_embedded
+    def get_sentence_embedded(self, ids, embedding, embedding_type):
+        if embedding_type == 'fasttext':
+            ids = torch.LongTensor(ids).to(self.device)
+            embeddeds = embedding(ids)  # [len(ids), pre_embedding_size]
+            mean_embedded = embeddeds.mean(dim=0)  # [pre_embedding_size]
+            return mean_embedded
+        elif embedding_type == 'elmo':
+            tokens = ids # if embedding_type is elmo, ids = words
+            vectors = embedding.embed_sentence(tokens)
+            assert(len(vectors) == 3)
+            assert(len(vectors[0]) == len(tokens))
+            # vectors: [3, len(tokens), 1024]
+            mean_embedded = vectors[2].mean(dim=0)
+            return mean_embedded
 
     def get_facts_weight(self, facts):
         """ facts: [[w_n] * size]"""
