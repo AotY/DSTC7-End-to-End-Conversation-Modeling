@@ -4,6 +4,11 @@ from __future__ import print_function
 
 from elasticsearch import Elasticsearch
 
+import logging
+
+for _ in ("boto", "elasticsearch", "urllib3"):
+    logging.getLogger(_).setLevel(logging.CRITICAL)
+
 '''
 default config
 '''

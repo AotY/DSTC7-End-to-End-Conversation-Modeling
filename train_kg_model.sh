@@ -30,7 +30,7 @@ python train_kg_model.py \
     --f_max_len 15 \
     --f_topk 10 \
     --lr 0.001 \
-    --max_grad_norm 1.0 \
+    --max_grad_norm 5.0 \
     --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
