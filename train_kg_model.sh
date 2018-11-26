@@ -7,7 +7,7 @@ python train_kg_model.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
     --vocab_size 6e4 \
-    --turn_num 5 \
+    --turn_num 4 \
     --min_turn 1 \
     --turn_type self_attn \
     --embedding_size 300 \
