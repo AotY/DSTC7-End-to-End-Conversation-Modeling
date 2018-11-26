@@ -132,11 +132,15 @@ class Vocab(object):
         return EOS
 
     def ids_to_text(self, ids):
-        words = self.ids_to_word(ids)
-        # remove pad, sos, eos, unk
-        #  words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos, '.']]
-        #  words = [word for word in words if word not in [self.pad, self.unk, self.sos, self.eos]]
-        words = [word for word in words if word not in [self.sos, self.eos]]
+        final_ids = []
+        for id in ids:
+            if id in [self.padid, self.sosid]:
+                continue
+            elif id == self.eosid:
+                break
+            else:
+                final_ids.append(id)
+        words = self.ids_to_word(final_ids)
         text = ' '.join(words)
         return text
 

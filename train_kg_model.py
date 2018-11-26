@@ -288,7 +288,7 @@ def decode(model, dataset):
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
-            greedy_outputs, beam_outputs = model.decode(
+            greedy_outputs, beam_outputs, beam_length = model.decode(
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
@@ -300,12 +300,11 @@ def decode(model, dataset):
             # generate sentence, and save to file
             # [max_length, batch_size]
             greedy_texts = dataset.generating_texts(greedy_outputs,
-                                                    opt.batch_size,
-                                                    'greedy')
+                                                    decode_type='greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
-                                                  opt.batch_size,
-                                                  'beam_search')
+                                                  beam_length,
+                                                  decode_type='beam_search')
             #  print(beam_texts)
 
             # save sentences
