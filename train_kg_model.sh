@@ -45,9 +45,9 @@ python train_kg_model.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type kg \
-    --task decode \
+    --task train \
     --share_embedding \
     --pre_trained_embedding \
-    --checkpoint models/checkpoint.epoch-1_kg_5_self_attn.pth \
+    # --checkpoint models/checkpoint.epoch-1_kg_5_self_attn.pth \
 
 /

@@ -509,7 +509,7 @@ if __name__ == '__main__':
 
         if not os.path.exists(offline_filename):
             facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
-            embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=False)
+            embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=True)
             with torch.no_grad():
                 dataset.build_similarity_facts_offline(
                     facts_dict,
@@ -521,6 +521,7 @@ if __name__ == '__main__':
             dataset.load_similarity_facts(offline_filename)
 
     model = build_model(vocab, pre_trained_weight)
+    del fasttext
 
     # Build optimizer.
     optimizer = build_optimizer(model)

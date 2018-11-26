@@ -309,6 +309,7 @@ class Dataset:
                                        offline_filename=None,
                                        embedding=None):
         try:
+            self.logger.info('load ranked phrase...')
             ranked_phrase_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_dict.pkl', 'rb'))
             ranked_phrase_embedded_dict = pickle.load(open(self.config.save_path + 'ranked_phrase_embedded_dict.pkl', 'rb'))
         except FileNotFoundError as e:
@@ -359,21 +360,21 @@ class Dataset:
                     mean_embedded = self.get_sentence_embedded(sentence_ids, embedding)
                     scores = list()
                     for phrase_embedded in phrase_embeddeds:
-                        print(phrase_embedded.shape)
-                        print(mean_embedded.shape)
+                        #  print(phrase_embedded.shape)
+                        #  print(mean_embedded.shape)
                         scores.append(cos(mean_embedded.view(-1), phrase_embedded.view(-1)))
                     scores = torch.stack(scores, dim=0)
                     sum_scores.append(scores)
                 # [len(sentences), len(phrase_embeddeds)]
                 sum_scores = torch.stack(sum_scores)
-                print('sum_scores: ', sum_scores.shape)
+                #  print('sum_scores: ', sum_scores.shape)
                 # [len(phrase_embeddeds)]
                 sum_score = sum_scores.sum(dim=0)
-                _, indexes = sum_score.topk(min(self.config.f_topk, sum_score.size(0), dim=0)
+                _, indexes = sum_score.topk(min(self.config.f_topk, sum_score.size(0)), dim=0)
 
                 topk_phrases = list()
-                print('phrases: %d' % len(phrases))
-                print('indexes: %d' % indexes.size(0))
+                #  print('phrases: %d' % len(phrases))
+                #  print('indexes: %d' % indexes.size(0))
                 for index in indexes.tolist():
                     if index >= len(phrases):
                         continue
@@ -458,11 +459,11 @@ class Dataset:
 
         batch_generated_texts = []
         if decode_type == 'greedy':
-            for bi in range(batch_size):
+            for bi in range(self.config.batch_size):
                 text = self.vocab.ids_to_text(outputs[bi].tolist())
                 batch_generated_texts.append(text)
         elif decode_type == 'beam_search':
-            for bi in range(batch_size):
+            for bi in range(self.config.batch_size):
                 topk_ids = outputs[bi]
                 topk_length = outputs_length[bi]
                 topk_texts = []
