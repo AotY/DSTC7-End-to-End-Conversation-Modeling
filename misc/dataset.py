@@ -345,6 +345,7 @@ class Dataset:
         offline_type = self.config.offline_type
         if offline_type == 'elastic':
             self.retrieval_similarity_facts(offline_filename)
+            return
 
         ranked_phrase_dict_path = self.config.save_path + 'ranked_phrase_dict.%s.pkl' % offline_type
         ranked_phrase_embedded_dict_path = self.config.save_path + 'ranked_phrase_embedded_dict.%s.pkl' % offline_type

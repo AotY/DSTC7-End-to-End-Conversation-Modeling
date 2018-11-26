@@ -17,6 +17,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
+    --cnn_kernel_width 3 \
     --dropout 0.2 \
     --c_max_len 35 \
     --r_max_len 35 \
