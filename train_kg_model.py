@@ -497,7 +497,7 @@ if __name__ == '__main__':
 
     fasttext = None
     pre_trained_weight = None
-    if (opt.pre_trained_embedding or opt.offline_type == 'fasttext') and os.path.exists(opt.fasttext_vec)
+    if (opt.pre_trained_embedding or opt.offline_type == 'fasttext') and os.path.exists(opt.fasttext_vec):
         logger.info('load pre trained embedding...')
         fasttext = load_fasttext_model(opt.fasttext_vec)
         pre_trained_weight = load_fasttext_embedding(fasttext, vocab)

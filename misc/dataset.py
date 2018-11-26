@@ -318,15 +318,16 @@ class Dataset:
                     query_text = ' '.join(sentences_text)
 
                 query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
-                hits, hit_count = es_helper.search(es, es_helper.fact_type, query_body)
+                hits, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body)
                 if hit_count == 0:
                     continue
                 phrases = []
-                for hit in hits[:self.config.topk]:
-                    phrase = hit['text']
+                for hit in hits[:self.config.f_topk]:
+                    phrase = hit['_source']['text']
                     phrases.append(phrase)
                 r.extract_keywords_from_sentences(phrases)
                 topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
+                #  print(topk_phrase)
 
                 facts_topk_phrases[hash_value] = topk_phrase
 
