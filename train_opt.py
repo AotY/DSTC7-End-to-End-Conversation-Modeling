@@ -148,6 +148,10 @@ def model_opt(parser):
                        type=int,
                        help='number of layers')
 
+    group.add_argument('--cnn_kernel_width',
+                       type=int,
+                       help='Size of the convolving kernel.')
+
     group.add_argument('--dropout',
                        type=float,
                        default=0.5,

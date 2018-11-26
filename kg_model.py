@@ -76,6 +76,11 @@ class KGModel(nn.Module):
                 self.encoder_embedding,
             )
 
+            #  self.cnn_encoder = CNNENcoder(
+                #  config,
+                #  self.encoder_embedding
+            #  ) 
+
         if config.turn_type != 'none' or config.turn_type != 'concat':
             if config.turn_type == 'c_concat':
                 self.c_concat_linear = nn.Linear(config.hidden_size * config.turn_num, config.hidden_size)
