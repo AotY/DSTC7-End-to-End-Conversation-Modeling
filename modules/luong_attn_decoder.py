@@ -26,6 +26,8 @@ class LuongAttnDecoder(nn.Module):
         # dropout
         self.dropout = nn.Dropout(config.dropout)
 
+        self.latent_size = config.latent_size
+
         # h_attn
         self.h_attn = Attention(config.hidden_size)
 
@@ -146,8 +148,10 @@ class LuongAttnDecoder(nn.Module):
     def f_forward(self, output, f_encoder_outputs, f_encoder_lengths=None):
         """
         output: [1, batch_size, hidden_size]
-        f_encoder_outputs: [topk, batch_size, embedding_size]
+        f_encoder_outputs: [topk, batch_size, embedding_size] or [topk, batch_size, hidden_size]
         """
+        #  print(output.shape)
+        #  print(f_encoder_outputs.shape)
         # K [batch_size, topk, hidden_size]
         fK = self.f_linearA(f_encoder_outputs.transpose(0, 1))
 

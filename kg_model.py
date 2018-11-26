@@ -70,16 +70,15 @@ class KGModel(nn.Module):
                 config,
                 self.encoder_embedding
             )
-        else:
-            self.normal_encoder = NormalEncoder(
-                config,
-                self.encoder_embedding,
-            )
+        self.normal_encoder = NormalEncoder(
+            config,
+            self.encoder_embedding,
+        )
 
-            #  self.cnn_encoder = CNNENcoder(
-                #  config,
-                #  self.encoder_embedding
-            #  ) 
+        #  self.cnn_encoder = CNNENcoder(
+            #  config,
+            #  self.encoder_embedding
+        #  )
 
         if config.turn_type != 'none' or config.turn_type != 'concat':
             if config.turn_type == 'c_concat':
@@ -152,7 +151,7 @@ class KGModel(nn.Module):
             decoder_hidden_state += f_encoder_hidden_state
             """
             #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
-            f_encoder_outputs = self.f_forward(f_inputs)
+            f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
 
         # decoder
         decoder_outputs = []
@@ -229,7 +228,7 @@ class KGModel(nn.Module):
             decoder_hidden_state += f_encoder_hidden_state
             """
             #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
-            f_encoder_outputs = self.f_forward(f_inputs)
+            f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
 
         # decoder
         decoder_outputs = []
@@ -285,7 +284,7 @@ class KGModel(nn.Module):
             decoder_hidden_state += f_encoder_hidden_state
             """
             #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
-            f_encoder_outputs = self.f_forward(f_inputs)
+            f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
 
         # decoder
         beam_outputs, beam_score, beam_length = self.beam_decode(
@@ -501,7 +500,7 @@ class KGModel(nn.Module):
     def f_forward(self,
                   f_inputs,
                   f_inputs_length,
-                  f_topks_length):
+                  f_topks_length=None):
         """
         Args:
             -f_inputs: [topk, max_len, batch_size]
