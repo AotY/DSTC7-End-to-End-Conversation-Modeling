@@ -45,6 +45,7 @@ python train_kg_model.py \
     --model_type kg \
     --task train \
     --share_embedding \
+    --offline_type elastic \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \

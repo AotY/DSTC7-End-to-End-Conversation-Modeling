@@ -36,9 +36,6 @@ class Dataset:
         self.device = device
         self.logger = logger
 
-        # es
-        self.es = es_helper.get_connection()
-
         self._data_dict = {}
         self._indicator_dict = {}
 
@@ -304,13 +301,52 @@ class Dataset:
     def load_similarity_facts(self, offline_filename):
         self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
 
+    def retrieval_similarity_facts(self, offline_filename):
+        es = es_helper.get_connection()
+        r = Rake()
+        facts_topk_phrases = {}
+        for task, task_datas in self._data_dict.items():
+            self.logger.info('retrieval similarity facts for: %s data.' % task)
+            for data in tqdm(task_datas):
+                conversation_id, sentences_text, _, _, hash_value = data
+                sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
+                if len(sentences_text) >= 2 or len(sentences_text[0]) > self.config.f_max_len + 20:
+                    r.extract_keywords_from_sentences(sentences_text)
+                    texts = r.get_ranked_phrases()[:self.config.f_topk]
+                    query_text = ' '.join(texts)
+                else:
+                    query_text = ' '.join(sentences_text)
+
+                query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
+                hits, hit_count = es_helper.search(es, es_helper.fact_type, query_body)
+                if hit_count == 0:
+                    continue
+                phrases = []
+                for hit in hits[:self.config.topk]:
+                    phrase = hit['text']
+                    phrases.append(phrase)
+                r.extract_keywords_from_sentences(phrases)
+                topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
+
+                facts_topk_phrases[hash_value] = topk_phrase
+
+        pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
+        self.facts_topk_phrases = facts_topk_phrases
+
     def build_similarity_facts_offline(self,
                                        facts_dict=None,
                                        offline_filename=None,
-                                       embedding=None,
-                                       embedding_type='fasttext'):
-        ranked_phrase_dict_path = self.config.save_path + 'ranked_phrase_dict.%s.pkl' % embedding_type
-        ranked_phrase_embedded_dict_path = self.config.save_path + 'ranked_phrase_embedded_dict.%s.pkl' % embedding_type
+                                       embedding=None):
+        if os.path.exists(offline_filename):
+            self.load_similarity_facts(offline_filename)
+            return
+
+        offline_type = self.config.offline_type
+        if offline_type == 'elastic':
+            self.retrieval_similarity_facts(offline_filename)
+
+        ranked_phrase_dict_path = self.config.save_path + 'ranked_phrase_dict.%s.pkl' % offline_type
+        ranked_phrase_embedded_dict_path = self.config.save_path + 'ranked_phrase_embedded_dict.%s.pkl' % offline_type
         try:
             self.logger.info('load ranked phrase...')
             ranked_phrase_dict = pickle.load(open(ranked_phrase_dict_path, 'rb'))
@@ -332,11 +368,11 @@ class Dataset:
                 ranked_phrase_dict[conversation_id] = phrases
                 phrase_embeddeds = list()
                 for phrase in phrases:
-                    if embedding_type == 'fasttext':
+                    if offline_type == 'fasttext':
                         ids = self.vocab.words_to_id(phrase.split())
-                        mean_embedded = self.get_sentence_embedded(ids, embedding, embedding_type)
-                    elif embedding_type == 'elmo':
-                        mean_embedded = self.get_sentence_embedded(phrase.split(), embedding, embedding_type)
+                        mean_embedded = self.get_sentence_embedded(ids, embedding, offline_type)
+                    elif offline_type == 'elmo':
+                        mean_embedded = self.get_sentence_embedded(phrase.split(), embedding, offline_type)
 
                     phrase_embeddeds.append(mean_embedded)
                 #  phrase_embeddeds = torch.stack(phrase_embeddeds, dim=0) # [len(phrase), pre_embedding_size]
@@ -364,7 +400,7 @@ class Dataset:
                 for sentence in sentences_text:
                     sentence_words = remove_stop_words(sentence.split())
                     sentence_ids = self.vocab.words_to_id(sentence_words)
-                    mean_embedded = self.get_sentence_embedded(sentence_ids, embedding, embedding_type)
+                    mean_embedded = self.get_sentence_embedded(sentence_ids, embedding, offline_type)
                     scores = list()
                     for phrase_embedded in phrase_embeddeds:
                         #  print(phrase_embedded.shape)
@@ -396,14 +432,14 @@ class Dataset:
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
         self.facts_topk_phrases = facts_topk_phrases
 
-    def get_sentence_embedded(self, ids, embedding, embedding_type):
-        if embedding_type == 'fasttext':
+    def get_sentence_embedded(self, ids, embedding, offline_type):
+        if offline_type == 'fasttext':
             ids = torch.LongTensor(ids).to(self.device)
             embeddeds = embedding(ids)  # [len(ids), pre_embedding_size]
             mean_embedded = embeddeds.mean(dim=0)  # [pre_embedding_size]
             return mean_embedded
-        elif embedding_type == 'elmo':
-            tokens = ids # if embedding_type is elmo, ids = words
+        elif offline_type == 'elmo':
+            tokens = ids # if offline_type is elmo, ids = words
             vectors = embedding.embed_sentence(tokens)
             assert(len(vectors) == 3)
             assert(len(vectors[0]) == len(tokens))

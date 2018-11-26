@@ -262,3 +262,7 @@ def train_opt(parser):
     group.add_argument('--model_type',
                         type=str,
                         help='seq2seq or kg model.')
+
+    group.add_argument('--offline_type',
+                        type=str,
+                        help='how to retrieval relative facts. elastic | fasttext | elmo.')
