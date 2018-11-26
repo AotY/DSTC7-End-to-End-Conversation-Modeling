@@ -147,6 +147,7 @@ class Beam(object):
 
         # [batch_size, beam, max_len]
         prediction = torch.stack(prediction, 2)
+        prediction = prediction.tolist()
 
         return prediction, final_score, length
 

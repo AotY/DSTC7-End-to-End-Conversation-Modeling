@@ -426,13 +426,14 @@ class Dataset:
                             f.write('fact %d: %s\n' % (fi, fact_text))
                 f.write('---------------------------------\n')
 
-    def generating_texts(self, outputs, batch_size, decode_type='greedy'):
+    def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
         """
         decode_type == greedy:
             outputs: [batch_size, max_len]
             return: [batch_size]
         decode_type == 'beam_search':
             outputs: [batch_size, topk, max_len]
+            outputs_length: [batch_size, topk]
             return: [batch_size, topk]
         """
 
@@ -443,11 +444,12 @@ class Dataset:
                 batch_generated_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(batch_size):
-                best_n_ids = outputs[bi]
-                best_n_texts = []
-                for ids in best_n_ids:
-                    text = self.vocab.ids_to_text(ids)
-                    best_n_texts.append(text)
-                batch_generated_texts.append(best_n_texts)
+                topk_ids = outputs[bi]
+                topk_length = outputs_length[bi]
+                topk_texts = []
+                for ids, length in zip(topk_ids, topk_length):
+                    text = self.vocab.ids_to_text(ids[:length])
+                    topk_texts.append(text)
+                batch_generated_texts.append(topk_texts)
 
         return batch_generated_texts

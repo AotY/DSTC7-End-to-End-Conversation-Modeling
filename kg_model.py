@@ -281,14 +281,13 @@ class KGModel(nn.Module):
             f_encoder_outputs = self.f_embedding(f_inputs)
 
         # decoder
-        beam_outputs, _, _ = self.beam_decode(
+        beam_outputs, beam_score, beam_length = self.beam_decode(
             decoder_hidden_state,
             h_encoder_outputs,
             h_encoder_lengths,
             f_encoder_outputs,
             f_encoder_lengths
         )
-        beam_outputs = beam_outputs.tolist()
 
         greedy_outputs = self.greedy_decode(
             decoder_hidden_state,
@@ -298,7 +297,7 @@ class KGModel(nn.Module):
                                             f_encoder_lengths
         )
 
-        return greedy_outputs, beam_outputs
+        return greedy_outputs, beam_outputs, beam_length
 
     def greedy_decode(self,
                       hidden_state,
