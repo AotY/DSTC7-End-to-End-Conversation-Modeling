@@ -28,7 +28,6 @@ class NormalEncoder(nn.Module):
         self.bidirection_num = 2 if config.bidirectional else 1
         self.hidden_size = config.hidden_size // self.bidirection_num
 
-
         # dropout
         self.dropout = nn.Dropout(config.dropout)
 
@@ -36,7 +35,7 @@ class NormalEncoder(nn.Module):
         self.rnn = rnn_factory(
             config.rnn_type,
             input_size=self.embedding_size,
-            hidden_size=config.hidden_size,
+            hidden_size=self.hidden_size,
             num_layers=config.num_layers,
             bidirectional=config.bidirectional,
             dropout=config.dropout
