@@ -18,7 +18,6 @@ import modules.transformer.models as transformer_models
 KGModel
 """
 
-
 class KGModel(nn.Module):
     '''
     generating responses on both conversation history and external "facts", allowing the model
@@ -147,7 +146,8 @@ class KGModel(nn.Module):
             )
             decoder_hidden_state += f_encoder_hidden_state
             """
-            f_encoder_outputs = self.f_embedding(f_inputs)
+            #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
+            f_encoder_outputs = self.f_forward(f_inputs)
 
         # decoder
         decoder_outputs = []
@@ -223,7 +223,8 @@ class KGModel(nn.Module):
             )
             decoder_hidden_state += f_encoder_hidden_state
             """
-            f_encoder_outputs = self.f_embedding(f_inputs)
+            #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
+            f_encoder_outputs = self.f_forward(f_inputs)
 
         # decoder
         decoder_outputs = []
@@ -278,7 +279,8 @@ class KGModel(nn.Module):
             )
             decoder_hidden_state += f_encoder_hidden_state
             """
-            f_encoder_outputs = self.f_embedding(f_inputs)
+            #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
+            f_encoder_outputs = self.f_forward(f_inputs)
 
         # decoder
         beam_outputs, beam_score, beam_length = self.beam_decode(
@@ -507,9 +509,6 @@ class KGModel(nn.Module):
             f_input = f_inputs[i, :, :]  # [max_len, batch_size]
             f_input_length = f_inputs_length[i, :]  # [batch_size]
 
-            #  output: [1, batch_size, hidden_size]
-            #  hidden_state: [num_layers * bidirection_num, batch_size, hidden_size // 2]
-
             outputs, hidden_state = self.normal_encoder(f_input, f_input_length)
             output = outputs[-1]
 
@@ -517,10 +516,9 @@ class KGModel(nn.Module):
 
         # [topk, batch_size, hidden_size]
         f_outputs = torch.stack(f_outputs, dim=0)
-
         return f_outputs
 
-    def f_embedding(self, f_inputs):
+    def f_embedding_forward(self, f_inputs):
         """
         f_inputs: [topk, max_len, batch_size]
         f_inputs_length: [topk, batch_size]
@@ -548,8 +546,4 @@ class KGModel(nn.Module):
         # [topk, batch_size, embedding_size]
         f_embedded = torch.stack(f_embedded, dim=0)
 
-        """
-        f_embedded = self.encoder_embedding(f_inputs) # [topk, max_len, batch_size, embedding_size]
-        f_embedded = f_embedded.mean(dim=1) # [topk, batch_size, embedding_size]
-        """
         return f_embedded
