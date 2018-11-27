@@ -518,12 +518,17 @@ class KGModel(nn.Module):
             #  outputs, hidden_state = self.normal_encoder(f_input, f_input_length)
             #  output = outputs[-1]
 
+            outputs, hidden_state = self.self_attn_encoder(f_input, f_input_length)
+            outputs = outputs.unsqueeze(0) # [1, batch_size, hidden_size]
+
+            """
             # outputs: [hidden_size, batch_size, max_len]
             _, outputs, _ = self.cnn_encoder(f_input, f_input_length)
             #  print('outputs: ', outputs.shape)
             outputs = outputs.permute(2, 1, 0)
-            output = outputs[-1]
+            """
 
+            output = outputs[-1]
             f_outputs.append(output)
 
         # [topk, batch_size, hidden_size]
