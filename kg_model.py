@@ -70,15 +70,16 @@ class KGModel(nn.Module):
                 config,
                 self.encoder_embedding
             )
+
         self.normal_encoder = NormalEncoder(
             config,
             self.encoder_embedding,
         )
 
-        #  self.cnn_encoder = CNNENcoder(
-            #  config,
-            #  self.encoder_embedding
-        #  )
+        self.cnn_encoder = CNNENcoder(
+            config,
+            self.encoder_embedding
+        )
 
         if config.turn_type != 'none' or config.turn_type != 'concat':
             if config.turn_type == 'c_concat':
@@ -513,7 +514,10 @@ class KGModel(nn.Module):
             f_input = f_inputs[i, :, :]  # [max_len, batch_size]
             f_input_length = f_inputs_length[i, :]  # [batch_size]
 
-            outputs, hidden_state = self.normal_encoder(f_input, f_input_length)
+            #  outputs, hidden_state = self.normal_encoder(f_input, f_input_length)
+            #  output = outputs[-1]
+            _, outputs, _ = self.cnn_encoder(f_input, f_input_length)
+            print('outputs: ', outputs.shape)
             output = outputs[-1]
 
             f_outputs.append(output)
