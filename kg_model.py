@@ -54,7 +54,7 @@ class KGModel(nn.Module):
 
         # h_encoder
         if config.turn_type == 'transformer':
-            self.transformer_encoder = transformer_models.Encoder(
+            self.h_encoder = transformer_models.Encoder(
                 config.c_max_len,
                 self.encoder_embedding,
                 num_layers=6,
@@ -67,20 +67,25 @@ class KGModel(nn.Module):
                 dropout=config.dropout
             )
         elif config.turn_type == 'self_attn':
-            self.self_attn_encoder = SelfAttentive(
+            self.h_encoder = SelfAttentive(
                 config,
                 self.encoder_embedding
             )
+        else:
+            self.h_encoder = NormalEncoder(
+                config,
+                self.encoder_embedding,
+            )
 
-        self.normal_encoder = NormalEncoder(
+        self.f_encoder = NormalEncoder(
             config,
             self.encoder_embedding,
         )
 
-        self.cnn_encoder = CNNEncoder(
-            config,
-            self.encoder_embedding
-        )
+        #  self.f_encoder = CNNEncoder(
+            #  config,
+            #  self.encoder_embedding
+        #  )
 
         if config.turn_type != 'none' or config.turn_type != 'concat':
             if config.turn_type == 'c_concat':
@@ -443,7 +448,7 @@ class KGModel(nn.Module):
             inputs_length = h_inputs_length[0, :]
 
             # [max_len, batch_size, hidden_size]
-            outputs, hidden_state = self.normal_encoder(inputs, inputs_length)
+            outputs, hidden_state = self.h_encoder(inputs, inputs_length)
             return outputs, hidden_state, inputs_length
         else:
             stack_outputs = list()
@@ -451,16 +456,16 @@ class KGModel(nn.Module):
                 inputs = h_inputs[ti, :, :]  # [max_len, batch_size]
                 if self.config.turn_type == 'transformer':
                     inputs_position = h_inputs_position[ti, :, :] # [max_len, batch_size]
-                    outputs = self.transformer_encoder(inputs.transpose(0, 1), inputs_position.transpose(0, 1))
+                    outputs = self.h_encoder(inputs.transpose(0, 1), inputs_position.transpose(0, 1))
                     # [batch_size, max_len, hidden_size]
                     outputs = outputs.transpose(0, 1)
                 elif self.config.turn_type == 'self_attn':
                     inputs_length = h_inputs_length[ti, :]  # [batch_size]
-                    outputs, hidden_state = self.self_attn_encoder(inputs, inputs_length)
+                    outputs, hidden_state = self.h_encoder(inputs, inputs_length)
                     outputs = outputs.unsqueeze(0) # [1, batch_size, hidden_size]
                 else:
                     inputs_length = h_inputs_length[ti, :]  # [batch_size]
-                    outputs, hidden_state = self.normal_encoder(inputs, inputs_length)
+                    outputs, hidden_state = self.h_encoder(inputs, inputs_length)
 
                 stack_outputs.append(outputs[-1].unsqueeze(0))
 
@@ -519,7 +524,7 @@ class KGModel(nn.Module):
             #  output = outputs[-1]
 
             # outputs: [hidden_size, batch_size, max_len]
-            _, outputs, _ = self.cnn_encoder(f_input, f_input_length)
+            _, outputs, _ = self.f_encoder(f_input, f_input_length)
             #  print('outputs: ', outputs.shape)
             outputs = outputs.permute(2, 1, 0)
             output = outputs[-1]
