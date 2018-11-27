@@ -102,41 +102,41 @@ class NormalCNN(nn.Module):
         conv2d1_output = self.conv2d1(embedded) # [batch_size, 512, 33, 1]
         conv2d1_output = F.relu(conv2d1_output)
         conv2d1_output = self.maxpool3(conv2d1_output) # [batch_size, 512, 31, 1]
-        print('conv2d1_output: ', conv2d1_output.shape)
+        #  print('conv2d1_output: ', conv2d1_output.shape)
 
         conv2d2_input = conv2d1_output.transpose(1, 3) # [batch_size, 1, 31, 512]
         conv2d2_output = self.conv2d2(conv2d2_input) # [batch_size, 256, 29, 1]
         conv2d2_output = F.relu(conv2d2_output)
         conv2d2_output = self.maxpool3(conv2d2_output) # [batch_size, 256, 27, 1]
-        print('conv2d2_output: ', conv2d2_output.shape)
+        #  print('conv2d2_output: ', conv2d2_output.shape)
 
         conv2d3_input = conv2d2_output.transpose(1, 3) # [batch_size, 1, 27, 256]
         conv2d3_output = self.conv2d3(conv2d3_input) # [batch_size, 128, 24, 1]
         conv2d3_output = F.relu(conv2d3_output)
         conv2d3_output = self.maxpool4(conv2d3_output) # [batch_size, 128, 21, 1]
-        print('conv2d3_output: ', conv2d3_output.shape)
+        #  print('conv2d3_output: ', conv2d3_output.shape)
 
         conv2d4_input = conv2d3_output.transpose(1, 3) # [batch_size, 1, 21, 128]
         conv2d4_output = self.conv2d4(conv2d4_input) # [batch_size, 256, 18, 1]
         conv2d4_output = F.relu(conv2d4_output)
         conv2d4_output = self.maxpool4(conv2d4_output) # [batch_size, 256, 15, 1]
-        print('conv2d4_output: ', conv2d4_output.shape)
+        #  print('conv2d4_output: ', conv2d4_output.shape)
 
         conv2d5_input = conv2d4_output.transpose(1, 3) # [batch_size, 1, 15, 256]
         conv2d5_output = self.conv2d5(conv2d5_input) # [batch_size, 512, 11, 1]
         conv2d5_output = F.relu(conv2d5_output)
-        conv2d5_output = self.maxpool5(conv2d5_output) # [batch_size, 512, 8, 1]
-        print('conv2d5_output: ', conv2d5_output.shape)
+        conv2d5_output = self.maxpool4(conv2d5_output) # [batch_size, 512, 8, 1]
+        #  print('conv2d5_output: ', conv2d5_output.shape)
 
         conv2d6_input = conv2d5_output.transpose(1, 3) # [batch_size, 1, 8, 512]
         conv2d6_output = self.conv2d6(conv2d6_input) # [batch_size, 1024, 5, 1]
         conv2d6_output = F.relu(conv2d6_output)
         conv2d6_output = self.maxpool5(conv2d6_output) # [batch_size, 1024, 1, 1]
-        print('conv2d6_output: ', conv2d6_output.shape)
+        #  print('conv2d6_output: ', conv2d6_output.shape)
 
         output = conv2d6_output.squeeze(3).squeeze(2).unsqueeze(0)
         output = self.out_linear(output) # [1, batch_size, hidden_size]
-        print('output: ', output.shape)
+        #  print('output: ', output.shape)
 
         return output, None
 
