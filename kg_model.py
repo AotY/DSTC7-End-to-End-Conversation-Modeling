@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 
 from modules.cnn_encoder import CNNEncoder
+from modules.normal import NormalCNN
 from modules.normal_encoder import NormalEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
@@ -82,15 +83,19 @@ class KGModel(nn.Module):
             #  self.encoder_embedding,
         #  )
 
-        self.h_encoder = SelfAttentive(
-            config,
-            self.encoder_embedding,
-        )
+        #  self.f_encoder = SelfAttentive(
+            #  config,
+            #  self.encoder_embedding,
+        #  )
 
-        #  self.cnn_encoder = CNNEncoder(
+        #  self.f_encoder = CNNEncoder(
             #  config,
             #  self.encoder_embedding
         #  )
+        self.f_encoder = NormalCNN(
+            config,
+            self.encoder_embedding
+        )
 
         if config.turn_type != 'none' or config.turn_type != 'concat':
             if config.turn_type == 'c_concat':
@@ -527,8 +532,7 @@ class KGModel(nn.Module):
 
             #  outputs, hidden_state = self.f_encoder(f_input, f_input_length)
 
-            outputs, hidden_state = self.f_encoder(f_input, f_input_length)
-            outputs = outputs.unsqueeze(0) # [1, batch_size, hidden_size]
+            output, _ = self.f_encoder(f_input, f_input_length)
 
             """
             # outputs: [hidden_size, batch_size, max_len]
@@ -537,11 +541,10 @@ class KGModel(nn.Module):
             outputs = outputs.permute(2, 1, 0)
             """
 
-            output = outputs[-1]
             f_outputs.append(output)
 
         # [topk, batch_size, hidden_size]
-        f_outputs = torch.stack(f_outputs, dim=0)
+        f_outputs = torch.cat(f_outputs, dim=0)
         return f_outputs
 
     def f_embedding_forward(self, f_inputs):
