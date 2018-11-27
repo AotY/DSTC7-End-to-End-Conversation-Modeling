@@ -69,10 +69,10 @@ class CNNEncoder(nn.Module):
         # []
         out = self.cnn(embedded_remap)
 
-        print('embedded_remap: ', embedded_remap.shape)
-        print('cnn: ', output.shape)
-        # [hidden_size, batch_size, max_len]
-        # []
+        #  print('embedded_remap: ', embedded_remap.shape)
+        #  print('cnn: ', output.shape)
+        #[hidden_size, batch_size, max_len]
+        #[hidden_size, batch_size, max_len]
         return embedded_remap.squeeze(3).transpose(0, 1).contiguous(), \
             out.squeeze(3).transpose(0, 1).contiguous(), \
             lengths
