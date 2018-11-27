@@ -25,7 +25,6 @@ class CNNEncoder(nn.Module):
 
     def __init__(self,
                  config,
-                 cnn_kernel_width,
                  embedding):
         super(CNNEncoder, self).__init__()
 
@@ -66,13 +65,14 @@ class CNNEncoder(nn.Module):
         # [batch_size, hidden_size, max_len, 1]
         embedded_remap = shape_transform(embedded_remap)
 
-        # []
-        out = self.cnn(embedded_remap)
+        # [batch_size, hidden_size, max_len, 1]
+        output = self.cnn(embedded_remap)
 
         #  print('embedded_remap: ', embedded_remap.shape)
-        #  print('cnn: ', output.shape)
+        #  print('output: ', output.shape)
+
         #[hidden_size, batch_size, max_len]
         #[hidden_size, batch_size, max_len]
         return embedded_remap.squeeze(3).transpose(0, 1).contiguous(), \
-            out.squeeze(3).transpose(0, 1).contiguous(), \
+            output.squeeze(3).transpose(0, 1).contiguous(), \
             lengths
