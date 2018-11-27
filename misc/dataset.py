@@ -181,6 +181,7 @@ class Dataset:
 
         context_texts = list()
         response_texts = list()
+        conversation_ids = list()
 
         # facts
         facts_texts = list()
@@ -197,6 +198,7 @@ class Dataset:
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
             response_texts.append(response_text)
             context_texts.append(sentences_text)
+            conversation_ids.append(conversation_id)
 
             # h inputs
             h_inputs_lenght.append(list([1]) * self.config.turn_num)
@@ -291,7 +293,7 @@ class Dataset:
         self._indicator_dict[task] = cur_indicator
 
         return decoder_inputs, decoder_targets, decoder_inputs_length, \
-            context_texts, response_texts, \
+            context_texts, response_texts, conversation_ids, \
             f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_lenght, h_inputs_position
 
@@ -473,6 +475,7 @@ class Dataset:
     def save_generated_texts(self,
                              context_texts,
                              response_texts,
+                             ids,
                              greedy_texts,
                              beam_texts,
                              filename,
@@ -481,11 +484,11 @@ class Dataset:
 
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for i, (sentences, response, greedy_text, beam_text) in enumerate(zip(context_texts, response_texts, greedy_texts, beam_texts)):
+            for i, (id, sentences, response, greedy_text, beam_text) in enumerate(zip(ids, context_texts, response_texts, greedy_texts, beam_texts)):
+                f.write('conversation_id: %s\n' % id)
                 for sentence in sentences:
                     f.write('> %s\n' % sentence)
 
-                #  f.write('> %s\n' % sentences)
                 f.write('gold: %s\n' % response)
 
                 f.write('greedy: %s\n' % greedy_text)
