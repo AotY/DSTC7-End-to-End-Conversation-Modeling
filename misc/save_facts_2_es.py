@@ -26,10 +26,10 @@ es = es_helper.get_connection()
 def save():
     #  es_helper.create_index(es, es_helper.index)
     # 2. delete index
-    es_helper.delete_index(es, es_helper.index)
+    #  es_helper.delete_index(es, es_helper.index)
 
     # 3. create index
-    es_helper.create_index(es, es_helper.index)
+    #  es_helper.create_index(es, es_helper.index)
 
     # 4. create settings, mappings
     settings_body = {
@@ -61,9 +61,9 @@ def save():
             }
         }
     }
-    es_helper.close_index(es, es_helper.index)
-    es_helper.put_settings(es, es_helper.index, settings_body)
-    es_helper.open_index(es, es_helper.index)
+    #  es_helper.close_index(es, es_helper.index)
+    #  es_helper.put_settings(es, es_helper.index, settings_body)
+    #  es_helper.open_index(es, es_helper.index)
 
     mappings_body = {
         "fact": {
@@ -81,9 +81,9 @@ def save():
         }
     }
 
-    es_helper.close_index(es, es_helper.index)
-    es_helper.put_mapping(es, es_helper.index, es_helper.fact_type, mappings_body)
-    es_helper.open_index(es, es_helper.index)
+    #  es_helper.close_index(es, es_helper.index)
+    #  es_helper.put_mapping(es, es_helper.index, es_helper.fact_type, mappings_body)
+    #  es_helper.open_index(es, es_helper.index)
 
 
     # 5. insert to es

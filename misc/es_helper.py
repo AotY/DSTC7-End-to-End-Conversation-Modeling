@@ -14,7 +14,8 @@ default config
 '''
 index = 'dstc-7'
 conversation_type = 'conversation'
-fact_type = 'fact'
+fact_type = 'fact_tag'
+#  fact_type = 'fact'
 
 def get_connection():
     es = Elasticsearch()

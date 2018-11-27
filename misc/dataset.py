@@ -311,9 +311,9 @@ class Dataset:
                 #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
                 sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence) for sentence in sentences_text]
                 if len(sentences_text) >= 2 or len(sentences_text[0]) > self.config.f_max_len + 20:
-                    r.extract_keywords_from_sentences(sentences_text)
+                    r.extract_keywords_from_sentences(sentences_text[:-1])
                     texts = r.get_ranked_phrases()[:self.config.f_topk]
-                    query_text = ' '.join(texts)
+                    query_text = ' '.join(texts) + ' ' + sentences_text[-1]
                 else:
                     query_text = ' '.join(sentences_text)
 
@@ -326,10 +326,17 @@ class Dataset:
                     phrase = hit['_source']['text']
                     id = hit['_source']['conversation_id']
                     assert (conversation_id == id), "%s != %s" % (conversation_id, id)
-                    phrases.append(phrase)
+                    parts = phrase.split('.')
+                    phrases.append(parts[-1])
+                    #  if len(parts) == 1:
+                        #  phrases.append(phrase)
+                    #  else:
+                        #  if parts[0] >= self.config.f_max_len:
+                            #  phrases.append(parts[0])
+                        #  else:
+                            #  phrases.append(parts[0] + parts[-1])
                 #  r.extract_keywords_from_sentences(phrases)
                 #  topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
-                #  print(topk_phrase)
                 topk_phrase = phrases
                 facts_topk_phrases[hash_value] = topk_phrase
 
@@ -345,7 +352,7 @@ class Dataset:
             return
 
         offline_type = self.config.offline_type
-        if offline_type == 'elastic':
+        if offline_type in ['elastic', 'elastic_tag']:
             self.retrieval_similarity_facts(offline_filename)
             return
 
