@@ -44,7 +44,7 @@ python train_kg_model.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type kg \
-    --task decode \
+    --task train \
     --share_embedding \
     --offline_type elastic_tag \
     --checkpoint models/epoch-1_kg_4_self_attn_2018_11_26_21:55.pth \
