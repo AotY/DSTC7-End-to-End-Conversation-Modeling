@@ -147,6 +147,6 @@ class LuongAttnDecoder(nn.Module):
 
         weights = F.softmax(weights, dim=2)
 
-        context = torch.bmm(weights, fV).tr0, 1)  # [1, batch_size, hidden_size]
+        context = torch.bmm(weights, fV).transpose(0, 1)  # [1, batch_size, hidden_size]
 
         return context
