@@ -516,8 +516,7 @@ class KGModel(nn.Module):
 
     def f_forward(self,
                   f_inputs,
-                  f_inputs_length,
-                  f_topks_length=None):
+                  f_inputs_length):
         """
         Args:
             -f_inputs: [topk, max_len, batch_size]
