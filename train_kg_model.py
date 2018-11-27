@@ -508,7 +508,7 @@ if __name__ == '__main__':
         """ computing similarity between conversation and fact """
         offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
 
-        if opt.offline_type == 'elastic':
+        if opt.offline_type in ['elastic', 'elastic_tag']:
             dataset.build_similarity_facts_offline(
                 offline_filename=offline_filename,
             )

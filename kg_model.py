@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from modules.cnn_encoder import CNNEncoder
-from modules.normal import NormalCNN
+from modules.normal_cnn import NormalCNN
 from modules.normal_encoder import NormalEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
