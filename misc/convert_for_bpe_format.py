@@ -9,51 +9,47 @@ from tqdm import tqdm
 
 parser = argparse.ArgumentParser('Covert for training bpe.')
 
+parser.add_argument('--pair_path', type=str, help='pair path')
+parser.add_argument('--fact_path', type=str, help='facts path')
 parser.add_argument('--type', type=str, help='seq2seq or kg')
+parser.add_argument('--save_path', type=str, help='path to save converted file.')
 
 args = parser.parse_args()
 
+def convert_format():
+    converted_file = open(args.save_path, 'w', encoding='utf-8')
 
-def convert_format(pair_path, fact_path):
-    converted_file = open('./../data/bpe_train.txt', 'w', encoding='utf-8')
-
-    with open(pair_path, 'r', encoding='utf-8') as f:
+    with open(args.pair_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
-            _, conversation, response, hash_value = line.split('SPLITTOKEN')
+            _, context, response, hash_value, _, _ = line.split('\t')
 
             # skip if source has nothing
-            if conversation == 'START' or len(conversation.rstrip()) == 0:
+            if context == 'start' or len(context.rstrip()) == 0:
                 continue
 
-            if conversation.startswith('start eos'):
-                conversation = conversation[10:]
-            elif conversation.startswith('eos'):
-                conversation = conversation[4:]
+            if context.startswith('start eos'):
+                context = context[10:]
+            elif context.startswith('eos'):
+                context = context[4:]
+            elif context.startswith('... eos'):
+                context = context[7:]
+            elif context.startswith('...'):
+                context = context[4:]
 
-            conversation_turns = conversation.split('eos')
-
-            for conversation_turn in conversation_turns:
-                converted_file.write(conversation_turn + '\n')
+            sentences = context.split('eos')
+            for sentence in sentences:
+                converted_file.write(sentence + '\n')
 
             converted_file.write(response + '\n')
 
-    if fact_path is not None:
-        with open(fact_path, 'r', encoding='utf-8') as f:
+    if args.fact_path is not None:
+        with open(args.fact_path, 'r', encoding='utf-8') as f:
             for line in tqdm(f):
                 line = line.rstrip()
-
                 _, _, _, fact = line.split('\t')
-
                 converted_file.write(fact + '\n')
-
     converted_file.close()
 
 if __name__ == '__main__':
-    pair_path = './../data/conversations_responses.pair.txt'
-    fact_path = None
-    if args.type == 'kg':
-        fact_path = './../data/facts.txt'
-
-    convert_format(pair_path, fact_path)
-
+    convert_format()

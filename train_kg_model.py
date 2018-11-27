@@ -76,6 +76,9 @@ def train_epochs(model,
         log_loss_total = 0
         log_accuracy_total = 0
 
+        # lr update
+        optimizer.update()
+
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
@@ -111,9 +114,6 @@ def train_epochs(model,
                 save_logger(logger_str)
                 log_loss_total = 0
                 log_accuracy_total = 0
-
-        # lr update
-        optimizer.update()
 
         # save model of each epoch
         save_state = {
@@ -355,7 +355,7 @@ def build_optimizer(model):
         eps=1e-09
     )
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=1, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.1)
 
     optimizer = ScheduledOptimizer(
         optim,

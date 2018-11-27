@@ -4,6 +4,7 @@ import random
 import torch
 import torch.nn as nn
 
+from modules.cnn_encoder import CNNEncoder
 from modules.normal_encoder import NormalEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
@@ -76,7 +77,7 @@ class KGModel(nn.Module):
             self.encoder_embedding,
         )
 
-        self.cnn_encoder = CNNENcoder(
+        self.cnn_encoder = CNNEncoder(
             config,
             self.encoder_embedding
         )
