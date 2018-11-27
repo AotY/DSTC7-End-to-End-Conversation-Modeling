@@ -145,6 +145,8 @@ class NormalCNN(nn.Module):
         conv2d1_output = self.maxpool3(
             conv2d1_output)  # [batch_size, 512, 31, 1]
         print('conv2d1_output: ', conv2d1_output.shape)
+        conv2d1_output = self.maxpool3(conv2d1_output) # [batch_size, 512, 31, 1]
+        #  print('conv2d1_output: ', conv2d1_output.shape)
 
         conv2d2_input = conv2d1_output.transpose(
             1, 3)  # [batch_size, 1, 31, 512]
@@ -154,6 +156,8 @@ class NormalCNN(nn.Module):
         conv2d2_output = self.maxpool3(
             conv2d2_output)  # [batch_size, 256, 27, 1]
         print('conv2d2_output: ', conv2d2_output.shape)
+        conv2d2_output = self.maxpool3(conv2d2_output) # [batch_size, 256, 27, 1]
+        #  print('conv2d2_output: ', conv2d2_output.shape)
 
         conv2d3_input = conv2d2_output.transpose(
             1, 3)  # [batch_size, 1, 27, 256]
@@ -163,6 +167,9 @@ class NormalCNN(nn.Module):
         conv2d3_output = self.maxpool4(
             conv2d3_output)  # [batch_size, 128, 21, 1]
         print('conv2d3_output: ', conv2d3_output.shape)
+        
+        conv2d3_output = self.maxpool4(conv2d3_output) # [batch_size, 128, 21, 1]
+        #  print('conv2d3_output: ', conv2d3_output.shape)
 
         conv2d4_input = conv2d3_output.transpose(
             1, 3)  # [batch_size, 1, 21, 128]
@@ -172,6 +179,8 @@ class NormalCNN(nn.Module):
         conv2d4_output = self.maxpool4(
             conv2d4_output)  # [batch_size, 256, 15, 1]
         print('conv2d4_output: ', conv2d4_output.shape)
+        conv2d4_output = self.maxpool4(conv2d4_output) # [batch_size, 256, 15, 1]
+        #  print('conv2d4_output: ', conv2d4_output.shape)
 
         conv2d5_input = conv2d4_output.transpose(
             1, 3)  # [batch_size, 1, 15, 256]
@@ -181,6 +190,8 @@ class NormalCNN(nn.Module):
         conv2d5_output = self.maxpool4(
             conv2d5_output)  # [batch_size, 512, 8, 1]
         print('conv2d5_output: ', conv2d5_output.shape)
+        conv2d5_output = self.maxpool4(conv2d5_output) # [batch_size, 512, 8, 1]
+        #  print('conv2d5_output: ', conv2d5_output.shape)
 
         conv2d6_input = conv2d5_output.transpose(
             1, 3)  # [batch_size, 1, 8, 512]
