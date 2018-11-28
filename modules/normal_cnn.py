@@ -30,6 +30,7 @@ class NormalCNN(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
 
         self.conv2ds = nn.ModuleList()
+        self.bn2s = nn.ModuleList()
         self.maxpool2ds = nn.ModuleList()
 
         # conv2d
@@ -57,6 +58,11 @@ class NormalCNN(nn.Module):
                 )
             )
 
+        for channel in channels:
+            self.bn2s.append(
+                nn.BatchNorm2d(channel)
+            )
+
 
         self.out_linear = nn.Linear(1024, config.hidden_size)
         init_linear_wt(self.out_linear)
@@ -78,8 +84,9 @@ class NormalCNN(nn.Module):
 
         # conv
         output = embedded
-        for conv2d, maxpool2d in zip(self.conv2ds, self.maxpool2ds):
+        for conv2d, bn2, maxpool2d in zip(self.conv2ds, self.bn2s, self.maxpool2ds):
             output = conv2d(output)
+            output = bn2(output)
             output = F.relu(output)
             output = maxpool2d(output)
             output = output.transpose(1, 3)
@@ -92,114 +99,3 @@ class NormalCNN(nn.Module):
 
         return output, None
 
-
-
-
-
-"""
-        self.maxpool4 = nn.MaxPool2d(
-            kernel_size=(4, 1),
-            stride=1
-        )
-
-        self.maxpool5 = nn.MaxPool2d(
-            kernel_size=(5, 1),
-            stride=1
-        )
-
-        self.conv2d1 = nn.Conv2d(in_channels=1,
-                                 out_channels=512,
-                                 kernel_size=(
-                                     kernel_sizes[0], self.embedding_size),
-                                 stride=1)
-        # output: [batch_size, output_channels, max_len - 3 + 1, 1]  35 - 3 + 1
-
-        self.conv2d2 = nn.Conv2d(in_channels=1,
-                                 out_channels=256,
-                                 kernel_size=(kernel_sizes[1], 512),
-                                 stride=1)
-        # output: [batch_size, output_channels, -3 + 1, 1]
-
-        self.conv2d3 = nn.Conv2d(in_channels=1,
-                                 out_channels=128,
-                                 kernel_size=(kernel_sizes[2], 256),
-                                 stride=1)
-
-        self.conv2d4 = nn.Conv2d(in_channels=1,
-                                 out_channels=256,
-                                 kernel_size=(kernel_sizes[3], 128),
-                                 stride=1)
-
-        self.conv2d5 = nn.Conv2d(in_channels=1,
-                                 out_channels=512,
-                                 kernel_size=(kernel_sizes[4], 256),
-                                 stride=1)
-
-        self.conv2d6 = nn.Conv2d(in_channels=1,
-                                 out_channels=1024,
-                                 kernel_size=(kernel_sizes[5], 512),
-                                 stride=1)
-
-        conv2d1_output = self.conv2d1(embedded)  # [batch_size, 512, 33, 1]
-        conv2d1_output = F.relu(conv2d1_output)
-        conv2d1_output = self.maxpool3(
-            conv2d1_output)  # [batch_size, 512, 31, 1]
-        print('conv2d1_output: ', conv2d1_output.shape)
-        conv2d1_output = self.maxpool3(conv2d1_output) # [batch_size, 512, 31, 1]
-        #  print('conv2d1_output: ', conv2d1_output.shape)
-
-        conv2d2_input = conv2d1_output.transpose(
-            1, 3)  # [batch_size, 1, 31, 512]
-        conv2d2_output = self.conv2d2(
-            conv2d2_input)  # [batch_size, 256, 29, 1]
-        conv2d2_output = F.relu(conv2d2_output)
-        conv2d2_output = self.maxpool3(
-            conv2d2_output)  # [batch_size, 256, 27, 1]
-        print('conv2d2_output: ', conv2d2_output.shape)
-        conv2d2_output = self.maxpool3(conv2d2_output) # [batch_size, 256, 27, 1]
-        #  print('conv2d2_output: ', conv2d2_output.shape)
-
-        conv2d3_input = conv2d2_output.transpose(
-            1, 3)  # [batch_size, 1, 27, 256]
-        conv2d3_output = self.conv2d3(
-            conv2d3_input)  # [batch_size, 128, 24, 1]
-        conv2d3_output = F.relu(conv2d3_output)
-        conv2d3_output = self.maxpool4(
-            conv2d3_output)  # [batch_size, 128, 21, 1]
-        print('conv2d3_output: ', conv2d3_output.shape)
-
-        conv2d3_output = self.maxpool4(conv2d3_output) # [batch_size, 128, 21, 1]
-        #  print('conv2d3_output: ', conv2d3_output.shape)
-
-        conv2d4_input = conv2d3_output.transpose(
-            1, 3)  # [batch_size, 1, 21, 128]
-        conv2d4_output = self.conv2d4(
-            conv2d4_input)  # [batch_size, 256, 18, 1]
-        conv2d4_output = F.relu(conv2d4_output)
-        conv2d4_output = self.maxpool4(
-            conv2d4_output)  # [batch_size, 256, 15, 1]
-        print('conv2d4_output: ', conv2d4_output.shape)
-        conv2d4_output = self.maxpool4(conv2d4_output) # [batch_size, 256, 15, 1]
-        #  print('conv2d4_output: ', conv2d4_output.shape)
-
-        conv2d5_input = conv2d4_output.transpose(
-            1, 3)  # [batch_size, 1, 15, 256]
-        conv2d5_output = self.conv2d5(
-            conv2d5_input)  # [batch_size, 512, 11, 1]
-        conv2d5_output = F.relu(conv2d5_output)
-        conv2d5_output = self.maxpool4(
-            conv2d5_output)  # [batch_size, 512, 8, 1]
-        print('conv2d5_output: ', conv2d5_output.shape)
-        conv2d5_output = self.maxpool4(conv2d5_output) # [batch_size, 512, 8, 1]
-        #  print('conv2d5_output: ', conv2d5_output.shape)
-
-        conv2d6_input = conv2d5_output.transpose(
-            1, 3)  # [batch_size, 1, 8, 512]
-        conv2d6_output = self.conv2d6(
-            conv2d6_input)  # [batch_size, 1024, 5, 1]
-        conv2d6_output = F.relu(conv2d6_output)
-        conv2d6_output = self.maxpool5(
-            conv2d6_output)  # [batch_size, 1024, 1, 1]
-        print('conv2d6_output: ', conv2d6_output.shape)
-
-"""

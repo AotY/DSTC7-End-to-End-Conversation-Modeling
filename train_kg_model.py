@@ -79,6 +79,9 @@ def train_epochs(model,
         # lr update
         optimizer.update()
 
+        # reset teacher forcing ratio
+        model.reset_teacher_forcing_ratio()
+
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
