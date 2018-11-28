@@ -251,7 +251,7 @@ class Dataset:
                                             device=self.device)
 
                 if topk_facts_text is not None:
-                    topk_facts_ids = [self.vocab.words_to_id(text.split(' ')) for text in topk_facts_text]
+                    topk_facts_ids = [self.vocab.words_to_id(text.split()) for text in topk_facts_text]
                     f_topks_length.append(min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
                         ids = ids[:min(self.config.f_max_len, len(ids))]
@@ -302,7 +302,10 @@ class Dataset:
 
     def retrieval_similarity_facts(self, offline_filename):
         es = es_helper.get_connection()
-        r = Rake()
+        r = Rake(
+            min_length=1,
+            max_length=self.f_max_len + 20
+        )
         facts_topk_phrases = {}
         for task, task_datas in self._data_dict.items():
             self.logger.info('retrieval similarity facts for: %s data.' % task)
@@ -310,31 +313,38 @@ class Dataset:
                 conversation_id, sentences_text, _, _, hash_value = data
                 #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
                 sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence) for sentence in sentences_text]
-                if len(sentences_text) >= 2 or len(sentences_text[0]) > self.config.f_max_len + 20:
+                print('sentences_text: ', sentences_text)
+                if len(sentences_text) >= 2:
                     r.extract_keywords_from_sentences(sentences_text[:-1])
-                    texts = r.get_ranked_phrases()[:self.config.f_topk]
-                    query_text = ' '.join(texts) + ' ' + sentences_text[-1]
+                    ranked_text = ' '.join(r.get_ranked_phrases())
+                    query_text = ranked_text + ' ' + sentences_text[-1]
                 else:
                     query_text = ' '.join(sentences_text)
 
+                print('query_text: ', query_text)
                 query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
                 hits, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body)
                 if hit_count == 0:
                     continue
+
                 phrases = []
                 for hit in hits[:self.config.f_topk]:
-                    phrase = hit['_source']['text']
                     id = hit['_source']['conversation_id']
                     assert (conversation_id == id), "%s != %s" % (conversation_id, id)
-                    parts = phrase.split('.')
-                    phrases.append(parts[-1])
-                    #  if len(parts) == 1:
-                        #  phrases.append(phrase)
-                    #  else:
-                        #  if parts[0] >= self.config.f_max_len:
-                            #  phrases.append(parts[0])
-                        #  else:
-                            #  phrases.append(parts[0] + parts[-1])
+                    phrase = hit['_source']['text']
+                    if len(phrase) <= self.config.f_max_len:
+                        phrases.append(phrase)
+                        continue
+
+                    parts = [part for part in phrase.split('.') if len(part.split()) > 2]
+                    if len(parts) == 0:
+                        phrases.append(phrase)
+                    elif len(parts) == 1:
+                        phrases.append(parts[0] + ' .')
+                    else:
+                        #  phrases.append(parts[-1])
+                        phrases.append('.'.join(parts))
+
                 #  r.extract_keywords_from_sentences(phrases)
                 #  topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
                 topk_phrase = phrases
@@ -365,7 +375,7 @@ class Dataset:
         except FileNotFoundError as e:
             r = Rake(
                 min_length=1,
-                max_length=self.config.f_max_len + 15
+                max_length=self.config.f_max_len
             )
             ranked_phrase_dict = {}
             ranked_phrase_embedded_dict = {}

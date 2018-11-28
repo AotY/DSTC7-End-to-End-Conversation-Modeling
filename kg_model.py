@@ -197,10 +197,17 @@ class KGModel(nn.Module):
         decoder_outputs = torch.cat(decoder_outputs, dim=0)
         return decoder_outputs
 
-    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.5):
+    def reset_teacher_forcing_ratio(self):
+        self.forward_step = 0
+        self.teacher_forcing_ratio = 1.0
+
+    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.2):
         self.forward_step += 1
+        if (self.teacher_forcing_ratio == min_t):
+            return
+
         update_t = self.teacher_forcing_ratio - \
-            eplison * (self.forward_step * eplison)
+            eplison * (self.forward_step)
         self.teacher_forcing_ratio = max(update_t, min_t)
 
     '''evaluate'''
