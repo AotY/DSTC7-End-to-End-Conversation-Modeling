@@ -304,7 +304,7 @@ class Dataset:
         es = es_helper.get_connection()
         r = Rake(
             min_length=1,
-            max_length=self.f_max_len + 20
+            max_length=self.config.f_max_len
         )
         facts_topk_phrases = {}
         for task, task_datas in self._data_dict.items():
@@ -313,7 +313,7 @@ class Dataset:
                 conversation_id, sentences_text, _, _, hash_value = data
                 #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
                 sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence) for sentence in sentences_text]
-                print('sentences_text: ', sentences_text)
+                #  print('sentences_text: ', sentences_text)
                 if len(sentences_text) >= 2:
                     r.extract_keywords_from_sentences(sentences_text[:-1])
                     ranked_text = ' '.join(r.get_ranked_phrases())
@@ -321,7 +321,7 @@ class Dataset:
                 else:
                     query_text = ' '.join(sentences_text)
 
-                print('query_text: ', query_text)
+                #  print('query_text: ', query_text)
                 query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
                 hits, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body)
                 if hit_count == 0:
