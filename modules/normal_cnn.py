@@ -34,7 +34,7 @@ class NormalCNN(nn.Module):
 
         # conv2d
         kernel_sizes = [(3, 512), (3, 512), (4, 256),
-                        (4, 256), (5, 256), (4, 512)]
+                        (4, 128), (5, 256), (4, 512)]
         channels = [512, 256, 128, 256, 512, 1024]
 
         for channel, kernel_size in zip(channels, kernel_sizes):
@@ -82,13 +82,13 @@ class NormalCNN(nn.Module):
             output = conv2d(output)
             output = F.relu(output)
             output = maxpool2d(output)
-            output = conv2d1_output.transpose(1, 3)
+            output = output.transpose(1, 3)
 
         # [batch_size, 1, 1, 1024]
 
         output = output.squeeze(2).transpose(0, 1)
         output = self.out_linear(output)  # [1, batch_size, hidden_size]
-        print('output: ', output.shape)
+        #  print('output: ', output.shape)
 
         return output, None
 
@@ -167,7 +167,7 @@ class NormalCNN(nn.Module):
         conv2d3_output = self.maxpool4(
             conv2d3_output)  # [batch_size, 128, 21, 1]
         print('conv2d3_output: ', conv2d3_output.shape)
-        
+
         conv2d3_output = self.maxpool4(conv2d3_output) # [batch_size, 128, 21, 1]
         #  print('conv2d3_output: ', conv2d3_output.shape)
 

@@ -197,7 +197,7 @@ class KGModel(nn.Module):
         decoder_outputs = torch.cat(decoder_outputs, dim=0)
         return decoder_outputs
 
-    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.2):
+    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.5):
         self.forward_step += 1
         update_t = self.teacher_forcing_ratio - \
             eplison * (self.forward_step * eplison)
