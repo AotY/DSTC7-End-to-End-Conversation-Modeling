@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_kg.60004.dict \
-    --vocab_size 6e4 \
-    --turn_num 4 \
+    --vocab_path data/vocab_word2idx_kg.40004.dict \
+    --vocab_size 4e4 \
+    --turn_num 3 \
     --min_turn 1 \
     --turn_type self_attn \
     --rnn_type GRU \
@@ -19,8 +19,8 @@ python train_kg_model.py \
     --decoder_num_layers 2 \
     --cnn_kernel_width 3 \
     --dropout 0.2 \
-    --c_max_len 35 \
-    --r_max_len 35 \
+    --c_max_len 50 \
+    --r_max_len 50 \
     --min_len 3 \
     --bidirectional \
     --tied \
@@ -30,7 +30,7 @@ python train_kg_model.py \
     --best_n 3 \
     --f_max_len 120 \
     --f_topk 5 \
-    --lr 0.005 \
+    --lr 0.0002 \
     --max_grad_norm 5.0 \
     --epochs 15 \
     --batch_size 100 \
