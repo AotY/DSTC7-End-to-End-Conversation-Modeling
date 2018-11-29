@@ -49,10 +49,10 @@ class NormalCNN(nn.Module):
                 )
             )
 
-        for channel in channels:
-            self.bn2s.append(
-                nn.BatchNorm2d(channel)
-            )
+        #  for channel in channels:
+            #  self.bn2s.append(
+                #  nn.BatchNorm2d(channel)
+            #  )
 
         self. maxpool2d = nn.MaxPool2d(kernel_size=(4, 1))
 
@@ -75,9 +75,10 @@ class NormalCNN(nn.Module):
 
         # conv
         output = embedded
-        for conv2d, bn2 in zip(self.conv2ds, self.bn2s):
+        #  for conv2d, bn2 in zip(self.conv2ds, self.bn2s):
+        for conv2d in self.conv2ds:
             output = conv2d(output)
-            output = bn2(output)
+            #  output = bn2(output)
             output = F.relu(output)
             output = output.transpose(1, 3)
             #  print('output: ', output.shape)
