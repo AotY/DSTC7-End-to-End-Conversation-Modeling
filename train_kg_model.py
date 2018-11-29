@@ -86,7 +86,7 @@ def train_epochs(model,
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-                context_texts, response_texts, conversation_ids, \
+                context_texts, response_texts, conversation_ids, hash_values, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
                 h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
                     'train', opt.batch_size)
@@ -243,7 +243,7 @@ def evaluate(model,
         for load in range(1, max_load + 1):
             # load data
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-                context_texts, response_texts, conversation_ids, \
+                context_texts, response_texts, conversation_ids, hash_values, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
                 h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
                     'test', opt.batch_size)
@@ -286,7 +286,7 @@ def decode(model, dataset):
     with torch.no_grad():
         for load in range(1, max_load + 1):
             decoder_inputs, decoder_targets, decoder_inputs_length, \
-                context_texts, response_texts, conversation_ids, \
+                context_texts, response_texts, conversation_ids, hash_values, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
                 h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
                     'eval', opt.batch_size)
@@ -316,6 +316,7 @@ def decode(model, dataset):
             dataset.save_generated_texts(context_texts,
                                          response_texts,
                                          conversation_ids,
+                                         hash_values,
                                          greedy_texts,
                                          beam_texts,
                                          os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
