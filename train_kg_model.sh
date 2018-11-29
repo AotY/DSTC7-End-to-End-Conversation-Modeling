@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -40,14 +40,14 @@ python train_kg_model.py \
     --log_interval 50 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.0005 \
+    --eval_split 0.0001 \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type kg \
-    --task decode \
+    --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/epoch-1_kg_4_self_attn_2018_11_28_16:48.pth \
+    # --checkpoint models/epoch-1_kg_4_self_attn_2018_11_28_16:48.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \
