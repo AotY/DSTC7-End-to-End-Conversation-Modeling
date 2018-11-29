@@ -203,7 +203,6 @@ class KGModel(nn.Module):
         self.forward_step += 1
         if (self.teacher_forcing_ratio == min_t):
             return
-
         update_t = self.teacher_forcing_ratio - \
             eplison * (self.forward_step)
         self.teacher_forcing_ratio = max(update_t, min_t)

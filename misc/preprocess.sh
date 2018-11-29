@@ -11,7 +11,7 @@ python preprocess.py \
     --r_min_len 3 \
     --f_max_len 270\
     --f_min_len 3 \
-    --min_count 4 \
+    --min_count 3 \
     --vocab_size 4e4 \
     --word_embedding_model_name v1.0_word_embedding \
     --google_vec_file /home/taoqing/Research/data/GoogleNews-vectors-negative300.bin \

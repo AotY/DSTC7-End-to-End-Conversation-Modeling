@@ -44,7 +44,7 @@ class Tokenizer:
             text = ' '.join(text)
 
         if not is_english(text):
-            return None
+            return []
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
