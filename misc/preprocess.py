@@ -498,7 +498,7 @@ if __name__ == '__main__':
         vocab = Vocab()
         vocab.load(opt.vocab_path)
 
-    vocab_size = int(vocab.get_vocab_size())
+    vocab_size = int(vocab.size)
     logger.info('%s vocab_size: %s' % (model_name, vocab_size))
 
     ''' Load pre-trained word embedding, and obtain these word's embedding which in the vocab. '''
