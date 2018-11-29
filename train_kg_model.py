@@ -60,6 +60,7 @@ if opt.turn_type == 'concat':
 
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
+logger.info('f_max_len: %d' % opt.f_max_len)
 
 
 def train_epochs(model,

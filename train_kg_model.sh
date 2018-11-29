@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=5
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -12,15 +12,15 @@ python train_kg_model.py \
     --turn_type self_attn \
     --rnn_type GRU \
     --embedding_size 512 \
-    --hidden_size 1024 \
+    --hidden_size 512 \
     --latent_size 0 \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
     --cnn_kernel_width 3 \
-    --dropout 0.3 \
-    --c_max_len 38 \
-    --r_max_len 38 \
+    --dropout 0.2 \
+    --c_max_len 35 \
+    --r_max_len 35 \
     --min_len 3 \
     --bidirectional \
     --tied \
@@ -28,7 +28,7 @@ python train_kg_model.py \
     --decode_type beam_search \
     --beam_size 8 \
     --best_n 3 \
-    --f_max_len 70 \
+    --f_max_len 120 \
     --f_topk 5 \
     --lr 0.005 \
     --max_grad_norm 5.0 \

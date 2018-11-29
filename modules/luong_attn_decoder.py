@@ -142,6 +142,7 @@ class LuongAttnDecoder(nn.Module):
         # V [batch_size, topk, hidden_size]
         fV = self.f_linearV(f_encoder_outputs.transpose(0, 1))
 
+        #  print(fK.shape)
         # [batch_size, 1, topk]
         weights = torch.bmm(output.transpose(0, 1), fK.transpose(1, 2))
 
