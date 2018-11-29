@@ -182,6 +182,7 @@ class Dataset:
         context_texts = list()
         response_texts = list()
         conversation_ids = list()
+        hash_values = list()
 
         # facts
         facts_texts = list()
@@ -194,11 +195,11 @@ class Dataset:
         """sort batch_data, by turn num"""
         batch_data = sorted(batch_data, key=lambda item: len(item[2]), reverse=True)
         for i, (conversation_id, sentences_text, sentences_ids, response_ids, hash_value) in enumerate(batch_data):
-
             response_text = ' '.join(self.vocab.ids_to_word(response_ids))
             response_texts.append(response_text)
             context_texts.append(sentences_text)
             conversation_ids.append(conversation_id)
+            hash_values.append(hash_value)
 
             # h inputs
             h_inputs_lenght.append(list([1]) * self.config.turn_num)
@@ -245,6 +246,7 @@ class Dataset:
                 f_input = torch.zeros((self.config.f_topk, self.config.f_max_len),
                                       dtype=torch.long,
                                       device=self.device)
+                print('topk_facts_text: {}'.format(topk_facts_text))
 
                 f_input_length = torch.ones(self.config.f_topk,
                                             dtype=torch.long,
@@ -293,7 +295,7 @@ class Dataset:
         self._indicator_dict[task] = cur_indicator
 
         return decoder_inputs, decoder_targets, decoder_inputs_length, \
-            context_texts, response_texts, conversation_ids, \
+            context_texts, response_texts, conversation_ids, hash_values, \
             f_inputs, f_inputs_length, f_topks_length, facts_texts, \
             h_inputs, h_turns_length, h_inputs_lenght, h_inputs_position
 
@@ -327,7 +329,7 @@ class Dataset:
                 if hit_count == 0:
                     continue
 
-                phrases = []
+                phrases = list()
                 for hit in hits[:self.config.f_topk]:
                     id = hit['_source']['conversation_id']
                     assert (conversation_id == id), "%s != %s" % (conversation_id, id)
@@ -345,10 +347,10 @@ class Dataset:
                         #  phrases.append(parts[-1])
                         phrases.append('.'.join(parts))
 
-                #  r.extract_keywords_from_sentences(phrases)
-                #  topk_phrase = r.get_ranked_phrases()[:self.config.f_topk]
-                topk_phrase = phrases
-                facts_topk_phrases[hash_value] = topk_phrase
+                print('conversation_id: ', conversation_id)
+                print('phrases: {}'.format(phrases))
+
+                facts_topk_phrases[hash_value] = phrases
 
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
         self.facts_topk_phrases = facts_topk_phrases
@@ -409,6 +411,9 @@ class Dataset:
             self.logger.info('build similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
                 conversation_id, sentences_text, _, _, hash_value = data
+                if not bool(hash_value):
+                    continue
+
                 # [len(phrases), pre_embedding_size]
                 phrase_embeddeds = ranked_phrase_embedded_dict.get(conversation_id, None)
                 if phrase_embeddeds is None or len(phrase_embeddeds) == 0:
@@ -492,7 +497,8 @@ class Dataset:
     def save_generated_texts(self,
                              context_texts,
                              response_texts,
-                             ids,
+                             conversation_ids,
+                             hash_values,
                              greedy_texts,
                              beam_texts,
                              filename,
@@ -501,8 +507,15 @@ class Dataset:
 
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for i, (id, sentences, response, greedy_text, beam_text) in enumerate(zip(ids, context_texts, response_texts, greedy_texts, beam_texts)):
-                f.write('conversation_id: %s\n' % id)
+            for i, (conversation_id, hash_value, sentences, response, greedy_text, beam_text) in enumerate(zip(conversation_ids, 
+                hash_values,
+                context_texts,
+                response_texts,
+                greedy_texts,
+                beam_texts)):
+
+                f.write('conversation_id: %s\n' % conversation_id)
+                f.write('hash_value: %s\n' % hash_value)
                 for sentence in sentences:
                     f.write('> %s\n' % sentence)
 
