@@ -541,9 +541,15 @@ class Dataset:
                 topk_ids = outputs[bi]
                 topk_length = outputs_length[bi]
                 topk_texts = []
-                for ids, length in zip(topk_ids, topk_length):
-                    text = self.vocab.ids_to_text(ids[:length])
-                    topk_texts.append(text)
+                if outputs_length is not None:
+                    for ids, length in zip(topk_ids, topk_length):
+                        text = self.vocab.ids_to_text(ids[:length])
+                        topk_texts.append(text)
+                else:
+                    for ids in topk_ids:
+                        text = self.vocab.ids_to_text(ids)
+                        topk_texts.append(text)
+
                 batch_generated_texts.append(topk_texts)
 
         return batch_generated_texts

@@ -37,17 +37,17 @@ python train_kg_model.py \
     --teacher_forcing_ratio 1.0 \
     --seed 19 \
     --device cuda \
-    --log_interval 20 \
+    --log_interval 50 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0005 \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type kg \
-    --task train \
+    --task decode \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/epoch-1_kg_4_self_attn_2018_11_26_21:55.pth \
+    --checkpoint models/epoch-1_kg_4_self_attn_2018_11_28_16:48.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \
