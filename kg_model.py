@@ -151,8 +151,7 @@ class KGModel(nn.Module):
         )
 
         if h_encoder_hidden_state is None:
-            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(
-                0).repeat(self.config.decoder_num_layers, 1, 1)
+            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(0).repeat(self.config.decoder_num_layers, 1, 1)
         else:
             decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
 
@@ -182,8 +181,7 @@ class KGModel(nn.Module):
                 if use_teacher_forcing:
                     decoder_input = decoder_inputs[i].view(1, -1)
                 else:
-                    decoder_input = torch.argmax(
-                        decoder_output, dim=2).detach().view(1, -1)
+                    decoder_input = torch.argmax(decoder_output, dim=2).detach().view(1, -1)
 
             decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
                                                                    decoder_hidden_state,

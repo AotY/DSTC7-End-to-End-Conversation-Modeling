@@ -261,7 +261,6 @@ class Dataset:
                             f_input[fi, fj] = id
                 else:
                     f_topks_length.append(1)
-
                 print('topk_facts_text: {}'.format(topk_facts_text))
 
                 f_inputs.append(f_input)

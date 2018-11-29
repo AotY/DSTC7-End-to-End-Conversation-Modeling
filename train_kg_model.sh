@@ -7,7 +7,7 @@ python train_kg_model.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.60004.dict \
     --vocab_size 6e4 \
-    --turn_num 4 \
+    --turn_num 5 \
     --min_turn 1 \
     --turn_type self_attn \
     --rnn_type GRU \
@@ -19,8 +19,8 @@ python train_kg_model.py \
     --decoder_num_layers 2 \
     --cnn_kernel_width 3 \
     --dropout 0.2 \
-    --c_max_len 35 \
-    --r_max_len 35 \
+    --c_max_len 50 \
+    --r_max_len 50 \
     --min_len 3 \
     --bidirectional \
     --tied \
@@ -44,10 +44,10 @@ python train_kg_model.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type kg \
-    --task decode \
+    --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/epoch-1_kg_4_self_attn_2018_11_28_16:48.pth \
+    # --checkpoint models/epoch-1_kg_4_self_attn_2018_11_28_16:48.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \
