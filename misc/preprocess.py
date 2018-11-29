@@ -71,34 +71,58 @@ def read_convos(convos_file_path, logger, opt):
 
             sub = line.split('\t')
 
-            conversation = sub[-2]
+            context = sub[-2]
             response = sub[-1]
 
             # skip if source has nothing
-            if conversation == 'START' or len(conversation.rstrip()) == 0:
+            if context == 'START' or len(context.rstrip()) == 0:
                 continue
 
-            # token
-            conversation_tokens = tokenizer.tokenize(conversation)
-            # abnormal lengths: 203, 204, 205, 206, 207
-            conversation_length = len(conversation_tokens)
+            if context.startswith('START EOS'):
+                context = context[10:]
+            elif context.startswith('EOS'):
+                context = context[4:]
+            elif context.startswith('... EOS'):
+                context = context[7:]
+            elif context.startswith('... '):
+                context = context[4:]
 
-            #  if conversation_length in [203, 204, 205, 206, 207]:
+            sentences = context.split('EOS')
+            tokenized_sentences = list()
+            for sentence in sentences:
+                # token
+                tokens = tokenizer.tokenize(sentence)
+                if len(tokens) < opt.c_min_len:
+                    continue
+                if tokens is not None and len(tokens) > 0:
+                    tokenized_sentences.append(' '.join(tokens) + ' .')
+
+            if len(tokenized_sentences) == 0:
+                continue
+
+            context = 'EOS'.join(tokenized_sentences)
+            # abnormal lengths: 203, 204, 205, 206, 207
+            context_length = len(context.split())
+            if context_length > opt.c_max_len:
+                continue
+
+            #  if context_length in [203, 204, 205, 206, 207]:
                 #  abnormal_conversations.append(
                     #  conversation_tokens + [sub[1], sub[2]])
 
-            #  conversation_max_length = max(conversation_max_length, conversation_length)
+            #  conversation_max_length = max(conversation_max_length, context_length)
 
-            #  conversations_length_distribution[conversation_length] = conversations_length_distribution.get(conversation_length, 0) + 1
+            #  conversations_length_distribution[context_length] = conversations_length_distribution.get(conversation_length, 0) + 1
 
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
 
-            if conversation_length < opt.c_min_len or conversation_length > opt.c_max_len or response_length < opt.r_min_len or response_length > opt.r_max_len:
+            if response_length < opt.r_min_len or response_length > opt.r_max_len:
                 continue
+            response = ' '.join(response_tokens)
 
-            if response_length <= 7:
-                abnormal_responses.append(response_tokens)
+            #  if response_length <= 7:
+                #  abnormal_responses.append(response_tokens)
 
             #  response_max_length = max(response_max_length, response_length)
             #  responses_length_distribution[response_length] = responses_length_distribution.get(
@@ -108,10 +132,10 @@ def read_convos(convos_file_path, logger, opt):
             #  raw_conversations.append(conversation)
             #  raw_responses.append(response)
 
-            conversations.append(conversation_tokens)
-            responses.append(response_tokens)
+            conversations.append(context)
+            responses.append(response)
 
-            hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
+            hash_values.append(sub[0])
             subreddit_names.append(sub[1])
             conversation_ids.append(sub[2])
             response_scores.append(sub[3])
@@ -119,8 +143,7 @@ def read_convos(convos_file_path, logger, opt):
 
             # TodayILearned-f2ruz nums
             key_value = sub[1] + '-' + sub[2]
-            conversation_response_nums[key_value] = conversation_response_nums.get(
-                key_value, 0) + 1
+            conversation_response_nums[key_value] = conversation_response_nums.get(key_value, 0) + 1
 
     return raw_conversations, raw_responses, \
         conversations, responses, \
@@ -186,9 +209,9 @@ def read_facts(facts_file_path, logger, opt):
 
             raw_facts.append(fact)
 
-            facts.append(fact_tokens)
+            facts.append(' '.join(fact_tokens))
 
-            hash_values.append(sub[0].rstrip().replace('\t', '').replace('\\', ''))
+            hash_values.append(sub[0])
             subreddit_names.append(sub[1])
             conversation_ids.append(sub[2])
             domain_names.append(sub[3])
@@ -272,12 +295,11 @@ def save_distribution(distribution, name):
 ''' save data to pair, conversation - response '''
 
 
-def save_data_to_pair(opt, conversations, responses, conversation_ids, hash_values, scores, turns, filename):
+def save_data_to_pair(opt, contexts, responses, conversation_ids, hash_values, scores, turns, filename):
     '''Save data in pair format.'''
-    save_file = open(os.path.join(opt.save_path, filename),
-                     'w', encoding='utf-8')
-    for conversation_id, conversation, response, hash_value, score, turn in zip(conversation_ids, conversations, responses, hash_values, scores, turns):
-        save_file.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (conversation_id, ' '.join(conversation), ' '.join(response), hash_value, str(score), str(turn)))
+    save_file = open(os.path.join(opt.save_path, filename), 'w', encoding='utf-8')
+    for conversation_id, context, response, hash_value, score, turn in zip(conversation_ids, contexts, responses, hash_values, scores, turns):
+        save_file.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (conversation_id, context, response, hash_value, str(score), str(turn)))
 
     save_file.close()
 
@@ -414,7 +436,14 @@ if __name__ == '__main__':
 
         # re-save conversations, responses, and facts
         # (%s\t%s\t\%s\t%s) conversation, response, subreddit_name, and conversation_id
-        save_data_to_pair(opt, conversations, responses, conversation_conversation_ids, conversation_hash_values, response_scores, dialogue_turns, filename='conversations_responses.pair.txt')
+        save_data_to_pair(opt,
+                conversations,
+                responses,
+                conversation_conversation_ids,
+                conversation_hash_values,
+                response_scores,
+                dialogue_turns,
+                filename='conversations_responses.pair.txt')
 
         #  save_distribution(conversations_length_distribution, 'conversations')
         #  save_distribution(responses_length_distribution, 'responses')

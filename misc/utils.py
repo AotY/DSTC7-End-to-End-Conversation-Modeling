@@ -44,7 +44,7 @@ class Tokenizer:
             text = ' '.join(text)
 
         if not is_english(text):
-            return []
+            return None
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -56,7 +56,7 @@ class Tokenizer:
         tokens = [token for token in tokens if len(token.split()) > 0]
 
         # clip max len of token
-        tokens = [token for token in tokens if len(token) < 16]
+        #  tokens = [token for token in tokens if len(token) < 16]
         return tokens
 
     def clean_str(self, text):
