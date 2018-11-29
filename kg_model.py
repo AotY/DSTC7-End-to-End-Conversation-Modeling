@@ -414,7 +414,7 @@ class KGModel(nn.Module):
             # output: [1, batch_size * beam_size, vocab_size]
             # -> [batch_size * beam_size, vocab_size]
             log_prob = output[0]
-            print('log_prob: ', log_prob.shape)
+            #  print('log_prob: ', log_prob.shape)
 
             # score: [batch_size * beam_size, vocab_size]
             score = score.view(-1, 1) + log_prob
