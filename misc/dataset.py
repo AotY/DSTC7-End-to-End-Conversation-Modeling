@@ -507,7 +507,7 @@ class Dataset:
 
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for i, (conversation_id, hash_value, sentences, response, greedy_text, beam_text) in enumerate(zip(conversation_ids, 
+            for i, (conversation_id, hash_value, sentences, response, greedy_text, beam_text) in enumerate(zip(conversation_ids,
                 hash_values,
                 context_texts,
                 response_texts,
@@ -552,9 +552,9 @@ class Dataset:
         elif decode_type == 'beam_search':
             for bi in range(self.config.batch_size):
                 topk_ids = outputs[bi]
-                topk_length = outputs_length[bi]
                 topk_texts = []
                 if outputs_length is not None:
+                    topk_length = outputs_length[bi]
                     for ids, length in zip(topk_ids, topk_length):
                         text = self.vocab.ids_to_text(ids[:length])
                         topk_texts.append(text)

@@ -573,7 +573,7 @@ if __name__ == '__main__':
                  dataset,
                  criterion)
     elif opt.task == 'decode':
-        decode(model, dataset, vocab)
+        decode(model, dataset)
     else:
         raise ValueError(
             "task must be train or eval, no %s " % opt.task)
