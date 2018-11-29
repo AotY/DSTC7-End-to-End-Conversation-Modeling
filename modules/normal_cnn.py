@@ -36,7 +36,7 @@ class NormalCNN(nn.Module):
 
         # conv2d 120 -> 1
         kernel_sizes = [(4, 512), (3, 512), (3, 256), (2, 256), (4, 512)]
-        channels = [512, 256, 256, 512, 1024]
+        channels = [512, 256, 256, 512, 512]
         strides = [(2, 1), (2, 1), (2, 1), (2, 1), (1, 1)]
 
         for channel, kernel_size, stride in zip(channels, kernel_sizes, strides):

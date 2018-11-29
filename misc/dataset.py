@@ -261,7 +261,8 @@ class Dataset:
                             f_input[fi, fj] = id
                 else:
                     f_topks_length.append(1)
-                print('topk_facts_text: {}'.format(topk_facts_text))
+
+                #  print('topk_facts_text: {}'.format(topk_facts_text))
 
                 f_inputs.append(f_input)
                 f_inputs_length.append(f_input_length)
@@ -347,8 +348,8 @@ class Dataset:
                         #  phrases.append(parts[-1])
                         phrases.append('.'.join(parts))
 
-                print('conversation_id: ', conversation_id)
-                print('phrases: {}'.format(phrases))
+                #  print('conversation_id: ', conversation_id)
+                #  print('phrases: {}'.format(phrases))
 
                 facts_topk_phrases[hash_value] = phrases
 
@@ -507,14 +508,13 @@ class Dataset:
 
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation_id, hash_value, sentences, response, greedy_text, beam_text, topk_facts in zip(conversation_ids, 
+            for conversation_id, hash_value, sentences, response, greedy_text, beam_text, topk_facts in zip(conversation_ids,
                 hash_values,
                 context_texts,
                 response_texts,
                 greedy_texts,
                 beam_texts,
-                facts_texts)
-            ):
+                facts_texts):
 
                 f.write('conversation_id: %s\n' % conversation_id)
                 f.write('hash_value: %s\n' % hash_value)
@@ -528,8 +528,9 @@ class Dataset:
                 for i, best_text in enumerate(beam_text):
                     f.write('beam %d: %s\n' % (i, best_text))
 
-                for fi, fact_text in enumerate(topk_facts):
-                    f.write('fact %d: %s\n' % (fi, fact_text))
+                if topk_facts is not None:
+                    for fi, fact_text in enumerate(topk_facts):
+                        f.write('fact %d: %s\n' % (fi, fact_text))
                 f.write('---------------------------------\n')
 
     def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
@@ -551,9 +552,9 @@ class Dataset:
         elif decode_type == 'beam_search':
             for bi in range(self.config.batch_size):
                 topk_ids = outputs[bi]
-                topk_length = outputs_length[bi]
                 topk_texts = []
                 if outputs_length is not None:
+                    topk_length = outputs_length[bi]
                     for ids, length in zip(topk_ids, topk_length):
                         text = self.vocab.ids_to_text(ids[:length])
                         topk_texts.append(text)
