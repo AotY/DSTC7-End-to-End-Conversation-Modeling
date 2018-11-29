@@ -246,7 +246,6 @@ class Dataset:
                 f_input = torch.zeros((self.config.f_topk, self.config.f_max_len),
                                       dtype=torch.long,
                                       device=self.device)
-                print('topk_facts_text: {}'.format(topk_facts_text))
 
                 f_input_length = torch.ones(self.config.f_topk,
                                             dtype=torch.long,
@@ -262,6 +261,8 @@ class Dataset:
                             f_input[fi, fj] = id
                 else:
                     f_topks_length.append(1)
+
+                #  print('topk_facts_text: {}'.format(topk_facts_text))
 
                 f_inputs.append(f_input)
                 f_inputs_length.append(f_input_length)
@@ -347,8 +348,8 @@ class Dataset:
                         #  phrases.append(parts[-1])
                         phrases.append('.'.join(parts))
 
-                print('conversation_id: ', conversation_id)
-                print('phrases: {}'.format(phrases))
+                #  print('conversation_id: ', conversation_id)
+                #  print('phrases: {}'.format(phrases))
 
                 facts_topk_phrases[hash_value] = phrases
 
@@ -507,12 +508,13 @@ class Dataset:
 
         #  print(facts_texts)
         with open(filename, 'a', encoding='utf-8') as f:
-            for i, (conversation_id, hash_value, sentences, response, greedy_text, beam_text) in enumerate(zip(conversation_ids,
+            for conversation_id, hash_value, sentences, response, greedy_text, beam_text, topk_facts in zip(conversation_ids,
                 hash_values,
                 context_texts,
                 response_texts,
                 greedy_texts,
-                beam_texts)):
+                beam_texts,
+                facts_texts):
 
                 f.write('conversation_id: %s\n' % conversation_id)
                 f.write('hash_value: %s\n' % hash_value)
@@ -526,11 +528,9 @@ class Dataset:
                 for i, best_text in enumerate(beam_text):
                     f.write('beam %d: %s\n' % (i, best_text))
 
-                if facts_texts is not None and len(facts_texts) > 0:
-                    topk_facts = facts_texts[i]
-                    if topk_facts is not None:
-                        for fi, fact_text in enumerate(topk_facts):
-                            f.write('fact %d: %s\n' % (fi, fact_text))
+                if topk_facts is not None:
+                    for fi, fact_text in enumerate(topk_facts):
+                        f.write('fact %d: %s\n' % (fi, fact_text))
                 f.write('---------------------------------\n')
 
     def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
