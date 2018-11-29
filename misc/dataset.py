@@ -66,28 +66,12 @@ class Dataset:
                     response_ids = response_ids[:min(self.config.r_max_len - 1, len(response_ids))]
 
                     # context split by EOS, START
-                    if context.startswith('start eos'):
-                        context = context[10:]
-                        sentences = self.parser_conversations(context)
-                        if len(sentences) > 2:
-                            sentences = sentences[1:]
-                    elif context.startswith('eos'):
-                        context = context[4:]
-                        sentences = self.parser_conversations(context)
-                    elif context.startswith('... eos'):
-                        context = context[7:]
-                        sentences = self.parser_conversations(context)
-                    elif context.startswith('... '):
-                        context = context[4:]
-                        sentences = self.parser_conversations(context)
-                    else:
-                        sentences = self.parser_conversations(context)
+                    sentences = self.parser_conversations(context)
 
                     if sentences is None or len(sentences) < self.config.min_turn:
                         continue
 
-                    sentences = sentences[-min(self.config.turn_num,
-                                               len(sentences)):]
+                    sentences = sentences[-min(self.config.turn_num, len(sentences)):]
 
                     if self.config.turn_type == 'concat':
                         context = ' '.join(sentences)
@@ -99,14 +83,15 @@ class Dataset:
                     sentences_text = []
 
                     sentences_ids = []
-                    for sentence in sentences:
-                        sentence_ids = self.vocab.words_to_id(
-                            sentence.split(' '))
-                        sentence_ids = sentence_ids[-min(
-                            self.config.c_max_len, len(sentence_ids)):]
+                    for si, sentence in enumerate(sentences):
+                        sentence_ids = self.vocab.words_to_id(sentence.split(' '))
+                        if si % 2 == 0: # start
+                            sentence_ids = sentence_ids[-min(self.config.c_max_len, len(sentence_ids)):]
+                        else: # reply
+                            sentence_ids = sentence_ids[:min(self.config.c_max_len, len(sentence_ids))]
+
                         sentences_ids.append(sentence_ids)
-                        sentences_text.append(
-                            ' '.join(self.vocab.ids_to_word(sentence_ids)))
+                        sentences_text.append(' '.join(self.vocab.ids_to_word(sentence_ids)))
 
                     datas.append((conversation_id, sentences_text, sentences_ids, response_ids, hash_value))
 
@@ -144,9 +129,8 @@ class Dataset:
         }
 
     def parser_conversations(self, context):
-        sentences = context.split('eos')
-        sentences = [sentence for sentence in sentences if len(
-            sentence.split()) >= self.config.min_len]
+        sentences = context.split('EOS')
+        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
         return sentences
 
     def reset_data(self, task, shuffle=True):

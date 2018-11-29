@@ -361,7 +361,7 @@ def build_optimizer(model):
         eps=1e-09
     )
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.5)
 
     optimizer = ScheduledOptimizer(
         optim,
