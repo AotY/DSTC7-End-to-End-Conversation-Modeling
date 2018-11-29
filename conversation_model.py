@@ -1,153 +1,83 @@
 # -*- coding: utf-8 -*-
-
-import random
 import torch
 import torch.nn as nn
 
-from modules.cnn_encoder import CNNEncoder
-from modules.normal_cnn import NormalCNN
-from modules.normal_encoder import NormalEncoder
-from modules.self_attn import SelfAttentive
-from modules.session_encoder import SessionEncoder
-from modules.reduce_state import ReduceState
-from modules.luong_attn_decoder import LuongAttnDecoder
-from modules.utils import init_linear_wt, init_wt_normal
+import random
+
 from modules.beam import Beam
+from modules.transformer.transformer import Transformer
 
-import modules.transformer.models as transformer_models
+from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
 """
-KGModel
+Conversation model,
+including encoder and decoder.
 """
 
-class KGModel(nn.Module):
-    '''
-    generating responses on both conversation history and external "facts", allowing the model
-    to be versatile and applicable in an open-domain setting.
-    '''
-
+class ConversationModel(nn.Module):
     def __init__(self,
                  config,
-                 vocab,
-                 device='cuda',
-                 pre_trained_weight=None):
-        super(KGModel, self).__init__()
+                 device='cuda'):
+        super(Conversation, self).__init__()
 
         self.config = config
-        self.vocab = vocab
         self.device = device
 
         self.teacher_forcing_ratio = config.teacher_forcing_ratio
         self.forward_step = 0
 
-        if pre_trained_weight is not None:
-            self.encoder_embedding = nn.Embedding.from_pretrained(pre_trained_weight)
-            self.encoder_embedding.padding_idx = vocab.padid
-        else:
-            self.encoder_embedding = nn.Embedding(
-                config.vocab_size,
-                config.embedding_size,
-                vocab.padid
-            )
-            init_wt_normal(self.encoder_embedding.weight,
-                           self.encoder_embedding.embedding_dim)
+        enc_embedding = nn.Embedding(
+            config.vocab_size,
+            config.embedding_size,
+            PADID
+        )
+        #  init_wt_normal(enc_embedding.weight, enc_embedding.embedding_dim)
 
+        decoder_embedding = nn.Embedding(
+            config.vocab_size,
+            config.embedding_size,
+            PAD_ID
+        )
+        #  init_wt_normal(decoder_embedding.weight, config.embedding_size)
 
-        # h_encoder
-        if config.turn_type == 'transformer':
-            self.h_encoder = transformer_models.Encoder(
-                config.c_max_len,
-                self.encoder_embedding,
-                num_layers=6,
-                num_head=8,
-                k_dim=64,
-                v_dim=64,
-                model_dim=config.hidden_size,
-                inner_dim=1024,
-                padid=vocab.padid,
-                dropout=config.dropout
-            )
-        elif config.turn_type == 'self_attn':
-            self.h_encoder = SelfAttentive(
-                config,
-                self.encoder_embedding
-            )
-        else:
-            self.h_encoder = NormalEncoder(
-                config,
-                self.encoder_embedding,
-            )
-
-        #  self.f_encoder = NormalEncoder(
-            #  config,
-            #  self.encoder_embedding,
-        #  )
-
-        #  self.f_encoder = SelfAttentive(
-            #  config,
-            #  self.encoder_embedding,
-        #  )
-
-        #  self.f_encoder = CNNEncoder(
-            #  config,
-            #  self.encoder_embedding
-        #  )
-        self.f_encoder = NormalCNN(
+        self.transformer = Transformer(
             config,
-            self.encoder_embedding
+            enc_embedding,
+            decoder_embedding
         )
 
-        if config.turn_type != 'none' or config.turn_type != 'concat':
-            if config.turn_type == 'c_concat':
-                self.c_concat_linear = nn.Linear(config.hidden_size * config.turn_num, config.hidden_size)
-                init_linear_wt(self.c_concat_linear)
-            elif config.turn_type in ['sequential', 'weight', 'transformer', 'self_attn']:
-                self.session_encoder = SessionEncoder(config)
-
-        # encoder hidden_state -> decoder hidden_state
-        self.reduce_state = ReduceState(config.rnn_type)
-
-        if config.share_embedding:
-            decoder_embedding = self.encoder_embedding
-        else:
-            decoder_embedding = nn.Embedding(
-                config.vocab_size,
-                config.embedding_size,
-                vocab.padid
-            )
-            init_wt_normal(decoder_embedding.weight, config.embedding_size)
-
-        self.decoder = LuongAttnDecoder(config, decoder_embedding)
+        # [batch_size * max_len, vocab_size]
+        self.log_softmax = nn.LogSoftmax(dim=1)
 
     def forward(self,
                 h_inputs,
                 h_turns_length,
                 h_inputs_length,
-                h_inputs_position,
-                decoder_inputs,
-                decoder_inputs_length,
+                h_inputs_pos,
+                dec_inputs,
+                dec_inputs_pos,
+                dec_inputs_length,
                 f_inputs,
                 f_inputs_length,
                 f_topks_length):
         '''
         input:
-            h_inputs: # [turn_num, max_len, batch_size]
+            h_inputs: # [turn_num, batch_size, max_len]
             h_inputs_length: [turn_num, batch_size]
             h_turns_length: [batch_size]
 
-            decoder_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
+            dec_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
-            f_inputs: [f_max_len, batch_size, topk]
-            f_inputs_length: [f_max_len, batch_size, topk]
+            f_inputs: [topk, batch_size, f_max_len]
+            f_inputs_length: [f_max_len, batch_size]
             f_topks_length: [batch_size]
-            f_embedded_inputs_length: [batch_size]
         '''
 
-        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
+        h_encoder_outputs = self.h_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
-            h_inputs_position,
+            h_inputs_pos,
         )
 
         if h_encoder_hidden_state is None:
@@ -171,31 +101,31 @@ class KGModel(nn.Module):
             f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
 
         # decoder
-        decoder_outputs = []
+        dec_outputs = []
         decoder_output = None
         self.update_teacher_forcing_ratio()
         for i in range(0, self.config.r_max_len):
             if i == 0:
-                decoder_input = decoder_inputs[i].view(1, -1)
+                dec_input = dec_inputs[i].view(1, -1)
             else:
                 use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
                 if use_teacher_forcing:
-                    decoder_input = decoder_inputs[i].view(1, -1)
+                    dec_input = dec_inputs[i].view(1, -1)
                 else:
-                    decoder_input = torch.argmax(
+                    dec_input = torch.argmax(
                         decoder_output, dim=2).detach().view(1, -1)
 
-            decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
+            decoder_output, decoder_hidden_state, _ = self.decoder(dec_input,
                                                                    decoder_hidden_state,
                                                                    h_encoder_outputs,
                                                                    h_encoder_lengths,
                                                                    f_encoder_outputs,
                                                                    f_encoder_lengths)
 
-            decoder_outputs.append(decoder_output)
+            dec_outputs.append(decoder_output)
 
-        decoder_outputs = torch.cat(decoder_outputs, dim=0)
-        return decoder_outputs
+        dec_outputs = torch.cat(dec_outputs, dim=0)
+        return dec_outputs
 
     def reset_teacher_forcing_ratio(self):
         self.forward_step = 0
@@ -205,7 +135,6 @@ class KGModel(nn.Module):
         self.forward_step += 1
         if (self.teacher_forcing_ratio == min_t):
             return
-
         update_t = self.teacher_forcing_ratio - \
             eplison * (self.forward_step)
         self.teacher_forcing_ratio = max(update_t, min_t)
@@ -216,7 +145,7 @@ class KGModel(nn.Module):
                  h_inputs,
                  h_turns_length,
                  h_inputs_length,
-                 h_inputs_position,
+                 h_inputs_pos,
                  f_inputs,
                  f_inputs_length,
                  f_topks_length):
@@ -225,13 +154,13 @@ class KGModel(nn.Module):
         h_inputs_length: [turn_num, batch_size]
         h_turns_length: [batch_size]
         c_encoder_inputs: [seq_len, batch_size], maybe [r_max_len, 1]
-        decoder_input: [1, batch_size], maybe: [sos * 1]
+        dec_input: [1, batch_size], maybe: [sos * 1]
         '''
         h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
-            h_inputs_position,
+            h_inputs_pos,
         )
 
         if h_encoder_hidden_state is None:
@@ -255,22 +184,22 @@ class KGModel(nn.Module):
             f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
 
         # decoder
-        decoder_outputs = []
-        decoder_input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * self.vocab.sosid
+        dec_outputs = []
+        dec_input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * SOS_ID
         for i in range(self.config.r_max_len):
-            decoder_output, decoder_hidden_state, _ = self.decoder(decoder_input,
+            decoder_output, decoder_hidden_state, _ = self.decoder(dec_input,
                                                                    decoder_hidden_state,
                                                                    h_encoder_outputs,
                                                                    h_encoder_lengths,
                                                                    f_encoder_outputs,
                                                                    f_encoder_lengths)
 
-            decoder_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
-            decoder_outputs.append(decoder_output)
+            dec_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
+            dec_outputs.append(decoder_output)
 
-        decoder_outputs = torch.cat(decoder_outputs, dim=0)
+        dec_outputs = torch.cat(dec_outputs, dim=0)
 
-        return decoder_outputs
+        return dec_outputs
 
     '''decode'''
 
@@ -278,7 +207,7 @@ class KGModel(nn.Module):
                h_inputs,
                h_turns_length,
                h_inputs_length,
-               h_inputs_position,
+               h_inputs_pos,
                f_inputs,
                f_inputs_length,
                f_topks_length):
@@ -287,7 +216,7 @@ class KGModel(nn.Module):
             h_inputs,
             h_turns_length,
             h_inputs_length,
-            h_inputs_position,
+            h_inputs_pos,
         )
 
         if h_encoder_hidden_state is None:
@@ -337,7 +266,7 @@ class KGModel(nn.Module):
                       f_encoder_lengths):
 
         greedy_outputs = []
-        input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * self.vocab.sosid
+        input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * SOS_ID
         for i in range(self.config.r_max_len):
             output, hidden_state, _ = self.decoder(input,
                                                     hidden_state,
@@ -349,7 +278,7 @@ class KGModel(nn.Module):
             input = torch.argmax(output, dim=2).detach().view(1, -1)  # [1, batch_size]
             greedy_outputs.append(input)
 
-            if input[0][0].item() == self.vocab.eosid:
+            if input[0][0].item() == EOS_ID
                 break
 
         # [len, batch_size]  -> [batch_size, len]
@@ -375,7 +304,7 @@ class KGModel(nn.Module):
         batch_size, beam_size = self.config.batch_size, self.config.beam_size
         # [1, batch_size x beam_size]
         input = torch.ones(batch_size * beam_size,
-                           dtype=torch.long, device=self.device) * self.vocab.sosid
+                           dtype=torch.long, device=self.device) * SOS_ID
 
         # [num_layers, batch_size x beam_size, hidden_size]
         hidden_state = hidden_state.repeat(1, beam_size, 1)
@@ -400,7 +329,7 @@ class KGModel(nn.Module):
             self.config.beam_size,
             self.config.r_max_len,
             batch_position,
-            self.vocab.eosid
+            EOS_ID
         )
 
         for i in range(self.config.r_max_len):
@@ -439,7 +368,7 @@ class KGModel(nn.Module):
 
             # Erase scores for EOS so that they are not expanded
             # [batch_size, beam_size]
-            eos_idx = input.data.eq(self.vocab.eosid).view(batch_size, beam_size)
+            eos_idx = input.data.eq(EOS_ID).view(batch_size, beam_size)
 
             if eos_idx.nonzero().dim() > 0:
                 score.data.masked_fill_(eos_idx, -float('inf'))
@@ -452,133 +381,49 @@ class KGModel(nn.Module):
                   h_inputs,
                   h_turns_length,
                   h_inputs_length,
-                  h_inputs_position):
+                  h_inputs_pos):
         """history forward
         Args:
             h_inputs: # [turn_num, max_len, batch_size]
             h_inputs_length: [turn_num, batch_size]
             h_turns_length: [batch_size]
+            h_inputs_pos: [batch_s]
         turn_type:
         """
-        if self.config.turn_type == 'concat' or self.config.turn_type == 'none':
-            inputs = h_inputs[0, :, :]  # [max_len, batch_size]
-            inputs_length = h_inputs_length[0, :]
-
-            # [max_len, batch_size, hidden_size]
-            outputs, hidden_state = self.h_encoder(inputs, inputs_length)
-            return outputs, hidden_state, inputs_length
-        else:
             stack_outputs = list()
             for ti in range(self.config.turn_num):
-                inputs = h_inputs[ti, :, :]  # [max_len, batch_size]
-                if self.config.turn_type == 'transformer':
-                    inputs_position = h_inputs_position[ti, :, :] # [max_len, batch_size]
-                    outputs = self.h_encoder(inputs.transpose(0, 1), inputs_position.transpose(0, 1))
-                    # [batch_size, max_len, hidden_size]
-                    outputs = outputs.transpose(0, 1)
-                elif self.config.turn_type == 'self_attn':
-                    inputs_length = h_inputs_length[ti, :]  # [batch_size]
-                    outputs, hidden_state = self.h_encoder(inputs, inputs_length)
-                    outputs = outputs.unsqueeze(0) # [1, batch_size, hidden_size]
-                else:
-                    inputs_length = h_inputs_length[ti, :]  # [batch_size]
-                    outputs, hidden_state = self.h_encoder(inputs, inputs_length)
+                inputs = h_inputs[ti, :, :]  # [batch_size, max_len]
+                inputs_position = h_inputs_pos[ti, :, :] # [batch_size, max_len]
+                # [batch_size, max_len, transformer_size]
+                outputs = self.h_encoder(inputs, inputs_position)
 
-                stack_outputs.append(outputs[-1].unsqueeze(0))
+                # [batch_size, max_len, transformer_size]
+                stack_outputs.append(outputs)
 
-            if self.config.turn_type == 'sum':
-                # [turn_num, batch_size, hidden_size]
-                stack_outputs = torch.cat(stack_outputs, dim=0)
-                # [1, batch_size, hidden_size]
-                return stack_outputs.sum(dim=0).unsqueeze(0), None, None
-            elif self.config.turn_type == 'c_concat':
-                # [1, hidden_size * turn_num]
-                c_concat_outputs = torch.cat(stack_outputs, dim=2)
-                # [1, batch_size, hidden_size]
-                return self.c_concat_linear(c_concat_outputs), None, None
-            elif self.config.turn_type == 'sequential':
-                # [turn_num, batch_size, hidden_size]
-                stack_outputs = torch.cat(stack_outputs, dim=0)
-                session_outputs, session_hidden_state = self.session_encoder(
-                    stack_outputs, h_turns_length)  # [1, batch_size, hidden_size]
-                return session_outputs[-1].unsqueeze(0), session_hidden_state, h_turns_length
-            elif self.config.turn_type == 'weight':
-                # [turn_num, batch_size, hidden_size]
-                stack_outputs = torch.cat(stack_outputs, dim=0)
-                session_outputs, session_hidden_state = self.session_encoder(
-                    stack_outputs, h_turns_length)  # [1, batch_size, hidden_size]
-                return session_outputs, session_hidden_state, h_turns_length
-            elif self.config.turn_type == 'transformer':
-                # [turn_num, batch_size, hidden_size]
-                stack_outputs = torch.cat(stack_outputs, dim=0)
-                session_outputs, session_hidden_state = self.session_encoder(
-                    stack_outputs, h_turns_length)  # [1, batch_size, hidden_size]
-                return session_outputs, session_hidden_state, h_turns_length
-            elif self.config.turn_type == 'self_attn':
-                # [turn_num, batch_size, hidden_size]
-                stack_outputs = torch.cat(stack_outputs, dim=0)
-                # session_hidden_state: [num_layers, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, h_turns_length)
-                return session_outputs, session_hidden_state, h_turns_length
+            # [turn_num, batch_size, transformer_size * turn_num]
+            stack_outputs = torch.cat(stack_outputs, dim=2)
+            return stack_outputs
 
     def f_forward(self,
                   f_inputs,
                   f_inputs_length):
         """
         Args:
-            -f_inputs: [topk, max_len, batch_size]
-            -f_inputs_length: [topk, batch_size]
-            -f_topks_length: [batch_size]
-            -hidden_state: [num_layers, batch_size, hidden_size]
+            -f_inputs: [batch_sizes, topk, max_len]
+            -f_inputs_length: [batch_size, topk]
         """
         f_outputs = list()
-        for i in range(f_inputs.size(0)):
-            f_input = f_inputs[i, :, :]  # [max_len, batch_size]
-            f_input_length = f_inputs_length[i, :]  # [batch_size]
+        for i in range(f_inputs.size(1)):
+            f_input = f_inputs[:, i, :]  # [batch_size, max_len]
+            f_input_length = f_inputs_length[:, i]  # [batch_size]
 
-            #  outputs, hidden_state = self.f_encoder(f_input, f_input_length)
-
+            # [batch_size, 1, max_len]
             output, _ = self.f_encoder(f_input, f_input_length)
-
-            """
-            # outputs: [hidden_size, batch_size, max_len]
-            _, outputs, _ = self.f_encoder(f_input, f_input_length)
-            #  print('outputs: ', outputs.shape)
-            outputs = outputs.permute(2, 1, 0)
-            """
 
             f_outputs.append(output)
 
-        # [topk, batch_size, hidden_size]
-        f_outputs = torch.cat(f_outputs, dim=0)
+        # [batch_size, topk, hidden_size]
+        f_outputs = torch.cat(f_outputs, dim=1)
         return f_outputs
 
-    def f_embedding_forward(self, f_inputs):
-        """
-        f_inputs: [topk, max_len, batch_size]
-        f_inputs_length: [topk, batch_size]
-        f_topks_length: [batch_size]
-        ignore padding_idx
-        """
-        f_embedded = list()  # [topk, batch_size, embedding_size]
-        for i in range(f_inputs.size(0)):
-            batch_embedded = list()
-            for j in range(f_inputs.size(2)):
-                ids = f_inputs[i, :, j].contiguous()  # [max_len]
-                nonzero_count = ids.nonzero().numel()
-                embedded = self.encoder_embedding(ids)
-                embedded = embedded.sum(dim=0)
-                if nonzero_count != 0:
-                    embedded = embedded / nonzero_count  # [embedding_size]
 
-                batch_embedded.append(embedded)
-
-            # [batch_size, embedding_size]
-            batch_embedded = torch.stack(batch_embedded, dim=0)
-
-            f_embedded.append(batch_embedded)
-
-        # [topk, batch_size, embedding_size]
-        f_embedded = torch.stack(f_embedded, dim=0)
-
-        return f_embedded

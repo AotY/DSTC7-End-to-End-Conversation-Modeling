@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
-    Manage Vocabulary,
-        1), Build Vocabulary
-        2), save and load vocabulary
-        3),
-"""
 from __future__ import division
 from __future__ import print_function
 import pickle
-import logging
-
-logger = logging.getLogger(__name__)
 
 PAD = '<pad>'
 UNK = '<unk>'
 SOS = '<sos>'
 EOS = '<eos>'
+
+PAD_ID = 0
+UNK_ID = 1
+SOS_ID = 2
+EOS_ID = 3
 
 class Vocab(object):
     def __init__(self):
