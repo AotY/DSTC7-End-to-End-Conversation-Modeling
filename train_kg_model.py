@@ -308,7 +308,7 @@ def decode(model, dataset):
                                                     decode_type='greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
-                                                  beam_length,
+                                                  None,
                                                   decode_type='beam_search')
             #  print(beam_texts)
 

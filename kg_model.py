@@ -201,7 +201,7 @@ class KGModel(nn.Module):
         self.forward_step = 0
         self.teacher_forcing_ratio = 1.0
 
-    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.2):
+    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.8):
         self.forward_step += 1
         if (self.teacher_forcing_ratio == min_t):
             return
