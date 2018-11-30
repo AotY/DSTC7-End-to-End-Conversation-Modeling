@@ -7,8 +7,8 @@ python train_kg_model.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
     --vocab_size 4e4 \
-    --turn_num 3 \
-    --min_turn 1 \
+    --turn_num 5 \
+    --min_turn 2 \
     --turn_type self_attn \
     --rnn_type GRU \
     --embedding_size 512 \
@@ -18,7 +18,7 @@ python train_kg_model.py \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
     --cnn_kernel_width 3 \
-    --dropout 0.2 \
+    --dropout 0.0 \
     --c_max_len 50 \
     --r_max_len 50 \
     --min_len 3 \
@@ -33,7 +33,7 @@ python train_kg_model.py \
     --lr 0.0002 \
     --max_grad_norm 5.0 \
     --epochs 15 \
-    --batch_size 100 \
+    --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 19 \
     --device cuda \

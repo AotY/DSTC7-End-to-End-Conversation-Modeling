@@ -72,7 +72,6 @@ class NormalEncoder(nn.Module):
         if lengths is not None:
             embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths)
 
-        # [batch_size, hidden_size]
         outputs, hidden_state = self.rnn(embedded)
 
         if lengths is not None:
@@ -80,3 +79,4 @@ class NormalEncoder(nn.Module):
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         return outputs, hidden_state
+

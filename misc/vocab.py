@@ -136,8 +136,8 @@ class Vocab(object):
         for id in ids:
             if id in [self.padid, self.sosid]:
                 continue
-            #  elif id == self.eosid:
-                #  break
+            elif id == self.eosid:
+                break
             else:
                 final_ids.append(id)
         words = self.ids_to_word(final_ids)
