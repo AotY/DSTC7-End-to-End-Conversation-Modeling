@@ -36,7 +36,7 @@ class LuongAttnDecoder(nn.Module):
         self.f_attn = Attention(config.hidden_size)
 
         """
-        # c_attn 
+        # c_attn
         self.c_linearK = nn.Linear(self.hidden_size, config.hidden_size)
         self.c_linearV = nn.Linear(self.hidden_size, config.hidden_size)
 
@@ -120,6 +120,9 @@ class LuongAttnDecoder(nn.Module):
 
         if c_encoder_outputs is not None:
             # output: [1, batch_size, 1 * hidden_size]
+            #  print(output.shape)
+            #  print(c_encoder_outputs.shape)
+            #  print(c_inputs_length.shape)
             c_context, c_attn_weights = self.c_attn(output, c_encoder_outputs, c_inputs_length)
 
         if f_encoder_outputs is not None:
