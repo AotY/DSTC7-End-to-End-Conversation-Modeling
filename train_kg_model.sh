@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=6
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -13,11 +13,9 @@ python train_kg_model.py \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
-    --latent_size 0 \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --cnn_kernel_width 3 \
     --dropout 0.0 \
     --c_max_len 50 \
     --r_max_len 50 \
