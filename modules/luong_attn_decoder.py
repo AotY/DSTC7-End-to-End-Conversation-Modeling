@@ -65,7 +65,7 @@ class LuongAttnDecoder(nn.Module):
             init_gru_orth(self.rnn)
 
         # linear  [q, c, f]
-        self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
+        self.linear = nn.Linear(config.hidden_size * 4, config.vocab_size)
         init_linear_wt(self.linear)
 
         #  if config.tied and self.embedding_size == config.hidden_size:
@@ -80,11 +80,11 @@ class LuongAttnDecoder(nn.Module):
                 input,
                 hidden_state,
                 q_encoder_outputs,
-                q_input_length,
+                q_encoder_length,
                 c_encoder_outputs,
-                c_inputs_length,
+                c_encoder_length,
                 f_encoder_outputs,
-                f_inputs_length):
+                f_encoder_length):
         '''
         Args:
             input: [1, batch_size] or [max_len, batch_size]
@@ -118,17 +118,22 @@ class LuongAttnDecoder(nn.Module):
             #  output, _ = nn.utils.rnn.pad_packed_sequence(output)
             #  output = output.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
+        if h_encoder_outputs is not None:
+            # output: [1, batch_size, 1 * hidden_size]
+            q_context, q_attn_weights = self.q_attn(output, q_encoder_outputs, q_encoder_length)
+
         if c_encoder_outputs is not None:
             # output: [1, batch_size, 1 * hidden_size]
-            c_context, c_attn_weights = self.c_attn(output, c_encoder_outputs, c_inputs_length)
+            c_context, c_attn_weights = self.c_attn(output, c_encoder_outputs, c_encoder_length)
 
         if f_encoder_outputs is not None:
             # [1, batch_size, hidden_size]
-            f_context, f_attn_weights = self.f_attn(output, f_encoder_outputs, f_inputs_length)
+            f_context, f_attn_weights = self.f_attn(output, f_encoder_outputs, f_encoder_length)
             #  f_context = self.f_forward(output, f_encoder_outputs)
 
         # [1, batch_size, 3 * hidden_size]
-        output = torch.cat((output, c_context, f_context), dim=2)
+        #  output = torch.cat((output, c_context, f_context), dim=2)
+        output = torch.cat((output, q_context, c_context, f_context), dim=2)
 
         # [1, batch_size, vocab_size]
         output = self.linear(output)
