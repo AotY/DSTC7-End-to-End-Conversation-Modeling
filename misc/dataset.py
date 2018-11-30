@@ -261,6 +261,7 @@ class Dataset:
 
         h_turns_length = torch.tensor(
             h_turns_length, dtype=torch.long, device=self.device) # [batch_size]
+
         h_inputs_lenght = torch.tensor(
             h_inputs_lenght, dtype=torch.long, device=self.device).transpose(0, 1)  # [turn_num, batch_size]
 
