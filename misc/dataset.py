@@ -187,7 +187,7 @@ class Dataset:
 
             # h inputs
             h_inputs_lenght.append(list([1]) * self.config.turn_num)
-            h_turns_length.append(len(sentences_ids))
+            h_turns_length.append(max(self.config.min_turn, len(sentences_ids)))
 
             h_input = torch.zeros((self.config.turn_num, self.config.c_max_len), dtype=torch.long).to(
                 self.device)  # [turn_num, max_len]
