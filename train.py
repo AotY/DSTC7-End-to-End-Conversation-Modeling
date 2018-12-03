@@ -222,7 +222,7 @@ def train(model,
     loss, accuracy = cal_performance(dec_outputs, dec_targets, smoothing=True)
 
     # compute loss
-    loss = criterion(dec_outputs, dec_targets)
+    #  loss = criterion(dec_outputs, dec_targets)
     #  print(loss)
 
     # backward
@@ -352,8 +352,9 @@ def build_optimizer(model):
 
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
+    #  criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
     #  criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
+    criterion = None
 
     return criterion
 

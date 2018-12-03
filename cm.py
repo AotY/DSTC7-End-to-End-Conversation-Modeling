@@ -154,7 +154,7 @@ class ConversationModel(nn.Module):
         # output_linear
         dec_outputs = self.output_linear(dec_outputs) * self.x_logit_scale
 
-        dec_outputs = dec_outputs.view(-1, config.vocab_size)
+        dec_outputs = dec_outputs.view(-1, self.config.vocab_size)
 
         return dec_outputs
 
