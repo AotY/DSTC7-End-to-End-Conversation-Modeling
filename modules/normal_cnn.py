@@ -79,7 +79,8 @@ class NormalCNN(nn.Module):
 
         # [batch_size, 1, 1, 1024]
         output = output.squeeze(2)
-        output = self.out_linear(output)  # [1, batch_size, hidden_size]
+        output = self.out_linear(output)  
+        # [batch_size, 1, hidden_size]
 
         return output, None
 

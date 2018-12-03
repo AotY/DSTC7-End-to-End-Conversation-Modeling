@@ -54,9 +54,9 @@ class Encoder(nn.Module):
         enc_attn_list = list()
 
         # -- Prepare masks
-        attn_mask = get_attn_key_pad_mask(k=enc_inputs, q=enc_inputs, padid=self.padid)
+        attn_mask = get_attn_key_pad_mask(k=enc_inputs, q=enc_inputs, padid=PAD_ID)
 
-        non_pad_mask = get_non_pad_mask(enc_inputs, self.padid)
+        non_pad_mask = get_non_pad_mask(enc_inputs, PAD_ID)
 
         embedded = self.embedding(enc_inputs) # [batch_size, max_len, embedding_size]
 
@@ -64,6 +64,7 @@ class Encoder(nn.Module):
 
         print('embedded: ', embedded.shape)
         print('pos_embedded: ', pos_embedded.shape)
+
         enc_embedded = embedded + pos_embedded
         print('enc_embedded shape: ', enc_embedded.shape) # [b, max_len, embedding_size]
 

@@ -45,6 +45,8 @@ class Decoder(nn.Module):
                 dec_inputs_pos,
                 enc_inputs,
                 enc_outputs,
+		c_enc_outputs,
+		f_enc_outputs,
                 return_attns=False):
         """
         args:
@@ -67,10 +69,9 @@ class Decoder(nn.Module):
 
         attn_mask = (slf_attn_mask_keypad + slf_attn_mask_subseq).gt(0)
 
-        dec_enc_attn_mask = get_attn_key_pad_mask(
-            seq_k=enc_inputs, seq_q=dec_inputs)
+        dec_enc_attn_mask = get_attn_key_pad_mask(seq_k=enc_inputs, seq_q=dec_inputs)
 
-        dec_embedded = self.embedding(dec_inputs) + self.pos_embedding(dec_inputs_pos).to(dec_inputs_pos.device)
+        dec_embedded = self.embedding(dec_inputs) + self.pos_embedding(dec_inputs_pos).to(dec_inputs.device)
 
         for dec_layer in self.layer_stack:
             dec_output, dec_slf_attn, dec_enc_attn = dec_layer(

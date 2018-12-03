@@ -112,6 +112,10 @@ def model_opt(parser):
                        type=int,
                        help='The greater the beam width, the fewer states are pruned. ')
 
+    group.add_argument('--n_best',
+                       type=int,
+                       help='n best sentence.')
+
 
 def train_opt(parser):
     ''' train parameters '''

@@ -84,6 +84,7 @@ class DecoderLayer(nn.Module):
         print('non_pad_mask: ', non_pad_mask.shape)
         print('dec_enc_attn_mask: ', dec_enc_attn_mask.shape)
 
+        # self attention
         dec_output, dec_slf_attn = self.slf_attn(
             dec_input,
             dec_input,
@@ -93,6 +94,7 @@ class DecoderLayer(nn.Module):
 
         dec_output *= non_pad_mask
 
+        # encoder attention
         dec_output, dec_enc_attn = self.enc_attn(
             dec_output,
             enc_output,

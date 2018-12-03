@@ -5,25 +5,26 @@ export CUDA_VISIBLE_DEVICES=3
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_kg.60004.dict \
-    --vocab_size 6e4 \
-    --turn_num 4 \
-    --min_turn 1 \
+    --vocab_path data/vocab_word2idx_kg.40004.dict \
+    --vocab_size 4e4 \
+    --turn_num 5 \
+    --min_turn 2 \
     --embedding_size 512 \
-    --dropout 0.3 \
-    --decode_type beam_search \
-    --c_max_len 38 \
-    --r_max_len 38 \
+    --hidden_size 512 \
+    --dropout 0.2 \
+    --c_max_len 50 \
+    --r_max_len 50 \
     --min_len 3 \
     --tied \
     --beam_size 8 \
-    --best_n 3 \
-    --f_max_len 70 \
+    --n_best 3 \
+    --f_max_len 100 \
     --f_topk 5 \
-    --lr 0.005 \
-    --max_grad_norm 5.0 \
+    --lr 0.0002 \
     --epochs 15 \
-    --batch_size 100 \
+    --batch_size 128 \
+    --decode_type beam_search \
+    --max_grad_norm 5.0 \
     --teacher_forcing_ratio 1.0 \
     --seed 19 \
     --device cuda \

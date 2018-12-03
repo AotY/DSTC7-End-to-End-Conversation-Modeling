@@ -84,24 +84,25 @@ def train_epochs(model,
 
         for load in range(1, max_load + 1):
             # load data
-            decoder_inputs, decoder_targets, decoder_inputs_length, \
+            dec_inputs, dec_targets, dec_inputs_length, dec_inputs_pos, \
                 context_texts, response_texts, conversation_ids, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_pos = dataset.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
                                    h_inputs,
-                                   h_turns_length,
                                    h_inputs_length,
-                                   h_inputs_position,
-                                   decoder_inputs,
-                                   decoder_targets,
-                                   decoder_inputs_length,
+                                   h_turns_length,
+                                   h_inputs_pos,
                                    f_inputs,
                                    f_inputs_length,
                                    f_topks_length,
+                                   dec_inputs,
+                                   dec_targets,
+                                   dec_inputs_length,
+                                   dec_inputs_pos,
                                    optimizer,
                                    criterion)
 
@@ -110,9 +111,11 @@ def train_epochs(model,
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
-                logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % (epoch, timeSince(start, load / max_load),
-                                                                                                    load, load / max_load * 100, log_loss_avg,
-                                                                                                    log_accuracy_avg, math.exp(log_loss_avg))
+                logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' \
+                    % (epoch, timeSince(start, load / max_load),
+                       load, load / max_load * 100, log_loss_avg,
+                       log_accuracy_avg, math.exp(log_loss_avg))
+
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
@@ -132,7 +135,8 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' % (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
+                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' %
+                                              (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
@@ -159,15 +163,16 @@ def train_epochs(model,
 
 def train(model,
           h_inputs,
-          h_turns_length,
           h_inputs_length,
-          h_inputs_position,
-          decoder_inputs,
-          decoder_targets,
-          decoder_inputs_length,
+          h_turns_length,
+          h_inputs_pos,
           f_inputs,
           f_inputs_length,
           f_topks_length,
+          dec_inputs,
+          dec_targets,
+          dec_inputs_length,
+          dec_inputs_pos,
           optimizer,
           criterion):
 
@@ -177,14 +182,15 @@ def train(model,
     # [max_len, batch_size, vocab_size]
     decoder_outputs = model(
         h_inputs,
-        h_turns_length,
         h_inputs_length,
-        h_inputs_position,
-        decoder_inputs,
-        decoder_inputs_length,
+        h_turns_length,
+        h_inputs_pos,
         f_inputs,
         f_inputs_length,
         f_topks_length,
+        dec_inputs,
+        dec_inputs_length,
+        dec_inputs_pos
     )
     #  print('decoder_outputs: ', decoder_outputs.shape)
 
@@ -194,15 +200,15 @@ def train(model,
 
     # decoder_outputs -> [max_length, batch_size, vocab_sizes]
     decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-    accuracy = compute_accuracy(decoder_outputs_argmax, decoder_targets)
+    accuracy = compute_accuracy(decoder_outputs_argmax, dec_targets)
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
 
-    decoder_targets = decoder_targets.view(-1)
+    dec_targets = dec_targets.view(-1)
 
     # compute loss
-    loss = criterion(decoder_outputs, decoder_targets)
+    loss = criterion(decoder_outputs, dec_targets)
     #  print(loss)
 
     # backward
@@ -242,35 +248,37 @@ def evaluate(model,
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            decoder_inputs, decoder_targets, decoder_inputs_length, \
+            dec_inputs, dec_targets, dec_inputs_length, dec_inputs_pos \
                 context_texts, response_texts, conversation_ids, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_pos = dataset.load_data(
                     'test', opt.batch_size)
 
             # train and get cur loss
-            decoder_outputs = model.evaluate(
+            decoder_outputs = model(
                 h_inputs,
-                h_turns_length,
                 h_inputs_length,
-                h_inputs_position,
+                h_turns_length,
+                h_inputs_pos,
                 f_inputs,
                 f_inputs_length,
                 f_topks_length,
+                dec_inputs,
+                dec_inputs_length,
+                dec_inputs_pos
             )
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
             decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
             accuracy = compute_accuracy(
-                decoder_outputs_argmax, decoder_targets)
+                decoder_outputs_argmax, dec_targets)
 
             #  Compute loss
             decoder_outputs = decoder_outputs.view(-1,
                                                    decoder_outputs.shape[-1])
-            decoder_targets = decoder_targets.view(-1)
+            dec_targets = dec_targets.view(-1)
 
-            loss = criterion(decoder_outputs,
-                             decoder_targets)
+            loss = criterion(decoder_outputs, dec_targets)
 
             loss_total += loss.item()
             accuracy_total += accuracy
@@ -285,56 +293,49 @@ def decode(model, dataset):
     max_load = int(np.floor(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
         for load in range(1, max_load + 1):
-            decoder_inputs, decoder_targets, decoder_inputs_length, \
+            dec_inputs, dec_targets, dec_inputs_length, dec_inputs_pos, \
                 context_texts, response_texts, conversation_ids, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-                h_inputs, h_turns_length, h_inputs_length, h_inputs_position = dataset.load_data(
+                h_inputs, h_turns_length, h_inputs_length, h_inputs_pos = dataset.load_data(
                     'eval', opt.batch_size)
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
-            greedy_outputs, beam_outputs, beam_length = model.decode(
+            beam_outputs, beam_score = model.decode(
                 h_inputs,
-                h_turns_length,
                 h_inputs_length,
-                h_inputs_position,
+                h_turns_length,
+                h_inputs_pos,
                 f_inputs,
                 f_inputs_length,
-                f_topks_length)
-
-            # generate sentence, and save to file
-            # [max_length, batch_size]
-            greedy_texts = dataset.generating_texts(greedy_outputs,
-                                                    decode_type='greedy')
+                f_topks_length
+            )
 
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   beam_length,
                                                   decode_type='beam_search')
-            #  print(beam_texts)
 
             # save sentences
             dataset.save_generated_texts(context_texts,
                                          response_texts,
                                          conversation_ids,
-                                         greedy_texts,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
+                                         os.path.join(opt.save_path, 'generated/transformer_%s_%s_%s_%d_%s.txt' % (
                                              opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
 
-
-def compute_accuracy(decoder_outputs_argmax, decoder_targets):
+def compute_accuracy(decoder_outputs_argmax, dec_targets):
     """
-    decoder_targets: [seq_len, batch_size]
+    dec_targets: [seq_len, batch_size]
     """
     #  print('---------------------->\n')
     #  print(decoder_outputs_argmax.shape)
-    #  print(decoder_targets.shape)
+    #  print(dec_targets.shape)
 
-    match_tensor = (decoder_outputs_argmax == decoder_targets).long()
+    match_tensor = (decoder_outputs_argmax == dec_targets).long()
 
-    decoder_mask = (decoder_targets != 0).long()
+    decoder_mask = (dec_targets != 0).long()
 
     accuracy_tensor = match_tensor * decoder_mask
 
@@ -510,7 +511,8 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
+        offline_filename = os.path.join(
+            opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
 
         if opt.offline_type in ['elastic', 'elastic_tag']:
             dataset.build_similarity_facts_offline(
@@ -520,7 +522,8 @@ if __name__ == '__main__':
             facts_dict = None
             if not os.path.exists(offline_filename):
                 facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
-                embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=True)
+                embedding = nn.Embedding.from_pretrained(
+                    pre_trained_weight, freeze=True)
                 with torch.no_grad():
                     dataset.build_similarity_facts_offline(
                         facts_dict,
@@ -544,7 +547,7 @@ if __name__ == '__main__':
     early_stopping = EarlyStopping(
         type='min',
         min_delta=0.001,
-        patience=2
+        patience=3
     )
 
     '''if load checkpoint'''

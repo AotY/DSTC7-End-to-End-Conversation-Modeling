@@ -24,9 +24,9 @@ class SelfAttentive(nn.Module):
                  config,
                  embedding,
                  attn_hops=4,
-                 mlp_input_size=128,
+                 mlp_input_size=256,
                  mlp_output_size=512,
-                 dropout=0.5):
+                 dropout=0.2):
 
         super(SelfAttentive, self).__init__()
 
