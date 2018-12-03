@@ -43,11 +43,11 @@ class Encoder(nn.Module):
             EncoderLayer(config) for _ in range(config.num_layers)]
         )
 
-    def forward(self, enc_inputs, enc_inptus_pos, return_attns=False):
+    def forward(self, enc_inputs, enc_inputs_pos, return_attns=False):
         """
         Args:
             enc_inputs: [batch_size, max_len]
-            enc_inptus_pos: [batch_size, max_len]
+            enc_inputs_pos: [batch_size, max_len]
         return:
             enc_output: [batch_size, max_len, transformer_size]
         """
@@ -60,7 +60,7 @@ class Encoder(nn.Module):
 
         embedded = self.embedding(enc_inputs) # [batch_size, max_len, embedding_size]
 
-        pos_embedded = self.pos_embedding(enc_inptus_pos).to(enc_inputs.device)
+        pos_embedded = self.pos_embedding(enc_inputs_pos).to(enc_inputs.device)
 
         print('embedded: ', embedded.shape)
         print('pos_embedded: ', pos_embedded.shape)

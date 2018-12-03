@@ -4,8 +4,13 @@ import torch.nn as nn
 
 import random
 
+from modules.normal_cnn import NormalCNN
+from modules.normal_encoder import NormalEncoder
+from modules.self_attn import SelfAttentive
+from modules.session_encoder import SessionEncoder
 from modules.beam import Beam
-from modules.transformer.transformer import Transformer
+from modules.utils import init_linear_wt, init_wt_normal
+import modules.transformer as transformer
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
@@ -13,6 +18,7 @@ from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 Conversation model,
 including encoder and decoder.
 """
+
 
 class ConversationModel(nn.Module):
     def __init__(self,
@@ -23,121 +29,105 @@ class ConversationModel(nn.Module):
         self.config = config
         self.device = device
 
-        self.teacher_forcing_ratio = config.teacher_forcing_ratio
-        self.forward_step = 0
-
         enc_embedding = nn.Embedding(
             config.vocab_size,
             config.embedding_size,
             PADID
         )
-        #  init_wt_normal(enc_embedding.weight, enc_embedding.embedding_dim)
 
-        decoder_embedding = nn.Embedding(
+        dec_embedding = nn.Embedding(
             config.vocab_size,
             config.embedding_size,
             PAD_ID
         )
-        #  init_wt_normal(decoder_embedding.weight, config.embedding_size)
 
-        self.transformer = Transformer(
+        self.c_encoder = SelfAttentive(
             config,
-            enc_embedding,
-            decoder_embedding
+            encoder_embedding
         )
 
-        # [batch_size * max_len, vocab_size]
-        self.log_softmax = nn.LogSoftmax(dim=1)
+        self.f_encoder = NormalCNN(
+            config,
+            encoder_embedding
+        )
+
+        self.q_encoder = transformer.Encoder(
+            config,
+            encoder_embedding
+        )
+
+        self.decoder = transformer.Decoder(
+            config,
+            dec_embedding
+        )
+
+        self.c_encoder.embedding.weight = self.c_encoder.embedding.weight
+        self.f_encoder.embedding.weight = self.c_encoder.embedding.weight
+
+    self.decoder.embedding.weight = self.c_encoder.embedding.weight
+
+        self.output_linear = nn.Linear(
+            config.transformer_size + config.hidden_size * 2,
+            config.vocab_size,
+            bias=False
+        )
+        nn.init.xavier_normal_(self.output_linear.weight)
+
+        # [batch_size, max_len, vocab_size]
+        self.log_softmax = nn.LogSoftmax(dim=2)
 
     def forward(self,
                 h_inputs,
-                h_turns_length,
                 h_inputs_length,
                 h_inputs_pos,
+                h_turns_length,
                 dec_inputs,
-                dec_inputs_pos,
                 dec_inputs_length,
+                dec_inputs_pos,
                 f_inputs,
                 f_inputs_length,
                 f_topks_length):
         '''
         input:
-            h_inputs: # [turn_num, batch_size, max_len]
+            h_inputs: # [turn_num, max_len, batch_size]
             h_inputs_length: [turn_num, batch_size]
             h_turns_length: [batch_size]
 
             dec_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
             f_inputs: [topk, batch_size, f_max_len]
-            f_inputs_length: [f_max_len, batch_size]
+            f_inputs_length: [batch_size, f_max_len]
             f_topks_length: [batch_size]
         '''
+        # c forward
+        c_inputs, c_turn_length, c_inputs_length, c_inputs_pos = (
+            h_inputs[:-1], h_turns_length - 1, h_inputs_length[:-1], h_inputs_position[:-1])
 
-        h_encoder_outputs = self.h_forward(
-            h_inputs,
-            h_turns_length,
-            h_inputs_length,
-            h_inputs_pos,
+        c_encoder_outputs = self.c_forward(
+            c_inputs,
+            c_inputs_length,
+            c_turn_length,
+            c_inputs_pos
         )
 
-        if h_encoder_hidden_state is None:
-            decoder_hidden_state = h_encoder_outputs[-1].unsqueeze(
-                0).repeat(self.config.decoder_num_layers, 1, 1)
-        else:
-            decoder_hidden_state = self.reduce_state(h_encoder_hidden_state)
-
         # fact encoder
-        f_encoder_outputs, f_encoder_lengths = None, f_topks_length
-        if self.config.model_type == 'kg':
-            """
-            f_encoder_outputs = self.f_forward(
-                f_inputs,
-                f_inputs_length,
-                f_topks_length,
-            )
-            decoder_hidden_state += f_encoder_hidden_state
-            """
-            #  f_encoder_outputs = self.f_embedding_forward(f_inputs)
-            f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
+        f_encoder_outputs = self.f_forward(f_inputs, f_inputs_length)
 
-        # decoder
-        dec_outputs = []
-        decoder_output = None
-        self.update_teacher_forcing_ratio()
-        for i in range(0, self.config.r_max_len):
-            if i == 0:
-                dec_input = dec_inputs[i].view(1, -1)
-            else:
-                use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
-                if use_teacher_forcing:
-                    dec_input = dec_inputs[i].view(1, -1)
-                else:
-                    dec_input = torch.argmax(
-                        decoder_output, dim=2).detach().view(1, -1)
+        # query forward
+        q_input, q_input_length, q_input_pos = h_inputs[-1], h_inputs_length[-1], h_inputs_position[-1:]
 
-            decoder_output, decoder_hidden_state, _ = self.decoder(dec_input,
-                                                                   decoder_hidden_state,
-                                                                   h_encoder_outputs,
-                                                                   h_encoder_lengths,
-                                                                   f_encoder_outputs,
-                                                                   f_encoder_lengths)
+        q_enc_outputs = self.q_encoder(q_input, q_input_pos)
 
-            dec_outputs.append(decoder_output)
+        # decoder [batch_size, max_len, transformer_size]
+        dec_outputs = self.decoder(
+            dec_inputs,
+            dec_inputs_pos,
+            q_input,
+            q_enc_outputs
+        )
 
-        dec_outputs = torch.cat(dec_outputs, dim=0)
+
         return dec_outputs
-
-    def reset_teacher_forcing_ratio(self):
-        self.forward_step = 0
-        self.teacher_forcing_ratio = 1.0
-
-    def update_teacher_forcing_ratio(self, eplison=0.0001, min_t=0.2):
-        self.forward_step += 1
-        if (self.teacher_forcing_ratio == min_t):
-            return
-        update_t = self.teacher_forcing_ratio - \
-            eplison * (self.forward_step)
-        self.teacher_forcing_ratio = max(update_t, min_t)
 
     '''evaluate'''
 
@@ -156,7 +146,7 @@ class ConversationModel(nn.Module):
         c_encoder_inputs: [seq_len, batch_size], maybe [r_max_len, 1]
         dec_input: [1, batch_size], maybe: [sos * 1]
         '''
-        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
+        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.c_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
@@ -185,7 +175,8 @@ class ConversationModel(nn.Module):
 
         # decoder
         dec_outputs = []
-        dec_input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * SOS_ID
+        dec_input = torch.ones((1, self.config.batch_size),
+                               dtype=torch.long, device=self.device) * SOS_ID
         for i in range(self.config.r_max_len):
             decoder_output, decoder_hidden_state, _ = self.decoder(dec_input,
                                                                    decoder_hidden_state,
@@ -194,7 +185,8 @@ class ConversationModel(nn.Module):
                                                                    f_encoder_outputs,
                                                                    f_encoder_lengths)
 
-            dec_input = torch.argmax(decoder_output, dim=2).detach()  # [1, batch_size]
+            dec_input = torch.argmax(
+                decoder_output, dim=2).detach()  # [1, batch_size]
             dec_outputs.append(decoder_output)
 
         dec_outputs = torch.cat(dec_outputs, dim=0)
@@ -212,7 +204,7 @@ class ConversationModel(nn.Module):
                f_inputs_length,
                f_topks_length):
 
-        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.h_forward(
+        h_encoder_outputs, h_encoder_hidden_state, h_encoder_lengths = self.c_forward(
             h_inputs,
             h_turns_length,
             h_inputs_length,
@@ -250,10 +242,10 @@ class ConversationModel(nn.Module):
 
         greedy_outputs = self.greedy_decode(
             decoder_hidden_state,
-                                            h_encoder_outputs,
-                                            h_encoder_lengths,
-                                            f_encoder_outputs,
-                                            f_encoder_lengths
+            h_encoder_outputs,
+            h_encoder_lengths,
+            f_encoder_outputs,
+            f_encoder_lengths
         )
 
         return greedy_outputs, beam_outputs, beam_length
@@ -266,20 +258,22 @@ class ConversationModel(nn.Module):
                       f_encoder_lengths):
 
         greedy_outputs = []
-        input = torch.ones((1, self.config.batch_size), dtype=torch.long, device=self.device) * SOS_ID
+        input = torch.ones((1, self.config.batch_size),
+                           dtype=torch.long, device=self.device) * SOS_ID
         for i in range(self.config.r_max_len):
             output, hidden_state, _ = self.decoder(input,
-                                                    hidden_state,
-                                                    h_encoder_outputs,
-                                                    h_encoder_lengths,
-                                                    f_encoder_outputs,
-                                                    f_encoder_lengths)
+                                                   hidden_state,
+                                                   h_encoder_outputs,
+                                                   h_encoder_lengths,
+                                                   f_encoder_outputs,
+                                                   f_encoder_lengths)
 
-            input = torch.argmax(output, dim=2).detach().view(1, -1)  # [1, batch_size]
+            input = torch.argmax(output, dim=2).detach().view(
+                1, -1)  # [1, batch_size]
             greedy_outputs.append(input)
 
             if input[0][0].item() == EOS_ID
-                break
+              break
 
         # [len, batch_size]  -> [batch_size, len]
         greedy_outputs = torch.cat(greedy_outputs, dim=0).transpose(0, 1)
@@ -318,10 +312,13 @@ class ConversationModel(nn.Module):
             f_encoder_lengths = f_encoder_lengths.repeat(beam_size)
 
         # [batch_size] [0, beam_size * 1, ..., beam_size * (batch_size - 1)]
-        batch_position = torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_size
+        batch_position = torch.arange(
+            0, batch_size, dtype=torch.long, device=self.device) * beam_size
 
-        score = torch.ones(batch_size * beam_size, device=self.device) * -float('inf')
-        score.index_fill_(0, torch.arange(0, batch_size, dtype=torch.long, device=self.device) * beam_size, 0.0)
+        score = torch.ones(batch_size * beam_size,
+                           device=self.device) * -float('inf')
+        score.index_fill_(0, torch.arange(
+            0, batch_size, dtype=torch.long, device=self.device) * beam_size, 0.0)
 
         # Initialize Beam that stores decisions for backtracking
         beam = Beam(
@@ -349,13 +346,15 @@ class ConversationModel(nn.Module):
             score = score.view(-1, 1) + log_prob
 
             # score [batch_size, beam_size]
-            score, top_k_idx = score.view(batch_size, -1).topk(beam_size, dim=1)
+            score, top_k_idx = score.view(
+                batch_size, -1).topk(beam_size, dim=1)
 
             # input: [batch_size x beam_size]
             input = (top_k_idx % self.config.vocab_size).view(-1)
 
             # beam_idx: [batch_size, beam_size]
-            beam_idx = top_k_idx / self.config.vocab_size  # [batch_size, beam_size]
+            # [batch_size, beam_size]
+            beam_idx = top_k_idx / self.config.vocab_size
 
             # top_k_pointer: [batch_size * beam_size]
             top_k_pointer = (beam_idx + batch_position.unsqueeze(1)).view(-1)
@@ -377,7 +376,7 @@ class ConversationModel(nn.Module):
 
         return prediction, final_score, length
 
-    def h_forward(self,
+    def c_forward(self,
                   h_inputs,
                   h_turns_length,
                   h_inputs_length,
@@ -390,12 +389,13 @@ class ConversationModel(nn.Module):
             h_inputs_pos: [batch_s]
         turn_type:
         """
-            stack_outputs = list()
-            for ti in range(self.config.turn_num):
+          stack_outputs = list()
+           for ti in range(self.config.turn_num):
                 inputs = h_inputs[ti, :, :]  # [batch_size, max_len]
-                inputs_position = h_inputs_pos[ti, :, :] # [batch_size, max_len]
+                # [batch_size, max_len]
+                inputs_position = h_inputs_pos[ti, :, :]
                 # [batch_size, max_len, transformer_size]
-                outputs = self.h_encoder(inputs, inputs_position)
+                outputs = self.c_encoder(inputs, inputs_position)
 
                 # [batch_size, max_len, transformer_size]
                 stack_outputs.append(outputs)
@@ -425,5 +425,3 @@ class ConversationModel(nn.Module):
         # [batch_size, topk, hidden_size]
         f_outputs = torch.cat(f_outputs, dim=1)
         return f_outputs
-
-

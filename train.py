@@ -125,7 +125,8 @@ def train_epochs(model,
             'acc': log_accuracy_avg,
             'epoch': epoch,
             'state_dict': model.state_dict(),
-            'optimizer': optimizer.optimizer.state_dict()
+            'optimizer': optimizer.optimizer.state_dict(),
+            'opt': opt
         }
 
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
@@ -554,7 +555,7 @@ if __name__ == '__main__':
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
         acc = checkpoint['acc']
-        #  acc = 0.0
+        opt = checkpoint['opt']
         logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (
             loss, acc, ppl)
         logger.info(logger_str)

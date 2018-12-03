@@ -10,6 +10,9 @@ Transformer
 import torch
 import torch.nn as nn
 
+from modules.transformer.encoder import Encoder
+from modules.transformer.decoder import Decoder
+
 
 class Transformer(nn.Module):
     ''' A sequence to sequence model with attention mechanism. '''
@@ -33,7 +36,7 @@ class Transformer(nn.Module):
         )
 
         self.output_linear = nn.Linear(
-            config.transformer_size, 
+            config.transformer_size,
             config.vocab_size,
             bias=False
         )
@@ -54,11 +57,11 @@ class Transformer(nn.Module):
             # Share the weight matrix between source & target word embeddings
             self.encoder.embedding.weight = self.decoder.embedding.weight
 
-    def forward(self, 
-            enc_inputs,
-            enc_inputs_pos,
-            dec_inputs,
-            dec_inputs_pos):
+    def forward(self,
+                enc_inputs,
+                enc_inputs_pos,
+                dec_inputs,
+                dec_inputs_pos):
         """
         Args:
             enc_inputs: [batch_size, max_len]
@@ -74,7 +77,12 @@ class Transformer(nn.Module):
 
         dec_inputs, dec_inputs_pos = dec_inputs[:, :-1], dec_inputs_pos[:, :-1]
 
-        dec_output, _ = self.decoder(dec_inputs, dec_inputs_pos, enc_inputs, enc_output)
+        dec_output, _ = self.decoder(
+            dec_inputs,
+            dec_inputs_pos,
+            enc_inputs,
+            enc_output
+        )
 
         # [batch_size, max_len, vocab_size]
         output = self.output_linear(dec_output) * self.x_logit_scale

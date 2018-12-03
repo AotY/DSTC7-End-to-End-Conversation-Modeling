@@ -17,6 +17,7 @@ from modules.transformer.sub_layers import PositionwiseFeedForward
 
 class EncoderLayer(nn.Module):
     """compose with two layer."""
+
     def __init__(self,
                  config):
         super(EncoderLayer, self).__init__()
@@ -71,12 +72,12 @@ class DecoderLayer(nn.Module):
 
         self.pos_ffn = PositionwiseFeedForward(config)
 
-    def forward(self, 
-            dec_input,
-            enc_output,
-            non_pad_mask=None,
-            slf_attn_mask=None,
-            dec_enc_attn_mask=None):
+    def forward(self,
+                dec_input,
+                enc_output,
+                non_pad_mask=None,
+                slf_attn_mask=None,
+                dec_enc_attn_mask=None):
 
         print('dec_input: ', dec_input.shape)
         print('enc_output: ', enc_output.shape)
@@ -106,6 +107,3 @@ class DecoderLayer(nn.Module):
         dec_output *= non_pad_mask
 
         return dec_output, dec_slf_attn, dec_enc_attn
-
-
-
