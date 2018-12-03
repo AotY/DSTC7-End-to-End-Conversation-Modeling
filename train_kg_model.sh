@@ -16,7 +16,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.0 \
+    --dropout 0.2 \
     --c_max_len 50 \
     --r_max_len 50 \
     --min_len 3 \
@@ -24,15 +24,15 @@ python train_kg_model.py \
     --tied \
 	--decoder_type luong \
     --decode_type beam_search \
-    --beam_size 8 \
+    --beam_size 10 \
     --best_n 3 \
     --f_max_len 120 \
     --f_topk 5 \
-    --lr 0.0002 \
-    --max_grad_norm 5.0 \
+    --lr 0.0001 \
+    --max_grad_norm 3.0 \
     --epochs 15 \
     --batch_size 128 \
-    --teacher_forcing_ratio 1.0 \
+    --teacher_forcing_ratio 0.9 \
     --seed 19 \
     --device cuda \
     --log_interval 50 \
@@ -40,12 +40,12 @@ python train_kg_model.py \
     --model_path ./models \
     --eval_split 0.0001 \
     --test_split 0.07 \
-    --start_epoch 1 \
+    --start_epoch 3 \
     --model_type kg \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/epoch-1_kg_4_self_attn_2018_11_28_16:48.pth \
+    --checkpoint models/epoch-3_kg_5_self_attn_2018_11_30_15:27.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \
