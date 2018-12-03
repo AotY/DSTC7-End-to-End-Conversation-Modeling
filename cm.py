@@ -134,8 +134,9 @@ class ConversationModel(nn.Module):
         f_enc_outputs = None
 
         # query forward
-        q_input, q_input_length, q_input_pos = h_inputs[-1].transpose(
-            0, 1), h_inputs_length[-1], h_inputs_pos[-1].transpose(0, 1)
+        q_input, q_input_length, q_input_pos = h_inputs[-1].transpose(0, 1), \
+                                                h_inputs_length[-1], \
+                                                h_inputs_pos[-1].transpose(0, 1)
 
         # [batch_size, max_len, transformer_size]
         q_enc_outputs = self.q_encoder(q_input, q_input_pos)
@@ -153,8 +154,7 @@ class ConversationModel(nn.Module):
         # output_linear
         dec_outputs = self.output_linear(dec_outputs) * self.x_logit_scale
 
-        # log softmax
-        dec_outputs = self.log_softmax(dec_outputs)
+        dec_outputs = dec_outputs.view(-1, config.vocab_size)
 
         return dec_outputs
 

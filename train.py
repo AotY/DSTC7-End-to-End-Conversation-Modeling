@@ -22,6 +22,7 @@ from modules.early_stopping import EarlyStopping
 from gensim.models import KeyedVectors
 
 from misc.vocab import Vocab
+from misc.vocab import PAD_ID
 from cm import ConversationModel
 from misc.dataset import Dataset
 from train_opt import data_set_opt, model_opt, train_opt
@@ -56,6 +57,41 @@ logging.info("device: %s" % device)
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
 
+
+def cal_performance(pred, gold, smoothing=False):
+    ''' Apply label smoothing if needed '''
+
+    loss = cal_loss(pred, gold, smoothing)
+
+    pred = pred.max(1)[1]
+    gold = gold.contiguous().view(-1)
+    non_pad_mask = gold.ne(PAD_ID)
+    n_correct = pred.eq(gold)
+    n_correct = n_correct.masked_select(non_pad_mask).sum().item()
+
+    return loss, n_correct
+
+
+def cal_loss(pred, gold, smoothing):
+    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
+
+    gold = gold.contiguous().view(-1)
+
+    if smoothing:
+        eps = 0.1
+        n_class = pred.size(1)
+
+        one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
+        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+        log_prb = F.log_softmax(pred, dim=1)
+
+        non_pad_mask = gold.ne(PAD_ID)
+        loss = -(one_hot * log_prb).sum(dim=1)
+        loss = loss.masked_select(non_pad_mask).sum()  # average later
+    else:
+        loss = F.cross_entropy(pred, gold, ignore_index=PAD_ID, reduction='sum')
+
+    return loss
 
 def train_epochs(model,
                  dataset,
@@ -147,9 +183,6 @@ def train_epochs(model,
             sys.exit(0)
 
 
-''' start traing '''
-
-
 def train(model,
           h_inputs,
           h_inputs_length,
@@ -168,8 +201,8 @@ def train(model,
     # Turn on training mode which enables dropout.
     model.train()
 
-    # [batch_size, max_len, vocab_size]
-    decoder_outputs = model(
+    # [batch_size * max_len, vocab_size]
+    dec_outputs = model(
         h_inputs,
         h_inputs_length,
         h_turns_length,
@@ -186,17 +219,10 @@ def train(model,
 
     loss = 0
 
-    # decoder_outputs -> [max_length, batch_size, vocab_sizes]
-    decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-    #  accuracy = compute_accuracy(decoder_outputs_argmax, dec_targets)
-
-    # reshape to [max_seq * batch_size, decoder_vocab_size]
-    decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
-
-    dec_targets = dec_targets.view(-1)
+    loss, accuracy = cal_performance(dec_outputs, dec_targets, smoothing=True)
 
     # compute loss
-    loss = criterion(decoder_outputs, dec_targets)
+    loss = criterion(dec_outputs, dec_targets)
     #  print(loss)
 
     # backward
@@ -243,7 +269,7 @@ def evaluate(model,
                     'test', opt.batch_size)
 
             # train and get cur loss
-            decoder_outputs = model(
+            dec_outputs = model(
                 h_inputs,
                 h_inputs_length,
                 h_turns_length,
@@ -256,17 +282,7 @@ def evaluate(model,
                 dec_inputs_pos
             )
 
-            # decoder_outputs -> [max_length, batch_size, vocab_sizes]
-            decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-            #  accuracy = compute_accuracy(
-                #  decoder_outputs_argmax, dec_targets)
-
-            #  Compute loss
-            decoder_outputs = decoder_outputs.view(-1,
-                                                   decoder_outputs.shape[-1])
-            dec_targets = dec_targets.view(-1)
-
-            loss = criterion(decoder_outputs, dec_targets)
+            loss, accuracy = cal_performance(dec_outputs, dec_targets, smoothing=False)
 
             loss_total += loss.item()
             accuracy_total += accuracy
