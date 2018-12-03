@@ -43,8 +43,7 @@ class Dataset:
 
     def read_txt(self):
         self.logger.info('read data...')
-        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s.%s.pkl' % (
-            self.config.turn_type, self.config.turn_num))
+        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.self_attn.%s.pkl' % (self.config.turn_num))
         if not os.path.exists(_data_dict_path):
             datas = []
             with open(self.config.pair_path, 'r', encoding='utf-8') as f:

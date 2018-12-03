@@ -4,6 +4,10 @@
 #
 # Distributed under terms of the MIT license.
 
-from .encoder import Encoder
-from .decoder import Decoder
-from .beam import Beam
+from modules.transformer.encoder import Encoder
+from modules.transformer.decoder import Decoder
+from modules.transformer.beam import Beam
+
+__all__ = [
+    Encoder, Decoder, Beam
+]

@@ -11,8 +11,7 @@
 """
 
 import torch
-import numpy as np
-import transformer.Constants as Constants
+from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
 class Beam():
     ''' Beam search '''
@@ -30,8 +29,8 @@ class Beam():
         self.prev_ks = []
 
         # The outputs at each time-step.
-        self.next_ys = [torch.full((size,), Constants.PAD, dtype=torch.long, device=device)]
-        self.next_ys[0][0] = Constants.BOS
+        self.next_ys = [torch.full((size,), PAD_ID, dtype=torch.long, device=device)]
+        self.next_ys[0][0] = SOS_ID
 
     def get_current_state(self):
         "Get the outputs for the current timestep."
@@ -70,7 +69,7 @@ class Beam():
         self.next_ys.append(best_scores_id - prev_k * num_words)
 
         # End condition is when top-of-beam is EOS.
-        if self.next_ys[-1][0].item() == Constants.EOS:
+        if self.next_ys[-1][0].item() == EOS_ID:
             self._done = True
             self.all_scores.append(self.scores)
 
@@ -93,7 +92,7 @@ class Beam():
         else:
             _, keys = self.sort_scores()
             hyps = [self.get_hypothesis(k) for k in keys]
-            hyps = [[Constants.BOS] + h for h in hyps]
+            hyps = [[SOS_ID] + h for h in hyps]
             dec_seq = torch.LongTensor(hyps)
 
         return dec_seq
@@ -106,6 +105,4 @@ class Beam():
             k = self.prev_ks[j][k]
 
         return list(map(lambda x: x.item(), hyp[::-1]))
-
-
 

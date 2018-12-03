@@ -30,8 +30,10 @@ class ScaleDotProductAttention(nn.Module):
             k: [b, k_len, ]
             v: [b, v_len, ]
         """
+
         attn = torch.bmm(q, k.transpose(1, 2))
-        attn = attn / self.temperature
+        attn = attn / self.temperature # [1024, 50, 50]
+        print('sdpa attn: ', attn.shape)
 
         if mask is not None:
             attn = attn.masked_fill(mask, -np.inf)
@@ -44,5 +46,3 @@ class ScaleDotProductAttention(nn.Module):
         output = torch.bmm(attn, v)
 
         return output, attn
-
-

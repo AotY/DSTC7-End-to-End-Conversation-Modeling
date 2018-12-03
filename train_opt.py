@@ -1,6 +1,5 @@
 # -*- coding:utf--8 -*-
 
-
 def data_set_opt(parser):
     # Data options
     group = parser.add_argument_group('Data Set Opt.')
@@ -60,24 +59,41 @@ def model_opt(parser):
     group = parser.add_argument_group('model opt.')
 
     ''' encoder, decoder '''
+    group.add_argument('--rnn_type',
+                        type=str,
+                        help='LSTM | GRU')
+
     group.add_argument('--embedding_size',
                        type=int,
                        default=300,
                        help='embedding size for dialog encoder.')
 
-    group.add_argument('-transformer_size', type=int, default=512)
+    group.add_argument('--hidden_size',
+                        type=int,
+                        default=300,
+                        help='number of hidden units per layer')
 
-    group.add_argument('-inner_hidden_size', type=int, default=2048)
+    group.add_argument('--transformer_size', type=int, default=512)
 
-    group.add_argument('-k_size', type=int, default=64)
+    group.add_argument('--inner_hidden_size', type=int, default=2048)
 
-    group.add_argument('-v_size', type=int, default=64)
+    group.add_argument('--k_size', type=int, default=64)
 
-    group.add_argument('-num_heads', type=int, default=8)
+    group.add_argument('--v_size', type=int, default=64)
 
-    group.add_argument('--num_layers',
+    group.add_argument('--num_heads', type=int, default=8)
+
+    group.add_argument('--r_num_layers',
                        type=int,
-                       help='number of layers')
+                       help='number layers of rnn')
+
+    group.add_argument('--t_num_layers',
+                       type=int,
+                       help='number layers of transformer')
+
+    group.add_argument('--bidirectional',
+                        action='store_true',
+                        help='is bidirectional.')
 
     group.add_argument('--dropout',
                        type=float,
@@ -193,3 +209,8 @@ def train_opt(parser):
     group.add_argument('--offline_type',
                        type=str,
                        help='how to retrieval relative facts. elastic | fasttext | elmo.')
+
+    group.add_argument('--model_type',
+                        type=str,
+                        help='seq2seq or kg model.')
+

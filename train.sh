@@ -2,15 +2,25 @@
 # export CUDA_LAUNCH_BLOCKING=1
 export CUDA_VISIBLE_DEVICES=5
 
-python train_kg_model.py \
+python train.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
     --vocab_size 4e4 \
     --turn_num 5 \
     --min_turn 2 \
+    --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
+    --bidirectional \
+    --r_num_layers 2 \
+    --t_num_layers 6 \
+    --transformer_size 512 \
+    --inner_hidden_size 2048 \
+    --k_size 64 \
+    --v_size 64 \
+    --num_heads 8 \
+    --n_warmup_steps 4000 \
     --dropout 0.1 \
     --c_max_len 50 \
     --r_max_len 50 \
@@ -29,7 +39,7 @@ python train_kg_model.py \
     --seed 19 \
     --device cuda \
     --log_interval 20 \
-    --log_path ./logs/{}_{}_{}_{}.log \
+    --log_path ./logs/transformer_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0005 \
     --test_split 0.07 \

@@ -27,10 +27,10 @@ class  MultiHeadAttention(nn.Module):
         self.k_size = config.k_size
         self.v_size = config.v_size
 
-        self.q_linear = nn.Linear(model_size, config.num_heads * config.k_size)
-        self.k_linear = nn.Linear(model_size, config.num_heads * config.k_size)
+        self.q_linear = nn.Linear(config.transformer_size, config.num_heads * config.k_size)
+        self.k_linear = nn.Linear(config.transformer_size, config.num_heads * config.k_size)
 
-        self.v_linear = nn.Linear(model_size, config.num_heads * v_size)
+        self.v_linear = nn.Linear(config.transformer_size, config.num_heads * config.v_size)
 
         init_wt_normal(self.q_linear.weight, (config.transformer_size + config.k_size))
         init_wt_normal(self.k_linear.weight, (config.transformer_size + config.k_size))
@@ -65,18 +65,19 @@ class  MultiHeadAttention(nn.Module):
         k = self.k_linear(k).view(sz_b, len_k, self.num_heads, self.k_size)
 
         v = self.v_linear(v).view(sz_b, len_v, self.num_heads, self.v_size)
-        print('q size: ', q.shape)
+        print('q size: ', q.shape) # [128, 50, 8, 64]
         print('k size: ', k.shape)
         print('v size: ', v.shape)
 
         q = q.permute(2, 0, 1, 3).contiguous().view(-1, len_q, self.k_size) # # (n*b) x lq x dk
         k = k.permute(2, 0, 1, 3).contiguous().view(-1, len_k, self.k_size)
         v = v.permute(2, 0, 1, 3).contiguous().view(-1, len_v, self.v_size)
-        print('q size: ', q.shape)
+        print('q size: ', q.shape) # [1024, 50, 64]
         print('k size: ', k.shape)
         print('v size: ', v.shape)
 
         mask = mask.repeat(self.num_heads, 1, 1) # (n*b) x .. x .. #[16, 35, 8 * 32]
+        print('mask: ', mask.shape)
         output, sdp_attn_weight = self.attention(q, k, v, mask=mask)
 
         output = output.view(self.num_heads, sz_b, len_q, self.v_size)
@@ -107,9 +108,10 @@ class PositionwiseFeedForward(nn.Module):
         """
         Args:
             input:
+        Return:
         """
 
-        print('input: ', input.shape)
+        print('sub_layer pff input: ', input.shape)
         residual = input
         output = input.transpose(1, 2)
 
@@ -122,6 +124,6 @@ class PositionwiseFeedForward(nn.Module):
         output = self.dropout(output)
 
         output = self.layer_norm(output + residual)
+        print('sub_layer pff output: ', output.shape)
 
         return output
-

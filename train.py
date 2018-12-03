@@ -11,7 +11,6 @@ import argparse
 
 import numpy as np
 import shutil
-import pickle
 
 import torch
 import torch.nn as nn
@@ -23,7 +22,7 @@ from modules.early_stopping import EarlyStopping
 from gensim.models import KeyedVectors
 
 from misc.vocab import Vocab
-from kg_model import KGModel
+from cm import ConversationModel
 from misc.dataset import Dataset
 from train_opt import data_set_opt, model_opt, train_opt
 
@@ -45,18 +44,14 @@ opt = parser.parse_args()
 # logger file
 time_str = time.strftime('%Y_%m_%d_%H:%M')
 opt.log_path = opt.log_path.format(
-    opt.model_type, time_str, opt.turn_num, opt.turn_type)
+    opt.model_type, time_str, opt.turn_num)
 logger.info('log_path: {}'.format(opt.log_path))
-
-device = torch.device(opt.device)
-logging.info("device: %s" % device)
 
 if opt.seed:
     torch.manual_seed(opt.seed)
 
-# update max_len
-if opt.turn_type == 'concat':
-    opt.c_max_len = opt.c_max_len + opt.turn_num
+device = torch.device(opt.device)
+logging.info("device: %s" % device)
 
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
@@ -75,12 +70,6 @@ def train_epochs(model,
         dataset.reset_data('train')
         log_loss_total = 0
         log_accuracy_total = 0
-
-        # lr update
-        optimizer.update()
-
-        # reset teacher forcing ratio
-        model.reset_teacher_forcing_ratio()
 
         for load in range(1, max_load + 1):
             # load data
@@ -135,8 +124,8 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' %
-                                              (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
+                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s.pth' %
+                                              (epoch, opt.model_type, opt.turn_num, time_str)))
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
@@ -192,7 +181,6 @@ def train(model,
         dec_inputs_length,
         dec_inputs_pos
     )
-    #  print('decoder_outputs: ', decoder_outputs.shape)
 
     optimizer.zero_grad()
 
@@ -248,7 +236,7 @@ def evaluate(model,
     with torch.no_grad():
         for load in range(1, max_load + 1):
             # load data
-            dec_inputs, dec_targets, dec_inputs_length, dec_inputs_pos \
+            dec_inputs, dec_targets, dec_inputs_length, dec_inputs_pos, \
                 context_texts, response_texts, conversation_ids, \
                 f_inputs, f_inputs_length, f_topks_length, facts_texts, \
                 h_inputs, h_turns_length, h_inputs_length, h_inputs_pos = dataset.load_data(
@@ -312,7 +300,6 @@ def decode(model, dataset):
             )
 
             beam_texts = dataset.generating_texts(beam_outputs,
-                                                  beam_length,
                                                   decode_type='beam_search')
 
             # save sentences
@@ -320,8 +307,8 @@ def decode(model, dataset):
                                          response_texts,
                                          conversation_ids,
                                          beam_texts,
-                                         os.path.join(opt.save_path, 'generated/transformer_%s_%s_%s_%d_%s.txt' % (
-                                             opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
+                                         os.path.join(opt.save_path, 'generated/transformer_%s_%s_%d_%s.txt' % (
+                                             opt.model_type, opt.decode_type, opt.turn_num, time_str)),
                                          opt.decode_type,
                                          facts_texts)
 
@@ -354,18 +341,12 @@ def save_logger(logger_str):
 
 
 def build_optimizer(model):
-    optim = torch.optim.Adam(
-        model.parameters(),
-        opt.lr,
-        betas=(0.9, 0.98),
-        eps=1e-09
-    )
-
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.1)
-
     optimizer = ScheduledOptimizer(
-        optim,
-        scheduler,
+        torch.optim.Adam(
+            filter(lambda x: x.requires_grad, model.parameters()),
+            betas=(0.9, 0.98), eps=1e-09),
+        opt.transformer_size,
+        opt.n_warmup_steps,
         opt.max_grad_norm
     )
 
@@ -418,19 +399,12 @@ def load_fasttext_embedding(fasttext, vocab):
     return words_embedded
 
 
-def build_model(vocab, pre_trained_weight=None):
+def build_model(vocab):
     logger.info('Building model...')
 
-    if pre_trained_weight is None:
-        if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
-            fasttext = load_fasttext_model(opt.fasttext_vec)
-            pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
-
-    model = KGModel(
+    model = ConversationModel(
         opt,
-        vocab,
         device,
-        pre_trained_weight,
     )
 
     model = model.to(device)
@@ -502,13 +476,6 @@ if __name__ == '__main__':
 
     dataset = build_dataset(vocab)
 
-    fasttext = None
-    pre_trained_weight = None
-    if (opt.pre_trained_embedding or opt.offline_type == 'fasttext') and os.path.exists(opt.fasttext_vec):
-        logger.info('load pre trained embedding...')
-        fasttext = load_fasttext_model(opt.fasttext_vec)
-        pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
-
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
         offline_filename = os.path.join(
@@ -518,26 +485,10 @@ if __name__ == '__main__':
             dataset.build_similarity_facts_offline(
                 offline_filename=offline_filename,
             )
-        elif opt.offline_type == 'fasttext':
-            facts_dict = None
-            if not os.path.exists(offline_filename):
-                facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
-                embedding = nn.Embedding.from_pretrained(
-                    pre_trained_weight, freeze=True)
-                with torch.no_grad():
-                    dataset.build_similarity_facts_offline(
-                        facts_dict,
-                        offline_filename,
-                        embedding=embedding,
-                    )
-                del embedding
-            else:
-                dataset.load_similarity_facts(offline_filename)
         elif opt.offline_type == 'elmo':
             pass
 
-    model = build_model(vocab, pre_trained_weight)
-    del fasttext
+    model = build_model(vocab)
 
     # Build optimizer.
     optimizer = build_optimizer(model)
