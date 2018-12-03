@@ -67,12 +67,12 @@ class Dataset:
                     # context split by EOS, START
                     sentences = self.parser_conversations(context)
 
-                    if sentences is None or len(sentences) < self.config.min_turn:
+                    if sentences is None or len(sentences) < self.config.turn_min:
                         continue
 
                     sentences = sentences[-min(self.config.turn_num, len(sentences)):]
 
-                    if sentences is None or len(sentences) < self.config.min_turn:
+                    if sentences is None or len(sentences) < self.config.turn_min:
                         continue
 
                     sentences = sentences[-min(self.config.turn_num, len(sentences)):]
@@ -150,15 +150,15 @@ class Dataset:
         h_inputs_lenght = list() # [turn_num, batch_size]
         h_turns_length = list() #[batch_size]
 
-        dec_inputs = torch.zeros((self.config.r_max_len, batch_size),
+        dec_inputs = torch.zeros((batch_size, self.config.r_max_len),
                                      dtype=torch.long,
                                      device=self.device)
 
-        dec_targets = torch.zeros((self.config.r_max_len, batch_size),
+        dec_targets = torch.zeros((batch_size, self.config.r_max_len),
                                       dtype=torch.long,
                                       device=self.device)
 
-        dec_inputs_pos = torch.zeros((self.config.r_max_len, batch_size),
+        dec_inputs_pos = torch.zeros((batch_size, self.config.r_max_len),
                                      dtype=torch.long,
                                      device=self.device)
 
@@ -213,12 +213,12 @@ class Dataset:
             h_inputs_pos.append(h_position)
 
             # dec_inputs
-            dec_inputs[0, i] = self.vocab.sosid
+            dec_inputs[i, 0] = self.vocab.sosid
             for r, token_id in enumerate(response_ids):
-                dec_inputs[r + 1, i] = token_id
-                dec_targets[r, i] = token_id
-                dec_inputs_pos[r, i] = r + 1
-            dec_targets[len(response_ids), i] = self.vocab.eosid
+                dec_inputs[i, r + 1] = token_id
+                dec_targets[i, r] = token_id
+                dec_inputs_pos[i, r] = r + 1
+            dec_targets[i, len(response_ids)] = self.vocab.eosid
             dec_inputs_length.append(len(response_ids) + 1)
 
             if self.config.model_type == 'kg':

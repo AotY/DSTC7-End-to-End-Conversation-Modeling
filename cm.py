@@ -106,9 +106,9 @@ class ConversationModel(nn.Module):
             h_turns_length: [batch_size]
             h_inputs_pos: [turn_num, max_len, batch_size]
 
-            dec_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
+            dec_inputs: [batch_size, r_max_len]
             dec_inputs_length: [batch_size]
-            dec_inputs_pos: [r_max_len, batch_size]
+            dec_inputs_pos: [batch_size, r_max_len]
 
             f_inputs: [topk, batch_size, f_max_len]
             f_inputs_length: [batch_size, f_max_len]
@@ -134,13 +134,13 @@ class ConversationModel(nn.Module):
         f_enc_outputs = None
 
         # query forward
-        q_input, q_input_length, q_input_pos = h_inputs[-1].transpose(0, 1), h_inputs_length[-1], h_inputs_pos[-1].transpose(0, 1)
+        q_input, q_input_length, q_input_pos = h_inputs[-1].transpose(
+            0, 1), h_inputs_length[-1], h_inputs_pos[-1].transpose(0, 1)
 
         # [batch_size, max_len, transformer_size]
         q_enc_outputs = self.q_encoder(q_input, q_input_pos)
 
         # decoder [batch_size, max_len, transformer_size]
-        dec_inputs, dec_inputs_pos = dec_inputs.transpose(0, 1), dec_inputs_pos.transpose(0, 1)
         dec_outputs = self.decoder(
             dec_inputs,
             dec_inputs_pos,
@@ -155,9 +155,6 @@ class ConversationModel(nn.Module):
 
         # log softmax
         dec_outputs = self.log_softmax(dec_outputs)
-
-        dec_outputs = dec_outputs.transpose(0, 1).contiguous()
-        print('dec_outputs: ', dec_outputs.shape)
 
         return dec_outputs
 
@@ -191,7 +188,8 @@ class ConversationModel(nn.Module):
         f_enc_outputs = None
 
         # query forward
-        q_input, q_input_length, q_input_pos = h_inputs[-1].transpose(0, 1), h_inputs_length[-1], h_inputs_pos[-1].transpose(0, 1)
+        q_input, q_input_length, q_input_pos = h_inputs[-1].transpose(
+            0, 1), h_inputs_length[-1], h_inputs_pos[-1].transpose(0, 1)
 
         # [batch_size, max_len, transformer_size]
         q_enc_outputs = self.q_encoder(q_input, q_input_pos)
@@ -207,10 +205,10 @@ class ConversationModel(nn.Module):
         return beam_outputs, beam_length
 
     def beam_decode(self,
-                q_input,
-                q_enc_outputs,
-                c_enc_outputs,
-                f_enc_outputs):
+                    q_input,
+                    q_enc_outputs,
+                    c_enc_outputs,
+                    f_enc_outputs):
 
         def get_idx_to_tensor_position_map(idx_list):
             ''' Indicate the position of an instance in a tensor. '''
@@ -228,18 +226,21 @@ class ConversationModel(nn.Module):
             return beamed_tensor
 
         def collate_active_info(q_input,
-                q_enc_outputs,
-                idx_to_position_map,
-                active_idx_list):
+                                q_enc_outputs,
+                                idx_to_position_map,
+                                active_idx_list):
             # Sentences which are still active are collected,
             # so the decoder will not run on completed sentences.
             n_prev_active = len(idx_to_position_map)
             active_idx = [idx_to_position_map[k] for k in active_idx_list]
             active_idx = torch.LongTensor(active_idx).to(self.device)
 
-            active_q_input = collect_active_part(q_input, active_idx, n_prev_active, beam_size)
-            active_q_enc_outputs = collect_active_part(q_enc_outputs, active_idx, n_prev_active, beam_size)
-            active_idx_to_pos_map = get_inst_idx_to_tensor_position_map(active_idx_list)
+            active_q_input = collect_active_part(
+                q_input, active_idx, n_prev_active, beam_size)
+            active_q_enc_outputs = collect_active_part(
+                q_enc_outputs, active_idx, n_prev_active, beam_size)
+            active_idx_to_pos_map = get_inst_idx_to_tensor_position_map(
+                active_idx_list)
 
             return active_q_input, active_q_enc_outputs, active_idx_to_pos_map
 
@@ -248,20 +249,27 @@ class ConversationModel(nn.Module):
             ''' Decode and update beam status, and then return active beam idx '''
 
             def prepare_beam_dec_seq(dec_beams, len_dec_seq):
-                dec_partial_seq = [b.get_current_state() for b in dec_beams if not b.done]
+                dec_partial_seq = [b.get_current_state()
+                                   for b in dec_beams if not b.done]
                 dec_partial_seq = torch.stack(dec_partial_seq).to(self.device)
                 dec_partial_seq = dec_partial_seq.view(-1, len_dec_seq)
                 return dec_partial_seq
 
             def prepare_beam_dec_pos(len_dec_seq, n_active, beam_size):
-                dec_partial_pos = torch.arange(1, len_dec_seq + 1, dtype=torch.long, device=self.device)
-                dec_partial_pos = dec_partial_pos.unsqueeze(0).repeat(n_active * beam_size, 1)
+                dec_partial_pos = torch.arange(
+                    1, len_dec_seq + 1, dtype=torch.long, device=self.device)
+                dec_partial_pos = dec_partial_pos.unsqueeze(
+                    0).repeat(n_active * beam_size, 1)
                 return dec_partial_pos
 
             def predict_word(dec_seq, dec_pos, q_input, enc_output, n_active, beam_size):
-                dec_output, *_ = self.model.decoder(dec_seq, dec_pos, q_input, enc_output)
-                dec_output = dec_output[:, -1, :]  # Pick the last step: (bh * bm) * d_h
-                word_prob = F.log_softmax(self.model.tgt_word_prj(dec_output), dim=1)
+                dec_output, * \
+                    _ = self.model.decoder(
+                        dec_seq, dec_pos, q_input, enc_output)
+                # Pick the last step: (bh * bm) * d_h
+                dec_output = dec_output[:, -1, :]
+                word_prob = F.log_softmax(
+                    self.model.tgt_word_prj(dec_output), dim=1)
                 word_prob = word_prob.view(n_active, beam_size, -1)
 
                 return word_prob
@@ -279,10 +287,12 @@ class ConversationModel(nn.Module):
 
             dec_seq = prepare_beam_dec_seq(dec_beams, len_dec_seq)
             dec_pos = prepare_beam_dec_pos(len_dec_seq, n_active, beam_size)
-            word_prob = predict_word(dec_seq, dec_pos, q_input, enc_output, n_active, beam_size)
+            word_prob = predict_word(
+                dec_seq, dec_pos, q_input, enc_output, n_active, beam_size)
 
             # Update the beam with predicted word prob information and collect incomplete instances
-            active_idx_list = collect_active_idx_list(dec_beams, word_prob, idx_to_pos_map)
+            active_idx_list = collect_active_idx_list(
+                dec_beams, word_prob, idx_to_pos_map)
 
             return active_idx_list
 
@@ -292,7 +302,8 @@ class ConversationModel(nn.Module):
                 scores, tail_idxs = dec_beams[inst_idx].sort_scores()
                 all_scores += [scores[:n_best]]
 
-                hyps = [dec_beams[inst_idx].get_hypothesis(i) for i in tail_idxs[:n_best]]
+                hyps = [dec_beams[inst_idx].get_hypothesis(
+                    i) for i in tail_idxs[:n_best]]
                 all_hyp += [hyps]
             return all_hyp, all_scores
 
@@ -307,7 +318,7 @@ class ConversationModel(nn.Module):
 
         # Prepare beams
         dec_beams = [transformer.Beam(beam_size, device=self.device)
-                                      for _ in range(batch_size)]
+                     for _ in range(batch_size)]
 
         # Bookkeeping for active or not
         active_idx_list = list(range(batch_size))
@@ -317,28 +328,28 @@ class ConversationModel(nn.Module):
         # Decode
         for len_dec_seq in range(1, r_max_len + 1):
 
-                active_idx_list = beam_decode_step(
-                    dec_beams,
-                    len_dec_seq,
-                    q_input,
-                    q_enc_outputs,
-                    idx_to_pos_map,
-                    beam_size)
+            active_idx_list = beam_decode_step(
+                dec_beams,
+                len_dec_seq,
+                q_input,
+                q_enc_outputs,
+                idx_to_pos_map,
+                beam_size)
 
-                if not active_idx_list:
-                    break  # all instances have finished their path to <EOS>
+            if not active_idx_list:
+                break  # all instances have finished their path to <EOS>
 
-                q_input, q_enc_outputs, idx_to_pos_map = collate_active_info(
-                    q_input,
-                    q_enc_outputs,
-                    idx_to_pos_map,
-                    active_idx_list
-                )
+            q_input, q_enc_outputs, idx_to_pos_map = collate_active_info(
+                q_input,
+                q_enc_outputs,
+                idx_to_pos_map,
+                active_idx_list
+            )
 
-        batch_hyp, batch_scores = collect_hypothesis_and_scores(dec_beams, self.config.n_best)
+        batch_hyp, batch_scores = collect_hypothesis_and_scores(
+            dec_beams, self.config.n_best)
 
         return batch_hyp, batch_scores
-
 
     def c_forward(self,
                   c_inputs,
@@ -389,4 +400,3 @@ class ConversationModel(nn.Module):
         # [batch_size, topk, hidden_size]
         f_outputs = torch.cat(f_outputs, dim=1)
         return f_outputs
-

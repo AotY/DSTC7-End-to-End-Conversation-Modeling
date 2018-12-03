@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
     --vocab_size 4e4 \
     --turn_num 5 \
-    --min_turn 2 \
+    --turn_min 2 \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \

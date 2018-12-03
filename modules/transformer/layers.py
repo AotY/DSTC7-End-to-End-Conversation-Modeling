@@ -36,13 +36,13 @@ class EncoderLayer(nn.Module):
                 attn_mask=None):
         """
         Args:
-            enc_input: []
-            non_pad_mask: []
-            attn_mask: []
+            enc_input: [batch_size, max_len, transformer_size]
+            non_pad_mask: [batch_size, max_len, transformer_size]
+            attn_mask: [batch_size, max_len, 1]
         """
-        print('enc_input: ', enc_input.shape)
-        print('non_pad_mask: ', non_pad_mask.shape)
-        print('attn_mask: ', attn_mask.shape)
+        #  print('enc_input: ', enc_input.shape)
+        #  print('non_pad_mask: ', non_pad_mask.shape)
+        #  print('attn_mask: ', attn_mask.shape)
 
         enc_output, enc_attn = self.mh_attn(
             enc_input,
@@ -78,11 +78,18 @@ class DecoderLayer(nn.Module):
                 non_pad_mask=None,
                 slf_attn_mask=None,
                 dec_enc_attn_mask=None):
+        """
+        dec_input: [batch_size, max_len, transformer_size]
+        enc_output: [batch_size, max_len, transformer_size]
+        non_pad_mask: [batch_size, max_len, 1]
+        enc_output: [batch_size, max_len, transformer_size]
+        dec_enc_attn_mask: [batch_size, c_max_len, r_max_len]
+        """
 
-        print('dec_input: ', dec_input.shape)
-        print('enc_output: ', enc_output.shape)
-        print('non_pad_mask: ', non_pad_mask.shape)
-        print('dec_enc_attn_mask: ', dec_enc_attn_mask.shape)
+        #  print('dec_input: ', dec_input.shape)
+        #  print('enc_output: ', enc_output.shape)
+        #  print('non_pad_mask: ', non_pad_mask.shape)
+        #  print('dec_enc_attn_mask: ', dec_enc_attn_mask.shape)
 
         # self attention
         dec_output, dec_slf_attn = self.slf_attn(

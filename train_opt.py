@@ -41,7 +41,7 @@ def data_set_opt(parser):
                        default=1,
                        help='input of the model including how many turn dialogue.')
 
-    group.add_argument('--min_turn', type=int,
+    group.add_argument('--turn_min', type=int,
                        default=1,
                        help='minimal turn num.')
 
