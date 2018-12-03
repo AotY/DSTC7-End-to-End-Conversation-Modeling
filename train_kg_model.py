@@ -545,7 +545,7 @@ if __name__ == '__main__':
     early_stopping = EarlyStopping(
         type='min',
         min_delta=0.001,
-        patience=2
+        patience=3
     )
 
     '''if load checkpoint'''
