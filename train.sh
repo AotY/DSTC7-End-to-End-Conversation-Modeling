@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=2
 
 python train.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -14,13 +14,13 @@ python train.py \
     --hidden_size 512 \
     --bidirectional \
     --r_num_layers 2 \
-    --t_num_layers 6 \
+    --t_num_layers 4 \
     --transformer_size 512 \
-    --inner_hidden_size 2048 \
+    --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
     --num_heads 8 \
-    --n_warmup_steps 4000 \
+    --n_warmup_steps 3000 \
     --dropout 0.1 \
     --c_max_len 50 \
     --r_max_len 50 \
@@ -28,14 +28,13 @@ python train.py \
     --tied \
     --beam_size 8 \
     --n_best 3 \
-    --f_max_len 100 \
+    --f_max_len 120 \
     --f_topk 5 \
-    --lr 0.0002 \
+    --lr 0.001 \
     --epochs 15 \
     --batch_size 128 \
     --decode_type beam_search \
-    --max_grad_norm 5.0 \
-    --teacher_forcing_ratio 1.0 \
+    --max_grad_norm 2.0 \
     --seed 19 \
     --device cuda \
     --log_interval 20 \

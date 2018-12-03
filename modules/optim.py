@@ -22,8 +22,8 @@ class ScheduledOptimizer:
         self.optimizer = optimizer
         self.n_warmup_steps = n_warmup_steps
         self.n_current_steps = 0
-        self.init_lr = np.power(model_size, -0.5)
         self.max_grad_norm = max_grad_norm
+        self.init_lr = np.power(model_size, -0.5)
 
     def step(self):
         self.update()

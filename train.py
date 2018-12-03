@@ -138,8 +138,8 @@ def train_epochs(model,
         save_logger(logger_str)
 
         # generate sentence
-        logger.info('generate...')
-        decode(model, dataset)
+        #  logger.info('generate...')
+        #  decode(model, dataset)
 
         is_stop = early_stopping.step(evaluate_loss)
         if is_stop:
@@ -168,7 +168,7 @@ def train(model,
     # Turn on training mode which enables dropout.
     model.train()
 
-    # [max_len, batch_size, vocab_size]
+    # [batch_size, max_len, vocab_size]
     decoder_outputs = model(
         h_inputs,
         h_inputs_length,
@@ -188,7 +188,7 @@ def train(model,
 
     # decoder_outputs -> [max_length, batch_size, vocab_sizes]
     decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-    accuracy = compute_accuracy(decoder_outputs_argmax, dec_targets)
+    #  accuracy = compute_accuracy(decoder_outputs_argmax, dec_targets)
 
     # reshape to [max_seq * batch_size, decoder_vocab_size]
     decoder_outputs = decoder_outputs.view(-1, decoder_outputs.shape[-1])
@@ -258,8 +258,8 @@ def evaluate(model,
 
             # decoder_outputs -> [max_length, batch_size, vocab_sizes]
             decoder_outputs_argmax = torch.argmax(decoder_outputs, dim=2)
-            accuracy = compute_accuracy(
-                decoder_outputs_argmax, dec_targets)
+            #  accuracy = compute_accuracy(
+                #  decoder_outputs_argmax, dec_targets)
 
             #  Compute loss
             decoder_outputs = decoder_outputs.view(-1,
@@ -312,25 +312,6 @@ def decode(model, dataset):
                                          opt.decode_type,
                                          facts_texts)
 
-def compute_accuracy(decoder_outputs_argmax, dec_targets):
-    """
-    dec_targets: [seq_len, batch_size]
-    """
-    #  print('---------------------->\n')
-    #  print(decoder_outputs_argmax.shape)
-    #  print(dec_targets.shape)
-
-    match_tensor = (decoder_outputs_argmax == dec_targets).long()
-
-    decoder_mask = (dec_targets != 0).long()
-
-    accuracy_tensor = match_tensor * decoder_mask
-
-    accuracy = float(torch.sum(accuracy_tensor)) / \
-        float(torch.sum(decoder_mask))
-
-    return accuracy
-
 
 ''' save log to file '''
 
@@ -359,44 +340,6 @@ def build_criterion(padid):
     #  criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
 
     return criterion
-
-
-def cal_loss(pred, gold, smoothing, padid=0):
-    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
-
-    gold = gold.contiguous().view(-1)
-
-    if smoothing:
-        eps = 0.1
-        n_class = pred.size(1)
-
-        one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
-        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
-        log_prb = F.log_softmax(pred, dim=1)
-
-        non_pad_mask = gold.ne(padid)
-        loss = -(one_hot * log_prb).sum(dim=1)
-        loss = loss.masked_select(non_pad_mask).sum()  # average later
-    else:
-        loss = F.cross_entropy(pred, gold, ignore_index=padid, reduction='sum')
-
-    return loss
-
-
-def load_fasttext_embedding(fasttext, vocab):
-    words_embedded = list()
-    for id, word in sorted(vocab.idx2word.items(), key=lambda item: item[0]):
-        try:
-            word_embedded = torch.from_numpy(fasttext[word])
-        except KeyError:
-            word_embedded = torch.rand(opt.pre_embedding_size)
-
-        word_embedded = word_embedded.to(device)
-        words_embedded.append(word_embedded)
-    # [vocab_size, pre_embedding_size]
-    words_embedded = torch.stack(words_embedded)
-
-    return words_embedded
 
 
 def build_model(vocab):
