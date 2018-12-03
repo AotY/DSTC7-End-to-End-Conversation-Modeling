@@ -197,11 +197,8 @@ class Dataset:
             for j, ids in enumerate(sentences_ids):
                 h_inputs_lenght[i][j] = len(ids)
 
-                tmp_i = torch.zeros(self.config.c_max_len,
-                                    dtype=torch.long, device=self.device)
-                tmp_p = torch.zeros(
-                    self.config.c_max_len, dtype=torch.long, device=self.device)
-
+                tmp_i = torch.zeros(self.config.c_max_len, dtype=torch.long, device=self.device)
+                tmp_p = torch.zeros(self.config.c_max_len, dtype=torch.long, device=self.device)
                 for k, id in enumerate(ids):
                     tmp_i[k] = id
                     tmp_p[k] = k + 1

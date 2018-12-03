@@ -63,9 +63,9 @@ def cal_performance(pred, gold, smoothing=False):
 
     loss = cal_loss(pred, gold, smoothing)
 
-    pred = pred.max(1)[1]
-    gold = gold.contiguous().view(-1)
-    non_pad_mask = gold.ne(PAD_ID)
+    pred = pred.max(1)[1] # [batch_size * max_len]
+    gold = gold.contiguous().view(-1) # [batch_size * max_len]
+    non_pad_mask = gold.ne(PAD_ID) # mask
     n_correct = pred.eq(gold)
     n_correct = n_correct.masked_select(non_pad_mask).sum().item()
 
@@ -73,8 +73,14 @@ def cal_performance(pred, gold, smoothing=False):
 
 
 def cal_loss(pred, gold, smoothing):
-    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
+    """
+    Calculate cross entropy loss, apply label smoothing if needed.
+    pred: [batch_size * max_len, vocab_size]
+    gold: [batch_size, max_len]
 
+    """
+
+    # [batch_size * max_len]
     gold = gold.contiguous().view(-1)
 
     if smoothing:
@@ -232,9 +238,9 @@ def train(model,
     #  if n[:6] == 'weight':
     #  print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
-    #  for p, n in zip(model.self_attn_encoder.rnn.parameters(), model.self_attn_encoder.rnn._all_weights[0]):
-    #  if n[:6] == 'weight':
-    #  print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
+    #  for p, n in zip(model.parameters(), model._all_weights[0]):
+        #  if n[:6] == 'weight':
+        #  print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
 
     # optimizer
     optimizer.step()

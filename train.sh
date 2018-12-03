@@ -19,7 +19,7 @@ python train.py \
     --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
-    --num_heads 8 \
+    --num_heads 6 \
     --n_warmup_steps 3000 \
     --dropout 0.1 \
     --c_max_len 50 \
