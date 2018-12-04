@@ -257,6 +257,7 @@ def evaluate(model,
                 f_inputs,
                 f_inputs_length,
                 f_topk_length,
+                evaluate=True
             )
 
             # dec_outputs -> [max_length, batch_size, vocab_sizes]
@@ -390,18 +391,12 @@ def load_fasttext_embedding(fasttext, vocab):
     return words_embedded
 
 
-def build_model(vocab, pre_trained_weight=None):
+def build_model(vocab):
     logger.info('Building model...')
-
-    if pre_trained_weight is None:
-        if opt.pre_trained_embedding and os.path.exists(opt.fasttext_vec):
-            fasttext = load_fasttext_model(opt.fasttext_vec)
-            pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
 
     model = KGModel(
         opt,
         device,
-        pre_trained_weight,
     )
 
     model = model.to(device)
@@ -505,8 +500,7 @@ if __name__ == '__main__':
         elif opt.offline_type == 'elmo':
             pass
 
-    model = build_model(vocab, pre_trained_weight)
-    del fasttext
+    model = build_model(vocab)
 
     # Build optimizer.
     optimizer = build_optimizer(model)
