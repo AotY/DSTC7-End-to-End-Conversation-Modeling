@@ -40,12 +40,12 @@ python train_kg_model.py \
     --model_path ./models \
     --eval_split 0.0001 \
     --test_split 0.07 \
-    --start_epoch 3 \
+    --start_epoch 1 \
     --model_type kg \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/epoch-3_kg_5_self_attn_2018_11_30_15:27.pth \
+    # --checkpoint models/epoch-3_kg_5_self_attn_2018_11_30_15:27.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \

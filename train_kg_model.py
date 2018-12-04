@@ -400,7 +400,6 @@ def build_model(vocab, pre_trained_weight=None):
 
     model = KGModel(
         opt,
-        vocab,
         device,
         pre_trained_weight,
     )
