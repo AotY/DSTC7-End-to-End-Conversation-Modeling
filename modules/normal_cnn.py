@@ -61,23 +61,19 @@ class NormalCNN(nn.Module):
     def forward(self, inputs, lengths=None):
         """
         args:
-            inputs: [max_len, batch_size]
+            inputs: [batch_size, max_len]
         return:
             [1, batch_size, hidden_size]
         """
-        embedded = self.embedding(inputs)  # [max_len, batch_size, embedding_size]
+        embedded = self.embedding(inputs)  # [batch_size, max_len, embedding_size]
         embedded = self.dropout(embedded)
 
         # [batch_size, 1, max_len, embedding_size]
-        embedded = embedded.transpose(0, 1).unsqueeze(1)
-        #  print(embedded.shape)
+        output = embedded.unsqueeze(1)
 
         # conv
-        output = embedded
-        #  for conv2d, bn2 in zip(self.conv2ds, self.bn2s):
         for conv2d in self.conv2ds:
             output = conv2d(output)
-            #  output = bn2(output)
             output = F.relu(output)
             output = output.transpose(1, 3)
             #  print('output: ', output.shape)

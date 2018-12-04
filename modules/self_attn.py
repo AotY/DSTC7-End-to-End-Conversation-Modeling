@@ -57,14 +57,14 @@ class SelfAttentive(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
+        self.Ws1 = nn.Parameter(torch.Tensor(1, mlp_input_size, self.bidirection_num * self.hidden_size))
+        self.Ws2 = nn.Parameter(torch.Tensor(1, attn_hops, mlp_input_size))
+        init_wt_unif(self.Ws1)
+        init_wt_unif(self.Ws2)
+        
         self.fc1 = nn.Linear(attn_hops * self.bidirection_num * self.hidden_size, mlp_output_size)
         init_linear_wt(self.fc1)
 
-        self.Ws1 = nn.Parameter(torch.Tensor(1, mlp_input_size, self.bidirection_num * self.hidden_size))
-        self.Ws2 = nn.Parameter(torch.Tensor(1, attn_hops, mlp_input_size))
-
-        init_wt_unif(self.Ws1)
-        init_wt_unif(self.Ws2)
 
     def forward(self, inputs, lengths=None):
         """
