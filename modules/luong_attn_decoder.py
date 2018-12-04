@@ -118,7 +118,7 @@ class LuongAttnDecoder(nn.Module):
             #  output, _ = nn.utils.rnn.pad_packed_sequence(output)
             #  output = output.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
-        if h_encoder_outputs is not None:
+        if q_encoder_outputs is not None:
             # output: [1, batch_size, 1 * hidden_size]
             q_context, q_attn_weights = self.q_attn(output, q_encoder_outputs, q_encoder_length)
 
