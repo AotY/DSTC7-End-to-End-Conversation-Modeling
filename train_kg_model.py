@@ -77,8 +77,10 @@ def train_epochs(model,
     max_load = int(np.ceil(dataset._size_dict['train'] / opt.batch_size))
     for epoch in range(opt.start_epoch, opt.epochs + 1):
         dataset.reset_data('train')
-        log_loss_total = 0
-        log_accuracy_total = 0
+        total_loss = 0
+        n_word_total = 0
+        n_word_correct = 0
+        start = time.time()
 
         # lr update
         optimizer.update()
@@ -93,21 +95,20 @@ def train_epochs(model,
                     'train', opt.batch_size)
 
             # train and get cur loss
-            loss, accuracy = train(model,
-                                   q_inputs,
-                                   q_inputs_length,
-                                   c_inputs,
-                                   c_inputs_length,
-                                   c_turn_length,
-                                   dec_inputs,
-                                   f_inputs,
-                                   f_inputs_length,
-                                   f_topk_length,
-                                   optimizer,
-                                   criterion)
+            loss, n_correct = train(model,
+                                    q_inputs,
+                                    q_inputs_length,
+                                    c_inputs,
+                                    c_inputs_length,
+                                    c_turn_length,
+                                    dec_inputs,
+                                    f_inputs,
+                                    f_inputs_length,
+                                    f_topk_length,
+                                    optimizer,
+                                    criterion)
 
-            log_loss_total += float(loss)
-            log_accuracy_total += accuracy
+            total_loss += loss
 
             non_pad_mask = gold.ne(PAD_ID)
             n_word = non_pad_mask.sum().item()
@@ -115,29 +116,24 @@ def train_epochs(model,
             n_word_correct += n_correct
 
             if load % opt.log_interval == 0:
-                log_loss_avg = log_loss_total / opt.log_interval
-                log_accuracy_avg = log_accuracy_total / opt.log_interval
-                """
-                logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % \
-                    (epoch, timeSince(start, load / max_load),
-                     load, load / max_load * 100, log_loss_avg,
-                     log_accuracy_avg, math.exp(log_loss_avg))
-                """
-                logger_str = '{epoch},{loss: 8.5f},{ppl: 8.5f},{accu:3.3f}\n'.format(
-                            epoch=epoch, loss=log_loss_avg,
-                            ppl=math.exp(min(log_loss_avg, 100)), accu=100 * log_accuracy_avg
-                )
+                train_loss = total_loss/n_word_total
+                train_accu = n_word_correct/n_word_total
 
-                logger.info(logger_str)
-                save_logger(logger_str)
-                log_loss_total = 0
-                log_accuracy_total = 0
+                print('  - (Training)   ppl: {ppl: 8.5f}, accuracy: {accu:3.3f} %, '
+                      'elapse: {elapse:3.3f} min'.format(
+                          ppl=math.exp(min(train_loss, 100)), accu=100*train_accu,
+                          elapse=(time.time()-start)/60))
+
+                total_loss = 0
+                n_word_total = 0
+                n_word_correct = 0
+                start = time.time()
 
         # save model of each epoch
         save_state = {
-            'loss': log_loss_avg,
-            'ppl': math.exp(log_loss_avg),
-            'acc': log_accuracy_avg,
+            'loss': train_loss,
+            'ppl': math.exp(min(train_loss, 100)),
+            'acc': train_accu,
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.optimizer.state_dict()
@@ -206,7 +202,7 @@ def train(model,
         f_topk_length,
     )
 
-    loss, accuracy = cal_performance(
+    loss, n_correct = cal_performance(
         dec_outputs, dec_inputs[1:, :], smoothing=True)
 
     # backward
@@ -215,7 +211,7 @@ def train(model,
     # optimizer
     optimizer.step()
 
-    return loss.item(), accuracy
+    return loss.item(), n_correct
 
 
 '''
@@ -254,14 +250,13 @@ def evaluate(model,
                 f_inputs,
                 f_inputs_length,
                 f_topk_length,
-                evaluate=True
             )
 
-            loss, accuracy = cal_performance(
+            loss, n_correct = cal_performance(
                 dec_outputs, dec_inputs[1:, :], smoothing=True)
 
             loss_total += loss.item()
-            accuracy_total += accuracy
+            accuracy_total += n_correct
 
     return loss_total / max_load, accuracy_total / max_load
 
@@ -324,10 +319,10 @@ def cal_performance(pred, gold, smoothing=False):
     pred = pred.max(1)[1]
     gold = gold.contiguous().view(-1)
     non_pad_mask = gold.ne(PAD_ID)
-    accuracy = pred.eq(gold)
-    accuracy = accuracy.masked_select(non_pad_mask).sum().item()
+    n_correct = pred.eq(gold)
+    n_correct = n_correct.masked_select(non_pad_mask).sum().item()
 
-    return loss, accuracy
+    return loss, n_correct
 
 
 def cal_loss(pred, gold, smoothing):
