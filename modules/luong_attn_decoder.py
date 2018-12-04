@@ -60,9 +60,6 @@ class LuongAttnDecoder(nn.Module):
 
         init_linear_wt(self.linear)
 
-        # log_softmax
-        self.log_softmax = nn.LogSoftmax(dim=2)
-
     def forward(self,
                 dec_input,
                 dec_hidden,
