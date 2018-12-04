@@ -124,7 +124,7 @@ class KGModel(nn.Module):
             f_embedded_inputs_length: [batch_size]
         '''
         c_enc_outputs = None
-        if self.config.turn_type not in ['none', 'concat']:
+        if self.config.turn_type != 'none':
             # [turn_num-1, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
@@ -146,6 +146,10 @@ class KGModel(nn.Module):
         # init decoder hidden
         dec_hidden = self.reduce_state(q_encoder_hidden)
 
+        #  print('q_inputs: ', q_inputs)
+        #  print('q_enc_outputs: ', q_enc_outputs)
+        #  print('dec_hidden: ', dec_hidden)
+
         # decoder
         dec_outputs, dec_hidden, _ = self.decoder(
             dec_inputs,
@@ -159,7 +163,8 @@ class KGModel(nn.Module):
         )
 
         # [max_len * batch_, vocab_size]
-        dec_outputs = output.view(-1, output.size(-1)).contiguous()
+        dec_outputs = dec_outputs.view(-1, dec_outputs.size(-1)).contiguous()
+        #  print('dec_outputs: ', dec_outputs)
 
         return dec_outputs
 

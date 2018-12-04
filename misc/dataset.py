@@ -85,10 +85,10 @@ class Dataset:
                     # contexts
                     contexts = sentences[:-1]
                     context_ids = []
-                    for si, sentence in enumerate(contexts):
+                    for ci, sentence in enumerate(contexts):
                         sentence_ids = self.vocab.words_to_id(
                             sentence.split(' '))
-                        if si % 2 == 0:  # start
+                        if ci % 2 == 0:  # start
                             sentence_ids = sentence_ids[-min(
                                 self.config.c_max_len, len(sentence_ids)):]
                         else:  # reply
@@ -96,8 +96,6 @@ class Dataset:
                                 self.config.c_max_len, len(sentence_ids))]
 
                         context_ids.append(sentence_ids)
-                        sentences_text.append(
-                            ' '.join(self.vocab.ids_to_word(sentence_ids)))
 
                     datas.append((conversation_id, query_ids,
                                  context_ids, response_ids, hash_value))
@@ -183,7 +181,7 @@ class Dataset:
 
             # q inputs
             q_inputs_length.append(len(query_ids))
-            q_input = torch.LongTensor(query_ids + [PAD_ID] * (self.config.c_max_len - len(query_ids)))).to(self.device)
+            q_input = torch.LongTensor(query_ids + [PAD_ID] * (self.config.c_max_len - len(query_ids))).to(self.device)
             q_inputs.append(q_input)
 
             if self.config.turn_type != 'none':
@@ -202,7 +200,7 @@ class Dataset:
 
             # dec_inputs
             dec_input=torch.LongTensor([SOS_ID] + response_ids + [EOS_ID] \
-                    + [PAD_ID] * (self.config.r_max_len - len(response_ids)))).to(self.device)
+                    + [PAD_ID] * (self.config.r_max_len - len(response_ids))).to(self.device)
             dec_inputs.append(dec_input)
 
             if self.config.model_type == 'kg':
@@ -231,12 +229,9 @@ class Dataset:
                 f_inputs.append(f_input)
                 f_inputs_length.append(f_input_length)
 
-                facts_texts.append(topk_facts_text)
-
         # q [max_len, batch_size]
-        q_inputs=torch.stack(q_inputs, dim=1)
-        q_turn_length=torch.tensor(
-            q_turn_length, dtype=torch.long, device=self.device)
+        q_inputs = torch.stack(q_inputs, dim=1)
+        q_inputs_length = torch.tensor(q_inputs_length, dtype=torch.long, device=self.device)
 
         # c [turn_num-1, max_len, batch_size]
         if self.config.turn_type != 'none':
@@ -258,10 +253,10 @@ class Dataset:
         # update _indicator_dict[task]
         self._indicator_dict[task]=cur_indicator
 
-        return dec_inputs, dec_targets, \
+        return dec_inputs, \
                 conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_lenght, c_turn_length, \
+                c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length
 
     def load_similarity_facts(self, offline_filename):
@@ -499,7 +494,7 @@ class Dataset:
             f_inputs = f_inputs.transpose(0, 1).tolist()
 
         with open(filename, 'a', encoding='utf-8') as f:
-            for id, hash_value, q_ids, c_ids, f_id, r_ids, g_text, b_text in zip(ids,
+            for id, hash_value, q_ids, c_ids, f_ids, r_ids, g_text, b_text in zip(ids,
                 hash_values,
                 q_inputs,
                 c_inputs,
@@ -510,7 +505,7 @@ class Dataset:
 
                 f.write('id: %s\n' % id)
                 f.write('hash_value: %s\n' % hash_value)
-                
+
                 if c_ids is not None:
                     for ci, ids in enumerate(c_ids):
                         text = ' '.join(self.vocab.ids_to_word(ids))

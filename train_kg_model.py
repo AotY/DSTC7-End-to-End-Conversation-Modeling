@@ -15,6 +15,7 @@ import pickle
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from tqdm import tqdm
 
@@ -24,6 +25,7 @@ from modules.early_stopping import EarlyStopping
 from gensim.models import KeyedVectors
 
 from misc.vocab import Vocab
+from misc.vocab import PAD_ID
 from kg_model import KGModel
 from misc.dataset import Dataset
 from train_opt import data_set_opt, model_opt, train_opt
@@ -81,15 +83,12 @@ def train_epochs(model,
         # lr update
         optimizer.update()
 
-        # reset teacher forcing ratio
-        model.reset_teacher_forcing_ratio()
-
         for load in range(1, max_load + 1):
             # load data
-            dec_inputs, dec_targets, \
+            dec_inputs, \
                 conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_lenght, c_turn_length, \
+                c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
                     'train', opt.batch_size)
 
@@ -101,7 +100,6 @@ def train_epochs(model,
                                    c_inputs_length,
                                    c_turn_length,
                                    dec_inputs,
-                                   dec_inputs_length,
                                    f_inputs,
                                    f_inputs_length,
                                    f_topk_length,
@@ -110,13 +108,26 @@ def train_epochs(model,
 
             log_loss_total += float(loss)
             log_accuracy_total += accuracy
+
+            non_pad_mask = gold.ne(PAD_ID)
+            n_word = non_pad_mask.sum().item()
+            n_word_total += n_word
+            n_word_correct += n_correct
+
             if load % opt.log_interval == 0:
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
+                """
                 logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % \
                     (epoch, timeSince(start, load / max_load),
                      load, load / max_load * 100, log_loss_avg,
                      log_accuracy_avg, math.exp(log_loss_avg))
+                """
+                logger_str = '{epoch},{loss: 8.5f},{ppl: 8.5f},{accu:3.3f}\n'.format(
+                            epoch=epoch, loss=log_loss_avg,
+                            ppl=math.exp(min(log_loss_avg, 100)), accu=100 * log_accuracy_avg
+                )
+
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
@@ -138,6 +149,7 @@ def train_epochs(model,
                         filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' %
                                               (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
 
+        """
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
                                                     dataset=dataset,
@@ -156,6 +168,7 @@ def train_epochs(model,
         if is_stop:
             logger.info('Early Stopping.')
             sys.exit(0)
+        """
 
 
 ''' start traing '''
@@ -168,7 +181,6 @@ def train(model,
           c_inputs_length,
           c_turn_length,
           dec_inputs,
-          dec_inputs_length,
           f_inputs,
           f_inputs_length,
           f_topk_length,
@@ -224,10 +236,10 @@ def evaluate(model,
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             # load data
-            dec_inputs, dec_targets, \
+            dec_inputs, \
                 conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_lenght, c_turn_length, \
+                c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
                     'test', opt.batch_size)
 
@@ -262,10 +274,10 @@ def decode(model, dataset):
     max_load = int(np.floor(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
-            dec_inputs, dec_targets, \
+            dec_inputs, \
                 conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_lenght, c_turn_length, \
+                c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
                     'eval', opt.batch_size)
 
