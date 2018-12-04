@@ -16,7 +16,7 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.2 \
+    --dropout 0.0 \
     --c_max_len 50 \
     --r_max_len 50 \
     --min_len 3 \
@@ -28,7 +28,7 @@ python train_kg_model.py \
     --best_n 3 \
     --f_max_len 120 \
     --f_topk 5 \
-    --lr 0.0003 \
+    --lr 0.001 \
     --max_grad_norm 10.0 \
     --epochs 15 \
     --batch_size 200 \

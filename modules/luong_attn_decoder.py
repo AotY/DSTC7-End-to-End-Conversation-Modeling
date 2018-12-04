@@ -38,7 +38,7 @@ class LuongAttnDecoder(nn.Module):
 
         self.rnn = rnn_factory(
             config.rnn_type,
-            input_size=self.embedding_size + config.hidden_size,
+            input_size=self.embedding_size,
             hidden_size=config.hidden_size,
             num_layers=config.num_layers,
             dropout=config.dropout
@@ -66,7 +66,6 @@ class LuongAttnDecoder(nn.Module):
     def forward(self,
                 dec_input,
                 dec_hidden,
-                dec_context,
                 q_enc_outputs,
                 q_enc_length,
                 c_enc_outputs,
@@ -89,8 +88,7 @@ class LuongAttnDecoder(nn.Module):
         embedded = self.embedding(dec_input)  # [1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
 
-        rnn_input = torch.cat((embedded, dec_context), dim=2) # [1, batch_size, embedding_size + hidden_size]
-        output, dec_hidden = self.rnn(rnn_input, dec_hidden)
+        output, dec_hidden = self.rnn(embedded, dec_hidden)
 
         # output: [1, batch_size, 1 * hidden_size]
         q_context, q_attn_weights = self.q_attn(output, q_enc_outputs, q_enc_length)
@@ -114,10 +112,7 @@ class LuongAttnDecoder(nn.Module):
 
         output = torch.cat(output_list, dim=2)
 
-        # [1, batch_size, vocab_size]
+        # [, batch_size, vocab_size]
         output = self.linear(output)
 
-        # log_softmax
-        output = self.log_softmax(output)
-
-        return output, dec_hidden, q_context, None
+        return output, dec_hidden, q_attn_weights

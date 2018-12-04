@@ -86,19 +86,21 @@ def train_epochs(model,
 
         for load in range(1, max_load + 1):
             # load data
-            dec_inputs, dec_targets, dec_inputs_length, \
-                context_texts, response_texts, conversation_ids, hash_values, \
-                f_inputs, f_inputs_length, f_topk_length, facts_texts, \
-                h_inputs, h_turn_length, h_inputs_length = dataset.load_data(
+            dec_inputs, dec_targets, \
+                conversation_ids, hash_values, \
+                q_inputs, q_inputs_length, \
+                c_inputs, c_inputs_lenght, c_turn_length, \
+                f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
                     'train', opt.batch_size)
 
             # train and get cur loss
             loss, accuracy = train(model,
-                                   h_inputs,
-                                   h_inputs_length,
-                                   h_turn_length,
+                                   q_inputs,
+                                   q_inputs_length,
+                                   c_inputs,
+                                   c_inputs_length,
+                                   c_turn_length,
                                    dec_inputs,
-                                   dec_targets,
                                    dec_inputs_length,
                                    f_inputs,
                                    f_inputs_length,
@@ -112,9 +114,9 @@ def train_epochs(model,
                 log_loss_avg = log_loss_total / opt.log_interval
                 log_accuracy_avg = log_accuracy_total / opt.log_interval
                 logger_str = '\ntrain --> epoch: %d %s (%d %d%%) loss: %.4f acc: %.4f ppl: %.4f' % \
-                        (epoch, timeSince(start, load / max_load), \
-                        load, load / max_load * 100, log_loss_avg, \
-                        log_accuracy_avg, math.exp(log_loss_avg))
+                    (epoch, timeSince(start, load / max_load),
+                     load, load / max_load * 100, log_loss_avg,
+                     log_accuracy_avg, math.exp(log_loss_avg))
                 logger.info(logger_str)
                 save_logger(logger_str)
                 log_loss_total = 0
@@ -133,8 +135,8 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' % \
-                                (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
+                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' %
+                                              (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
 
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
@@ -160,11 +162,12 @@ def train_epochs(model,
 
 
 def train(model,
-          h_inputs,
-          h_inputs_length,
-          h_turn_length,
+          q_inputs,
+          q_inputs_length,
+          c_inputs,
+          c_inputs_length,
+          c_turn_length,
           dec_inputs,
-          dec_targets,
           dec_inputs_length,
           f_inputs,
           f_inputs_length,
@@ -175,51 +178,30 @@ def train(model,
     # Turn on training mode which enables dropout.
     model.train()
 
+    optimizer.zero_grad()
+    loss = 0
+
     # [max_len, batch_size, vocab_size]
     dec_outputs = model(
-        h_inputs,
-        h_inputs_length,
-        h_turn_length,
-        dec_inputs,
-        dec_inputs_length,
+        q_inputs,
+        q_inputs_length,
+        c_inputs,
+        c_inputs_length,
+        c_turn_length,
+        dec_inputs[:-1, :],
         f_inputs,
         f_inputs_length,
         f_topk_length,
     )
-    #  print('dec_outputs: ', dec_outputs.shape)
 
-    optimizer.zero_grad()
-
-    loss = 0
-
-    # dec_outputs -> [max_length, batch_size, vocab_sizes]
-    decoder_outputs_argmax = torch.argmax(dec_outputs, dim=2)
-    accuracy = compute_accuracy(decoder_outputs_argmax, dec_targets)
-
-    # reshape to [max_seq * batch_size, decoder_vocab_size]
-    dec_outputs = dec_outputs.view(-1, dec_outputs.shape[-1])
-
-    dec_targets = dec_targets.view(-1)
-
-    # compute loss
-    loss = criterion(dec_outputs, dec_targets)
-    #  print(loss)
+    loss, accuracy = cal_performance(
+        dec_outputs, dec_inputs[1:, :], smoothing=True)
 
     # backward
     loss.backward()
 
-    #  for p, n in zip(model.simple_encoder.rnn.parameters(), model.simple_encoder.rnn._all_weights[0]):
-    #  if n[:6] == 'weight':
-    #  print('simple: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
-
-    #  for p, n in zip(model.self_attn_encoder.rnn.parameters(), model.self_attn_encoder.rnn._all_weights[0]):
-    #  if n[:6] == 'weight':
-    #  print('self_attn: ===========\ngradient:{}\n----------\n{}'.format(n,p.grad))
-
     # optimizer
     optimizer.step()
-    #  _ = nn.utils.clip_grad_norm_(model.parameters(), opt.max_grad_norm)
-    #  optimizer.step()
 
     return loss.item(), accuracy
 
@@ -242,34 +224,29 @@ def evaluate(model,
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             # load data
-            dec_inputs, dec_targets, dec_inputs_length, \
-                context_texts, response_texts, conversation_ids, hash_values, \
-                f_inputs, f_inputs_length, f_topk_length, facts_texts, \
-                h_inputs, h_turn_length, h_inputs_length = dataset.load_data(
+            dec_inputs, dec_targets, \
+                conversation_ids, hash_values, \
+                q_inputs, q_inputs_length, \
+                c_inputs, c_inputs_lenght, c_turn_length, \
+                f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
                     'test', opt.batch_size)
 
             # train and get cur loss
             dec_outputs = model(
-                h_inputs,
-                h_inputs_length,
-                h_turn_length,
-                dec_inputs,
-                dec_inputs_length,
+                q_inputs,
+                q_inputs_length,
+                c_inputs,
+                c_inputs_length,
+                c_turn_length,
+                dec_inputs[:-1, :],
                 f_inputs,
                 f_inputs_length,
                 f_topk_length,
                 evaluate=True
             )
 
-            # dec_outputs -> [max_length, batch_size, vocab_sizes]
-            decoder_outputs_argmax = torch.argmax(dec_outputs, dim=2)
-            accuracy = compute_accuracy(decoder_outputs_argmax, dec_targets)
-
-            #  Compute loss
-            dec_outputs = dec_outputs.view(-1, dec_outputs.shape[-1])
-            dec_targets = dec_targets.view(-1)
-
-            loss = criterion(dec_outputs, dec_targets)
+            loss, accuracy = cal_performance(
+                dec_outputs, dec_inputs[1:, :], smoothing=True)
 
             loss_total += loss.item()
             accuracy_total += accuracy
@@ -285,17 +262,21 @@ def decode(model, dataset):
     max_load = int(np.floor(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
-            dec_inputs, dec_targets, dec_inputs_length, \
-                context_texts, response_texts, conversation_ids, hash_values, \
-                f_inputs, f_inputs_length, f_topk_length, facts_texts, \
-                h_inputs, h_turn_length, h_inputs_length = dataset.load_data('eval', opt.batch_size)
+            dec_inputs, dec_targets, \
+                conversation_ids, hash_values, \
+                q_inputs, q_inputs_length, \
+                c_inputs, c_inputs_lenght, c_turn_length, \
+                f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
+                    'eval', opt.batch_size)
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
             greedy_outputs, beam_outputs, beam_length = model.decode(
-                h_inputs,
-                h_inputs_length,
-                h_turn_length,
+                q_inputs,
+                q_inputs_length,
+                c_inputs,
+                c_inputs_length,
+                c_turn_length,
                 f_inputs,
                 f_inputs_length,
                 f_topk_length)
@@ -306,41 +287,58 @@ def decode(model, dataset):
                                                     decode_type='greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
-                                                  None,
                                                   decode_type='beam_search')
-            #  print(beam_texts)
 
             # save sentences
-            dataset.save_generated_texts(context_texts,
-                                         response_texts,
-                                         conversation_ids,
-                                         hash_values,
-                                         greedy_texts,
-                                         beam_texts,
-                                         os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
-                                             opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
-                                         opt.decode_type,
-                                         facts_texts)
+            dataset.save_generated_texts(
+                conversation_ids,
+                hash_values,
+                q_inputs,
+                c_inputs,
+                f_inputs,
+                greedy_texts,
+                beam_texts,
+                os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
+                    opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
+                opt.decode_type,
+            )
 
 
-def compute_accuracy(decoder_outputs_argmax, dec_targets):
-    """
-    dec_targets: [seq_len, batch_size]
-    """
-    #  print('---------------------->\n')
-    #  print(decoder_outputs_argmax.shape)
-    #  print(dec_targets.shape)
+def cal_performance(pred, gold, smoothing=False):
+    ''' Apply label smoothing if needed '''
 
-    match_tensor = (decoder_outputs_argmax == dec_targets).long()
+    loss = cal_loss(pred, gold, smoothing)
 
-    decoder_mask = (dec_targets != 0).long()
+    pred = pred.max(1)[1]
+    gold = gold.contiguous().view(-1)
+    non_pad_mask = gold.ne(PAD_ID)
+    accuracy = pred.eq(gold)
+    accuracy = accuracy.masked_select(non_pad_mask).sum().item()
 
-    accuracy_tensor = match_tensor * decoder_mask
+    return loss, accuracy
 
-    accuracy = float(torch.sum(accuracy_tensor)) / \
-        float(torch.sum(decoder_mask))
 
-    return accuracy
+def cal_loss(pred, gold, smoothing):
+    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
+
+    gold = gold.contiguous().view(-1)
+
+    if smoothing:
+        eps = 0.1
+        n_class = pred.size(1)
+
+        one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
+        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+        log_prb = F.log_softmax(pred, dim=1)
+
+        non_pad_mask = gold.ne(PAD_ID)
+        loss = -(one_hot * log_prb).sum(dim=1)
+        loss = loss.masked_select(non_pad_mask).sum()  # average later
+    else:
+        loss = F.cross_entropy(
+            pred, gold, ignore_index=PAD_ID, reduction='sum')
+
+    return loss
 
 
 ''' save log to file '''
@@ -376,6 +374,7 @@ def build_criterion(padid):
     #  criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
 
     return criterion
+
 
 def load_fasttext_embedding(fasttext, vocab):
     words_embedded = list()
@@ -479,7 +478,8 @@ if __name__ == '__main__':
 
     if opt.model_type == 'kg':
         """ computing similarity between conversation and fact """
-        offline_filename = os.path.join(opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
+        offline_filename = os.path.join(
+            opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
 
         if opt.offline_type in ['elastic', 'elastic_tag']:
             dataset.build_similarity_facts_offline(
@@ -489,7 +489,8 @@ if __name__ == '__main__':
             facts_dict = None
             if not os.path.exists(offline_filename):
                 facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
-                embedding = nn.Embedding.from_pretrained(pre_trained_weight, freeze=True)
+                embedding = nn.Embedding.from_pretrained(
+                    pre_trained_weight, freeze=True)
                 with torch.no_grad():
                     dataset.build_similarity_facts_offline(
                         facts_dict,
