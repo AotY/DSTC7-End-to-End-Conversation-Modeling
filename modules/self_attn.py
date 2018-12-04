@@ -61,7 +61,7 @@ class SelfAttentive(nn.Module):
         self.Ws2 = nn.Parameter(torch.Tensor(1, attn_hops, mlp_input_size))
         init_wt_unif(self.Ws1)
         init_wt_unif(self.Ws2)
-        
+
         self.fc1 = nn.Linear(attn_hops * self.bidirection_num * self.hidden_size, mlp_output_size)
         init_linear_wt(self.fc1)
 
@@ -92,6 +92,7 @@ class SelfAttentive(nn.Module):
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+            hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         A = torch.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]

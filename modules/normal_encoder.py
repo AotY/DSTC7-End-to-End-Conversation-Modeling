@@ -11,8 +11,8 @@ import torch
 import torch.nn as nn
 
 from modules.utils import rnn_factory
-from modules.utils import init_wt_normal, init_linear_wt
 from modules.utils import init_gru_orth, init_lstm_orth
+
 
 class NormalEncoder(nn.Module):
     def __init__(self,
@@ -77,6 +77,6 @@ class NormalEncoder(nn.Module):
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
             outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+            hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         return outputs, hidden_state
-

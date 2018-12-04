@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=7
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
@@ -9,7 +9,7 @@ python train_kg_model.py \
     --vocab_size 4e4 \
     --turn_num 5 \
     --min_turn 2 \
-    --turn_type normal \
+    --turn_type none \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -41,7 +41,7 @@ python train_kg_model.py \
     --eval_split 0.0001 \
     --test_split 0.07 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task train \
     --share_embedding \
     --offline_type elastic \
