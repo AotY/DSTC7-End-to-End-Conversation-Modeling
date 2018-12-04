@@ -16,6 +16,7 @@ from misc.utils import remove_stop_words
 
 from misc.url_tags_weight import tag_weight_dict
 from misc.url_tags_weight import default_weight
+from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
 
 class Dataset:
@@ -43,8 +44,8 @@ class Dataset:
 
     def read_txt(self):
         self.logger.info('read data...')
-        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s.%s.pkl' % (
-            self.config.turn_type, self.config.turn_num))
+        _data_dict_path = os.path.join(
+            self.config.save_path, '_data_dict.%s.pkl' % (self.config.turn_num))
         if not os.path.exists(_data_dict_path):
             datas = []
             with open(self.config.pair_path, 'r', encoding='utf-8') as f:
@@ -53,47 +54,53 @@ class Dataset:
                     if not bool(line):
                         continue
 
-                    conversation_id, context, response, hash_value, score, turn = line.split('\t')
+                    conversation_id, conversation, response, hash_value, score, turn = line.split(
+                        '\t')
 
-                    if not bool(context) or not bool(response):
+                    if not bool(conversation) or not bool(response):
                         continue
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
                     if len(response_ids) < self.config.min_len or len(response_ids) > self.config.r_max_len + 50:
                         continue
 
-                    #  response_ids = response_ids[-min(self.r_max_len - 1, len(response_ids)):]
-                    response_ids = response_ids[:min(self.config.r_max_len - 1, len(response_ids))]
+                    response_ids = response_ids[:min(
+                        self.config.r_max_len, len(response_ids))]
 
-                    # context split by EOS, START
-                    sentences = self.parser_conversations(context)
+                    # conversation split by EOS, START
+                    sentences = self.parser_conversations(conversation)
 
                     if sentences is None or len(sentences) < self.config.min_turn:
                         continue
 
-                    sentences = sentences[-min(self.config.turn_num, len(sentences)):]
+                    sentences = sentences[-min(self.config.turn_num,
+                                               len(sentences)):]
 
-                    if self.config.turn_type == 'concat':
-                        context = ' '.join(sentences)
-                        sentences = [context]
-                    elif self.config.turn_type == 'none':
-                        context = sentences[-1]
-                        sentences = [context]
+                    # query
+                    query = sentences[-1]
+                    query_ids = self.vocab.words_to_id(query.split(' '))
+                    query_ids = query_ids[-min(self.config.c_max_len,
+                                               len(query_ids)):]
 
-                    sentences_text = []
+                    # contexts
+                    contexts = sentences[:-1]
+                    context_ids = []
+                    for si, sentence in enumerate(contexts):
+                        sentence_ids = self.vocab.words_to_id(
+                            sentence.split(' '))
+                        if si % 2 == 0:  # start
+                            sentence_ids = sentence_ids[-min(
+                                self.config.c_max_len, len(sentence_ids)):]
+                        else:  # reply
+                            sentence_ids = sentence_ids[:min(
+                                self.config.c_max_len, len(sentence_ids))]
 
-                    sentences_ids = []
-                    for si, sentence in enumerate(sentences):
-                        sentence_ids = self.vocab.words_to_id(sentence.split(' '))
-                        if si % 2 == 0: # start
-                            sentence_ids = sentence_ids[-min(self.config.c_max_len, len(sentence_ids)):]
-                        else: # reply
-                            sentence_ids = sentence_ids[:min(self.config.c_max_len, len(sentence_ids))]
+                        context_ids.append(sentence_ids)
+                        sentences_text.append(
+                            ' '.join(self.vocab.ids_to_word(sentence_ids)))
 
-                        sentences_ids.append(sentence_ids)
-                        sentences_text.append(' '.join(self.vocab.ids_to_word(sentence_ids)))
-
-                    datas.append((conversation_id, sentences_text, sentences_ids, response_ids, hash_value))
+                    datas.append((conversation_id, query_ids,
+                                 context_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -128,9 +135,10 @@ class Dataset:
             'test': 0
         }
 
-    def parser_conversations(self, context):
-        sentences = context.split('EOS')
-        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
+    def parser_conversations(self, conversation):
+        sentences = conversation.split('EOS')
+        sentences = [sentence for sentence in sentences if len(
+            sentence.split()) >= self.config.min_len]
         return sentences
 
     def reset_data(self, task, shuffle=True):
@@ -148,162 +156,159 @@ class Dataset:
             self.reset_data(task)
             cur_indicator = batch_size
 
-        h_inputs = list()
-        h_inputs_lenght = list()
-        h_turn_length = list()
+        q_inputs = list()
+        q_inputs_length = list()
 
-        dec_inputs = torch.zeros((self.config.r_max_len, batch_size),
-                                     dtype=torch.long,
-                                     device=self.device)
+        c_inputs = list()
+        c_inputs_length = list()
+        c_turn_length = list()
 
-        dec_targets = torch.zeros((self.config.r_max_len, batch_size),
-                                      dtype=torch.long,
-                                      device=self.device)
+        dec_inputs = list()
 
-        dec_inputs_length = list()
-
-        context_texts = list()
-        response_texts = list()
         conversation_ids = list()
         hash_values = list()
-
-        # facts
-        facts_texts = list()
 
         f_inputs = list()
         f_inputs_length = list()
         f_topk_length = list()
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
+
         """sort batch_data, by turn num"""
-        batch_data = sorted(batch_data, key=lambda item: len(item[2]), reverse=True)
-        for i, (conversation_id, sentences_text, sentences_ids, response_ids, hash_value) in enumerate(batch_data):
-            response_text = ' '.join(self.vocab.ids_to_word(response_ids))
-            response_texts.append(response_text)
-            context_texts.append(sentences_text)
+        batch_data = sorted(
+            batch_data, key=lambda item: len(item[1]), reverse=True)
+        for i, (conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
-            # h inputs
-            h_inputs_lenght.append(list([1]) * self.config.turn_num)
-            h_turn_length.append(max(self.config.min_turn, len(sentences_ids)))
+            # q inputs
+            q_inputs_length.append(len(query_ids))
+            q_input = torch.LongTensor(query_ids + [PAD_ID] * (self.config.c_max_len - len(query_ids)))).to(self.device)
+            q_inputs.append(q_input)
 
-            h_input = torch.zeros((self.config.turn_num, self.config.c_max_len), dtype=torch.long).to(
-                self.device)  # [turn_num, max_len]
+            if self.config.turn_type != 'none':
+                # c inputs
+                c_turn_length.append(len(context_ids))
+                c_inputs_length.append(list([1]) * (self.config.turn_num - 1))
 
-            for j, ids in enumerate(sentences_ids):
-                h_inputs_lenght[i][j] = len(ids)
-
-                tmp_i = torch.zeros(self.config.c_max_len, dtype=torch.long, device=self.device)
-
-                for k, id in enumerate(ids):
-                    tmp_i[k] = id
-                h_input[j, :] = tmp_i
-
-            h_inputs.append(h_input)
+                context_ids=torch.LongTensor([
+                    ids + [PAD_ID] * (self.config.c_max_len - len(ids))
+                    for ids in context_ids
+                ]).to(self.device)
+                c_input=torch.zeros((self.config.turn_num - 1, self.config.c_max_len),
+                                        dtype = torch.long).to(self.device)
+                c_input[:len(context_ids), :]=context_ids
+                c_inputs.append(c_input)
 
             # dec_inputs
-            dec_inputs[0, i] = self.vocab.sosid
-            for r, token_id in enumerate(response_ids):
-                dec_inputs[r + 1, i] = token_id
-                dec_targets[r, i] = token_id
-            dec_targets[len(response_ids), i] = self.vocab.eosid
-            dec_inputs_length.append(len(response_ids) + 1)
+            dec_input=torch.LongTensor([SOS_ID] + response_ids + [EOS_ID] \
+                    + [PAD_ID] * (self.config.r_max_len - len(response_ids)))).to(self.device)
+            dec_inputs.append(dec_input)
 
-            topk_facts_text = None
             if self.config.model_type == 'kg':
-                topk_facts_text = self.facts_topk_phrases.get(hash_value, None)
-                f_input = torch.zeros((self.config.f_topk, self.config.f_max_len),
+                topk_facts_text=self.facts_topk_phrases.get(hash_value, None)
+                f_input=torch.zeros((self.config.f_topk, self.config.f_max_len),
                                       dtype=torch.long,
                                       device=self.device)
 
-                f_input_length = torch.ones(self.config.f_topk,
+                f_input_length=torch.ones(self.config.f_topk,
                                             dtype=torch.long,
                                             device=self.device)
 
                 if topk_facts_text is not None:
-                    topk_facts_ids = [self.vocab.words_to_id(text.split()) for text in topk_facts_text]
-                    f_topk_length.append(min(len(topk_facts_ids), self.config.f_topk))
+                    topk_facts_ids=[self.vocab.words_to_id(
+                        text.split()) for text in topk_facts_text]
+                    f_topk_length.append(
+                        min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
-                        ids = ids[:min(self.config.f_max_len, len(ids))]
-                        f_input_length[fi] = len(ids)
+                        ids=ids[:min(self.config.f_max_len, len(ids))]
+                        f_input_length[fi]=len(ids)
                         for fj, id in enumerate(ids):
-                            f_input[fi, fj] = id
+                            f_input[fi, fj]=id
                 else:
                     f_topk_length.append(1)
 
                 f_inputs.append(f_input)
                 f_inputs_length.append(f_input_length)
 
-            facts_texts.append(topk_facts_text)
+                facts_texts.append(topk_facts_text)
 
-        # [turn_num, max_len, batch_size]
-        h_inputs = torch.stack(h_inputs, dim=2)
+        # q [max_len, batch_size]
+        q_inputs=torch.stack(q_inputs, dim=1)
+        q_turn_length=torch.tensor(
+            q_turn_length, dtype=torch.long, device=self.device)
 
-        h_turn_length = torch.tensor(h_turn_length, dtype=torch.long, device=self.device) # [batch_size]
-
-        h_inputs_lenght = torch.tensor(
-            h_inputs_lenght, dtype=torch.long, device=self.device).transpose(0, 1)  # [turn_num, batch_size]
-
-        dec_inputs_length = torch.tensor(
-            dec_inputs_length, dtype=torch.long, device=self.device)  # [batch_size]
+        # c [turn_num-1, max_len, batch_size]
+        if self.config.turn_type != 'none':
+            c_inputs=torch.stack(c_inputs, dim=2)
+            c_turn_length=torch.tensor(c_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
+            c_inputs_length=torch.tensor(c_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)  # [turn_num-1, batch_size]
+        # decoder [max_len, batch_size]
+        dec_inputs = torch.stack(dec_inputs, dim=1)
 
         if self.config.model_type == 'kg':
             # [topk, batch_size, max_len]
-            f_inputs = torch.stack(f_inputs, dim=1)
-            f_inputs_length = torch.stack(f_inputs_length, dim=1)  # [f_topk, batch_size]
+            f_inputs=torch.stack(f_inputs, dim=1)
+            f_inputs_length=torch.stack(
+                f_inputs_length, dim=1)  # [f_topk, batch_size]
 
-            f_topk_length = torch.tensor(
+            f_topk_length=torch.tensor(
                 f_topk_length, dtype=torch.long, device=self.device)
 
         # update _indicator_dict[task]
-        self._indicator_dict[task] = cur_indicator
+        self._indicator_dict[task]=cur_indicator
 
-        return dec_inputs, dec_targets, dec_inputs_length, \
-            context_texts, response_texts, conversation_ids, hash_values, \
-            f_inputs, f_inputs_length, f_topk_length, facts_texts, \
-            h_inputs, h_turn_length, h_inputs_lenght
+        return dec_inputs, dec_targets, \
+                conversation_ids, hash_values, \
+                q_inputs, q_inputs_length, \
+                c_inputs, c_inputs_lenght, c_turn_length, \
+                f_inputs, f_inputs_length, f_topk_length
 
     def load_similarity_facts(self, offline_filename):
-        self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
+        self.facts_topk_phrases=pickle.load(open(offline_filename, 'rb'))
 
     def retrieval_similarity_facts(self, offline_filename):
-        es = es_helper.get_connection()
-        r = Rake(
+        es=es_helper.get_connection()
+        r=Rake(
             min_length=1,
             max_length=self.config.f_max_len
         )
-        facts_topk_phrases = {}
+        facts_topk_phrases={}
         for task, task_datas in self._data_dict.items():
             self.logger.info('retrieval similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
-                conversation_id, sentences_text, _, _, hash_value = data
+                conversation_id, sentences_text, _, _, hash_value=data
                 #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
-                sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence) for sentence in sentences_text]
+                sentences_text=[re.sub(r'<number>|<url>|<unk>', '', sentence)
+                                       for sentence in sentences_text]
                 #  print('sentences_text: ', sentences_text)
                 if len(sentences_text) >= 2:
                     r.extract_keywords_from_sentences(sentences_text[:-1])
-                    ranked_text = ' '.join(r.get_ranked_phrases())
-                    query_text = ranked_text + ' ' + sentences_text[-1]
+                    ranked_text=' '.join(r.get_ranked_phrases())
+                    query_text=ranked_text + ' ' + sentences_text[-1]
                 else:
-                    query_text = ' '.join(sentences_text)
+                    query_text=' '.join(sentences_text)
 
                 #  print('query_text: ', query_text)
-                query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
-                hits, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body)
+                query_body=es_helper.assemble_search_fact_body(
+                    conversation_id, query_text)
+                hits, hit_count=es_helper.search(
+                    es, es_helper.index, es_helper.fact_type, query_body)
                 if hit_count == 0:
                     continue
 
-                phrases = list()
+                phrases=list()
                 for hit in hits[:self.config.f_topk]:
-                    id = hit['_source']['conversation_id']
-                    assert (conversation_id == id), "%s != %s" % (conversation_id, id)
-                    phrase = hit['_source']['text']
+                    id=hit['_source']['conversation_id']
+                    assert (conversation_id == id), "%s != %s" % (
+                        conversation_id, id)
+                    phrase=hit['_source']['text']
                     if len(phrase) <= self.config.f_max_len:
                         phrases.append(phrase)
                         continue
 
-                    parts = [part for part in phrase.split('.') if len(part.split()) > 2]
+                    parts=[part for part in phrase.split(
+                        '.') if len(part.split()) > 2]
                     if len(parts) == 0:
                         phrases.append(phrase)
                     elif len(parts) == 1:
@@ -315,10 +320,10 @@ class Dataset:
                 #  print('conversation_id: ', conversation_id)
                 #  print('phrases: {}'.format(phrases))
 
-                facts_topk_phrases[hash_value] = phrases
+                facts_topk_phrases[hash_value]=phrases
 
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
-        self.facts_topk_phrases = facts_topk_phrases
+        self.facts_topk_phrases=facts_topk_phrases
 
     def build_similarity_facts_offline(self,
                                        facts_dict=None,
@@ -328,85 +333,93 @@ class Dataset:
             self.load_similarity_facts(offline_filename)
             return
 
-        offline_type = self.config.offline_type
+        offline_type=self.config.offline_type
         if offline_type in ['elastic', 'elastic_tag']:
             self.retrieval_similarity_facts(offline_filename)
             return
 
-        ranked_phrase_dict_path = self.config.save_path + 'ranked_phrase_dict.%s.pkl' % offline_type
-        ranked_phrase_embedded_dict_path = self.config.save_path + 'ranked_phrase_embedded_dict.%s.pkl' % offline_type
+        ranked_phrase_dict_path=self.config.save_path + \
+            'ranked_phrase_dict.%s.pkl' % offline_type
+        ranked_phrase_embedded_dict_path=self.config.save_path + \
+            'ranked_phrase_embedded_dict.%s.pkl' % offline_type
         try:
             self.logger.info('load ranked phrase...')
-            ranked_phrase_dict = pickle.load(open(ranked_phrase_dict_path, 'rb'))
-            ranked_phrase_embedded_dict = pickle.load(open(ranked_phrase_embedded_dict_path, 'rb'))
+            ranked_phrase_dict=pickle.load(open(ranked_phrase_dict_path, 'rb'))
+            ranked_phrase_embedded_dict=pickle.load(
+                open(ranked_phrase_embedded_dict_path, 'rb'))
         except FileNotFoundError as e:
-            r = Rake(
+            r=Rake(
                 min_length=1,
                 max_length=self.config.f_max_len
             )
-            ranked_phrase_dict = {}
-            ranked_phrase_embedded_dict = {}
+            ranked_phrase_dict={}
+            ranked_phrase_embedded_dict={}
             for conversation_id, ps in tqdm(facts_dict.items()):
                 if len(ps) == 0:
                     continue
                 r.extract_keywords_from_sentences(ps)
-                phrases = r.get_ranked_phrases()
+                phrases=r.get_ranked_phrases()
                 if len(phrases) == 0:
                     continue
-                ranked_phrase_dict[conversation_id] = phrases
-                phrase_embeddeds = list()
+                ranked_phrase_dict[conversation_id]=phrases
+                phrase_embeddeds=list()
                 for phrase in phrases:
                     if offline_type == 'fasttext':
-                        ids = self.vocab.words_to_id(phrase.split())
-                        mean_embedded = self.get_sentence_embedded(ids, embedding, offline_type)
+                        ids=self.vocab.words_to_id(phrase.split())
+                        mean_embedded=self.get_sentence_embedded(
+                            ids, embedding, offline_type)
                     elif offline_type == 'elmo':
-                        mean_embedded = self.get_sentence_embedded(phrase.split(), embedding, offline_type)
+                        mean_embedded=self.get_sentence_embedded(
+                            phrase.split(), embedding, offline_type)
 
                     phrase_embeddeds.append(mean_embedded)
                 #  phrase_embeddeds = torch.stack(phrase_embeddeds, dim=0) # [len(phrase), pre_embedding_size]
-                ranked_phrase_embedded_dict[conversation_id] = phrase_embeddeds
+                ranked_phrase_embedded_dict[conversation_id]=phrase_embeddeds
 
-            pickle.dump(ranked_phrase_dict, open(ranked_phrase_dict_path, 'wb'))
-            pickle.dump(ranked_phrase_embedded_dict, open(ranked_phrase_embedded_dict_path, 'wb'))
+            pickle.dump(ranked_phrase_dict, open(
+                ranked_phrase_dict_path, 'wb'))
+            pickle.dump(ranked_phrase_embedded_dict, open(
+                ranked_phrase_embedded_dict_path, 'wb'))
 
         # embedding match
-        cos = nn.CosineSimilarity(dim=0, eps=1e-6)
-        facts_topk_phrases = {}
+        cos= nn.CosineSimilarity(dim=0, eps=1e-6)
+        facts_topk_phrases= {}
         for task, task_datas in self._data_dict.items():
             self.logger.info('build similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
-                conversation_id, sentences_text, _, _, hash_value = data
+                conversation_id, sentences_text, _, _, hash_value= data
                 if not bool(hash_value):
                     continue
 
                 # [len(phrases), pre_embedding_size]
-                phrase_embeddeds = ranked_phrase_embedded_dict.get(conversation_id, None)
+                phrase_embeddeds= ranked_phrase_embedded_dict.get(conversation_id, None)
                 if phrase_embeddeds is None or len(phrase_embeddeds) == 0:
                     continue
-                phrases = ranked_phrase_dict.get(conversation_id, None)
+                phrases= ranked_phrase_dict.get(conversation_id, None)
                 if phrases is None or len(phrases) == 0:
                     continue
 
-                sum_scores = list()
+                sum_scores= list()
                 for sentence in sentences_text:
-                    sentence_words = remove_stop_words(sentence.split())
-                    sentence_ids = self.vocab.words_to_id(sentence_words)
-                    mean_embedded = self.get_sentence_embedded(sentence_ids, embedding, offline_type)
-                    scores = list()
+                    sentence_words= remove_stop_words(sentence.split())
+                    sentence_ids= self.vocab.words_to_id(sentence_words)
+                    mean_embedded= self.get_sentence_embedded(sentence_ids, embedding, offline_type)
+                    scores= list()
                     for phrase_embedded in phrase_embeddeds:
                         #  print(phrase_embedded.shape)
                         #  print(mean_embedded.shape)
-                        scores.append(cos(mean_embedded.view(-1), phrase_embedded.view(-1)))
-                    scores = torch.stack(scores, dim=0)
+                        scores.append(cos(mean_embedded.view(-1),
+                                      phrase_embedded.view(-1)))
+                    scores= torch.stack(scores, dim=0)
                     sum_scores.append(scores)
                 # [len(sentences), len(phrase_embeddeds)]
-                sum_scores = torch.stack(sum_scores)
+                sum_scores= torch.stack(sum_scores)
                 #  print('sum_scores: ', sum_scores.shape)
                 # [len(phrase_embeddeds)]
-                sum_score = sum_scores.sum(dim=0)
-                _, indexes = sum_score.topk(min(self.config.f_topk, sum_score.size(0)), dim=0)
+                sum_score= sum_scores.sum(dim=0)
+                _, indexes= sum_score.topk(min(self.config.f_topk, sum_score.size(0)), dim=0)
 
-                topk_phrases = list()
+                topk_phrases= list()
                 #  print('phrases: %d' % len(phrases))
                 #  print('indexes: %d' % indexes.size(0))
                 for index in indexes.tolist():
@@ -414,44 +427,44 @@ class Dataset:
                         continue
                     topk_phrases.append(phrases[index])
 
-                facts_topk_phrases[hash_value] = phrases
+                facts_topk_phrases[hash_value]= phrases
 
                 del phrase_embeddeds
                 del phrases
 
         # save topk_facts_embedded_dict
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
-        self.facts_topk_phrases = facts_topk_phrases
+        self.facts_topk_phrases= facts_topk_phrases
 
     def get_sentence_embedded(self, ids, embedding, offline_type):
         if offline_type == 'fasttext':
-            ids = torch.LongTensor(ids).to(self.device)
-            embeddeds = embedding(ids)  # [len(ids), pre_embedding_size]
-            mean_embedded = embeddeds.mean(dim=0)  # [pre_embedding_size]
+            ids= torch.LongTensor(ids).to(self.device)
+            embeddeds= embedding(ids)  # [len(ids), pre_embedding_size]
+            mean_embedded= embeddeds.mean(dim=0)  # [pre_embedding_size]
             return mean_embedded
         elif offline_type == 'elmo':
-            tokens = ids # if offline_type is elmo, ids = words
-            vectors = embedding.embed_sentence(tokens)
+            tokens= ids # if offline_type is elmo, ids = words
+            vectors= embedding.embed_sentence(tokens)
             assert(len(vectors) == 3)
             assert(len(vectors[0]) == len(tokens))
             # vectors: [3, len(tokens), 1024]
-            mean_embedded = vectors[2].mean(dim=0)
+            mean_embedded= vectors[2].mean(dim=0)
             return mean_embedded
 
     def get_facts_weight(self, facts):
         """ facts: [[w_n] * size]"""
-        facts_weight = []
-        new_facts = []
+        facts_weight= []
+        new_facts= []
         for fact in facts:
             if len(fact) < self.config.min_len:
                 continue
-            fact_str = " ".join(fact)
-            fact_weight = default_weight
+            fact_str= " ".join(fact)
+            fact_weight= default_weight
             for tag, weight in tag_weight_dict.items():
                 if fact_str.find(tag) != -1:
-                    fact_weight = max(fact_weight, weight)
-                    fact_str = fact_str.replace(tag, '')
-                    fact_str = fact_str.replace(tag[0] + '/' + tag[1:], '')
+                    fact_weight= max(fact_weight, weight)
+                    fact_str= fact_str.replace(tag, '')
+                    fact_str= fact_str.replace(tag[0] + '/' + tag[1:], '')
 
             if len(fact_str.split(" ")) >= self.config.min_len:
                 new_facts.append(fact_str)
@@ -460,41 +473,68 @@ class Dataset:
         return new_facts, facts_weight
 
     def save_generated_texts(self,
-                             context_texts,
-                             response_texts,
-                             conversation_ids,
+                             ids,
                              hash_values,
+                            q_inputs,
+                            c_inputs,
+                            f_inputs,
+                            r_inputs,
                              greedy_texts,
                              beam_texts,
                              filename,
-                             decode_type='greed',
-                             facts_texts=None):
+                             decode_type='greed'):
 
-        #  print(facts_texts)
+        q_inputs = q_inputs.transpose(0, 1).tolist() # [batch_size, max_len]
+        r_inputs = r_inputs.transpose(0, 1).tolist()
+        if len(c_inputs) == 0:
+            c_inputs = [None] * self.config.batch_size
+        else:
+            # c [batch_size, turn_num-1, max_len]
+            c_inputs = c_inputs.transpose(0, 2).tolist()
+
+        if len(f_inputs) == 0:
+            f_inputs = [None] * self.config.batch_size
+        else:
+            # [batch_size, topk, max_len]
+            f_inputs = f_inputs.transpose(0, 1).tolist()
+
         with open(filename, 'a', encoding='utf-8') as f:
-            for conversation_id, hash_value, sentences, response, greedy_text, beam_text, topk_facts in zip(conversation_ids,
+            for id, hash_value, q_ids, c_ids, f_id, r_ids, g_text, b_text in zip(ids,
                 hash_values,
-                context_texts,
-                response_texts,
+                q_inputs,
+                c_inputs,
+                f_inputs,
+                r_inputs,
                 greedy_texts,
-                beam_texts,
-                facts_texts):
+                beam_texts):
 
-                f.write('conversation_id: %s\n' % conversation_id)
+                f.write('id: %s\n' % id)
                 f.write('hash_value: %s\n' % hash_value)
-                for sentence in sentences:
-                    f.write('> %s\n' % sentence)
+                
+                if c_ids is not None:
+                    for ci, ids in enumerate(c_ids):
+                        text = ' '.join(self.vocab.ids_to_word(ids))
+                        if ci % 2 == 0:
+                            f.write('> %s\n' % text)
+                        else:
+                            f.write('< %s\n' % text)
 
-                f.write('gold: %s\n' % response)
+                query_text = ' '.join(self.vocab.ids_to_word(q_ids))
+                f.write('query: %s\n' % query_text)
 
-                f.write('greedy: %s\n' % greedy_text)
+                response_text = ' '.join(self.vocab.ids_to_word(r_ids))
+                f.write('response: %s\n' % response_text)
 
-                for i, best_text in enumerate(beam_text):
+                f.write('greedy: %s\n' % g_text)
+
+                for i, best_text in enumerate(b_text):
                     f.write('beam %d: %s\n' % (i, best_text))
 
-                if topk_facts is not None:
-                    for fi, fact_text in enumerate(topk_facts):
-                        f.write('fact %d: %s\n' % (fi, fact_text))
+                if f_ids is not None:
+                    for fi, ids in enumerate(f_ids):
+                        text = ' '.join(self.vocab.ids_to_word(ids))
+                        f.write('fact %d: %s\n' % (fi, text))
+
                 f.write('---------------------------------\n')
 
     def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
@@ -508,23 +548,23 @@ class Dataset:
             return: [batch_size, topk]
         """
 
-        batch_generated_texts = []
+        batch_generated_texts= []
         if decode_type == 'greedy':
             for bi in range(self.config.batch_size):
-                text = self.vocab.ids_to_text(outputs[bi].tolist())
+                text= self.vocab.ids_to_text(outputs[bi].tolist())
                 batch_generated_texts.append(text)
         elif decode_type == 'beam_search':
             for bi in range(self.config.batch_size):
-                topk_ids = outputs[bi]
-                topk_texts = []
+                topk_ids= outputs[bi]
+                topk_texts= []
                 if outputs_length is not None:
-                    topk_length = outputs_length[bi]
+                    topk_length= outputs_length[bi]
                     for ids, length in zip(topk_ids, topk_length):
-                        text = self.vocab.ids_to_text(ids[:length])
+                        text= self.vocab.ids_to_text(ids[:length])
                         topk_texts.append(text)
                 else:
                     for ids in topk_ids:
-                        text = self.vocab.ids_to_text(ids)
+                        text= self.vocab.ids_to_text(ids)
                         topk_texts.append(text)
 
                 batch_generated_texts.append(topk_texts)
