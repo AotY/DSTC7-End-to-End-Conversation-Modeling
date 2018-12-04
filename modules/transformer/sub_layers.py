@@ -63,7 +63,6 @@ class  MultiHeadAttention(nn.Module):
 
         q = self.q_linear(q).view(sz_b, len_q, self.num_heads, self.k_size) #[16, 35, 8 * 32]
         k = self.k_linear(k).view(sz_b, len_k, self.num_heads, self.k_size)
-
         v = self.v_linear(v).view(sz_b, len_v, self.num_heads, self.v_size)
         #  print('q size: ', q.shape) # [128, 50, 8, 64]
         #  print('k size: ', k.shape)

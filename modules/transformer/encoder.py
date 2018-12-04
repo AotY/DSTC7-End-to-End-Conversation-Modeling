@@ -52,12 +52,14 @@ class Encoder(nn.Module):
         """
         #  print('enc_inputs: ', enc_inputs.shape)
         #  print('enc_inputs_pos: ', enc_inputs_pos.shape)
-        enc_attn_list = list()
+        enc_slf_attn_list = list()
 
         # -- Prepare masks
         attn_mask = get_attn_key_pad_mask(k=enc_inputs, q=enc_inputs, padid=PAD_ID)
+        #  print('attn_mask: ', attn_mask)
 
         non_pad_mask = get_non_pad_mask(enc_inputs, PAD_ID)
+        #  print('non_pad_mask: ', non_pad_mask)
 
         embedded = self.embedding(enc_inputs) # [batch_size, max_len, embedding_size]
 
@@ -68,15 +70,17 @@ class Encoder(nn.Module):
 
         enc_embedded = embedded + pos_embedded
         #  print('enc_embedded shape: ', enc_embedded.shape) # [b, max_len, embedding_size]
+        print('enc_embedded: ', enc_embedded)
 
+        enc_output = enc_embedded
         for enc_layer in self.layer_stack:
-            enc_output, enc_attn = enc_layer(
-                enc_embedded,
+            enc_output, en_slf_attn = enc_layer(
+                enc_output,
                 non_pad_mask=non_pad_mask,
                 attn_mask=attn_mask)
 
             if return_attns:
-                enc_attn_list.append(enc_attn)
+                enc_slf_attn_list.append(en_slf_attn)
 
         #  print('enc_output shape: ', enc_output.shape)
         if return_attns:

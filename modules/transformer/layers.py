@@ -50,6 +50,7 @@ class EncoderLayer(nn.Module):
             enc_input,
             mask=attn_mask
         )
+        print('layer enc_output: ', enc_output)
 
         enc_output *= non_pad_mask
 

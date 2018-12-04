@@ -40,6 +40,7 @@ class ConversationModel(nn.Module):
             PAD_ID
         )
 
+        """
         # context encoder, self Attention
         self.c_encoder = SelfAttentive(
             config,
@@ -51,6 +52,7 @@ class ConversationModel(nn.Module):
             config,
             enc_embedding
         )
+        """
 
         # query encoder, Transformer
         self.q_encoder = transformer.Encoder(
@@ -65,8 +67,8 @@ class ConversationModel(nn.Module):
         )
 
         # encoder embedding sharing
-        self.c_encoder.embedding.weight = self.q_encoder.embedding.weight
-        self.f_encoder.embedding.weight = self.q_encoder.embedding.weight
+        #  self.c_encoder.embedding.weight = self.q_encoder.embedding.weight
+        #  self.f_encoder.embedding.weight = self.q_encoder.embedding.weight
 
         # decoder, encoder embedding sharing
         if config.share_embedding:
@@ -139,7 +141,10 @@ class ConversationModel(nn.Module):
                                                 h_inputs_pos[-1].transpose(0, 1)
 
         # [batch_size, max_len, transformer_size]
+        #  print('q_input: ', q_input)
+        #  print('q_input_pos: ', q_input_pos)
         q_enc_outputs = self.q_encoder(q_input, q_input_pos)
+        print('q_enc_outputs: ', q_enc_outputs)
 
         # decoder [batch_size, max_len, transformer_size]
         dec_outputs = self.decoder(
@@ -155,6 +160,7 @@ class ConversationModel(nn.Module):
         dec_outputs = self.output_linear(dec_outputs) * self.x_logit_scale
 
         dec_outputs = dec_outputs.view(-1, self.config.vocab_size)
+        print('dec_outputs: ', dec_outputs)
 
         return dec_outputs
 

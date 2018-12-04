@@ -31,7 +31,8 @@ class ScheduledOptimizer:
         "Step with the inner optimizer"
         if self.max_grad_norm is not None and self.max_grad_norm > 0:
             params = itertools.chain.from_iterable([group['params'] for group in self.optimizer.param_groups])
-            _ = nn.utils.clip_grad_norm_(params, self.max_grad_norm)
+            norm_count = nn.utils.clip_grad_norm_(params, self.max_grad_norm)
+            print('norm_count: %d' % norm_count)
 
         self.optimizer.step()
 

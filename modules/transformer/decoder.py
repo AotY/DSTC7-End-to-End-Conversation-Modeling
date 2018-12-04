@@ -72,9 +72,10 @@ class Decoder(nn.Module):
 
         dec_embedded = self.embedding(dec_inputs) + self.pos_embedding(dec_inputs_pos).to(dec_inputs.device)
 
+        dec_output = dec_embedded
         for dec_layer in self.layer_stack:
             dec_output, dec_slf_attn, dec_enc_attn = dec_layer(
-                dec_embedded,
+                dec_output,
                 enc_outputs,
                 non_pad_mask=non_pad_mask,
                 slf_attn_mask=slf_attn_mask,

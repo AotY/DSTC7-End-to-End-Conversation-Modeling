@@ -22,8 +22,8 @@ python train.py \
     --num_heads 6 \
     --n_warmup_steps 3000 \
     --dropout 0.1 \
-    --c_max_len 50 \
-    --r_max_len 50 \
+    --c_max_len 35 \
+    --r_max_len 35 \
     --min_len 3 \
     --tied \
     --beam_size 8 \
@@ -32,7 +32,7 @@ python train.py \
     --f_topk 5 \
     --lr 0.001 \
     --epochs 15 \
-    --batch_size 128 \
+    --batch_size 64 \
     --decode_type beam_search \
     --max_grad_norm 2.0 \
     --seed 19 \

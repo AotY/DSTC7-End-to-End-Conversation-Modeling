@@ -225,11 +225,12 @@ def train(model,
 
     loss = 0
 
-    loss, accuracy = cal_performance(dec_outputs, dec_targets, smoothing=True)
+    print(dec_targets)
+    loss, accuracy = cal_performance(dec_outputs, dec_targets, smoothing=False)
 
     # compute loss
     #  loss = criterion(dec_outputs, dec_targets)
-    #  print(loss)
+    #  print(loss.item())
 
     # backward
     loss.backward()
