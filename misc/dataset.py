@@ -149,19 +149,18 @@ class Dataset:
             cur_indicator = batch_size
 
         h_inputs = list()
-        h_inputs_position = list()
         h_inputs_lenght = list()
-        h_turns_length = list()
+        h_turn_length = list()
 
-        decoder_inputs = torch.zeros((self.config.r_max_len, batch_size),
+        dec_inputs = torch.zeros((self.config.r_max_len, batch_size),
                                      dtype=torch.long,
                                      device=self.device)
 
-        decoder_targets = torch.zeros((self.config.r_max_len, batch_size),
+        dec_targets = torch.zeros((self.config.r_max_len, batch_size),
                                       dtype=torch.long,
                                       device=self.device)
 
-        decoder_inputs_length = list()
+        dec_inputs_length = list()
 
         context_texts = list()
         response_texts = list()
@@ -173,7 +172,7 @@ class Dataset:
 
         f_inputs = list()
         f_inputs_length = list()
-        f_topks_length = list()
+        f_topk_length = list()
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
         """sort batch_data, by turn num"""
@@ -187,43 +186,29 @@ class Dataset:
 
             # h inputs
             h_inputs_lenght.append(list([1]) * self.config.turn_num)
-            h_turns_length.append(max(self.config.min_turn, len(sentences_ids)))
+            h_turn_length.append(max(self.config.min_turn, len(sentences_ids)))
 
             h_input = torch.zeros((self.config.turn_num, self.config.c_max_len), dtype=torch.long).to(
                 self.device)  # [turn_num, max_len]
-            if self.config.turn_type == 'transformer':
-                h_position = torch.zeros((self.config.turn_num, self.config.c_max_len), dtype=torch.long).to(
-                    self.device)  # [turn_nu, max_len]
 
             for j, ids in enumerate(sentences_ids):
                 h_inputs_lenght[i][j] = len(ids)
 
-                tmp_i = torch.zeros(self.config.c_max_len,
-                                    dtype=torch.long, device=self.device)
-                if self.config.turn_type == 'transformer':
-                    tmp_p = torch.zeros(
-                        self.config.c_max_len, dtype=torch.long, device=self.device)
+                tmp_i = torch.zeros(self.config.c_max_len, dtype=torch.long, device=self.device)
 
                 for k, id in enumerate(ids):
                     tmp_i[k] = id
-                    if self.config.turn_type == 'transformer':
-                        tmp_p[k] = k + 1
-
                 h_input[j, :] = tmp_i
-                if self.config.turn_type == 'transformer':
-                    h_position[j, :] = tmp_p
 
             h_inputs.append(h_input)
-            if self.config.turn_type == 'transformer':
-                h_inputs_position.append(h_position)
 
-            # decoder_inputs
-            decoder_inputs[0, i] = self.vocab.sosid
+            # dec_inputs
+            dec_inputs[0, i] = self.vocab.sosid
             for r, token_id in enumerate(response_ids):
-                decoder_inputs[r + 1, i] = token_id
-                decoder_targets[r, i] = token_id
-            decoder_targets[len(response_ids), i] = self.vocab.eosid
-            decoder_inputs_length.append(len(response_ids) + 1)
+                dec_inputs[r + 1, i] = token_id
+                dec_targets[r, i] = token_id
+            dec_targets[len(response_ids), i] = self.vocab.eosid
+            dec_inputs_length.append(len(response_ids) + 1)
 
             if self.config.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(hash_value, None)
@@ -237,14 +222,14 @@ class Dataset:
 
                 if topk_facts_text is not None:
                     topk_facts_ids = [self.vocab.words_to_id(text.split()) for text in topk_facts_text]
-                    f_topks_length.append(min(len(topk_facts_ids), self.config.f_topk))
+                    f_topk_length.append(min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
                         ids = ids[:min(self.config.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
                             f_input[fi, fj] = id
                 else:
-                    f_topks_length.append(1)
+                    f_topk_length.append(1)
 
                 #  print('topk_facts_text: {}'.format(topk_facts_text))
 
@@ -255,35 +240,30 @@ class Dataset:
 
         # [turn_num, max_len, batch_size]
         h_inputs = torch.stack(h_inputs, dim=2)
-        if self.config.turn_type == 'transformer':
-            # [turn_num, max_len, batch_size]
-            h_inputs_position = torch.stack(h_inputs_position, dim=2)
 
-        h_turns_length = torch.tensor(
-            h_turns_length, dtype=torch.long, device=self.device) # [batch_size]
+        h_turn_length = torch.tensor(h_turn_length, dtype=torch.long, device=self.device) # [batch_size]
 
         h_inputs_lenght = torch.tensor(
             h_inputs_lenght, dtype=torch.long, device=self.device).transpose(0, 1)  # [turn_num, batch_size]
 
-        decoder_inputs_length = torch.tensor(
-            decoder_inputs_length, dtype=torch.long, device=self.device)  # [batch_size]
+        dec_inputs_length = torch.tensor(
+            dec_inputs_length, dtype=torch.long, device=self.device)  # [batch_size]
 
         if self.config.model_type == 'kg':
-            # [topk, max_len, batch_size]
-            f_inputs = torch.stack(f_inputs, dim=2)
-            f_inputs_length = torch.stack(
-                f_inputs_length, dim=1)  # [f_topk, batch_size]
+            # [topk, batch_size, max_len]
+            f_inputs = torch.stack(f_inputs, dim=1)
+            f_inputs_length = torch.stack(f_inputs_length, dim=1)  # [f_topk, batch_size]
 
-            f_topks_length = torch.tensor(
-                f_topks_length, dtype=torch.long, device=self.device)
+            f_topk_length = torch.tensor(
+                f_topk_length, dtype=torch.long, device=self.device)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
-        return decoder_inputs, decoder_targets, decoder_inputs_length, \
+        return dec_inputs, dec_targets, dec_inputs_length, \
             context_texts, response_texts, conversation_ids, hash_values, \
-            f_inputs, f_inputs_length, f_topks_length, facts_texts, \
-            h_inputs, h_turns_length, h_inputs_lenght, h_inputs_position
+            f_inputs, f_inputs_length, f_topk_length, facts_texts, \
+            h_inputs, h_turn_length, h_inputs_lenght
 
     def load_similarity_facts(self, offline_filename):
         self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
