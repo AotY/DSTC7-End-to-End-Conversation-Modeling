@@ -95,7 +95,7 @@ def train_epochs(model,
                     'train', opt.batch_size)
 
             # train and get cur loss
-            loss, n_correct = train(model,
+            loss, n_correct, n_word = train(model,
                                     q_inputs,
                                     q_inputs_length,
                                     c_inputs,
@@ -110,8 +110,6 @@ def train_epochs(model,
 
             total_loss += loss
 
-            non_pad_mask = gold.ne(PAD_ID)
-            n_word = non_pad_mask.sum().item()
             n_word_total += n_word
             n_word_correct += n_correct
 
@@ -205,13 +203,16 @@ def train(model,
     loss, n_correct = cal_performance(
         dec_outputs, dec_inputs[1:, :], smoothing=True)
 
+    non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
+    n_word = non_pad_mask.sum().item()
+
     # backward
     loss.backward()
 
     # optimizer
     optimizer.step()
 
-    return loss.item(), n_correct
+    return loss.item(), n_correct, n_word
 
 
 '''
