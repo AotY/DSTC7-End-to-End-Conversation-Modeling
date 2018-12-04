@@ -210,6 +210,7 @@ class Dataset:
             dec_targets[len(response_ids), i] = self.vocab.eosid
             dec_inputs_length.append(len(response_ids) + 1)
 
+            topk_facts_text = None
             if self.config.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(hash_value, None)
                 f_input = torch.zeros((self.config.f_topk, self.config.f_max_len),
@@ -231,12 +232,10 @@ class Dataset:
                 else:
                     f_topk_length.append(1)
 
-                #  print('topk_facts_text: {}'.format(topk_facts_text))
-
                 f_inputs.append(f_input)
                 f_inputs_length.append(f_input_length)
 
-                facts_texts.append(topk_facts_text)
+            facts_texts.append(topk_facts_text)
 
         # [turn_num, max_len, batch_size]
         h_inputs = torch.stack(h_inputs, dim=2)

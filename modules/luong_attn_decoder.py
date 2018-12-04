@@ -6,7 +6,6 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from modules.utils import init_linear_wt
 from modules.utils import init_lstm_orth, init_gru_orth
@@ -30,30 +29,16 @@ class LuongAttnDecoder(nn.Module):
         self.q_attn = Attention(config.hidden_size)
 
         # c_attn
-        self.c_attn = Attention(config.hidden_size)
+        if config.turn_type not in ['none', 'concat']:
+            self.c_attn = Attention(config.hidden_size)
 
         # f_attn
-        self.f_attn = Attention(config.hidden_size)
-
-        """
-        # c_attn
-        self.c_linearK = nn.Linear(self.hidden_size, config.hidden_size)
-        self.c_linearV = nn.Linear(self.hidden_size, config.hidden_size)
-
-        init_linear_wt(self.c_linearK)
-        init_linear_wt(self.c_linearV)
-
-        # f_attn
-        self.f_linearK = nn.Linear(self.embedding_size, config.hidden_size)
-        self.f_linearV = nn.Linear(self.embedding_size, config.hidden_size)
-
-        init_linear_wt(self.f_linearK)
-        init_linear_wt(self.f_linearV)
-        """
+        if config.model_type == 'kg':
+            self.f_attn = Attention(config.hidden_size)
 
         self.rnn = rnn_factory(
             config.rnn_type,
-            input_size=self.embedding_size,
+            input_size=self.embedding_size + config.hidden_size,
             hidden_size=config.hidden_size,
             num_layers=config.num_layers,
             dropout=config.dropout
@@ -65,13 +50,15 @@ class LuongAttnDecoder(nn.Module):
             init_gru_orth(self.rnn)
 
         # linear  [q, c, f]
-        self.linear = nn.Linear(config.hidden_size * 4, config.vocab_size)
-        init_linear_wt(self.linear)
+        if config.model_type == 'kg':
+            self.linear = nn.Linear(config.hidden_size * 4, config.vocab_size)
+        else:
+            if config.turn_type not in ['none', 'concat']:
+                self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
+            else:
+                self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
 
-        #  if config.tied and self.embedding_size == config.hidden_size:
-        #  self.linear.weight = self.embedding.weight
-        #  else:
-        #  init_linear_wt(self.linear)
+        init_linear_wt(self.linear)
 
         # log_softmax
         self.log_softmax = nn.LogSoftmax(dim=2)
@@ -108,16 +95,24 @@ class LuongAttnDecoder(nn.Module):
         # output: [1, batch_size, 1 * hidden_size]
         q_context, q_attn_weights = self.q_attn(output, q_enc_outputs, q_enc_length)
 
+        c_context = None
         if c_enc_outputs is not None:
             # output: [1, batch_size, 1 * hidden_size]
             c_context, c_attn_weights = self.c_attn(q_context, c_enc_outputs, c_enc_length)
 
+        f_context = None
         if f_enc_outputs is not None:
             # [1, batch_size, hidden_size]
             f_context, f_attn_weights = self.f_attn(c_context, f_enc_outputs, f_enc_length)
 
-        #  output = torch.cat((output, c_context, f_context), dim=2)
-        output = torch.cat((output, q_context, c_context, f_context), dim=2)
+        output_list = [output, q_context]
+        if c_context is not None:
+            output_list.append(c_context)
+
+        if f_context is not None:
+            output_list.append(f_context)
+
+        output = torch.cat(output_list, dim=2)
 
         # [1, batch_size, vocab_size]
         output = self.linear(output)

@@ -10,7 +10,6 @@ from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
-from modules.utils import init_linear_wt, init_wt_normal
 from modules.beam import Beam
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -81,7 +80,8 @@ class KGModel(nn.Module):
         self.reduce_state = ReduceState(config.rnn_type)
 
         # session encoder
-        self.session_encoder = SessionEncoder(config)
+        if config.turn_type not in ['none', 'concat']:
+            self.session_encoder = SessionEncoder(config)
 
         # decoder
         self.decoder = LuongAttnDecoder(config, decoder_embedding)
@@ -89,11 +89,12 @@ class KGModel(nn.Module):
         # encoder embedding share
         if self.c_encoder is not None:
             self.c_encoder.embedding.weight = self.q_encoder.embedding.weight
+
         if self.f_encoder is not None:
             self.f_encoder.embedding.weight = self.q_encoder.embedding.weight
-    
+
         # encoder, decode embedding share
-        if config.share_embedding:  
+        if config.share_embedding:
             self.decoder.embedding.weight = self.q_encoder.embedding.weight
 
     def forward(self,
@@ -120,6 +121,7 @@ class KGModel(nn.Module):
             f_embedded_inputs_length: [batch_size]
         '''
         c_enc_outputs = None
+        c_turn_length = None
         if self.config.turn_type not in ['none', 'concat']:
             # c forward
             c_inputs, c_inputs_length, c_turn_length = (h_inputs[:-1], h_inputs_length[:-1], h_turn_length - 1)
@@ -159,13 +161,16 @@ class KGModel(nn.Module):
                 dec_context = torch.zeros(
                     1, self.config.batch_size, self.config.hidden_size).to(self.device)
             else:
-                use_teacher_forcing = True \
-                    if random.random() < self.teacher_forcing_ratio else False
-                if use_teacher_forcing and not evaluate:
+                if evaluate:
                     dec_input = dec_inputs[i].view(1, -1)
                 else:
-                    dec_input = torch.argmax(
-                        dec_output, dim=2).detach().view(1, -1)
+                    use_teacher_forcing = True \
+                        if random.random() < self.teacher_forcing_ratio else False
+                    if use_teacher_forcing:
+                        dec_input = dec_inputs[i].view(1, -1)
+                    else:
+                        dec_input = torch.argmax(
+                            dec_output, dim=2).detach().view(1, -1)
 
             dec_output, dec_hidden, dec_context, _ = self.decoder(
                 dec_input,
@@ -207,6 +212,7 @@ class KGModel(nn.Module):
                f_topk_length):
 
         c_enc_outputs = None
+        c_turn_length = None
         if self.config.turn_type not in ['none', 'concat']:
             # c forward
             c_inputs, c_inputs_length, c_turn_length = (h_inputs[:-1], h_inputs_length[:-1], h_turn_length - 1)
@@ -443,11 +449,9 @@ class KGModel(nn.Module):
                     outputs = outputs.unsqueeze(0)
                 else:
                     inputs_length = c_inputs_length[ti, :]  # [batch_size]
-                    outputs, hidden_state = self.c_encoder(
-                        inputs, inputs_length)
+                    outputs, hidden_state = self.c_encoder(inputs, inputs_length)
 
                 stack_outputs.append(outputs[-1].unsqueeze(0))
-
             if self.config.turn_type == 'sum':
                 # [turn_num-1, batch_size, hidden_size]
                 stack_outputs = torch.cat(stack_outputs, dim=0)
@@ -468,8 +472,7 @@ class KGModel(nn.Module):
                 # [turn_num-1, batch_size, hidden_size]
                 stack_outputs = torch.cat(stack_outputs, dim=0)
                 # [turn_num-1, batch_size, hidden_size]
-                session_outputs, session_hidden_state = self.session_encoder(
-                    stack_outputs, c_turn_length)
+                session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)
                 return session_outputs
 
     def f_forward(self,

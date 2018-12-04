@@ -15,7 +15,8 @@ import pickle
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
+from tqdm import tqdm
 
 from modules.optim import ScheduledOptimizer
 from modules.early_stopping import EarlyStopping
@@ -231,7 +232,7 @@ evaluate model.
 def evaluate(model,
              dataset,
              criterion):
-
+    logger.info('evaluate...')
     # Turn on evaluation mode which disables dropout.
     model.eval()
     loss_total = 0
@@ -239,7 +240,7 @@ def evaluate(model,
     max_load = int(np.floor(dataset._size_dict['test'] / opt.batch_size))
     dataset.reset_data('test', False)
     with torch.no_grad():
-        for load in range(1, max_load + 1):
+        for load in tqdm(range(1, max_load + 1)):
             # load data
             dec_inputs, dec_targets, dec_inputs_length, \
                 context_texts, response_texts, conversation_ids, hash_values, \
@@ -277,12 +278,13 @@ def evaluate(model,
 
 
 def decode(model, dataset):
+    logger.info('decode...')
     # Turn on evaluation mode which disables dropout.
     model.eval()
     dataset.reset_data('eval', False)
     max_load = int(np.floor(dataset._size_dict['eval'] / opt.batch_size))
     with torch.no_grad():
-        for load in range(1, max_load + 1):
+        for load in tqdm(range(1, max_load + 1)):
             dec_inputs, dec_targets, dec_inputs_length, \
                 context_texts, response_texts, conversation_ids, hash_values, \
                 f_inputs, f_inputs_length, f_topk_length, facts_texts, \
@@ -532,7 +534,7 @@ if __name__ == '__main__':
                      criterion=criterion,
                      vocab=vocab,
                      early_stopping=early_stopping)
-    elif opt.task == 'eval':
+    elif opt.task == 'evaluate':
         evaluate(model,
                  dataset,
                  criterion)
