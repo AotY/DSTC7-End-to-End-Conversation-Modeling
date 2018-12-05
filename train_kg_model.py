@@ -212,7 +212,7 @@ def train(model,
     )
 
     loss, n_correct = cal_performance(
-        dec_outputs, dec_inputs[1:, :], smoothing=True)
+        dec_outputs, dec_inputs[1:, :], smoothing=opt.smoothing)
 
     non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
 
@@ -267,7 +267,7 @@ def evaluate(model,
             )
 
             loss, n_correct = cal_performance(
-                dec_outputs, dec_inputs[1:, :], smoothing=True)
+                dec_outputs, dec_inputs[1:, :], smoothing=False)
 
             non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
             n_word = non_pad_mask.sum().item()
