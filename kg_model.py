@@ -61,7 +61,7 @@ class KGModel(nn.Module):
         else:
             self.c_encoder = NormalEncoder(
                 config,
-                enc_embedding,
+                enc_embedding
             )
 
         # q encoder
@@ -367,7 +367,7 @@ class KGModel(nn.Module):
                   c_inputs,
                   c_inputs_length,
                   c_turn_length):
-        """history forward
+        """
         Args:
             c_inputs: # [turn_num-1, max_len, batch_size]  [c1, c2, ..., q]
             c_inputs_length: [turn_num-1, batch_size]
@@ -378,18 +378,14 @@ class KGModel(nn.Module):
         # query encode separately.
         for ti in range(self.config.turn_num - 1):
             inputs = c_inputs[ti, :, :]  # [max_len, batch_size]
-            if self.config.turn_type == 'self_attn':
-                inputs_length = c_inputs_length[ti, :]  # [batch_size]
-                outputs, hidden_state = self.c_encoder(
-                    inputs, inputs_length)
-                # [1, batch_size, hidden_size]
-                outputs = outputs.unsqueeze(0)
-            else:
-                inputs_length = c_inputs_length[ti, :]  # [batch_size]
-                outputs, hidden_state = self.c_encoder(inputs, inputs_length)
+            inputs_length = c_inputs_length[ti, :]  # [batch_size]
+            outputs, hidden_state = self.c_encoder(inputs, inputs_length, sort=False)
 
             stack_outputs.append(outputs[-1].unsqueeze(0))
 
+        stack_outputs = torch.cat(stack_outputs, dim=0)
+        return stack_outputs
+        """
         if self.config.turn_type == 'sum':
             # [turn_num-1, batch_size, hidden_size]
             stack_outputs = torch.cat(stack_outputs, dim=0)
@@ -403,16 +399,15 @@ class KGModel(nn.Module):
         elif self.config.turn_type == 'sequential':
             # [turn_num-1, batch_size, hidden_size]
             stack_outputs = torch.cat(stack_outputs, dim=0)
-            session_outputs, session_hidden_state = self.session_encoder(
-                stack_outputs, c_turn_length)  # [1, batch_size, hidden_size]
+            session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)  # [1, batch_size, hidden_size]
             return session_outputs[-1].unsqueeze(0)
         else:
             # [turn_num-1, batch_size, hidden_size]
             stack_outputs = torch.cat(stack_outputs, dim=0)
             # [turn_num-1, batch_size, hidden_size]
-            session_outputs, session_hidden_state = self.session_encoder(
-                stack_outputs, c_turn_length)
+            session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)
             return session_outputs
+        """
 
     def f_forward(self,
                   f_inputs,
