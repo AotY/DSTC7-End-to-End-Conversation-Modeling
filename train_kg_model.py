@@ -117,7 +117,7 @@ def train_epochs(model,
                 train_loss = total_loss/n_word_total
                 train_accu = n_word_correct/n_word_total
 
-                logger_str = '  - (Training) {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, '
+                logger_str = '  - (Training) epoch: {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, ' \
                 'elapse: {elapse:3.3f} min'.format(
                     epoch=epoch,
                     loss=train_loss,
@@ -125,6 +125,7 @@ def train_epochs(model,
                     accu=100*train_accu,
                     elapse=(time.time()-start)/60)
                 logger.info(logger_str)
+                #  print(logger_str)
                 save_logger(logger_str)
 
                 total_loss = 0
@@ -153,11 +154,12 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '  - (evaluate) {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+        logger_str = '  - (evaluate) epoch: {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
             epoch=epoch,
             loss=evaluate_loss,
             ppl=math.exp(min(evaluate_loss, 100)),
             accu=100*evaluate_accuracy)
+
         logger.info(logger_str)
         save_logger(logger_str)
 
