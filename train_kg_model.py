@@ -96,17 +96,17 @@ def train_epochs(model,
 
             # train and get cur loss
             loss, n_correct, n_word = train(model,
-                                    q_inputs,
-                                    q_inputs_length,
-                                    c_inputs,
-                                    c_inputs_length,
-                                    c_turn_length,
-                                    dec_inputs,
-                                    f_inputs,
-                                    f_inputs_length,
-                                    f_topk_length,
-                                    optimizer,
-                                    criterion)
+                                            q_inputs,
+                                            q_inputs_length,
+                                            c_inputs,
+                                            c_inputs_length,
+                                            c_turn_length,
+                                            dec_inputs,
+                                            f_inputs,
+                                            f_inputs_length,
+                                            f_topk_length,
+                                            optimizer,
+                                            criterion)
 
             total_loss += loss
 
@@ -118,15 +118,14 @@ def train_epochs(model,
                 train_accu = n_word_correct/n_word_total
 
                 logger_str = '  - (Training) {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, '
-                      'elapse: {elapse:3.3f} min'.format(
-                          epoch=epoch,
-                          loss=train_loss,
-                          ppl=math.exp(min(train_loss, 100)), 
-                          accu=100*train_accu,
-                          elapse=(time.time()-start)/60)
+                'elapse: {elapse:3.3f} min'.format(
+                    epoch=epoch,
+                    loss=train_loss,
+                    ppl=math.exp(min(train_loss, 100)),
+                    accu=100*train_accu,
+                    elapse=(time.time()-start)/60)
                 logger.info(logger_str)
                 save_logger(logger_str)
-
 
                 total_loss = 0
                 n_word_total = 0
@@ -154,8 +153,11 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (
-            evaluate_loss, evaluate_accuracy, math.exp(evaluate_loss))
+        logger_str = '  - (evaluate) {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+            epoch=epoch,
+            loss=evaluate_loss,
+            ppl=math.exp(min(evaluate_loss, 100)),
+            accu=100*evaluate_accuracy)
         logger.info(logger_str)
         save_logger(logger_str)
 
@@ -189,6 +191,7 @@ def train(model,
     model.train()
 
     optimizer.zero_grad()
+
     loss = 0
 
     # [max_len, batch_size, vocab_size]
@@ -201,13 +204,14 @@ def train(model,
         dec_inputs[:-1, :],
         f_inputs,
         f_inputs_length,
-        f_topk_length,
+        f_topk_length
     )
 
     loss, n_correct = cal_performance(
         dec_outputs, dec_inputs[1:, :], smoothing=True)
 
     non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
+
     n_word = non_pad_mask.sum().item()
 
     # backward
@@ -230,8 +234,11 @@ def evaluate(model,
     logger.info('evaluate...')
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    loss_total = 0
-    accuracy_total = 0
+
+    total_loss = 0
+    n_word_total = 0
+    n_word_correct = 0
+
     max_load = int(np.floor(dataset._size_dict['test'] / opt.batch_size))
     dataset.reset_data('test', False)
     with torch.no_grad():
@@ -244,7 +251,6 @@ def evaluate(model,
                 f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
                     'test', opt.batch_size)
 
-            # train and get cur loss
             dec_outputs = model(
                 q_inputs,
                 q_inputs_length,
@@ -254,16 +260,23 @@ def evaluate(model,
                 dec_inputs[:-1, :],
                 f_inputs,
                 f_inputs_length,
-                f_topk_length,
+                f_topk_length
             )
 
             loss, n_correct = cal_performance(
                 dec_outputs, dec_inputs[1:, :], smoothing=True)
 
-            loss_total += loss.item()
-            accuracy_total += n_correct
+            non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
+            n_word = non_pad_mask.sum().item()
+            n_word_total += n_word
+            n_word_correct += n_correct
 
-    return loss_total / max_load, accuracy_total / max_load
+            total_loss += loss.item()
+
+    loss_per_word = total_loss / n_word_total
+    accuracy = n_word_correct / n_word_total
+    return loss_per_word, accuracy
+
 
 
 def decode(model, dataset):

@@ -56,7 +56,7 @@ class KGModel(nn.Module):
                 config,
                 enc_embedding
             )
-        elif config.turn_type in ['none', 'concat']:
+        elif config.turn_type == 'none':
             pass
         else:
             self.c_encoder = NormalEncoder(
@@ -81,7 +81,7 @@ class KGModel(nn.Module):
         self.reduce_state = ReduceState(config.rnn_type)
 
         # session encoder
-        if config.turn_type not in ['none', 'concat']:
+        if config.turn_type != 'none':
             self.session_encoder = SessionEncoder(config)
 
         # decoder
@@ -146,10 +146,6 @@ class KGModel(nn.Module):
         # init decoder hidden
         dec_hidden = self.reduce_state(q_encoder_hidden)
 
-        #  print('q_inputs: ', q_inputs)
-        #  print('q_enc_outputs: ', q_enc_outputs)
-        #  print('dec_hidden: ', dec_hidden)
-
         # decoder
         dec_outputs, dec_hidden, _ = self.decoder(
             dec_inputs,
@@ -181,7 +177,7 @@ class KGModel(nn.Module):
                f_topk_length):
 
         c_enc_outputs = None
-        if self.config.turn_type not in ['none', 'concat']:
+        if self.config.turn_type != 'none':
             # [turn_num-1, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
@@ -251,8 +247,7 @@ class KGModel(nn.Module):
                 f_tpok_length
             )
             output = F.log_softmax(output, dim=2)
-            dec_input = torch.argmax(output, dim=2).detach().view(
-                1, -1)  # [1, batch_size]
+            dec_input = torch.argmax(output, dim=2).detach().view(1, -1)  # [1, batch_size]
             greedy_outputs.append(dec_input)
 
         # [len, batch_size]  -> [batch_size, len]

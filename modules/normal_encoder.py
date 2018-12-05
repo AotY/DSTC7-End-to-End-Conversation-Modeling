@@ -56,13 +56,13 @@ class NormalEncoder(nn.Module):
             max_output: [1, batch_size, hidden_size * num_directions]
             hidden_state: (h_n, c_n)
         '''
+
         """
         if lengths is not None:
             # sort lengths
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
-
             inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
         """
 
@@ -70,19 +70,14 @@ class NormalEncoder(nn.Module):
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
 
-        """
         if lengths is not None:
             embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths)
-        """
 
         outputs, hidden_state = self.rnn(embedded)
 
-        """
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-            outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-            hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-
-        """
+            #  outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+            #  hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         return outputs, hidden_state
