@@ -9,7 +9,7 @@ python train_kg_model.py \
     --vocab_size 4e4 \
     --turn_num 5 \
     --min_turn 2 \
-    --turn_type normal \
+    --turn_type self_attn \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -35,8 +35,8 @@ python train_kg_model.py \
     --teacher_forcing_ratio 1.0 \
     --seed 19 \
     --device cuda \
-    --eval_interval 300000 \
-    --log_interval 10 \
+    --eval_interval 90 \
+    --log_interval 15 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0001 \

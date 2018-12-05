@@ -81,7 +81,7 @@ class KGModel(nn.Module):
         self.reduce_state = ReduceState(config.rnn_type)
 
         # session encoder
-        if config.turn_type != 'none':
+        if config.turn_type == 'session':
             self.session_encoder = SessionEncoder(config)
 
         # decoder
@@ -383,31 +383,16 @@ class KGModel(nn.Module):
 
             stack_outputs.append(outputs[-1].unsqueeze(0))
 
+        # [turn_num-1, batch_size, hidden_size]
         stack_outputs = torch.cat(stack_outputs, dim=0)
-        return stack_outputs
-        """
-        if self.config.turn_type == 'sum':
-            # [turn_num-1, batch_size, hidden_size]
-            stack_outputs = torch.cat(stack_outputs, dim=0)
-            # [1, batch_size, hidden_size]
-            return stack_outputs.sum(dim=0)
-        elif self.config.turn_type == 'c_concat':
-            # [1, hidden_size * turn_num-1]
-            c_concat_outputs = torch.cat(stack_outputs, dim=2)
-            # [1, batch_size, hidden_size]
-            return self.c_concat_linear(c_concat_outputs)
-        elif self.config.turn_type == 'sequential':
-            # [turn_num-1, batch_size, hidden_size]
-            stack_outputs = torch.cat(stack_outputs, dim=0)
-            session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)  # [1, batch_size, hidden_size]
-            return session_outputs[-1].unsqueeze(0)
-        else:
-            # [turn_num-1, batch_size, hidden_size]
-            stack_outputs = torch.cat(stack_outputs, dim=0)
+
+        if self.config.turn_type == 'session':
             # [turn_num-1, batch_size, hidden_size]
             session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)
             return session_outputs
-        """
+
+        return stack_outputs
+
 
     def f_forward(self,
                   f_inputs,
