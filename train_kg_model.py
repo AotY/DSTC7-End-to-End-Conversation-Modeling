@@ -82,9 +82,6 @@ def train_epochs(model,
         n_word_correct = 0
         start = time.time()
 
-        # lr update
-        optimizer.update()
-
         for load in range(1, max_load + 1):
             # load data
             dec_inputs, \
@@ -145,9 +142,16 @@ def train_epochs(model,
                     loss=evaluate_loss,
                     ppl=math.exp(min(evaluate_loss, 100)),
                     accu=100*evaluate_accuracy)
-
                 logger.info(logger_str)
                 save_logger(logger_str)
+
+                # lr update
+                optimizer.update(evaluate_loss)
+
+                is_stop = early_stopping.step(evaluate_loss)
+                if is_stop:
+                    logger.info('Early Stopping.')
+                    sys.exit(0)
 
         # save model of each epoch
         save_state = {
@@ -168,10 +172,6 @@ def train_epochs(model,
         logger.info('generate...')
         decode(model, dataset, epoch)
 
-        is_stop = early_stopping.step(evaluate_loss)
-        if is_stop:
-            logger.info('Early Stopping.')
-            sys.exit(0)
 
 
 ''' start traing '''
@@ -335,8 +335,9 @@ def cal_performance(pred, gold, smoothing=False):
 
     loss = cal_loss(pred, gold, smoothing)
 
-    pred = pred.max(1)[1]
-    gold = gold.contiguous().view(-1)
+    pred = pred.max(1)[1] # [max_len * batch_size]
+    gold = gold.contiguous().view(-1) # [max_len * batch_size]
+
     non_pad_mask = gold.ne(PAD_ID)
     n_correct = pred.eq(gold)
     n_correct = n_correct.masked_select(non_pad_mask).sum().item()
@@ -347,17 +348,19 @@ def cal_performance(pred, gold, smoothing=False):
 def cal_loss(pred, gold, smoothing):
     ''' Calculate cross entropy loss, apply label smoothing if needed. '''
 
-    gold = gold.contiguous().view(-1)
+    gold = gold.contiguous().view(-1) # [max_len * batch_size]
 
     if smoothing:
         eps = 0.1
         n_class = pred.size(1)
 
-        one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
+        one_hot = torch.zeros_like(pred).scatter(dim=1, index=gold.view(-1, 1), source=1)
         one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+
         log_prb = F.log_softmax(pred, dim=1)
 
         non_pad_mask = gold.ne(PAD_ID)
+
         loss = -(one_hot * log_prb).sum(dim=1)
         loss = loss.masked_select(non_pad_mask).sum()  # average later
     else:
@@ -383,7 +386,13 @@ def build_optimizer(model):
         eps=1e-09
     )
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.5)
+    #  scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=2, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optim,
+        mode='min',
+        factor=0.1,
+        patience=5
+    )
 
     optimizer = ScheduledOptimizer(
         optim,
@@ -396,8 +405,9 @@ def build_optimizer(model):
 
 def build_criterion(padid):
     # The negative log likelihood loss. It is useful to train a classification problem with `C` classes.
-    criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
+    #  criterion = nn.NLLLoss(reduction='elementwise_mean', ignore_index=padid)
     #  criterion = nn.NLLLoss(reduction='sum', ignore_index=padid)
+    criterion = None
 
     return criterion
 
@@ -424,9 +434,7 @@ def build_model(vocab):
     model = KGModel(
         opt,
         device,
-    )
-
-    model = model.to(device)
+    ).to(device)
 
     print(model)
     return model
@@ -539,7 +547,7 @@ if __name__ == '__main__':
     early_stopping = EarlyStopping(
         type='min',
         min_delta=0.001,
-        patience=3
+        patience=7
     )
 
     '''if load checkpoint'''
