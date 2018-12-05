@@ -503,7 +503,7 @@ class Dataset:
             # [batch_size, topk, max_len]
             f_inputs = f_inputs.transpose(0, 1).tolist()
 
-        with open(filename, 'a', encoding='utf-8') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             for id, hash_value, q_ids, c_ids, f_ids, r_ids, g_text, b_text in zip(ids,
                                                                                   hash_values,
                                                                                   q_inputs,

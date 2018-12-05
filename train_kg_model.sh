@@ -35,6 +35,7 @@ python train_kg_model.py \
     --teacher_forcing_ratio 1.0 \
     --seed 19 \
     --device cuda \
+    --eval_interval 300000 \
     --log_interval 10 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
