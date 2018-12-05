@@ -117,9 +117,11 @@ def train_epochs(model,
                 train_loss = total_loss/n_word_total
                 train_accu = n_word_correct/n_word_total
 
-                print('  - (Training)   ppl: {ppl: 8.5f}, accuracy: {accu:3.3f} %, '
+                print('  - (Training) loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, '
                       'elapse: {elapse:3.3f} min'.format(
-                          ppl=math.exp(min(train_loss, 100)), accu=100*train_accu,
+                          loss=train_loss,
+                          ppl=math.exp(min(train_loss, 100)), 
+                          accu=100*train_accu,
                           elapse=(time.time()-start)/60))
 
                 total_loss = 0
@@ -143,7 +145,6 @@ def train_epochs(model,
                         filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' %
                                               (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
 
-        """
         # evaluate
         evaluate_loss, evaluate_accuracy = evaluate(model=model,
                                                     dataset=dataset,
@@ -162,7 +163,6 @@ def train_epochs(model,
         if is_stop:
             logger.info('Early Stopping.')
             sys.exit(0)
-        """
 
 
 ''' start traing '''
@@ -287,7 +287,8 @@ def decode(model, dataset):
                 c_turn_length,
                 f_inputs,
                 f_inputs_length,
-                f_topk_length)
+                f_topk_length
+            )
 
             # generate sentence, and save to file
             # [max_length, batch_size]
