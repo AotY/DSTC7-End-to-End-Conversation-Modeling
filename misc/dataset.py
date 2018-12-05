@@ -72,7 +72,7 @@ class Dataset:
                     # conversation split by EOS, START
                     sentences = self.parser_conversations(conversation)
 
-                    if sentences is None or len(sentences) < self.config.min_turn:
+                    if sentences is None or len(sentences) <= self.config.min_len:
                         continue
 
                     sentences = sentences[-min(self.config.turn_num,
@@ -136,7 +136,7 @@ class Dataset:
 
     def parser_conversations(self, conversation):
         sentences = conversation.split('EOS')
-        #  sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
+        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
         return sentences
 
     def reset_data(self, task, shuffle=True):
@@ -220,7 +220,7 @@ class Dataset:
                     topk_facts_ids = [self.vocab.words_to_id(
                         text.split()) for text in topk_facts_text]
                     f_topk_length.append(
-                        min(len(topk_facts_ids), self.config.f_topk))
+                       min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
                         ids = ids[:min(self.config.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
