@@ -45,7 +45,7 @@ python train_kg_model.py \
     --task decode \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/epoch-4_seq2seq_5_none_2018_12_04_23:03.pth \
+    --checkpoint models/epoch-3_seq2seq_5_none_2018_12_04_18:08.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \
