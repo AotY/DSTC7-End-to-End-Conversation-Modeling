@@ -481,6 +481,7 @@ class Dataset:
 
         q_inputs = q_inputs.transpose(0, 1).tolist() # [batch_size, max_len]
         r_inputs = r_inputs.transpose(0, 1).tolist()
+
         if len(c_inputs) == 0:
             c_inputs = [None] * self.config.batch_size
         else:

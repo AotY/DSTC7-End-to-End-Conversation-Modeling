@@ -305,11 +305,12 @@ def decode(model, dataset):
                 q_inputs,
                 c_inputs,
                 f_inputs,
+                dec_inputs[:-1, :],
                 greedy_texts,
                 beam_texts,
                 os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
                     opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
-                opt.decode_type,
+                opt.decode_type
             )
 
 
