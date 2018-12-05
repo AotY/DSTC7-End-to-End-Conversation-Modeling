@@ -128,11 +128,26 @@ def train_epochs(model,
                 logger.info(logger_str)
                 #  print(logger_str)
                 save_logger(logger_str)
-
                 total_loss = 0
                 n_word_total = 0
                 n_word_correct = 0
                 start = time.time()
+
+            
+            if load % opt.eval_interval == 0:
+                # evaluate
+                evaluate_loss, evaluate_accuracy = evaluate(model=model,
+                                                            dataset=dataset,
+                                                            criterion=criterion)
+                logger_str = '  - (evaluate) epoch: {epoch: 2d},' \
+                    'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+                    epoch=epoch,
+                    loss=evaluate_loss,
+                    ppl=math.exp(min(evaluate_loss, 100)),
+                    accu=100*evaluate_accuracy)
+
+                logger.info(logger_str)
+                save_logger(logger_str)
 
         # save model of each epoch
         save_state = {
@@ -147,27 +162,11 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%d_%s_%s.pth' %
-                                              (epoch, opt.model_type, opt.turn_num, opt.turn_type, time_str)))
-
-        # evaluate
-        evaluate_loss, evaluate_accuracy = evaluate(model=model,
-                                                    dataset=dataset,
-                                                    criterion=criterion)
-
-        logger_str = '  - (evaluate) epoch: {epoch: 2d},' \
-            'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
-            epoch=epoch,
-            loss=evaluate_loss,
-            ppl=math.exp(min(evaluate_loss, 100)),
-            accu=100*evaluate_accuracy)
-
-        logger.info(logger_str)
-        save_logger(logger_str)
-
+                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
+                                              (epoch, opt.model_type, opt.turn_type, opt.min_turn, opt.turn_num, time_str)))
         # generate sentence
         logger.info('generate...')
-        decode(model, dataset)
+        decode(model, dataset, epoch)
 
         is_stop = early_stopping.step(evaluate_loss)
         if is_stop:
@@ -281,8 +280,7 @@ def evaluate(model,
     return loss_per_word, accuracy
 
 
-
-def decode(model, dataset):
+def decode(model, dataset, epoch):
     logger.info('decode...')
     # Turn on evaluation mode which disables dropout.
     model.eval()
@@ -327,8 +325,8 @@ def decode(model, dataset):
                 dec_inputs[:-1, :],
                 greedy_texts,
                 beam_texts,
-                os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
-                    opt.model_type, opt.turn_type, opt.min_turn, opt.turn_num, time_str)),
+                os.path.join(opt.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
+                    opt.model_type, epoch, opt.turn_type, opt.min_turn, opt.turn_num, time_str)),
             )
 
 

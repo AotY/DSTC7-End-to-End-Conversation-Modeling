@@ -242,6 +242,10 @@ def train_opt(parser):
                        default='cuda',
                        help='use cuda or cpu.')
 
+    group.add_argument('--eval_interval',
+                       type=int,
+                       help='eavl interval.')
+
     group.add_argument('--log_interval',
                        type=int,
                        help='report interval')
