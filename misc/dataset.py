@@ -45,7 +45,7 @@ class Dataset:
     def read_txt(self):
         self.logger.info('read data...')
         _data_dict_path = os.path.join(
-            self.config.save_path, '_data_dict.%s.pkl' % (self.config.turn_num))
+            self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.min_turn, self.config.turn_num))
         if not os.path.exists(_data_dict_path):
             datas = []
             with open(self.config.pair_path, 'r', encoding='utf-8') as f:
@@ -54,18 +54,16 @@ class Dataset:
                     if not bool(line):
                         continue
 
-                    conversation_id, conversation, response, hash_value, score, turn = line.split(
-                        '\t')
+                    conversation_id, conversation, response, hash_value, score, turn = line.split('\t')
 
                     if not bool(conversation) or not bool(response):
                         continue
 
                     response_ids = self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) < self.config.min_len or len(response_ids) > self.config.r_max_len + 50:
+                    if len(response_ids) <= self.config.min_len or len(response_ids) >= self.config.r_max_len + 50:
                         continue
 
-                    response_ids = response_ids[:min(
-                        self.config.r_max_len, len(response_ids))]
+                    response_ids = response_ids[:min(self.config.r_max_len, len(response_ids))]
 
                     # conversation split by EOS, START
                     sentences = self.parser_conversations(conversation)
@@ -73,21 +71,18 @@ class Dataset:
                     if sentences is None or len(sentences) < self.config.min_turn:
                         continue
 
-                    sentences = sentences[-min(self.config.turn_num,
-                                               len(sentences)):]
+                    sentences = sentences[-min(self.config.turn_num, len(sentences)):]
 
                     # query
                     query = sentences[-1]
                     query_ids = self.vocab.words_to_id(query.split(' '))
-                    query_ids = query_ids[-min(self.config.c_max_len,
-                                               len(query_ids)):]
+                    query_ids = query_ids[-min(self.config.c_max_len, len(query_ids)):]
 
                     # contexts
                     contexts = sentences[:-1]
                     context_ids = []
                     for ci, sentence in enumerate(contexts):
-                        sentence_ids = self.vocab.words_to_id(
-                            sentence.split(' '))
+                        sentence_ids = self.vocab.words_to_id(sentence.split(' '))
                         if ci % 2 == 0:  # start
                             sentence_ids = sentence_ids[-min(
                                 self.config.c_max_len, len(sentence_ids)):]
@@ -135,8 +130,7 @@ class Dataset:
 
     def parser_conversations(self, conversation):
         sentences = conversation.split('EOS')
-        sentences = [sentence for sentence in sentences if len(
-            sentence.split()) >= self.config.min_len]
+        #  sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
         return sentences
 
     def reset_data(self, task, shuffle=True):
@@ -173,8 +167,7 @@ class Dataset:
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
 
         """sort batch_data, by turn num"""
-        batch_data = sorted(
-            batch_data, key=lambda item: len(item[1]), reverse=True)
+        batch_data = sorted(batch_data, key=lambda item: len(item[1]), reverse=True)
         for i, (conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
