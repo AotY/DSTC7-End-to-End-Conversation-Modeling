@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
     --vocab_size 4e4 \
-    --turn_num 6 \
-    --min_turn 1 \
-    --turn_type none \
+    --turn_num 5 \
+    --min_turn 2 \
+    --turn_type normal \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -35,7 +35,7 @@ python train_kg_model.py \
     --teacher_forcing_ratio 1.0 \
     --seed 19 \
     --device cuda \
-    --log_interval 20 \
+    --log_interval 10 \
     --log_path ./logs/{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0001 \

@@ -46,7 +46,7 @@ class NormalEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, lengths=None):
+    def forward(self, inputs, lengths=None, sort=True):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -57,14 +57,12 @@ class NormalEncoder(nn.Module):
             hidden_state: (h_n, c_n)
         '''
 
-        """
-        if lengths is not None:
+        if lengths is not None and not sort:
             # sort lengths
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
             inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
-        """
 
         # embedded
         embedded = self.embedding(inputs)
@@ -77,7 +75,8 @@ class NormalEncoder(nn.Module):
 
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-            #  outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-            #  hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+            if not sort:
+                outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+                hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         return outputs, hidden_state

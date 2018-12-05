@@ -88,11 +88,10 @@ def train_epochs(model,
         for load in range(1, max_load + 1):
             # load data
             dec_inputs, \
-                conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
-                f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
-                    'train', opt.batch_size)
+                f_inputs, f_inputs_length, f_topk_length, \
+                conversation_ids, hash_values = dataset.load_data('train')
 
             # train and get cur loss
             loss, n_correct, n_word = train(model,
@@ -117,14 +116,17 @@ def train_epochs(model,
                 train_loss = total_loss/n_word_total
                 train_accu = n_word_correct/n_word_total
 
-                logger_str = '  - (Training) epoch: {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, '
+                logger_str = ' ( Training {progress: 3.3f}% ) epoch: {epoch: 2d}, ' \
+                'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, ' \
                 'elapse: {elapse:3.3f} min'.format(
+                    progress=100*(load / max_load),
                     epoch=epoch,
                     loss=train_loss,
                     ppl=math.exp(min(train_loss, 100)),
                     accu=100*train_accu,
                     elapse=(time.time()-start)/60)
                 logger.info(logger_str)
+                #  print(logger_str)
                 save_logger(logger_str)
 
                 total_loss = 0
@@ -153,11 +155,13 @@ def train_epochs(model,
                                                     dataset=dataset,
                                                     criterion=criterion)
 
-        logger_str = '  - (evaluate) {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+        logger_str = '  - (evaluate) epoch: {epoch: 2d},' \
+            'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
             epoch=epoch,
             loss=evaluate_loss,
             ppl=math.exp(min(evaluate_loss, 100)),
             accu=100*evaluate_accuracy)
+
         logger.info(logger_str)
         save_logger(logger_str)
 
@@ -245,11 +249,10 @@ def evaluate(model,
         for load in tqdm(range(1, max_load + 1)):
             # load data
             dec_inputs, \
-                conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
-                f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
-                    'test', opt.batch_size)
+                f_inputs, f_inputs_length, f_topk_length, \
+                conversation_ids, hash_values = dataset.load_data('test')
 
             dec_outputs = model(
                 q_inputs,
@@ -288,11 +291,10 @@ def decode(model, dataset):
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             dec_inputs, \
-                conversation_ids, hash_values, \
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
-                f_inputs, f_inputs_length, f_topk_length = dataset.load_data(
-                    'eval', opt.batch_size)
+                f_inputs, f_inputs_length, f_topk_length, \
+                conversation_ids, hash_values = dataset.load_data('eval')
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
@@ -326,8 +328,7 @@ def decode(model, dataset):
                 greedy_texts,
                 beam_texts,
                 os.path.join(opt.save_path, 'generated/%s_%s_%s_%d_%s.txt' % (
-                    opt.model_type, opt.decode_type, opt.turn_type, opt.turn_num, time_str)),
-                opt.decode_type
+                    opt.model_type, opt.turn_type, opt.min_turn, opt.turn_num, time_str)),
             )
 
 

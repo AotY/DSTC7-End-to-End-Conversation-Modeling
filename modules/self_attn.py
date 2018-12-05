@@ -110,4 +110,6 @@ class SelfAttentive(nn.Module):
 
         output = torch.relu(self.fc1(M)) # [batch_size, mlp_output_size]
 
+        output = output.unsqueeze(0) # [1, batch_size, mlp_output_size]
+
         return output, hidden_state
