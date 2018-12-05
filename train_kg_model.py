@@ -117,7 +117,7 @@ def train_epochs(model,
                 train_loss = total_loss/n_word_total
                 train_accu = n_word_correct/n_word_total
 
-                logger_str = '  - (Training) {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, '
+                logger_str = '  - (Training) epoch: {epoch: 2d}, loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, '
                 'elapse: {elapse:3.3f} min'.format(
                     epoch=epoch,
                     loss=train_loss,
