@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
     --pair_path data/conversations_responses.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
     --vocab_size 4e4 \
-    --turn_num 6 \
-    --min_turn 1 \
+    --turn_num 5 \
+    --min_turn 2 \
     --turn_type none \
     --rnn_type GRU \
     --embedding_size 512 \
@@ -42,10 +42,11 @@ python train_kg_model.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type seq2seq \
-    --task train \
+    --task decode \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/epoch-3_seq2seq_5_none_2018_12_04_18:08.pth \
+    --checkpoint models/epoch-1_seq2seq_5_none_2018_12_05_13:45.pth \
+    # --smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
     # --pre_trained_embedding \
