@@ -181,13 +181,7 @@ class Dataset:
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
-            # q inputs
-            q_inputs_length.append(len(query_ids))
-            q_input = torch.LongTensor(
-                query_ids + [PAD_ID] * (c_max_len - len(query_ids))).to(self.device)
-            q_inputs.append(q_input)
-
-            if self.config.turn_type != 'none':
+            if self.config.turn_type not in ['none', 'concat']:
                 # c inputs
                 c_turn_length.append(len(context_ids))
                 c_inputs_length.append(list([1]) * (self.config.turn_num - 1))
@@ -200,6 +194,19 @@ class Dataset:
                                       dtype=torch.long).to(self.device)
                 c_input[:len(context_ids), :] = context_ids
                 c_inputs.append(c_input)
+
+            if self.config.turn_type == 'concat':
+                concat_ids = []
+                for ids in context_ids:
+                    concat_ids.extend(ids)
+                concat_ids.extend(query_ids)
+                query_ids = query_ids
+
+            # q inputs
+            q_inputs_length.append(len(query_ids))
+            q_input = torch.LongTensor(
+                query_ids + [PAD_ID] * (c_max_len - len(query_ids))).to(self.device)
+            q_inputs.append(q_input)
 
             # dec_inputs
             dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID]
@@ -495,7 +502,7 @@ class Dataset:
             c_inputs = [None] * self.config.batch_size
         else:
             # c [batch_size, turn_num-1, max_len]
-            c_inputs = c_inputs.transpose(0, 2).tolist()
+            c_inputs = c_inputs.permute(2, 0, 1).tolist()
 
         if len(f_inputs) == 0:
             f_inputs = [None] * self.config.batch_size
