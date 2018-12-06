@@ -201,6 +201,7 @@ class Dataset:
                     concat_ids.extend(ids)
                 concat_ids.extend(query_ids)
                 query_ids = query_ids
+                query_ids = query_ids[-min(self.config.c_max_len, len(query_ids)):]
 
             # q inputs
             q_inputs_length.append(len(query_ids))
@@ -244,7 +245,7 @@ class Dataset:
         q_inputs_length = torch.tensor(
             q_inputs_length, dtype=torch.long, device=self.device)
 
-        if self.config.turn_type != 'none':
+        if self.config.turn_type not in ['none', 'concat']:
             # [turn_num-1, max_len, batch_size]
             c_inputs = torch.stack(c_inputs, dim=2)
             c_turn_length = torch.tensor(

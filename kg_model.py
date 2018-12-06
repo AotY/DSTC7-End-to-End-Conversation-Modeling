@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,6 +12,7 @@ from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
 from modules.attention import Attention
+from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
@@ -57,10 +57,10 @@ class KGModel(nn.Module):
                 config,
                 enc_embedding
             )
-        if self.config.turn_type not in ['none', 'concat']:
+        elif config.turn_type in ['none', 'concat']:
             pass
         elif config.turn_type == 'cnn':
-            self.c_encoder = NormalEncoder(
+            self.c_encoder = NormalCNN(
                 config,
                 enc_embedding,
                 type='context'
@@ -160,9 +160,11 @@ class KGModel(nn.Module):
 
         if c_enc_outputs is not None:
             # q_enc_outputs, c_enc_outputs attention
-            c_context = self.c_attn(dec_hidden, c_enc_outputs)
+            c_context, _ = self.c_attn(dec_hidden, c_enc_outputs)
+            #  print('c_context: ', c_context.shape)
+            #  print('dec_hidden: ', dec_hidden.shape)
             dec_hidden = torch.cat((dec_hidden, c_context), dim=2)
-            dec_hidden = torch.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
+            dec_hidden = self.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
             c_enc_outputs = None
 
         # decoder
@@ -220,9 +222,9 @@ class KGModel(nn.Module):
 
         if c_enc_outputs is not None:
             # q_enc_outputs, c_enc_outputs attention
-            c_context = self.c_attn(dec_hidden, c_enc_outputs)
+            c_context, _ = self.c_attn(dec_hidden, c_enc_outputs)
             dec_hidden = torch.cat((dec_hidden, c_context), dim=2)
-            dec_hidden = torch.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
+            dec_hidden = self.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
 
             c_enc_outputs = None
 
@@ -254,9 +256,9 @@ class KGModel(nn.Module):
                       q_enc_outputs,
                       q_inputs_length,
                       c_enc_outputs,
-                      c_enc_length,
+                      c_turn_length,
                       f_enc_outputs,
-                      f_tpok_length):
+                      f_topk_length):
 
         greedy_outputs = []
         dec_input = torch.ones((1, self.config.batch_size),
@@ -287,9 +289,9 @@ class KGModel(nn.Module):
                     q_enc_outputs,
                     q_inputs_length,
                     c_enc_outputs,
-                    c_enc_length,
+                    c_turn_length,
                     f_enc_outputs,
-                    f_tpok_length):
+                    f_topk_length):
         '''
         Args:
             dec_hidden : [num_layers, batch_size, hidden_size] (optional)
@@ -314,11 +316,11 @@ class KGModel(nn.Module):
 
         if c_enc_outputs is not None:
             c_enc_outputs = c_enc_outputs.repeat(1, beam_size, 1)
-            c_enc_length = c_enc_length.repeat(beam_size)
+            c_turn_length = c_turn_length.repeat(beam_size)
 
         if f_enc_outputs is not None:
             f_enc_outputs = f_enc_outputs.repeat(1, beam_size, 1)
-            f_tpok_length = f_tpok_length.repeat(beam_size)
+            f_topk_length = f_topk_length.repeat(beam_size)
 
         # [batch_size] [0, beam_size * 1, ..., beam_size * (batch_size - 1)]
         batch_position = torch.arange(
@@ -406,12 +408,16 @@ class KGModel(nn.Module):
         for ti in range(self.config.turn_num - 1):
             inputs = c_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = c_inputs_length[ti, :]  # [batch_size]
+
+            if self.config.turn_type == 'cnn':
+                inputs = inputs.transpose(0, 1)
             outputs, hidden_state = self.c_encoder(inputs, inputs_length, sort=False)
 
             stack_outputs.append(outputs[-1].unsqueeze(0))
 
         # [turn_num-1, batch_size, hidden_size]
         stack_outputs = torch.cat(stack_outputs, dim=0)
+        #  print('stack_outputs: ', stack_outputs.shape)
 
         if self.config.turn_type == 'session':
             # [turn_num-1, batch_size, hidden_size]

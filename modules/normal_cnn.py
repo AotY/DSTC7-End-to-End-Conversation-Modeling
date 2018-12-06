@@ -30,7 +30,7 @@ class NormalCNN(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
 
         self.conv2ds = nn.ModuleList()
-        
+
         if type == 'fact':
             # conv2d 120 -> 1
             kernel_sizes = [(4, 512), (3, 512), (3, 256), (2, 256), (4, 512)]
@@ -39,7 +39,7 @@ class NormalCNN(nn.Module):
             maxpool_kernel_size = (4, 1)
         elif type == 'context':
             # conv2d 50 -> 1
-            kernel_sizes = [(3, 512), (4, 512), (3, 256), (4, 512)] # 50 -> 25 -> 12 -> 6 -> 3
+            kernel_sizes = [(4, 512), (4, 512), (3, 256), (3, 512)] # 50 -> 24 -> 11 -> 5 -> 3
             output_channels = [512, 256, 512, 512]
             strides = [(2, 1), (2, 1), (2, 1), (1, 1)]
             maxpool_kernel_size = (3, 1)
@@ -59,7 +59,7 @@ class NormalCNN(nn.Module):
         self.out_linear = nn.Linear(output_channels[-1], config.hidden_size)
         init_linear_wt(self.out_linear)
 
-    def forward(self, inputs, lengths=None):
+    def forward(self, inputs, lengths=None, sort=False):
         """
         args:
             inputs: [batch_size, max_len]
@@ -76,6 +76,7 @@ class NormalCNN(nn.Module):
         for conv2d in self.conv2ds:
             output = conv2d(output)
             output = F.relu(output)
+            #  print('output: ', output.shape)
             output = output.transpose(1, 3)
 
         # [batch_size, 1, 1, 1024]
