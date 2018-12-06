@@ -66,7 +66,7 @@ class SelfAttentive(nn.Module):
         init_linear_wt(self.fc1)
 
 
-    def forward(self, inputs, lengths=None):
+    def forward(self, inputs, lengths=None, sort=False):
         """
         Args:
             inputs: [max_len, batch_size]
@@ -76,7 +76,7 @@ class SelfAttentive(nn.Module):
         """
         max_len, batch_size = inputs.size()
 
-        if lengths is not None:
+        if lengths is not None and not sort:
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
             inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
@@ -91,8 +91,9 @@ class SelfAttentive(nn.Module):
 
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-            outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-            hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+            if not sort:
+                outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+                hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         A = torch.tanh(torch.bmm(self.Ws1.repeat(batch_size, 1, 1), outputs.permute((1, 2, 0)).contiguous())) # [batch_size, mlp_input_size, max_len]
         A = torch.bmm(self.Ws2.repeat(batch_size, 1, 1), A) # [batch_size, attn_hops, max_len]
