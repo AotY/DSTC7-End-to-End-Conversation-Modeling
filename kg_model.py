@@ -12,6 +12,7 @@ from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
+from modules.attention import Attention
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
@@ -56,8 +57,14 @@ class KGModel(nn.Module):
                 config,
                 enc_embedding
             )
-        elif config.turn_type == 'none':
+        if self.config.turn_type not in ['none', 'concat']:
             pass
+        elif config.turn_type == 'cnn':
+            self.c_encoder = NormalEncoder(
+                config,
+                enc_embedding,
+                type='context'
+            )
         else:
             self.c_encoder = NormalEncoder(
                 config,
@@ -83,6 +90,11 @@ class KGModel(nn.Module):
         # session encoder
         if config.turn_type == 'session':
             self.session_encoder = SessionEncoder(config)
+
+        if config.turn_type not in ['none', 'concat']:
+            self.c_attn = Attention(config.hidden_size)
+            self.c_linear = nn.Linear(config.hidden_size * 2, config.hidden_size)
+            init_linear_wt(self.c_linear)
 
         # decoder
         self.decoder = LuongAttnDecoder(config, dec_embedding)
@@ -124,7 +136,7 @@ class KGModel(nn.Module):
             f_embedded_inputs_length: [batch_size]
         '''
         c_enc_outputs = None
-        if self.config.turn_type != 'none':
+        if self.config.turn_type not in ['none', 'concat']:
             # [turn_num-1, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
@@ -143,19 +155,26 @@ class KGModel(nn.Module):
             q_inputs_length
         )
 
-        # init decoder hidden
+        # init decoder hidden [num_layers, batch_size, hidden_size]
         dec_hidden = self.reduce_state(q_encoder_hidden)
+
+        if c_enc_outputs is not None:
+            # q_enc_outputs, c_enc_outputs attention
+            c_context = self.c_attn(dec_hidden, c_enc_outputs)
+            dec_hidden = torch.cat((dec_hidden, c_context), dim=2)
+            dec_hidden = torch.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
+            c_enc_outputs = None
 
         # decoder
         dec_outputs, dec_hidden, _ = self.decoder(
             dec_inputs,
             dec_hidden,
-            q_enc_outputs,
-            q_inputs_length,
-            c_enc_outputs,
-            c_turn_length,
-            f_enc_outputs,
-            f_topk_length
+            q_enc_outputs=q_enc_outputs,
+            q_enc_length=q_inputs_length,
+            c_enc_outputs=c_enc_outputs,
+            c_enc_length=c_turn_length,
+            f_enc_outputs=f_enc_outputs,
+            f_enc_length=f_topk_length
         )
 
         # [max_len * batch_, vocab_size]
@@ -177,7 +196,7 @@ class KGModel(nn.Module):
                f_topk_length):
 
         c_enc_outputs = None
-        if self.config.turn_type != 'none':
+        if self.config.turn_type not in ['none', 'concat']:
             # [turn_num-1, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
@@ -198,6 +217,14 @@ class KGModel(nn.Module):
 
         # init decoder hidden
         dec_hidden = self.reduce_state(q_encoder_hidden)
+
+        if c_enc_outputs is not None:
+            # q_enc_outputs, c_enc_outputs attention
+            c_context = self.c_attn(dec_hidden, c_enc_outputs)
+            dec_hidden = torch.cat((dec_hidden, c_context), dim=2)
+            dec_hidden = torch.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
+
+            c_enc_outputs = None
 
         # decoder
         beam_outputs, beam_score, beam_length = self.beam_decode(
@@ -239,12 +266,12 @@ class KGModel(nn.Module):
             output, dec_hidden,  _ = self.decoder(
                 dec_input,
                 dec_hidden,
-                q_enc_outputs,
-                q_inputs_length,
-                c_enc_outputs,
-                c_enc_length,
-                f_enc_outputs,
-                f_tpok_length
+                q_enc_outputs=q_enc_outputs,
+                q_enc_length=q_inputs_length,
+                c_enc_outputs=c_enc_outputs,
+                c_enc_length=c_turn_length,
+                f_enc_outputs=f_enc_outputs,
+                f_enc_length=f_topk_length
             )
             output = F.log_softmax(output, dim=2)
             dec_input = torch.argmax(output, dim=2).detach().view(1, -1)  # [1, batch_size]
@@ -315,12 +342,12 @@ class KGModel(nn.Module):
             output, dec_hidden, _ = self.decoder(
                 dec_input.view(1, -1),
                 dec_hidden,
-                q_enc_outputs,
-                q_inputs_length,
-                c_enc_outputs,
-                c_enc_length,
-                f_enc_outputs,
-                f_tpok_length
+                q_enc_outputs=q_enc_outputs,
+                q_enc_length=q_inputs_length,
+                c_enc_outputs=c_enc_outputs,
+                c_enc_length=c_turn_length,
+                f_enc_outputs=f_enc_outputs,
+                f_enc_length=f_topk_length
             )
 
             # output: [1, batch_size * beam_size, vocab_size]

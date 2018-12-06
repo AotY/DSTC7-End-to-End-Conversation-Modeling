@@ -9,7 +9,7 @@ python train_kg_model.py \
     --vocab_size 4e4 \
     --turn_num 5 \
     --min_turn 2 \
-    --turn_type session \
+    --turn_type cnn \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \

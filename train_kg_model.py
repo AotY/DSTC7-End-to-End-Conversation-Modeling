@@ -59,12 +59,11 @@ if opt.seed:
 
 # update max_len
 if opt.turn_type == 'concat':
-    opt.c_max_len = opt.c_max_len + opt.turn_num
+    opt.c_max_len = (opt.c_max_len - int(opt.c_max_len / 4)) * opt.turn_num
 
 logger.info('c_max_len: %d' % opt.c_max_len)
 logger.info('r_max_len: %d' % opt.r_max_len)
 logger.info('f_max_len: %d' % opt.f_max_len)
-
 
 def train_epochs(model,
                  dataset,
@@ -375,7 +374,7 @@ def cal_loss(pred, gold, smoothing):
 
 def save_logger(logger_str):
     with open(opt.log_path, 'a', encoding='utf-8') as f:
-        f.write(logger_str)
+        f.write(logger_str + '\n')
 
 
 def build_optimizer(model):

@@ -20,7 +20,7 @@ class NormalCNN(nn.Module):
     def __init__(self,
                  config,
                  embedding,
-                 ):
+                 type='fact'):
         super(NormalCNN, self).__init__()
 
         # embedding
@@ -30,15 +30,21 @@ class NormalCNN(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
 
         self.conv2ds = nn.ModuleList()
+        
+        if type == 'fact':
+            # conv2d 120 -> 1
+            kernel_sizes = [(4, 512), (3, 512), (3, 256), (2, 256), (4, 512)]
+            output_channels = [512, 256, 256, 512, 512]
+            strides = [(2, 1), (2, 1), (2, 1), (2, 1), (1, 1)]
+            maxpool_kernel_size = (4, 1)
+        elif type == 'context':
+            # conv2d 50 -> 1
+            kernel_sizes = [(3, 512), (4, 512), (3, 256), (4, 512)] # 50 -> 25 -> 12 -> 6 -> 3
+            output_channels = [512, 256, 512, 512]
+            strides = [(2, 1), (2, 1), (2, 1), (1, 1)]
+            maxpool_kernel_size = (3, 1)
 
-        #  self.bn2s = nn.ModuleList()
-
-        # conv2d 120 -> 1
-        kernel_sizes = [(4, 512), (3, 512), (3, 256), (2, 256), (4, 512)]
-        channels = [512, 256, 256, 512, 512]
-        strides = [(2, 1), (2, 1), (2, 1), (2, 1), (1, 1)]
-
-        for channel, kernel_size, stride in zip(channels, kernel_sizes, strides):
+        for channel, kernel_size, stride in zip(output_channels, kernel_sizes, strides):
             self.conv2ds.append(
                 nn.Conv2d(
                     in_channels=1,
@@ -48,14 +54,9 @@ class NormalCNN(nn.Module):
                 )
             )
 
-        #  for channel in channels:
-            #  self.bn2s.append(
-                #  nn.BatchNorm2d(channel)
-            #  )
+        self. maxpool2d = nn.MaxPool2d(kernel_size=maxpool_kernel_size)
 
-        self. maxpool2d = nn.MaxPool2d(kernel_size=(4, 1))
-
-        self.out_linear = nn.Linear(channels[-1], config.hidden_size)
+        self.out_linear = nn.Linear(output_channels[-1], config.hidden_size)
         init_linear_wt(self.out_linear)
 
     def forward(self, inputs, lengths=None):
