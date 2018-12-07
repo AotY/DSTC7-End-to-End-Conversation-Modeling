@@ -75,8 +75,7 @@ class Dataset:
                     if sentences is None or len(sentences) <= self.config.min_len:
                         continue
 
-                    sentences = sentences[-min(self.config.turn_num,
-                                               len(sentences)):]
+                    sentences = sentences[-min(self.config.turn_num, len(sentences)):]
 
                     # query
                     query = sentences[-1]
@@ -190,8 +189,8 @@ class Dataset:
                     ids + [PAD_ID] * (c_max_len - len(ids))
                     for ids in context_ids
                 ]).to(self.device)
-                c_input = torch.zeros((self.config.turn_num - 1, c_max_len),
-                                      dtype=torch.long).to(self.device)
+                c_input = torch.zeros((self.config.turn_num - 1, c_max_len), \
+                        dtype=torch.long).to(self.device)
                 c_input[:len(context_ids), :] = context_ids
                 c_inputs.append(c_input)
 
@@ -486,6 +485,7 @@ class Dataset:
         return new_facts, facts_weight
 
     def save_generated_texts(self,
+                             epoch,
                              ids,
                              hash_values,
                              q_inputs,
@@ -511,6 +511,17 @@ class Dataset:
             # [batch_size, topk, max_len]
             f_inputs = f_inputs.transpose(0, 1).tolist()
 
+        ground_truth_path = os.path.join(opt.save_path, 'ground_truth/%s_%s.txt' % (
+            self.config.min_turn, self.config.turn_num
+        ))
+
+        predicted_path = os.path.join(opt.save_path, 'predicted/%s_%s_%s_%s.txt' % (
+            self.config.turn_type, epoch, self.config.min_turn, self.config.turn_num
+        ))
+
+        ground_truth_f = open(ground_truth_path, 'w') 
+        predicted_f = open(predicted_path, 'w')
+
         with open(filename, 'w', encoding='utf-8') as f:
             for id, hash_value, q_ids, c_ids, f_ids, r_ids, g_text, b_text in zip(ids,
                                                                                   hash_values,
@@ -532,13 +543,19 @@ class Dataset:
                         else:
                             f.write('< %s\n' % text)
 
-                query_text = ' '.join(self.vocab.ids_to_word(q_ids))
+                #  query_text = ' '.join(self.vocab.ids_to_word(q_ids))
+                query_text = self.vocab.ids_to_text(q_ids)
                 f.write('query: %s\n' % query_text)
 
-                response_text = ' '.join(self.vocab.ids_to_word(r_ids))
+                #  response_text = ' '.join(self.vocab.ids_to_word(r_ids))
+                response_text = self.vocab.ids_to_text(r_ids)
                 f.write('response: %s\n' % response_text)
 
                 f.write('greedy: %s\n' % g_text)
+
+                # for embedding metrics
+                ground_truth_f.write('%s\n' % response_text)
+                predicted_f.write('%s\n' % g_text)
 
                 for i, best_text in enumerate(b_text):
                     f.write('beam %d: %s\n' % (i, best_text))
@@ -550,9 +567,12 @@ class Dataset:
 
                 f.write('---------------------------------\n')
 
+        ground_truth_f.close()
+        predicted_f.close()
+
+
     def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
-        """
-        decode_type == greedy:
+        """ decode_type == greedy:
             outputs: [batch_size, max_len]
             return: [batch_size]
         decode_type == 'beam_search':

@@ -316,6 +316,7 @@ def decode(model, dataset, epoch):
 
             # save sentences
             dataset.save_generated_texts(
+                epoch,
                 conversation_ids,
                 hash_values,
                 q_inputs,
