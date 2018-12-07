@@ -34,7 +34,7 @@ def stats():
             conversation_id, conversation, response, hash_value, score, turn = line.split(
                 '\t')
 
-            # 
+            #
             sub_conversations = conversation.split('EOS')
             sub_conversations = [sub for sub in sub_conversations if len(sub.split()) >= 3]
 
@@ -52,7 +52,7 @@ def stats():
 
             c_sentences = context.split('.')
             c_sentences = [sentence for sentence in c_sentences if len(sentence.split()) >= 3]
-            
+
             r_sentences = response.split('.')
             r_sentences = [sentence for sentence in r_sentences if len(sentence.split()) >= 3]
 
@@ -65,20 +65,20 @@ def stats():
 
             c_len_dict[len(context)] = c_len_dict.get(len(context), 0) + 1
             c_sentence_count_dict[len(c_sentences)] = c_sentence_count_dict.get(len(c_sentences), 0) + 1
-            c_num_dict[len(sub_conversations)] = c_num_dict.get(len(sub_conversations), 0) + 1
+            c_num_dict[len(context_texts)] = c_num_dict.get(len(context_texts), 0) + 1
 
         save_distribution(q_len_dict, 'q_len')
         save_distribution(q_sentence_count_dict, 'q_sentence_count')
 
         save_distribution(r_len_dict, 'r_len')
         save_distribution(r_sentence_count_dict, 'r_sentence_count')
-            
+
         save_distribution(c_len_dict, 'c_len')
         save_distribution(c_sentence_count_dict, 'c_sentence_count')
         save_distribution(c_num_dict, 'c_num')
-    
+
 def save_distribution(distribution, name):
-    distribution_list = sorted(distribution.items(), key=lambda item: item[0], reverse=True)
+    distribution_list = sorted(distribution.items(), key=lambda item: item[0], reverse=False)
     with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
