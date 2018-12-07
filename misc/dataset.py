@@ -200,7 +200,7 @@ class Dataset:
                 for ids in context_ids:
                     concat_ids.extend(ids)
                 concat_ids.extend(query_ids)
-                query_ids = query_ids
+                query_ids = concat_ids
                 query_ids = query_ids[-min(self.config.c_max_len, len(query_ids)):]
 
             # q inputs
