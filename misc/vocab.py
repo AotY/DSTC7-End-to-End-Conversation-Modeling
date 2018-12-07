@@ -3,10 +3,10 @@ from __future__ import division
 from __future__ import print_function
 import pickle
 
-PAD = '<pad>'
-UNK = '<unk>'
-SOS = '<sos>'
-EOS = '<eos>'
+PAD = '__pad__'
+UNK = '__unk__'
+SOS = '__sos__'
+EOS = '__eos__'
 
 PAD_ID = 0
 UNK_ID = 1

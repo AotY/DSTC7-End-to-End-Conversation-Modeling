@@ -30,13 +30,9 @@ def data_set_opt(parser):
                        type=int,
                        help='clip fact by max_len.')
 
-    #  group.add_argument('--max_len',
-                       #  type=int,
-                       #  help="tokens after the first max_seq_len tokens will be discarded.")
-
-    #  group.add_argument('--h_max_len',
-                       #  type=int,
-                       #  help="history conversation max len.")
+    group.add_argument('--q_max_len',
+                       type=int,
+                       help="tokens after the first max_seq_len tokens will be discarded.")
 
     group.add_argument('--c_max_len',
                        type=int,
@@ -50,7 +46,7 @@ def data_set_opt(parser):
                        default=1,
                        help='input of the model including how many turn dialogue.')
 
-    group.add_argument('--min_turn', type=int,
+    group.add_argument('--turn_min', type=int,
                        default=1,
                        help='minimal turn num.')
 

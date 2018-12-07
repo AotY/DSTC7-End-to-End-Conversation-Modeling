@@ -5,12 +5,11 @@ python preprocess.py \
     --facts_file_path ./../data/train.facts.txt \
     --save_path ./../data \
     --vocab_path ./../data/vocab_word2idx_{}.{}.dict \
-    --c_max_len 300 \
-    --c_min_len 3 \
-    --r_max_len 200 \
-    --r_min_len 3 \
-    --f_max_len 300\
-    --f_min_len 3 \
+    --min_len 3 \
+    --c_max_len 500 \
+    --q_max_len 220 \
+    --r_max_len 150 \
+    --f_max_len 350 \
     --min_count 3 \
     --vocab_size 4e4 \
     --word_embedding_model_name v1.0_word_embedding \

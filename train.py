@@ -43,27 +43,28 @@ parser = argparse.ArgumentParser(description=program,
 data_set_opt(parser)
 model_opt(parser)
 train_opt(parser)
-opt = parser.parse_args()
+args = parser.parse_args()
 
 # logger file
 time_str = time.strftime('%Y_%m_%d_%H:%M')
-opt.log_path = opt.log_path.format(
-    opt.model_type, time_str, opt.turn_num, opt.turn_type)
-logger.info('log_path: {}'.format(opt.log_path))
+args.log_path = args.log_path.format(
+    args.model_type, time_str, args.turn_num, args.turn_type)
+logger.info('log_path: {}'.format(args.log_path))
 
-device = torch.device(opt.device)
+device = torch.device(args.device)
 logging.info("device: %s" % device)
 
-if opt.seed:
-    torch.manual_seed(opt.seed)
+if args.seed:
+    torch.manual_seed(args.seed)
 
 # update max_len
-if opt.turn_type == 'concat':
-    opt.c_max_len = (opt.c_max_len - int(opt.c_max_len / 4)) * opt.turn_num
+if args.turn_type == 'concat':
+    args.q_max_len = (args.q_max_len - int(args.q_max_len / 4)) * args.turn_num
 
-logger.info('c_max_len: %d' % opt.c_max_len)
-logger.info('r_max_len: %d' % opt.r_max_len)
-logger.info('f_max_len: %d' % opt.f_max_len)
+logger.info('c_max_len: %d' % args.c_max_len)
+logger.info('q_max_len: %d' % args.q_max_len)
+logger.info('r_max_len: %d' % args.r_max_len)
+logger.info('f_max_len: %d' % args.f_max_len)
 
 def train_epochs(model,
                  dataset,
@@ -73,8 +74,8 @@ def train_epochs(model,
                  early_stopping):
 
     start = time.time()
-    max_load = int(np.ceil(dataset._size_dict['train'] / opt.batch_size))
-    for epoch in range(opt.start_epoch, opt.epochs + 1):
+    max_load = int(np.ceil(dataset._size_dict['train'] / args.batch_size))
+    for epoch in range(args.start_epoch, args.epochs + 1):
         dataset.reset_data('train')
         total_loss = 0
         n_word_total = 0
@@ -87,7 +88,7 @@ def train_epochs(model,
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                conversation_ids, hash_values = dataset.load_data('train')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('train')
 
             # train and get cur loss
             loss, n_correct, n_word = train(model,
@@ -108,7 +109,7 @@ def train_epochs(model,
             n_word_total += n_word
             n_word_correct += n_correct
 
-            if load % opt.log_interval == 0:
+            if load % args.log_interval == 0:
                 train_loss = total_loss/n_word_total
                 train_accu = n_word_correct/n_word_total
 
@@ -130,7 +131,7 @@ def train_epochs(model,
                 start = time.time()
 
             
-            if load % opt.eval_interval == 0:
+            if load % args.eval_interval == 0:
                 # evaluate
                 evaluate_loss, evaluate_accuracy = evaluate(model=model,
                                                             dataset=dataset,
@@ -165,8 +166,8 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(opt.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
-                                              (epoch, opt.model_type, opt.turn_type, opt.min_turn, opt.turn_num, time_str)))
+                        filename=os.path.join(args.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
+                                              (epoch, args.model_type, args.turn_type, args.min_turn, args.turn_num, time_str)))
         # generate sentence
         logger.info('generate...')
         decode(model, dataset, epoch)
@@ -210,7 +211,7 @@ def train(model,
     )
 
     loss, n_correct = cal_performance(
-        dec_outputs, dec_inputs[1:, :], smoothing=opt.smoothing)
+        dec_outputs, dec_inputs[1:, :], smoothing=args.smoothing)
 
     non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
 
@@ -241,7 +242,7 @@ def evaluate(model,
     n_word_total = 0
     n_word_correct = 0
 
-    max_load = int(np.floor(dataset._size_dict['test'] / opt.batch_size))
+    max_load = int(np.floor(dataset._size_dict['test'] / args.batch_size))
     dataset.reset_data('test', False)
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
@@ -250,7 +251,7 @@ def evaluate(model,
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                conversation_ids, hash_values = dataset.load_data('test')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('test')
 
             dec_outputs = model(
                 q_inputs,
@@ -284,14 +285,14 @@ def decode(model, dataset, epoch):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     dataset.reset_data('eval', False)
-    max_load = int(np.floor(dataset._size_dict['eval'] / opt.batch_size))
+    max_load = int(np.floor(dataset._size_dict['eval'] / args.batch_size))
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             dec_inputs, \
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                conversation_ids, hash_values = dataset.load_data('eval')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
@@ -317,6 +318,7 @@ def decode(model, dataset, epoch):
             # save sentences
             dataset.save_generated_texts(
                 epoch,
+                subreddit_names,
                 conversation_ids,
                 hash_values,
                 q_inputs,
@@ -325,8 +327,8 @@ def decode(model, dataset, epoch):
                 dec_inputs[:-1, :],
                 greedy_texts,
                 beam_texts,
-                os.path.join(opt.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
-                    opt.model_type, epoch, opt.turn_type, opt.min_turn, opt.turn_num, time_str)),
+                os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
+                    args.model_type, epoch, args.turn_type, args.min_turn, args.turn_num, time_str)),
             )
 
 
@@ -374,14 +376,14 @@ def cal_loss(pred, gold, smoothing):
 
 
 def save_logger(logger_str):
-    with open(opt.log_path, 'a', encoding='utf-8') as f:
+    with open(args.log_path, 'a', encoding='utf-8') as f:
         f.write(logger_str + '\n')
 
 
 def build_optimizer(model):
     optim = torch.optim.Adam(
         model.parameters(),
-        opt.lr,
+        args.lr,
         betas=(0.9, 0.98),
         eps=1e-09
     )
@@ -397,7 +399,7 @@ def build_optimizer(model):
     optimizer = ScheduledOptimizer(
         optim,
         scheduler,
-        opt.max_grad_norm
+        args.max_grad_norm
     )
 
     return optimizer
@@ -418,7 +420,7 @@ def load_fasttext_embedding(fasttext, vocab):
         try:
             word_embedded = torch.from_numpy(fasttext[word])
         except KeyError:
-            word_embedded = torch.rand(opt.pre_embedding_size)
+            word_embedded = torch.rand(args.pre_embedding_size)
 
         word_embedded = word_embedded.to(device)
         words_embedded.append(word_embedded)
@@ -432,7 +434,7 @@ def build_model(vocab):
     logger.info('Building model...')
 
     model = KGModel(
-        opt,
+        args,
         device,
     ).to(device)
 
@@ -442,7 +444,7 @@ def build_model(vocab):
 
 def build_dataset(vocab):
     dataset = Dataset(
-        opt,
+        args,
         vocab,
         device,
         logger)
@@ -460,7 +462,7 @@ def save_checkpoint(state, is_best, filename):
     '''
     torch.save(state, filename)
     if is_best:
-        shutil.copy(filename, 'model_best_%s.pth' % opt.model_type)
+        shutil.copy(filename, 'model_best_%s.pth' % args.model_type)
 
 
 def load_fasttext_model(vec_file):
@@ -489,37 +491,37 @@ def timeSince(since, percent):
 
 if __name__ == '__main__':
     # Load checkpoint if we resume from a previous training.
-    if opt.checkpoint:
-        logger.info('Loading checkpoint from: %s' % opt.checkpoint)
-        checkpoint = load_checkpoint(filename=opt.checkpoint)
+    if args.checkpoint:
+        logger.info('Loading checkpoint from: %s' % args.checkpoint)
+        checkpoint = load_checkpoint(filename=args.checkpoint)
     else:
         checkpoint = None
 
     vocab = Vocab()
-    vocab.load(opt.vocab_path)
+    vocab.load(args.vocab_path)
     vocab_size = vocab.size
-    opt.vocab_size = int(vocab_size)
-    logger.info("vocab_size: %d" % opt.vocab_size)
+    args.vocab_size = int(vocab_size)
+    logger.info("vocab_size: %d" % args.vocab_size)
 
     dataset = build_dataset(vocab)
 
     fasttext = None
     pre_trained_weight = None
-    if (opt.pre_trained_embedding or opt.offline_type == 'fasttext') and os.path.exists(opt.fasttext_vec):
+    if (args.pre_trained_embedding or args.offline_type == 'fasttext') and os.path.exists(args.fasttext_vec):
         logger.info('load pre trained embedding...')
-        fasttext = load_fasttext_model(opt.fasttext_vec)
+        fasttext = load_fasttext_model(args.fasttext_vec)
         pre_trained_weight = load_fasttext_embedding(fasttext, vocab)
 
-    if opt.model_type == 'kg':
+    if args.model_type == 'kg':
         """ computing similarity between conversation and fact """
         offline_filename = os.path.join(
-            opt.save_path, 'facts_topk_phrases.%s.pkl' % opt.offline_type)
+            args.save_path, 'facts_topk_phrases.%s.pkl' % args.offline_type)
 
-        if opt.offline_type in ['elastic', 'elastic_tag']:
+        if args.offline_type in ['elastic', 'elastic_tag']:
             dataset.build_similarity_facts_offline(
                 offline_filename=offline_filename,
             )
-        elif opt.offline_type == 'fasttext':
+        elif args.offline_type == 'fasttext':
             facts_dict = None
             if not os.path.exists(offline_filename):
                 facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
@@ -534,7 +536,7 @@ if __name__ == '__main__':
                 del embedding
             else:
                 dataset.load_similarity_facts(offline_filename)
-        elif opt.offline_type == 'elmo':
+        elif args.offline_type == 'elmo':
             pass
 
     model = build_model(vocab)
@@ -554,7 +556,7 @@ if __name__ == '__main__':
     if checkpoint:
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
-        opt.start_epoch = checkpoint['epoch'] + 1
+        args.start_epoch = checkpoint['epoch'] + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
         acc = checkpoint['acc']
@@ -562,19 +564,19 @@ if __name__ == '__main__':
             loss, acc, ppl)
         logger.info(logger_str)
 
-    if opt.task == 'train':
+    if args.task == 'train':
         train_epochs(model=model,
                      dataset=dataset,
                      optimizer=optimizer,
                      criterion=criterion,
                      vocab=vocab,
                      early_stopping=early_stopping)
-    elif opt.task == 'evaluate':
+    elif args.task == 'evaluate':
         evaluate(model,
                  dataset,
                  criterion)
-    elif opt.task == 'decode':
+    elif args.task == 'decode':
         decode(model, dataset)
     else:
         raise ValueError(
-            "task must be train or eval, no %s " % opt.task)
+            "task must be train or eval, no %s " % args.task)

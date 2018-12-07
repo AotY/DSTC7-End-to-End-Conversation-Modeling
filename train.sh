@@ -3,13 +3,13 @@
 export CUDA_VISIBLE_DEVICES=6
 
 python train_kg_model.py \
-    --pair_path data/conversations_responses.pair.txt \
+    --pair_path data/train.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
     --vocab_size 4e4 \
     --turn_num 5 \
-    --min_turn 2 \
-    --turn_type normal_sum \
+    --turn_min 2 \
+    --turn_type normal \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -17,17 +17,17 @@ python train_kg_model.py \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
     --dropout 0.0 \
-    --q_max_len 60 \
-    --c_max_len 35 \
-    --r_max_len 35 \
-    --min_len 3 \
     --bidirectional \
     --tied \
 	--decoder_type luong \
     --decode_type beam_search \
+    --q_max_len 60 \
+    --c_max_len 35 \
+    --r_max_len 35 \
+    --f_max_len 120 \
+    --min_len 3 \
     --beam_size 8 \
     --best_n 3 \
-    --f_max_len 120 \
     --f_topk 5 \
     --lr 0.001 \
     --max_grad_norm 10.0 \
