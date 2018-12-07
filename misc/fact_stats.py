@@ -268,7 +268,8 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
     with open(conversation_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
-            conversation_id, conversation, response, _ = line.rstrip().split('SPLITTOKEN')
+            conversation_id, conversation, response, hash_value, score, turn = line.split(
+                '\t')
 
             conversation_words = conversation.split(' ')
             response_words = response.split(' ')
