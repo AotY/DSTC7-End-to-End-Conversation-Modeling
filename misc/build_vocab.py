@@ -52,6 +52,5 @@ def build_vocab():
     vocab.save(args.vocab_path)
     return vocab
 
-
 if __name__ == '__main__':
     build_vocab()

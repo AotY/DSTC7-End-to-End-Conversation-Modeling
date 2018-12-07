@@ -36,7 +36,7 @@ Read convos file.
 '''
 
 
-def read_convos(convos_file_path, logger, opt):
+def read_convos(convos_file_path, logger, args):
     queries = list()
 
     contexts = list()
@@ -77,7 +77,7 @@ def read_convos(convos_file_path, logger, opt):
             for sentence in sentences:
                 # token
                 tokens = tokenizer.tokenize(sentence)
-                if tokens is None or len(tokens) < opt.min_len:
+                if tokens is None or len(tokens) < args.min_len:
                     continue
                 sentences_tokens.append(tokens)
 
@@ -90,7 +90,7 @@ def read_convos(convos_file_path, logger, opt):
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
 
-            if response_length < opt.r_min_len or response_length > opt.r_max_len:
+            if response_length < args.r_min_len or response_length > args.r_max_len:
                 continue
 
             queries.append(query_tokens)
@@ -122,7 +122,7 @@ Read facts file.
 '''
 
 
-def read_facts(facts_file_path, logger, opt):
+def read_facts(facts_file_path, logger, args):
     facts = []
 
     hash_values = []
@@ -142,7 +142,7 @@ def read_facts(facts_file_path, logger, opt):
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
-            if fact_len < opt.f_min_len or fact_len > opt.f_max_len:
+            if fact_len < args.f_min_len or fact_len > args.f_max_len:
                 continue
 
             facts.append(fact_tokens)
@@ -206,9 +206,12 @@ def save_distribution(distribution, name):
 ''' save data to pair, conversation - response '''
 
 
-def save_data_to_pair(opt, contexts, queries, responses, names, conversation_ids, hash_values, scores, turns, filename):
+def save_data_to_pair(args, contexts, queries, 
+                      responses, names, conversation_ids, 
+                      hash_values, scores, turns, filename):
+
     '''Save data in pair format.'''
-    save_file = open(os.path.join(opt.save_path, filename), 'w', encoding='utf-8')
+    save_file = open(os.path.join(args.save_path, filename), 'w', encoding='utf-8')
     for name, conversation_id, context, query, response, hash_value, score, turn in \
             zip(names, conversation_ids, queries, contexts, responses, hash_values, scores, turns):
 
@@ -268,7 +271,7 @@ def save_conversations_responses_facts_count(contexts, responses, facts):
 
 
 def save_raw_pair(raw_conversations, raw_responses, hash_values):
-    with open(os.path.join(opt.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(args.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8') as f:
         for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
             f.write("%sSPLITTOKEN%sSPLITTOKEN\%s\n" %
                     (conversation, response, hash_value))
@@ -331,18 +334,18 @@ if __name__ == '__main__':
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     preprocess_opt(parser)
     train_embedding_opt(parser)
-    opt = parser.parse_args()
-    model_name = opt.model_name
+    args = parser.parse_args()
+    model_name = args.model_name
 
-    logger.info('opt.vocab_size: %d ' % int(opt.vocab_size + 4))
-    opt.vocab_path = opt.vocab_path.format(opt.model_name, int(opt.vocab_size + 4))
+    logger.info('args.vocab_size: %d ' % int(args.vocab_size + 4))
+    args.vocab_path = args.vocab_path.format(args.model_name, int(args.vocab_size + 4))
 
     contexts, queries, responses, \
         hash_values, subreddit_names, conversation_ids, \
-        response_scores, dialogue_turns = read_convos(opt.convos_file_path, logger, opt)
+        response_scores, dialogue_turns = read_convos(args.convos_file_path, logger, args)
 
     save_data_to_pair(
-        opt,
+        args,
         contexts,
         queries,
         responses,
@@ -357,19 +360,18 @@ if __name__ == '__main__':
     #  read facts
     facts, facts_hash_values, \
         facts_subreddit_names, facts_conversation_ids, \
-        domain_names = read_facts(opt.facts_file_path, logger, opt)
+        domain_names = read_facts(args.facts_file_path, logger, args)
 
     #  save raw facts to txt
-    save_facts(facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(opt.save_path, 'facts.txt'))
+    save_facts(facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(args.save_path, 'facts.txt'))
 
-    datas = responses + facts
+    datas = queries + responses + facts
     for context in contexts:
-        for tokens in context:
-            datas.extend(tokens)
+        datas += context
 
     datas_name = ['contexts', 'queries', 'responses', 'facts']
 
     sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
-        datas, datas_name, opt.min_count, opt.vocab_size, logger)
+        datas, datas_name, args.min_count, args.vocab_size, logger)
 
     logger.info('Preprocessing finished.')

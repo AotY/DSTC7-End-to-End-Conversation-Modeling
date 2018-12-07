@@ -124,7 +124,7 @@ class KGModel(nn.Module):
         Args:
             q_inputs: [max_len, batch_size]
 
-            c_inputs: # [turn_num-1, max_len, batch_size] [c1, c2, ..., q]
+            c_inputs: # [turn_num, max_len, batch_size] [c1, c2, ..., q]
             c_inputs_length: [turn_num, batch_size]
             c_turn_length: [batch_size]
 
@@ -137,7 +137,7 @@ class KGModel(nn.Module):
         '''
         c_enc_outputs = None
         if self.config.turn_type not in ['none', 'concat']:
-            # [turn_num-1, batch_size, hidden_size]
+            # [turn_num, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
                 c_inputs_length,
@@ -204,7 +204,7 @@ class KGModel(nn.Module):
 
         c_enc_outputs = None
         if self.config.turn_type not in ['none', 'concat']:
-            # [turn_num-1, batch_size, hidden_size]
+            # [turn_num, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
                 c_inputs_length,
@@ -406,14 +406,14 @@ class KGModel(nn.Module):
                   c_turn_length):
         """
         Args:
-            c_inputs: # [turn_num-1, max_len, batch_size]  [c1, c2, ..., q]
-            c_inputs_length: [turn_num-1, batch_size]
+            c_inputs: # [turn_num, max_len, batch_size]  [c1, c2, ..., q]
+            c_inputs_length: [turn_num, batch_size]
             c_turn_length: [batch_size]
-        turn_type: [max_len, turn_num-1, hidden_size]
+        turn_type: [max_len, turn_num, hidden_size]
         """
         stack_outputs = list()
         # query encode separately.
-        for ti in range(self.config.turn_num - 1):
+        for ti in range(self.config.turn_num):
             inputs = c_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = c_inputs_length[ti, :]  # [batch_size]
 
@@ -423,13 +423,13 @@ class KGModel(nn.Module):
 
             stack_outputs.append(outputs[-1].unsqueeze(0))
 
-        # [turn_num-1, batch_size, hidden_size]
+        # [turn_num, batch_size, hidden_size]
         stack_outputs = torch.cat(stack_outputs, dim=0)
         #  print('stack_outputs: ', stack_outputs.shape)
 
         """
         if self.config.turn_type == 'session':
-            # [turn_num-1, batch_size, hidden_size]
+            # [turn_num, batch_size, hidden_size]
             session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)
             return session_outputs
         """

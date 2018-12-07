@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=3
 
 python train_kg_model.py \
     --pair_path data/train.pair.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx_kg.40004.dict \
-    --vocab_size 4e4 \
-    --turn_num 5 \
-    --turn_min 2 \
+    --turn_num 4 \
+    --turn_min 1 \
     --turn_type normal \
     --rnn_type GRU \
     --embedding_size 512 \
