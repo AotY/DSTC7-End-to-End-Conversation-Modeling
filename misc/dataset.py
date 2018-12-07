@@ -64,16 +64,15 @@ class Dataset:
 
                     # query
                     query_ids = self.vocab.words_to_id(query.split(' '))
-                    query_ids = query_ids[-min(q_max_len, len(query_ids)):]
                     if len(query_ids) <= self.config.min_len:
                         continue
+                    query_ids = query_ids[-min(q_max_len, len(query_ids)):]
 
                     # response
                     response_ids = self.vocab.words_to_id(response.split(' '))
                     if len(response_ids) <= self.config.min_len:
                         continue
-                    response_ids = response_ids[:min(
-                        r_max_len, len(response_ids))]
+                    response_ids = response_ids[:min(r_max_len, len(response_ids))]
 
                     # context split by EOS
                     sentences = self.parser_context(context)
@@ -180,13 +179,13 @@ class Dataset:
             if self.config.turn_type not in ['none', 'concat']:
                 # c inputs
                 c_turn_length.append(len(context_ids))
-                c_inputs_length.append(list([1]) * (self.config.turn_num - 1))
+                c_inputs_length.append(list([1]) * (self.config.turn_num))
 
                 context_ids = torch.LongTensor([
                     ids + [PAD_ID] * (c_max_len - len(ids))
                     for ids in context_ids
                 ]).to(self.device)
-                c_input = torch.zeros((self.config.turn_num - 1, c_max_len),
+                c_input = torch.zeros((self.config.turn_num, c_max_len),
                                       dtype=torch.long).to(self.device)
                 c_input[:len(context_ids), :] = context_ids
                 c_inputs.append(c_input)
@@ -243,11 +242,11 @@ class Dataset:
             q_inputs_length, dtype=torch.long, device=self.device)
 
         if self.config.turn_type not in ['none', 'concat']:
-            # [turn_num-1, max_len, batch_size]
+            # [turn_num, max_len, batch_size]
             c_inputs = torch.stack(c_inputs, dim=2)
             c_turn_length = torch.tensor(
                 c_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
-            # [turn_num-1, batch_size]
+            # [turn_num, batch_size]
             c_inputs_length = torch.tensor(
                 c_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
         # decoder [max_len, batch_size]
@@ -502,7 +501,7 @@ class Dataset:
         if len(c_inputs) == 0:
             c_inputs = [None] * self.config.batch_size
         else:
-            # c [batch_size, turn_num-1, max_len]
+            # c [batch_size, turn_num, max_len]
             c_inputs = c_inputs.permute(2, 0, 1).tolist()
 
         if len(f_inputs) == 0:
