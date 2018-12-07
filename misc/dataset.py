@@ -45,60 +45,54 @@ class Dataset:
     def read_txt(self):
         self.logger.info('read data...')
         _data_dict_path = os.path.join(
-            self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.min_turn, self.config.turn_num))
+            self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.turn_min, self.config.turn_num))
         if not os.path.exists(_data_dict_path):
             datas = []
             batch_size = self.config.batch_size
-            c_max_len, r_max_len = self.config.c_max_len, self.config.r_max_len
+            c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
             with open(self.config.pair_path, 'r', encoding='utf-8') as f:
                 for line in tqdm(f):
                     line = line.rstrip()
                     if not bool(line):
                         continue
 
-                    conversation_id, conversation, response, hash_value, score, turn = line.split(
-                        '\t')
+                    subreddit_names, conversation_id, context, query, \
+                        response, hash_value, score, turn = line.split('\t')
 
-                    if not bool(conversation) or not bool(response):
+                    if not bool(query) or not bool(response):
                         continue
 
+                    # query
+                    query_ids = self.vocab.words_to_id(query.split(' '))
+                    query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                    if len(query_ids) <= self.config.min_len:
+                        continue
+
+                    # response
                     response_ids = self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) <= self.config.min_len or len(response_ids) >= r_max_len + 50:
+                    if len(response_ids) <= self.config.min_len:
                         continue
-
                     response_ids = response_ids[:min(
                         r_max_len, len(response_ids))]
 
-                    # conversation split by EOS, START
-                    sentences = self.parser_conversations(conversation)
-
-                    if sentences is None or len(sentences) <= self.config.min_len:
+                    # context split by EOS
+                    sentences = self.parser_context(context)
+                    if sentences is None or len(sentences) < self.config.turn_min:
                         continue
 
                     sentences = sentences[-min(self.config.turn_num, len(sentences)):]
 
-                    # query
-                    query = sentences[-1]
-                    query_ids = self.vocab.words_to_id(query.split(' '))
-                    query_ids = query_ids[-min(c_max_len,
-                                               len(query_ids)):]
-
-                    # contexts
-                    contexts = sentences[:-1]
                     context_ids = []
-                    for ci, sentence in enumerate(contexts):
-                        sentence_ids = self.vocab.words_to_id(
-                            sentence.split(' '))
-                        if ci % 2 == 0:  # start
-                            sentence_ids = sentence_ids[-min(
-                                c_max_len, len(sentence_ids)):]
+                    for si, sentence in enumerate(sentences):
+                        ids = self.vocab.words_to_id(sentence.split(' '))
+                        if si % 2 == 0:  # start
+                            ids = ids[-min(c_max_len, len(ids)):]
                         else:  # reply
-                            sentence_ids = sentence_ids[:min(
-                                c_max_len, len(sentence_ids))]
+                            ids = ids[:min(c_max_len, len(ids))]
 
-                        context_ids.append(sentence_ids)
+                        context_ids.append(ids)
 
-                    datas.append((conversation_id, query_ids,
+                    datas.append((name, conversation_id, query_ids,
                                   context_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
@@ -133,9 +127,10 @@ class Dataset:
             'test': 0
         }
 
-    def parser_conversations(self, conversation):
+    def parser_context(self, conversation):
         sentences = conversation.split('EOS')
-        sentences = [sentence for sentence in sentences if len(sentence.split()) >= self.config.min_len]
+        sentences = [sentence for sentence in sentences if len(
+            sentence.split()) >= self.config.min_len]
         return sentences
 
     def reset_data(self, task, shuffle=True):
@@ -146,7 +141,7 @@ class Dataset:
     def load_data(self, task):
         task_len = len(self._data_dict[task])
         batch_size = self.config.batch_size
-        c_max_len, r_max_len = self.config.c_max_len, self.config.r_max_len
+        c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
 
@@ -164,6 +159,7 @@ class Dataset:
 
         dec_inputs = list()
 
+        subreddit_names = list()
         conversation_ids = list()
         hash_values = list()
 
@@ -175,8 +171,9 @@ class Dataset:
 
         """sort batch_data, by turn num"""
         batch_data = sorted(
-            batch_data, key=lambda item: len(item[1]), reverse=True)
-        for i, (conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
+            batch_data, key=lambda item: len(item[2]), reverse=True)
+        for i, (name, conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
+            subreddit_names.append(name)
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
@@ -189,8 +186,8 @@ class Dataset:
                     ids + [PAD_ID] * (c_max_len - len(ids))
                     for ids in context_ids
                 ]).to(self.device)
-                c_input = torch.zeros((self.config.turn_num - 1, c_max_len), \
-                        dtype=torch.long).to(self.device)
+                c_input = torch.zeros((self.config.turn_num - 1, c_max_len),
+                                      dtype=torch.long).to(self.device)
                 c_input[:len(context_ids), :] = context_ids
                 c_inputs.append(c_input)
 
@@ -200,12 +197,13 @@ class Dataset:
                     concat_ids.extend(ids)
                 concat_ids.extend(query_ids)
                 query_ids = concat_ids
-                query_ids = query_ids[-min(self.config.c_max_len, len(query_ids)):]
+                query_ids = query_ids[-min(self.config.q_max_len,
+                                           len(query_ids)):]
 
             # q inputs
             q_inputs_length.append(len(query_ids))
             q_input = torch.LongTensor(
-                query_ids + [PAD_ID] * (c_max_len - len(query_ids))).to(self.device)
+                query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
             q_inputs.append(q_input)
 
             # dec_inputs
@@ -227,7 +225,7 @@ class Dataset:
                     topk_facts_ids = [self.vocab.words_to_id(
                         text.split()) for text in topk_facts_text]
                     f_topk_length.append(
-                       min(len(topk_facts_ids), self.config.f_topk))
+                        min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
                         ids = ids[:min(self.config.f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
@@ -250,7 +248,8 @@ class Dataset:
             c_turn_length = torch.tensor(
                 c_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
             # [turn_num-1, batch_size]
-            c_inputs_length = torch.tensor(c_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
+            c_inputs_length = torch.tensor(
+                c_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
         # decoder [max_len, batch_size]
         dec_inputs = torch.stack(dec_inputs, dim=1)
 
@@ -270,7 +269,7 @@ class Dataset:
             q_inputs, q_inputs_length, \
             c_inputs, c_inputs_length, c_turn_length, \
             f_inputs, f_inputs_length, f_topk_length, \
-            conversation_ids, hash_values
+            subreddit_names, conversation_ids, hash_values
 
     def load_similarity_facts(self, offline_filename):
         self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
@@ -486,6 +485,7 @@ class Dataset:
 
     def save_generated_texts(self,
                              epoch,
+                             names,
                              ids,
                              hash_values,
                              q_inputs,
@@ -497,7 +497,7 @@ class Dataset:
                              filename):
 
         q_inputs = q_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
-        r_inputs = r_inputs.transpose(0, 1).tolist() # [batch_size, max_len]
+        r_inputs = r_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
 
         if len(c_inputs) == 0:
             c_inputs = [None] * self.config.batch_size
@@ -512,26 +512,29 @@ class Dataset:
             f_inputs = f_inputs.transpose(0, 1).tolist()
 
         ground_truth_path = os.path.join(opt.save_path, 'ground_truth/%s_%s.txt' % (
-            self.config.min_turn, self.config.turn_num
+            self.config.turn_min, self.config.turn_num
         ))
 
         predicted_path = os.path.join(opt.save_path, 'predicted/%s_%s_%s_%s.txt' % (
-            self.config.turn_type, epoch, self.config.min_turn, self.config.turn_num
+            self.config.turn_type, epoch, self.config.turn_min, self.config.turn_num
         ))
 
-        ground_truth_f = open(ground_truth_path, 'w') 
+        ground_truth_f = open(ground_truth_path, 'w')
         predicted_f = open(predicted_path, 'w')
 
         with open(filename, 'w', encoding='utf-8') as f:
-            for id, hash_value, q_ids, c_ids, f_ids, r_ids, g_text, b_text in zip(ids,
-                                                                                  hash_values,
-                                                                                  q_inputs,
-                                                                                  c_inputs,
-                                                                                  f_inputs,
-                                                                                  r_inputs,
-                                                                                  greedy_texts,
-                                                                                  beam_texts):
+            for name, id, hash_value, q_ids, c_ids, f_ids, r_ids, g_text, b_text in \
+                    zip(names,
+                        ids,
+                        hash_values,
+                        q_inputs,
+                        c_inputs,
+                        f_inputs,
+                        r_inputs,
+                        greedy_texts,
+                        beam_texts):
 
+                f.write('name: %s\n' % name)
                 f.write('id: %s\n' % id)
                 f.write('hash_value: %s\n' % hash_value)
 
@@ -566,7 +569,6 @@ class Dataset:
 
         ground_truth_f.close()
         predicted_f.close()
-
 
     def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
         """ decode_type == greedy:

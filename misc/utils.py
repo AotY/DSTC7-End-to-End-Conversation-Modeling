@@ -11,6 +11,7 @@ from nltk.tokenize import TweetTokenizer
 from bs4 import BeautifulSoup
 import warnings
 
+
 def is_english(text):
     try:
         _ = text.encode('ascii')
@@ -18,26 +19,32 @@ def is_english(text):
     except UnicodeEncodeError:
         return False
 
+
 stop_words = set(stopwords.words('english'))
 punctuations = list(string.punctuation)
+
 
 def remove_stop_words(words):
     words = [word for word in words if word not in stop_words]
     words = [word for word in words if word not in punctuations]
     return words
 
+
 class Tokenizer:
     def __init__(self):
         # URLs
-        #  url_regex_str = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+'
+        url_regex_str = r'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))'
 
         number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
 
-        self.number_re = re.compile(number_regex_str, re.VERBOSE | re.IGNORECASE)
+        self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
+        self.number_re = re.compile(
+            number_regex_str, re.VERBOSE | re.IGNORECASE)
 
     ''' replace number by NUMBER_TAG'''
+
     def replace_number(self, tokens):
-        return ['<number>' if self.number_re.search(token) else token for token in tokens]
+        return ['__number__' if self.number_re.search(token) else token for token in tokens]
 
     def tokenize(self, text):
         if isinstance(text, list):
@@ -52,57 +59,48 @@ class Tokenizer:
 
         tokens = self.clean_str(text).split()
 
-        tokens = self.replace_number(tokens)
         tokens = [token for token in tokens if len(token.split()) > 0]
 
-        # clip max len of token
-        #  tokens = [token for token in tokens if len(token) < 16]
         return tokens
 
     def clean_str(self, text):
         text = text.lower()
-        text = re.sub('^',' ', text)
-        text = re.sub('$',' ', text)
-        text = re.sub(r"[^A-Za-z0-9,!?\'\`\.]", " ", text)
-        text = re.sub(r"\.{3}", " ...", text)
-        text = re.sub(r"\'s", " \'s", text)
-        text = re.sub(r"\'ve", " \'ve", text)
-        text = re.sub(r"n\'t", " n\'t", text)
-        text = re.sub(r"\'re", " \'re", text)
-        text = re.sub(r"\'d", " \'d", text)
-        text = re.sub(r"\'ll", " \'ll", text)
-        text = re.sub(r",", " , ", text)
-        text = re.sub(r"!", " ! ", text)
-        text = re.sub(r"\?", " ? ", text)
-        text = re.sub(r"\s{2,}", " ", text)
+        text = re.sub('^', ' ', text)
+        text = re.sub('$', ' ', text)
 
         # url
+        text = self.url_re.sub('__url__', text)
+
         words = []
         for word in text.split():
-            i = -1
-            if word.find('http') != -1:
-                i = word.find('http')
-            elif word.find('www') != -1:
-                i = word.find('www')
-            elif word.find('.com') != -1:
-                i = word.find('.com')
-
+            i = word.find('http')
             if i >= 0:
-                word = word[:i] + ' ' + '<url>'
+                word = word[:i] + ' ' + '__url__'
             words.append(word.strip())
         text = ' '.join(words)
 
-        # remove markdown url
-        text = re.sub(r'\[([^\]]*)\] \( *<url> *\)', r'\1', text)
+        # remove markdown URL
+        text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
 
         # remove illegal char
-        text = re.sub('<url>', 'url', text)
-        text = re.sub(r"[^a-za-z0-9():,.!?\"\']", " ", text)
-        text = re.sub('url', '<url>',text)
+        text = re.sub('__url__', 'URL', text)
+        text = re.sub(r"[^A-Za-z0-9():,.!?\"\']", " ", text)
+        text = re.sub('URL', '__url__', text)
+
+        # number
+        text = self.number_re.sub('__number__', text)
+
+        # merge multi to single
+        text = re.sub(r'( __url__)+', ' __url__', text)
+        text = re.sub(r'( __number__)+', ' __number__', text)
+        text = text.replace('.com', ' ')
+        text = text.replace('.org', ' ')
+        text = text.replace('.cn', ' ')
 
         # contraction
-        add_space = ["'s", "'m", "'re", "n't", "'ll","'ve","'d","'em"]
-        tokenizer = TweetTokenizer(preserve_case=False, strip_handles=False, reduce_len=True)
+        add_space = ["'s", "'m", "'re", "n't", "'ll", "'ve", "'d", "'em"]
+        tokenizer = TweetTokenizer(
+            preserve_case=False, strip_handles=False, reduce_len=True)
         text = ' ' + ' '.join(tokenizer.tokenize(text)) + ' '
         text = text.replace(" won't ", " will n't ")
         text = text.replace(" can't ", " can n't ")
@@ -111,13 +109,15 @@ class Tokenizer:
 
         text = re.sub(r'^\s+', '', text)
         text = re.sub(r'\s+$', '', text)
-        text = re.sub(r'\s+', ' ', text) # remove extra spaces
+        text = re.sub(r'\s+', ' ', text)  # remove extra spaces
 
         return text
 
+
 if __name__ == '__main__':
-    sequence = 'RT @marcobonzanini: just an example! :D http://example.com #NLP <title> 223: 113'
+    sequence = 'RT @marcobonzanini: just an example! 342 23424 '\
+        ' trio.com www.trio.com :D https://www.youtube.com/watch?v=gGRyC8fjTUM http://example.com #NLP <title> 223: 113'
     tokenizer = Tokenizer()
+    print(sequence)
     print(tokenizer.tokenize(sequence))
     # ['RT', '@marcobonzanini', ':', 'just', 'an', 'example', '!', ':D', 'http://example.com', '#NLP']
-
