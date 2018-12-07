@@ -7,9 +7,9 @@ python preprocess.py \
     --vocab_path ./../data/vocab_word2idx_{}.{}.dict \
     --c_max_len 300 \
     --c_min_len 3 \
-    --r_max_len 70 \
+    --r_max_len 200 \
     --r_min_len 3 \
-    --f_max_len 270\
+    --f_max_len 300\
     --f_min_len 3 \
     --min_count 3 \
     --vocab_size 4e4 \

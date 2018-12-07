@@ -36,12 +36,10 @@ Read convos file.
 
 
 def read_convos(convos_file_path, logger, opt):
-    contexts = list()
-    contexts_tokens = list()
-    responses = list()
+    querys = list()
 
-    raw_conversations = list()
-    raw_responses = list()
+    contexts = list()
+    responses = list()
 
     subreddit_names = list()
     conversation_ids = list()
