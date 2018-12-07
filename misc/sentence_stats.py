@@ -43,6 +43,10 @@ def stats():
 
             context_texts = sub_conversations[:-1]
             context = ''.join(context_texts)
+            #  print('context: ', context)
+            #  print('query: ', query)
+            #  print('response: ', response)
+            #  print('-------------------')
 
             # sentences
             q_sentences = query.split('.')
@@ -55,13 +59,17 @@ def stats():
             r_sentences = [sentence for sentence in r_sentences if len(sentence.split()) >= 3]
 
             # dict
-            q_len_dict[len(query)] = q_len_dict.get(len(query), 0) + 1
+
+            query_tokens = query.split()
+            q_len_dict[len(query_tokens)] = q_len_dict.get(len(query_tokens), 0) + 1
             q_sentence_count_dict[len(q_sentences)] = q_sentence_count_dict.get(len(q_sentences), 0) + 1
 
-            r_len_dict[len(response)] = r_len_dict.get(len(response), 0) + 1
+            response_tokens = response.split()
+            r_len_dict[len(response_tokens)] = r_len_dict.get(len(response_tokens), 0) + 1
             r_sentence_count_dict[len(r_sentences)] = r_sentence_count_dict.get(len(r_sentences), 0) + 1
 
-            c_len_dict[len(context)] = c_len_dict.get(len(context), 0) + 1
+            context_tokens = context.split()
+            c_len_dict[len(context_tokens)] = c_len_dict.get(len(context_tokens), 0) + 1
             c_sentence_count_dict[len(c_sentences)] = c_sentence_count_dict.get(len(c_sentences), 0) + 1
             c_num_dict[len(context_texts)] = c_num_dict.get(len(context_texts), 0) + 1
 
