@@ -17,8 +17,9 @@ python train_kg_model.py \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
     --dropout 0.0 \
-    --c_max_len 50 \
-    --r_max_len 50 \
+    --q_max_len 60 \
+    --c_max_len 35 \
+    --r_max_len 35 \
     --min_len 3 \
     --bidirectional \
     --tied \
