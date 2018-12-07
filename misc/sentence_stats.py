@@ -31,10 +31,8 @@ def stats():
     with open(args.pair_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
-            conversation_id, conversation, response, hash_value, score, turn = line.split(
-                '\t')
+            _, conversation, response, _, _, _ = line.split('\t')
 
-            #
             sub_conversations = conversation.split('EOS')
             sub_conversations = [sub for sub in sub_conversations if len(sub.split()) >= 3]
 
@@ -43,7 +41,7 @@ def stats():
 
             query = sub_conversations[-1]
 
-            context_texts = sub_conversations[-1]
+            context_texts = sub_conversations[:-1]
             context = ''.join(context_texts)
 
             # sentences
