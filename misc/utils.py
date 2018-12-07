@@ -96,6 +96,11 @@ class Tokenizer:
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
         text = text.replace('.cn', ' ')
+        text = text.replace('.ai', ' ')
+        text = text.replace('.io', ' ')
+        text = text.replace('.net', ' ')
+        text = text.replace('.gov', ' ')
+        text = text.replace('.edu', ' ')
 
         # contraction
         add_space = ["'s", "'m", "'re", "n't", "'ll", "'ve", "'d", "'em"]
