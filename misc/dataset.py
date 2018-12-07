@@ -538,10 +538,7 @@ class Dataset:
                 if c_ids is not None:
                     for ci, ids in enumerate(c_ids):
                         text = ' '.join(self.vocab.ids_to_word(ids))
-                        if ci % 2 == 0:
-                            f.write('> %s\n' % text)
-                        else:
-                            f.write('< %s\n' % text)
+                        f.write('c %d: %s\n' % (ci, text))
 
                 #  query_text = ' '.join(self.vocab.ids_to_word(q_ids))
                 query_text = self.vocab.ids_to_text(q_ids)
