@@ -46,7 +46,7 @@ class NormalEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, lengths=None, sort=True):
+    def forward(self, inputs, lengths=None, sort=False):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
