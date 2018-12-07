@@ -10,6 +10,7 @@ Build vocab from freq distribution
 
 import argparse
 from tqdm import tqdm
+from misc.vocab import Vocab
 
 parser = argparse.ArgumentParser()
 
