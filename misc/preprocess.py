@@ -90,7 +90,7 @@ def read_convos(convos_file_path, logger, args):
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
 
-            if response_length < args.r_min_len or response_length > args.r_max_len:
+            if response_length < args.min_len or response_length > args.r_max_len:
                 continue
 
             queries.append(query_tokens)
