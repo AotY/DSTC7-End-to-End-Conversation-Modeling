@@ -90,7 +90,7 @@ def read_convos(convos_file_path, logger, opt):
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
 
-            if response_length < opt.r_min_len or response_length > opt.r_max_len:
+            if response_length < opt.min_len or response_length > opt.r_max_len:
                 continue
 
             queries.append(query_tokens)
@@ -142,7 +142,7 @@ def read_facts(facts_file_path, logger, opt):
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
-            if fact_len < opt.f_min_len or fact_len > opt.f_max_len:
+            if fact_len < opt.min_len or fact_len > opt.f_max_len:
                 continue
 
             facts.append(fact_tokens)
