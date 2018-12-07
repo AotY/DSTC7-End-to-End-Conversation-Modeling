@@ -183,10 +183,10 @@ def average(fileone, filetwo, w2v):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'ground_truth', help="ground truth text file, one example per line")
+        '--ground_truth', help="ground truth text file, one example per line")
     parser.add_argument(
-        'predicted', help="predicted text file, one example per line")
-    parser.add_argument('embeddings', help="embeddings bin file")
+        '--predicted', help="predicted text file, one example per line")
+    parser.add_argument('--embeddings', help="embeddings bin file")
     args = parser.parse_args()
 
     print("loading embeddings file...")
