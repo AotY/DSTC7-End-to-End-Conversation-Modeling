@@ -6,10 +6,9 @@ import sys
 import logging
 import argparse
 
-sys.path.append('..')
 
-from misc.utils import Tokenizer
-from misc.misc_opts import preprocess_opt
+from utils import Tokenizer
+from misc_opts import preprocess_opt
 
 '''
 Generate
@@ -50,6 +49,9 @@ def read_convos(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
+            if n == 1000:
+                break
+
             sub = line.split('\t')
 
             conversation = sub[-2]
@@ -81,8 +83,12 @@ def read_convos(args, logger):
             if len(sentences_tokens) == 0:
                 continue
 
+            print('sentences_tokens: ', sentences_tokens)
+
             query_tokens = sentences_tokens[-1]
             context_tokens = sentences_tokens[:-1]
+            print('query_tokens: ', query_tokens)
+            print('context_tokens: ', context_tokens)
 
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
@@ -121,12 +127,15 @@ def read_facts(args, logger):
     domain_names = []
 
     n = 0
-    with open(facts_file_path, 'r', encoding='utf-8') as f:
+    with open(args.facts_file_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
             n += 1
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
+
+            if n == 1000:
+                break
 
             sub = line.split('\t')
 
@@ -136,7 +145,7 @@ def read_facts(args, logger):
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
-            if fact_len < args.f_min_len or fact_len > args.f_max_len:
+            if fact_len < args.min_len or fact_len > args.f_max_len:
                 continue
 
             facts.append(fact_tokens)
@@ -191,8 +200,14 @@ def save_data_to_pair(args, contexts, queries,
 
     '''Save data in pair format.'''
     save_file = open(os.path.join(args.save_path, filename), 'w', encoding='utf-8')
-    for name, conversation_id, context, query, response, hash_value, score, turn in \
-            zip(names, conversation_ids, queries, contexts, responses, hash_values, scores, turns):
+    for name, conversation_id, context, \
+        query, response, hash_value, score, turn in \
+            zip(names, conversation_ids, contexts, \
+                queries, responses, hash_values, scores, turns):
+
+        print('context: ', context)
+        print('query: ', query)
+        print('response: ', response)
 
         if len(context) == 0:
             context = ''
@@ -257,7 +272,7 @@ if __name__ == '__main__':
     #  read facts
     facts, facts_hash_values, \
         facts_subreddit_names, facts_conversation_ids, \
-        domain_names = read_facts(args.facts_file_path, logger, args)
+        domain_names = read_facts(args, logger)
 
     #  save raw facts to txt
     save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
