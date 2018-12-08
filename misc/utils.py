@@ -87,7 +87,15 @@ class Tokenizer:
 
         # merge multi to single
         text = re.sub(r'( __url__)+', ' __url__', text)
+        text = re.sub(r'(__url__ __url__)+', '__url__', text)
+
+        text = re.sub(r'\( __number__ \)', '__number__', text)
+
         text = re.sub(r'( __number__)+', ' __number__', text)
+        text = re.sub(r'(__number__ __number__)', '__number__', text)
+
+        text = re.sub(r'(__number__ __url__)', '__url__', text)
+        text = re.sub(r'(__url__ __number__)', '__url__', text)
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')

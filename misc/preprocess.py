@@ -49,7 +49,7 @@ def read_convos(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            if n == 1000:
+            if n == 50000:
                 break
 
             sub = line.split('\t')
@@ -83,12 +83,12 @@ def read_convos(args, logger):
             if len(sentences_tokens) == 0:
                 continue
 
-            print('sentences_tokens: ', sentences_tokens)
+            #  print('sentences_tokens: ', sentences_tokens)
 
             query_tokens = sentences_tokens[-1]
             context_tokens = sentences_tokens[:-1]
-            print('query_tokens: ', query_tokens)
-            print('context_tokens: ', context_tokens)
+            #  print('query_tokens: ', query_tokens)
+            #  print('context_tokens: ', context_tokens)
 
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
@@ -134,7 +134,7 @@ def read_facts(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            if n == 1000:
+            if n == 50000:
                 break
 
             sub = line.split('\t')
@@ -205,9 +205,9 @@ def save_data_to_pair(args, contexts, queries,
             zip(names, conversation_ids, contexts, \
                 queries, responses, hash_values, scores, turns):
 
-        print('context: ', context)
-        print('query: ', query)
-        print('response: ', response)
+        #  print('context: ', context)
+        #  print('query: ', query)
+        #  print('response: ', response)
 
         if len(context) == 0:
             context = ''
@@ -220,12 +220,10 @@ def save_data_to_pair(args, contexts, queries,
 
         query = ' '.join(query)
         response = ' '.join(response)
-        save_file.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
+        save_file.write('%s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s\n' % \
                 (name, conversation_id, context, query, response, hash_value, score, turn))
 
     save_file.close()
-
-
 
 
 def save_facts(facts, subreddit_names, conversation_ids, domain_names, filename):
@@ -276,7 +274,7 @@ if __name__ == '__main__':
 
     #  save raw facts to txt
     save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
-            domain_names, os.path.join(args.save_path, 'facts.txt'))
+            domain_names, os.path.join(args.save_path, 'train.facts.txt'))
 
     datas = queries + responses + facts
     for context in contexts:

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 python preprocess.py \
-    --convos_file_path ./../data/train.convos.txt \
-    --facts_file_path ./../data/train.facts.txt \
+    --convos_file_path ./../data/raw.convos.txt \
+    --facts_file_path ./../data/raw.facts.txt \
     --save_path ./../data \
     --min_len 3 \
     --c_max_len 500 \
