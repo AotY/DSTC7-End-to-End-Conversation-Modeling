@@ -10,10 +10,6 @@ sys.path.append('..')
 
 from misc.utils import Tokenizer
 from misc.misc_opts import preprocess_opt
-from misc import es_helper
-from embedding.embedding_opt import train_embedding_opt
-from embedding.utils import build_vocab_word2vec, build_vocab_fastText
-from embedding import train_embedding
 
 '''
 Generate
@@ -33,7 +29,7 @@ Read convos file.
 '''
 
 
-def read_convos(convos_file_path, logger, args):
+def read_convos(args, logger):
     queries = list()
 
     contexts = list()
@@ -47,12 +43,13 @@ def read_convos(convos_file_path, logger, args):
 
     logger.info('read convos...')
     n = 0
-    with open(convos_file_path, 'r', encoding='utf-8') as f:
+    with open(args.convos_file_path, 'r', encoding='utf-8') as f:
         for line in f:
+            line = line.rstrip()
             n += 1
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
-            line = line.rstrip()
+
             sub = line.split('\t')
 
             conversation = sub[-2]
@@ -93,8 +90,8 @@ def read_convos(convos_file_path, logger, args):
             if response_length < args.min_len or response_length > args.r_max_len:
                 continue
 
-            queries.append(query_tokens)
             contexts.append(context_tokens)
+            queries.append(query_tokens)
             responses.append(response_tokens)
 
             hash_values.append(sub[0])
@@ -108,13 +105,6 @@ def read_convos(convos_file_path, logger, args):
         response_scores, dialogue_turns
 
 
-''' save abnormal datas'''
-
-
-def save_abnormal_datas(datas, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
-        for data in datas:
-            f.write("%s\n" % (' '.join(data)))
 
 
 '''
@@ -122,7 +112,7 @@ Read facts file.
 '''
 
 
-def read_facts(facts_file_path, logger, args):
+def read_facts(args, logger):
     facts = []
 
     hash_values = []
@@ -133,16 +123,16 @@ def read_facts(facts_file_path, logger, args):
     n = 0
     with open(facts_file_path, 'r', encoding='utf-8') as f:
         for line in f:
+            line = line.rstrip()
             n += 1
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
-            line = line.rstrip()
 
             sub = line.split('\t')
 
             fact = sub[-1]
 
-            fact_tokens = tokenizer.tokenize(fact)
+            fact_tokens = tokenizer.tokenize(fact, html=True)
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
@@ -167,21 +157,13 @@ datas, may be contexts + responses or contexts individually.
 '''
 
 
-def stat_frequency(datas, datas_name, min_count=3, vocab_size=8e5, logger=None):
+def stat_frequency(datas, datas_name, logger=None):
     freq_dict = {}
-    vocab_size = int(vocab_size)
-    total_token_nums = 0
-    token_len_dict = {}
     for data in datas:
-        total_token_nums += len(data)
         for token in data:
             freq_dict.setdefault(token, 0)
             freq_dict[token] += 1
 
-            token_len_dict.setdefault(len(token), 0)
-            token_len_dict[len(token)] += 1
-
-    total_type_nums = len(freq_dict)
 
     sorted_freq_list = sorted(freq_dict.items(), key=lambda d: d[1], reverse=True)
     freq_path = '_'.join(datas_name) + '.freq.txt'
@@ -189,14 +171,7 @@ def stat_frequency(datas, datas_name, min_count=3, vocab_size=8e5, logger=None):
         for item in sorted_freq_list:
             f.write('%s\t%d\n' % (item[0], item[1]))
 
-    sorted_len_list = sorted(token_len_dict.items(), key=lambda d: d[0], reverse=False)
-    token_len_path = '_'.join(datas_name) + '_token_len.freq.txt'
-    with open(token_len_path, 'w', encoding='utf-8') as f:
-        for item in sorted_len_list:
-            f.write('%d\t%d\n' % (item[0], item[1]))
-
-    print('token size: %d' % len(sorted_freq_list))
-    return sorted_freq_list, total_token_nums, total_type_nums
+    return sorted_freq_list
 
 
 def save_distribution(distribution, name):
@@ -236,84 +211,6 @@ def save_data_to_pair(args, contexts, queries,
     save_file.close()
 
 
-def save_to_es(es, datas_zip, doc_type='conversation'):
-    if doc_type == es_helper.conversation_type:
-        for hash_value, subreddit_name, conversation_id, response_score, dialogue_turn in datas_zip:
-            body = {
-                'hash_value': hash_value,
-                'subreddit_name': subreddit_name,
-                'conversation_id': conversation_id,
-                'response_score': response_score,
-                'dialogue_turn': dialogue_turn
-            }
-            es_helper.insert_to_es(
-                es, body, es_helper.index, doc_type)
-    elif doc_type == es_helper.fact_type:
-        for hash_value, subreddit_name, conversation_id, domain_name, fact in datas_zip:
-            body = {
-                'hash_value': hash_value,
-                'subreddit_name': subreddit_name,
-                'conversation_id': conversation_id,
-                'domain_name': domain_name,
-                'fact': fact
-            }
-            es_helper.insert_to_es(
-                es, body, es_helper.index, doc_type)
-
-
-'''save count'''
-
-
-def save_conversations_responses_facts_count(contexts, responses, facts):
-    with open('conversations_responses_count.txt', 'w', encoding='utf-8') as f:
-        f.write("%s\t%d\n" % ('contexts', len(contexts)))
-        f.write("%s\t%d\n" % ('responses', len(responses)))
-        f.write("%s\t%d\n" % ('facts', len(facts)))
-
-
-'''save raw pair'''
-
-
-def save_raw_pair(raw_conversations, raw_responses, hash_values):
-    with open(os.path.join(args.save_path, 'conversations_responses_raw_pair.txt'), 'w', encoding='utf-8') as f:
-        for conversation, response, hash_value in zip(raw_conversations, raw_responses, hash_values):
-            f.write("%sSPLITTOKEN%sSPLITTOKEN\%s\n" %
-                    (conversation, response, hash_value))
-
-
-'''save token, type nums '''
-
-
-def save_token_type_nums(total_token_nums, total_type_nums):
-    with open('token_type_nums.txt', 'w', encoding='utf-8') as f:
-        f.write("%s\t%d\n" % ('token', total_token_nums))
-        f.write("%s\t%d\n" % ('type', total_type_nums))
-        f.write("%s\t%.4f\n" %
-                ('token/type', total_token_nums/total_type_nums))
-
-
-''' save_conversation_response_facts_nums '''
-
-
-def save_conversation_response_facts_nums(name_num_dict, filename):
-    avg_num = sum(list(name_num_dict.values())) / len(name_num_dict)
-    # sort
-    sorted_list = sorted(name_num_dict.items(),
-                         key=lambda item: item[1], reverse=True)
-
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write('%s\t%.4f\n' % ('avg', avg_num))
-        for name, count in sorted_list:
-            f.write("%s\t%d\n" % (name, count))
-
-
-''' save_out_of_vocab_words '''
-
-
-def save_out_of_vocab_words(out_of_vocab_words, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
-        for word in out_of_vocab_words:
-            f.write('%s\n' % word)
 
 
 def save_facts(facts, subreddit_names, conversation_ids, domain_names, filename):
@@ -337,16 +234,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     preprocess_opt(parser)
-    train_embedding_opt(parser)
     args = parser.parse_args()
     model_name = args.model_name
 
-    logger.info('args.vocab_size: %d ' % int(args.vocab_size + 4))
-    args.vocab_path = args.vocab_path.format(args.model_name, int(args.vocab_size + 4))
-
     contexts, queries, responses, \
         hash_values, subreddit_names, conversation_ids, \
-        response_scores, dialogue_turns = read_convos(args.convos_file_path, logger, args)
+        response_scores, dialogue_turns = read_convos(args, logger)
 
     save_data_to_pair(
         args,
@@ -376,7 +269,6 @@ if __name__ == '__main__':
 
     datas_name = ['contexts', 'queries', 'responses', 'facts']
 
-    sorted_freq_list, total_token_nums, total_type_nums = stat_frequency(
-        datas, datas_name, args.min_count, args.vocab_size, logger)
+    sorted_freq_list = stat_frequency(datas, datas_name, logger)
 
     logger.info('Preprocessing finished.')
