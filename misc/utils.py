@@ -40,7 +40,7 @@ class Tokenizer:
         self.number_re = re.compile(
             number_regex_str, re.VERBOSE | re.IGNORECASE)
 
-    def tokenize(self, text, html=True):
+    def tokenize(self, text, html=False):
         if isinstance(text, list):
             text = ' '.join(text)
 
@@ -86,31 +86,21 @@ class Tokenizer:
         text = self.number_re.sub('__number__', text)
 
         # merge multi to single
-        text = text.replace('__number__ __number__', '')
         text = text.replace('__url__ __url__', '')
+        text = text.replace('__number__ __number__', '')
         text = text.replace('__number__ __url__', '')
         text = text.replace('__url__ __number__', '')
 
-        text = re.sub(r'\(\s__url__\s\)', '__url__', text)
-        text = re.sub(r'(\s__url__)+', ' __url__', text)
-        text = re.sub(r'(__url__\s)+', '__url__ ', text)
-        text = re.sub(r'(__url__)+', '__url__', text)
+        text = re.sub(r'(number__ __number)+', 'number', text)
+        text = re.sub(r'(url__ __url)+', 'url', text)
 
-        text = re.sub(r'\(\s__number__\s\)', '__number__', text)
-        text = re.sub(r'(\s__number__\s)+', ' __number__ ', text)
-        text = re.sub(r'(\s__number__)+', ' __number__', text)
-        text = re.sub(r'(__number__\s)+', '__number__ ', text)
+        text = re.sub(r'(url__ __number)+', 'url', text)
+        text = re.sub(r'(number__ __url)+', 'number', text)
 
-        text = text.replace('__number__ __number__', '')
-        text = text.replace('__url__ __url__', '')
-        text = text.replace('__number__ __url__', '')
-        text = text.replace('__url__ __number__', '')
-        text = text.replace('__number__ __number__', '')
-        text = text.replace('__url__ __url__', '')
-        text = text.replace('__number__ __number__', '')
-        text = text.replace('__url__ __url__', ' ')
-        text = text.replace('__number__ __number__', '')
-        text = text.replace('__number__ __number__', '')
+        text = text.replace('number__ __number', 'number')
+        text = text.replace('url__ __url', 'url')
+        text = text.replace('number__ __number', 'number')
+        text = text.replace('url__ __url', 'url')
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
