@@ -9,7 +9,6 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 
-#  from summa import keywords # for keyword extraction
 from rake_nltk import Rake
 from misc import es_helper
 from misc.utils import remove_stop_words
@@ -56,7 +55,7 @@ class Dataset:
                     if not bool(line):
                         continue
 
-                    subreddit_names, conversation_id, context, query, \
+                    subreddit_name, conversation_id, context, query, \
                         response, hash_value, score, turn = line.split('SPLIT')
 
                     if not bool(query) or not bool(response):
@@ -91,7 +90,7 @@ class Dataset:
 
                         context_ids.append(ids)
 
-                    datas.append((name, conversation_id, query_ids,
+                    datas.append((subreddit_name, conversation_id, query_ids,
                                   context_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
@@ -171,8 +170,8 @@ class Dataset:
         """sort batch_data, by turn num"""
         batch_data = sorted(
             batch_data, key=lambda item: len(item[2]), reverse=True)
-        for i, (name, conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
-            subreddit_names.append(name)
+        for i, (subreddit_name, conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
+            subreddit_names.append(subreddit_name)
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
@@ -533,8 +532,8 @@ class Dataset:
                         greedy_texts,
                         beam_texts):
 
-                f.write('name: %s\n' % name)
-                f.write('id: %s\n' % id)
+                f.write('subreddit_name: %s\n' % name)
+                f.write('conversation_id: %s\n' % id)
                 f.write('hash_value: %s\n' % hash_value)
 
                 if c_ids is not None:
