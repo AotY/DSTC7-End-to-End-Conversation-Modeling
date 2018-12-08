@@ -76,8 +76,11 @@ def read_convos(args, logger):
             for si, sentence in enumerate(sentences):
                 # token
                 if len(sentence.split()) > args.q_max_len:
-                    sentences_tokens = list()
-                    continue
+                    if si != len(sentences) - 1:
+                        sentences_tokens = list()
+                        continue
+                    else:
+                        continue
 
                 tokens = tokenizer.tokenize(sentence)
                 if tokens is None or len(tokens) < args.min_len:
