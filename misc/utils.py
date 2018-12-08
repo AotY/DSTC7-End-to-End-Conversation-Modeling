@@ -40,7 +40,7 @@ class Tokenizer:
         self.number_re = re.compile(
             number_regex_str, re.VERBOSE | re.IGNORECASE)
 
-    def tokenize(self, text, html=False):
+    def tokenize(self, text, html=True):
         if isinstance(text, list):
             text = ' '.join(text)
 
@@ -115,7 +115,7 @@ class Tokenizer:
         # contraction
         add_space = ["'s", "'m", "'re", "n't", "'ll", "'ve", "'d", "'em"]
         tweet_tokenizer = TweetTokenizer(
-            preserve_case=False, strip_handles=False, reduce_len=True)
+            preserve_case=False, strip_handles=False, reduce_len=False)
         text = ' ' + ' '.join(tweet_tokenizer.tokenize(text)) + ' '
         text = text.replace(" won't ", " will n't ")
         text = text.replace(" can't ", " can n't ")
@@ -130,8 +130,12 @@ class Tokenizer:
 
 
 if __name__ == '__main__':
-    sequence = 'RT @marcobonzanini: just an example! 342 23424 '\
-        ' trio.com www.trio.com :D https://www.youtube.com/watch?v=gGRyC8fjTUM http://example.com #NLP <title> 223: 113'
+    #  sequence = 'RT @marcobonzanini: just an example! 342 23424 '\
+        #  ' trio.com www.trio.com :D https://www.youtube.com/watch?v=gGRyC8fjTUM http://example.com #NLP <title> 223: 113'
+    sequence = """
+     ... franchise would have been differently with farley as shrek . EOS really ? i can't imagine farley as shrek at all . his voice is too youngish sounding , clean , if you know what i mean . myers has a rough ogrish voice . EOS yeah , it would definitely be a different movie . http://lostmedia.wikia.com/wiki/Shrek_(Original_Chris_Farley_Audio) is some original recordings , so you can hear what shrek would have been like . i imagine his body language would have been much more animated had farley finished the role . EOS wow , that's amazing , thanks ! > " it was about a teenage ogre who wasn't all that eager to go into the family business . you see , young shrek didn't really want to frighten people . he longed to make friends , help people . this ogre actually dreamed of becoming a knight " it seems really not as good as what was eventually made . it seems dull and cliche . shrek and a more original plot than that . this seems like it would have been good , especially with farley on board , but not become the classic that it eventually became .yeah , well we definitely have different feelings about the finished product .
+
+    """
     tokenizer = Tokenizer()
     print(sequence)
     print(tokenizer.tokenize(sequence))

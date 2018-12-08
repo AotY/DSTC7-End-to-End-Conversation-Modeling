@@ -5,7 +5,7 @@ export CUDA_VISIBLE_DEVICES=3
 python train_kg_model.py \
     --pair_path data/train.pair.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx_kg.40004.dict \
+    --vocab_path data/vocab_word2idx.40004.dict \
     --turn_num 4 \
     --turn_min 1 \
     --turn_type normal \
@@ -15,10 +15,9 @@ python train_kg_model.py \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.0 \
+    --dropout 0.1 \
     --bidirectional \
     --tied \
-	--decoder_type luong \
     --decode_type beam_search \
     --q_max_len 60 \
     --c_max_len 35 \

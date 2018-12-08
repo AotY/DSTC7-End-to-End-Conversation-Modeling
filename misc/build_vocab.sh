@@ -11,7 +11,7 @@ python build_vocab.py \
     --distribution ./conversations_responses_facts.freq.txt \
     --vocab_size 4e4 \
     --min_count 3 \
-    --vocab_path ./../data/vocab_word2idx.40004.pkl \
+    --vocab_path ./../data/vocab_word2idx.40004.dict \
  
 /
 
