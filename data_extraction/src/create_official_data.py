@@ -39,8 +39,7 @@ parser.add_argument("--pickle", help="Pickle that contains conversations and fac
 parser.add_argument("--subreddit_filter", help="List of subreddits (inoffensive, safe for work, etc.)")
 parser.add_argument("--domain_filter", help="Filter on subreddits and domains.")
 parser.add_argument("--nsubmissions", help="Number of submissions to process (< 0 means all)", default=-1, type=int)
-parser.add_argument("--min_fact_len", help="Minimum number of tokens in each fact (reduce noise in html).", default=0,
-                    type=int)
+parser.add_argument("--min_fact_len", help="Minimum number of tokens in each fact (reduce noise in html).", default=0, type=int)
 parser.add_argument("--min_res_len", help="Min number of characters in response.", default=2, type=int)
 parser.add_argument("--max_res_len", help="Max number of characters in response.", default=280, type=int)
 parser.add_argument("--max_context_len", help="Max number of words in context.", default=200, type=int)
@@ -50,15 +49,13 @@ parser.add_argument("--minscore", help="Minimum score of each comment.", default
 parser.add_argument("--delay", help="Seconds of delay when crawling web pages", default=0, type=int)
 parser.add_argument("--tokenize", help="Whether to tokenize facts and conversations.", default=True, type=bool)
 parser.add_argument("--anchoronly", help="Filter out URLs with no named anchors.", default=False, type=bool)
-parser.add_argument("--use_robots_txt",
-                    help="Whether to respect robots.txt (disable this only if urls have been previously checked by other means!)",
-                    default=True, type=bool)
+parser.add_argument("--use_robots_txt", help="Whether to respect robots.txt (disable this only if urls have been previously checked by other means!)", default=True, type=bool)
 parser.add_argument("--use_cc", help="Whether to download pages from Common Crawl.", default=False, type=bool)
 parser.add_argument("--dryrun", help="Just collect stats about data; don't create any data.", default=False, type=bool)
 parser.add_argument("--blind", help="Don't print out responses.", default=False, type=bool)
 args = parser.parse_args()
 
-fields = ["id", "subreddit", "score", "num_comments", "domain", "title", "url", "permalink"]
+fields = [ "id", "subreddit", "score", "num_comments", "domain", "title", "url", "permalink" ]
 important_tags = ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'p']
 notext_tags = ['script', 'style']
 deleted_str = '[deleted]'
@@ -69,64 +66,39 @@ robotparsers = {}
 tokenizer = TweetTokenizer(preserve_case=False)
 cc = CommonCrawl(-2)
 
-
 def get_subreddit(submission):
     return submission["subreddit"]
-
-
 def get_domain(submission):
     return submission["domain"]
-
-
 def get_url(submission):
     return submission["url"]
-
-
 def get_submission_text(submission):
     return submission["title"]
-
-
 def get_permalink(submission):
     return submission["permalink"]
-
-
 def get_submission_id(submission):
     return submission["id"]
-
-
 def get_comment_id(comment):
     return "t1_" + comment["id"]
-    # return comment["name"]
-
-
+    #return comment["name"]
 def get_parent_comment_id(comment):
     return comment["parent_id"]
-
-
 def get_text(comment):
     return comment["body"]
-
-
 def get_user(comment):
     return comment["author"]
-
-
 def get_score(comment):
     return comment["score"]
-
-
 def get_linked_submission_id(comment):
     return comment["link_id"].split("_")[1]
-
 
 def get_anchor(url):
     pos = url.find("#")
     if (pos > 0):
-        label = url[pos + 1:]
+        label = url[pos+1:]
         label = label.strip()
         return label
     return ""
-
 
 def filter_submission(submission):
     """Determines whether to filter out this submission (over-18, deleted user, etc.)."""
@@ -143,15 +115,13 @@ def filter_submission(submission):
     if submission["distinguished"] != None:
         return True
     if "subreddit_type" in submission:
-        if submission["subreddit_type"] == "restricted":  # filter only public
+        if submission["subreddit_type"] == "restricted": # filter only public
             return True
         if submission["subreddit_type"] == "archived":
             return True
     url = get_url(submission)
     domain = get_domain(submission)
-    if domain.find("reddit.com") >= 0 or domain.find("twitter.com") >= 0 or domain.find(
-            "youtube.com") >= 0 or domain.find("youtube.com") >= 0 or domain.find("imgur.com") >= 0 or domain.find(
-            "flickr.com") >= 0 or domain.find("ebay.com") >= 0:
+    if domain.find("reddit.com") >= 0 or domain.find("twitter.com") >= 0 or domain.find("youtube.com") >= 0 or domain.find("youtube.com") >= 0 or domain.find("imgur.com") >= 0 or domain.find("flickr.com") >= 0 or domain.find("ebay.com") >= 0:
         return True
     if args.anchoronly and len(get_anchor(url)) <= 2:
         return True
@@ -161,15 +131,13 @@ def filter_submission(submission):
         return True
     return False
 
-
 def norm_article(t):
     """Minimalistic processing with linebreaking."""
-    t = re.sub("\s*\n+\s*", "\n", t)
-    t = re.sub(r'(</[pP]>)', r'\1\n', t)
-    t = re.sub("[ \t]+", " ", t)
+    t = re.sub("\s*\n+\s*","\n", t)
+    t = re.sub(r'(</[pP]>)',r'\1\n', t)
+    t = re.sub("[ \t]+"," ", t)
     t = t.strip()
     return t
-
 
 def norm_sentence(t):
     """Minimalistic processing: remove extra space characters."""
@@ -177,16 +145,14 @@ def norm_sentence(t):
     t = t.strip()
     if args.tokenize:
         t = " ".join(tokenizer.tokenize(t))
-        t = t.replace('[ deleted ]', '[deleted]');
+        t = t.replace('[ deleted ]','[deleted]');
     return t
-
 
 def add_webpage(submission, year, month):
     """Retrive sentences ('facts') from submission["url"]. """
     if args.use_cc:
         return add_cc_webpage(submission, year, month)
     return add_live_webpage(submission)
-
 
 def add_cc_webpage(submission, year, month):
     url = get_url(submission)
@@ -203,14 +169,13 @@ def add_cc_webpage(submission, year, month):
     submission["source"] = src
     return submission
 
-
 def add_live_webpage(submission):
     url = get_url(submission)
     domain = get_domain(submission)
     try:
         if args.use_robots_txt:
             if args.delay > 0:
-                time.sleep(args.delay)
+                time.sleep(args.delay) 
             if domain in robotparsers.keys():
                 rp = robotparsers[domain]
             else:
@@ -238,7 +203,6 @@ def add_live_webpage(submission):
         traceback.print_exc()
         return None
 
-
 def add_webpages(submissions):
     """Use multithreading to retrieve multiple webpages at once."""
     print("Downloading %d pages:" % len(submissions))
@@ -247,13 +211,11 @@ def add_webpages(submissions):
     print("\nDone.")
     return [s for s in submissions if s is not None]
 
-
 def get_date(file_name):
     m = re.search(r'(\d\d\d\d)-(\d\d)', file_name)
     year = m.group(1)
     month = m.group(2)
     return year, month
-
 
 def get_submissions(rs_file, subreddit_file, domain_file):
     """Return all submissions from a dump submission file rs_file (RS_*.bz2),
@@ -264,10 +226,10 @@ def get_submissions(rs_file, subreddit_file, domain_file):
     year, month = get_date(rs_file)
     if subreddit_file != None:
         with open(subreddit_file) as f:
-            subreddit_dic = dict([(el.strip(), 1) for el in f.readlines()])
+            subreddit_dic = dict([ (el.strip(), 1) for el in f.readlines() ])
     if domain_file != None:
         with open(domain_file) as f:
-            domain_dic = dict([(el.strip(), 1) for el in f.readlines()])
+            domain_dic = dict([ (el.strip(), 1) for el in f.readlines() ])
     with bz2.open(rs_file, 'rt', encoding="utf-8") as f:
         i = 0
         for line in f:
@@ -279,7 +241,7 @@ def get_submissions(rs_file, subreddit_file, domain_file):
                     scheck = subreddit_dic == None or subreddit in subreddit_dic
                     dcheck = domain_dic == None or domain in domain_dic
                     if scheck and dcheck:
-                        s = dict([(f, submission[f]) for f in fields])
+                        s = dict([ (f, submission[f]) for f in fields ])
                         print("keeping: subreddit=%s\tdomain=%s" % (subreddit, domain))
                         if args.dryrun:
                             continue
@@ -303,8 +265,7 @@ def get_submissions(rs_file, subreddit_file, domain_file):
         submissions = add_webpages(submissions)
     else:
         submissions = [s for s in submissions if s is not None]
-    return dict([(get_submission_id(s), s) for s in submissions])
-
+    return dict([ (get_submission_id(s), s) for s in submissions ])
 
 def get_comments(rc_file, submissions):
     """Return all conversation triples from rc_file (RC_*.bz2),
@@ -322,11 +283,10 @@ def get_comments(rc_file, submissions):
                 pass
     return comments
 
-
 def load_data():
     """Load data either from a pickle file if it exists, 
        and otherwise from RC_* RS_* and directly from the web."""
-    if not os.path.isfile(args.pickle):
+    if not os.path.isfile(args.pickle): 
         submissions = get_submissions(args.rsinput, args.subreddit_filter, args.domain_filter)
         comments = get_comments(args.rcinput, submissions)
         with open(args.pickle, 'wb') as f:
@@ -335,7 +295,6 @@ def load_data():
         with open(args.pickle, 'rb') as f:
             [submissions, comments] = pickle.load(f)
     return submissions, comments
-
 
 def insert_escaped_tags(tags, label=None):
     """For each tag in "tags", insert contextual tags (e.g., <p> </p>) as escaped text
@@ -348,25 +307,25 @@ def insert_escaped_tags(tags, label=None):
                 l = label
             else:
                 l = tag.name
-            strs[0].parent.insert(0, NavigableString("<" + l + ">"))
-            strs[-1].parent.append(NavigableString("</" + l + ">"))
+            strs[0].parent.insert(0, NavigableString("<"+l+">"))
+            strs[-1].parent.append(NavigableString("</"+l+">"))
             found = True
     return found
 
-
-def save_facts(submissions, sids=None):
+def save_facts(submissions, sids = None):
     subs = {}
     i = 0
+    if args.facts == '-':
+        return submissions
     with open(args.facts, 'wt', encoding="utf-8") as f:
         for id in sorted(submissions.keys()):
-            s = submissions[id]
+            s = submissions[id] 
             url = get_url(s)
             label = get_anchor(url)
-            print("Processing submission %s...\n\turl: %s\n\tanchor: %s\n\tpermalink: http://reddit.com%s" % (
-            id, url, str(label), get_permalink(s)))
+            print("Processing submission %s...\n\turl: %s\n\tanchor: %s\n\tpermalink: http://reddit.com%s" % (id, url, str(label), get_permalink(s)))
             subs[id] = s
             if sids == None or id in sids.keys():
-                b = BeautifulSoup(s["source"], 'html.parser')
+                b = BeautifulSoup(s["source"],'html.parser')
                 # If there is any anchor in the url, locate it in the facts:
                 if label != "":
                     if not insert_escaped_tags(b.find_all(True, attrs={"id": label}), 'anchor'):
@@ -387,7 +346,7 @@ def save_facts(submissions, sids=None):
                 facts = []
                 for sent in filter(None, t.split("\n")):
                     if len(sent.split(" ")) >= args.min_fact_len:
-                        facts.append(norm_sentence(sent))
+                       facts.append(norm_sentence(sent))
                 for fact in facts:
                     out_str = "\t".join([get_subreddit(s), id, get_domain(s), fact])
                     hash_str = hashlib.sha224(out_str.encode("utf-8")).hexdigest()
@@ -398,30 +357,26 @@ def save_facts(submissions, sids=None):
                     break
     return subs
 
-
 def get_convo(id, submissions, comments, depth=args.max_depth):
     c = comments[id]
     pid = get_parent_comment_id(c)
     if pid in comments.keys() and depth > 0:
-        els = get_convo(pid, submissions, comments, depth - 1)
+        els = get_convo(pid, submissions, comments, depth-1)
     else:
         s = submissions[get_linked_submission_id(c)]
-        els = ["START", norm_sentence(get_submission_text(s))]
+        els = [ "START", norm_sentence(get_submission_text(s)) ]
     els.append(norm_sentence(get_text(c)))
     return els
-
 
 def save_tuple(f, subreddit, sid, pos, user, context, message, response, score, test_hashes):
     cwords = re.split("\s+", context)
     mwords = re.split("\s+", message)
-    max_len = max(args.max_context_len, len(mwords) + 1)
+    max_len = max(args.max_context_len, len(mwords)+1)
     if len(cwords) > max_len:
         ndel = len(cwords) - max_len
         del cwords[:ndel]
         context = "... " + " ".join(cwords)
-    if len(response) <= args.max_res_len and len(
-            response) >= args.min_res_len and response != deleted_str and user != deleted_str and response.find(
-            ">") < 0:
+    if len(response) <= args.max_res_len and len(response) >= args.min_res_len and response != deleted_str and user != deleted_str and response.find(">") < 0:
         if context.find(deleted_str) < 0:
             if score >= args.minscore:
                 out_str = "\t".join([subreddit, sid, str(score), str(pos), context, response])
@@ -433,7 +388,6 @@ def save_tuple(f, subreddit, sid, pos, user, context, message, response, score, 
                         out_str = "\t".join([subreddit, sid, str(score), str(pos), context, undisclosed_str])
                     f.write(hash_str + "\t" + out_str + "\n")
 
-
 def save_tuples(submissions, comments, test_hashes):
     has_firstturn = {}
     with open(args.convos, 'wt', encoding="utf-8") as f:
@@ -441,7 +395,7 @@ def save_tuples(submissions, comments, test_hashes):
             comment = comments[id]
             user = get_user(comment)
             score = get_score(comment)
-            sid = get_linked_submission_id(comment)
+            sid = get_linked_submission_id(comment) 
             if sid in submissions.keys():
                 s = submissions[sid]
                 convo = get_convo(id, submissions, comments)
@@ -450,10 +404,9 @@ def save_tuples(submissions, comments, test_hashes):
                 message = convo[-2]
                 response = convo[-1]
                 if len(convo) == 3 and not sid in has_firstturn.keys():
-                    save_tuple(f, get_subreddit(s), sid, pos - 1, "", convo[-3], convo[-3], message, 1, test_hashes)
+                    save_tuple(f, get_subreddit(s), sid, pos-1, "", convo[-3], convo[-3], message, 1, test_hashes)
                     has_firstturn[sid] = 1
                 save_tuple(f, get_subreddit(s), sid, pos, user, context, message, response, score, test_hashes)
-
 
 def read_test_hashes(hash_file):
     hashes = {}
@@ -463,12 +416,10 @@ def read_test_hashes(hash_file):
             hashes[hash_str] = 1
     return hashes
 
-
-if __name__ == "__main__":
+if __name__== "__main__":
     test_hashes = None
     if args.test != "":
         test_hashes = read_test_hashes(args.test)
-
     submissions, comments = load_data()
     submissions = save_facts(submissions)
     save_tuples(submissions, comments, test_hashes)
