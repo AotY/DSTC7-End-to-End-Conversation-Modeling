@@ -8,5 +8,5 @@ python preprocess.py \
     --c_max_len 500 \
     --q_max_len 220 \
     --r_max_len 150 \
-    --f_max_len 350 \
+    --f_max_len 350
 /
