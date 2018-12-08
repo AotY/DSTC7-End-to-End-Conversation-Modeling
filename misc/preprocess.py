@@ -258,24 +258,10 @@ def save_facts(facts, subreddit_names, conversation_ids, domain_names, filename)
                     (subreddit, conversation_id, domain, fact))
 
 
-if __name__ == '__main__':
-    program = os.path.basename(sys.argv[0])
-    logger = logging.getLogger(program)
-
-    logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-    logging.root.setLevel(level=logging.INFO)
-    logger.info("Running %s", ' '.join(sys.argv))
-
-    # get optional parameters
-    parser = argparse.ArgumentParser(description=program,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    preprocess_opt(parser)
-    args = parser.parse_args()
-    model_name = args.model_name
-
+def init_clear_stats(args, logger):
     contexts, queries, responses, \
-        hash_values, subreddit_names, conversation_ids, \
-        response_scores, dialogue_turns = read_convos(args, logger)
+    hash_values, subreddit_names, conversation_ids, \
+    response_scores, dialogue_turns = read_convos(args, logger)
 
     save_data_to_pair(
         args,
@@ -304,7 +290,24 @@ if __name__ == '__main__':
         datas += context
 
     datas_name = ['contexts', 'queries', 'responses', 'facts']
-
     sorted_freq_list = stat_frequency(datas, datas_name, logger)
+
+
+
+if __name__ == '__main__':
+    program = os.path.basename(sys.argv[0])
+    logger = logging.getLogger(program)
+
+    logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
+    logging.root.setLevel(level=logging.INFO)
+    logger.info("Running %s", ' '.join(sys.argv))
+
+    # get optional parameters
+    parser = argparse.ArgumentParser(description=program,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    preprocess_opt(parser)
+    args = parser.parse_args()
+
+    init_clear_stats(args, logger)
 
     logger.info('Preprocessing finished.')
