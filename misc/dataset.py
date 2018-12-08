@@ -57,7 +57,7 @@ class Dataset:
                         continue
 
                     subreddit_names, conversation_id, context, query, \
-                        response, hash_value, score, turn = line.split('\t')
+                        response, hash_value, score, turn = line.split('SPLIT')
 
                     if not bool(query) or not bool(response):
                         continue
