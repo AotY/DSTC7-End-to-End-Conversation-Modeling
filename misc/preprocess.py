@@ -49,8 +49,8 @@ def read_convos(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            if n == 50000:
-                break
+            #  if n == 20000:
+                #  break
 
             sub = line.split('\t')
 
@@ -126,6 +126,7 @@ def read_facts(args, logger):
     conversation_ids = []
     domain_names = []
 
+    logger.info('read facts...')
     n = 0
     with open(args.facts_file_path, 'r', encoding='utf-8') as f:
         for line in f:
@@ -134,8 +135,8 @@ def read_facts(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            if n == 50000:
-                break
+            #  if n == 20000:
+                #  break
 
             sub = line.split('\t')
 
