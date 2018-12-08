@@ -5,12 +5,9 @@ import os
 import sys
 import logging
 import argparse
-import numpy as np
-from tqdm import tqdm
 
 sys.path.append('..')
 
-from misc.vocab import Vocab
 from misc.utils import Tokenizer
 from misc.misc_opts import preprocess_opt
 from misc import es_helper
@@ -49,9 +46,12 @@ def read_convos(convos_file_path, logger, args):
     hash_values = list()
 
     logger.info('read convos...')
+    n = 0
     with open(convos_file_path, 'r', encoding='utf-8') as f:
-        for line in tqdm(f):
-
+        for line in f:
+            n += 1
+            if n % 1e5 == 0:
+                logger.info('checked %.2fM' % (n / 1e6))
             line = line.rstrip()
             sub = line.split('\t')
 
@@ -130,8 +130,12 @@ def read_facts(facts_file_path, logger, args):
     conversation_ids = []
     domain_names = []
 
+    n = 0
     with open(facts_file_path, 'r', encoding='utf-8') as f:
-        for line in tqdm(f):
+        for line in f:
+            n += 1
+            if n % 1e5 == 0:
+                logger.info('checked %.2fM' % (n / 1e6))
             line = line.rstrip()
 
             sub = line.split('\t')
@@ -206,8 +210,8 @@ def save_distribution(distribution, name):
 ''' save data to pair, conversation - response '''
 
 
-def save_data_to_pair(args, contexts, queries, 
-                      responses, names, conversation_ids, 
+def save_data_to_pair(args, contexts, queries,
+                      responses, names, conversation_ids,
                       hash_values, scores, turns, filename):
 
     '''Save data in pair format.'''
