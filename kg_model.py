@@ -147,7 +147,7 @@ class KGModel(nn.Module):
         # fact encoder
         f_enc_outputs = None
         if self.config.model_type == 'kg':
-            f_enc_outputs = self.f_forward(f_inputs, f_inputs_length)
+            f_enc_outputs = self.f_forward(f_inputs, f_inputs_length, f_topk_length)
 
         # [max_len, batch_size, hidden_size]
         q_enc_outputs, q_encoder_hidden = self.q_encoder(
@@ -214,7 +214,7 @@ class KGModel(nn.Module):
         # fact encoder
         f_enc_outputs = None
         if self.config.model_type == 'kg':
-            f_enc_outputs = self.f_forward(f_inputs, f_inputs_length)
+            f_enc_outputs = self.f_forward(f_inputs, f_inputs_length, f_topk_length)
 
         # query forward
         q_enc_outputs, q_encoder_hidden = self.q_encoder(
@@ -439,11 +439,13 @@ class KGModel(nn.Module):
 
     def f_forward(self,
                   f_inputs,
-                  f_inputs_length):
+                  f_inputs_length,
+                  f_topk_length):
         """
         Args:
             -f_inputs: [topk, batch_size, max_len]
             -f_inputs_length: [topk, batch_size]
+            -f_topk_length: [batch_size]
         """
         f_outputs = list()
         for i in range(f_inputs.size(0)):
@@ -456,4 +458,25 @@ class KGModel(nn.Module):
 
         # [topk, batch_size, hidden_size]
         f_outputs = torch.cat(f_outputs, dim=0)
+
+        # M [batch_size, topk, hidden_size]
+        fM = self.fact_linearA(f_outputs)
+
+        # C [batch_size, topk, hidden_size]
+        fC = self.fact_linearC(f_outputs)
+
+        # [batch_size, num_layers, topk]
+        tmpP = torch.bmm(dec_hidden.transpose(0, 1), fM.transpose(1, 2))
+
+        mask = sequence_mask(f_topk_length, max_len=tmpP.size(-1))
+        mask = mask.unsqueeze(1)  # Make it broadcastable.
+        tmpP.masked_fill_(1 - mask, -float('inf'))
+
+        P = F.softmax(tmpP, dim=2)
+
+        o = torch.bmm(P, fC)  # [batch_size, num_layers, hidden_size]
+
+        # [num_layers, batch_size, hidden_size]
+        o = o.transpose(0, 1).contiguous()
+
         return f_outputs

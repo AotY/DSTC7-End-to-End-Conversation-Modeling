@@ -37,7 +37,7 @@ python train_kg_model.py \
     --device cuda \
     --eval_interval 100 \
     --log_interval 15 \
-    --log_path ./logs/{}_{}_{}_{}.log \
+    --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0001 \
     --test_split 0.07 \
