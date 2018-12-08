@@ -65,6 +65,8 @@ class Tokenizer:
 
         # url
         text = self.url_re.sub('__url__', text)
+        if text.count('__url__') >= 5:
+            return ''
 
         # remove markdown URL
         text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
@@ -77,28 +79,29 @@ class Tokenizer:
         # number
         #  text = self.number_re.sub('__number__', text)
 
-        if text.count('__number__') >= 7:
-            return ''
-
-        if text.count('__url__') >= 5:
+        if text.count('__number__') >= 9:
             return ''
 
         # merge multi to single
-        text = re.sub(r'(\s?__number__\s?)+', ' __number__ ', text)
-        text = re.sub(r'(\s?__url__\s?)+', ' __url__ ', text)
+        text = text.replace('__url__ __url__', '')
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__number__ __url__', '')
+        text = text.replace('__url__ __number__', '')
 
-        text = re.sub(r'(\s?__url__ __number__\s?)+', ' __url__ ', text)
-        text = re.sub(r'(\s?__number__ __url__\s?)+', ' __number__ ', text)
+        text = re.sub(r'(number__ __number)+', 'number', text)
+        text = re.sub(r'(url__ __url)+', 'url', text)
 
-        text = text.replace('__url__ __url__', '__url__')
-        text = text.replace('__number__ __number__', '__number__')
-        text = text.replace('__number__ __url__', '__number__')
-        text = text.replace('__url__ __number__', '__url__')
+        text = re.sub(r'(url__ __number)+', 'url', text)
+        text = re.sub(r'(number__ __url)+', 'number', text)
 
-        text = re.sub(r'__number__\w+', '__number__', text)
-        text = re.sub(r'\w+__number__', '__number__', text)
-        text = re.sub(r'__url__\w+', '__url__', text)
-        text = re.sub(r'\w+__url__', '__url__', text)
+        text = text.replace('number__ __number', 'number')
+        text = text.replace('url__ __url', 'url')
+        text = text.replace('number__ __number', 'number')
+        text = text.replace('url__ __url', 'url')
+        text = text.replace('number__ __number', 'number')
+        text = text.replace('url__ __url', 'url')
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__url__ __url__', '')
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
