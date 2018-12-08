@@ -48,7 +48,7 @@ args = parser.parse_args()
 # logger file
 time_str = time.strftime('%Y_%m_%d_%H:%M')
 args.log_path = args.log_path.format(
-    args.model_type, time_str, args.turn_num, args.turn_type)
+    args.model_type, args.turn_type, args.turn_min, args.turn_num, time_str)
 logger.info('log_path: {}'.format(args.log_path))
 
 device = torch.device(args.device)
@@ -75,6 +75,8 @@ def train_epochs(model,
 
     start = time.time()
     max_load = int(np.ceil(dataset._size_dict['train'] / args.batch_size))
+    evaluate_loss_list = []
+    evaluate_accuracy_list = []
     for epoch in range(args.start_epoch, args.epochs + 1):
         dataset.reset_data('train')
         total_loss = 0
@@ -136,7 +138,7 @@ def train_epochs(model,
                 evaluate_loss, evaluate_accuracy = evaluate(model=model,
                                                             dataset=dataset,
                                                             criterion=criterion)
-                logger_str = '  - (evaluate) epoch: {epoch: 2d},' \
+                logger_str = ' (evaluate) epoch: {epoch: 2d},' \
                     'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
                     epoch=epoch,
                     loss=evaluate_loss,
@@ -147,9 +149,21 @@ def train_epochs(model,
 
                 # lr update
                 optimizer.update(evaluate_loss)
+                evaluate_loss_list.append(evaluate_loss)
+                evaluate_accuracy_list.append(evaluate_accuracy)
 
                 is_stop = early_stopping.step(evaluate_loss)
+
                 if is_stop:
+                    avg_evaluate_loss = np.mean(evaluate_loss_list[-5:])
+                    avg_evaluate_accuracy = np.mean(evaluate_accuracy_list[-5:])
+                    logger_str = ' (avg evaluate)' \
+                        'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+                        ppl=math.exp(min(avg_evaluate_loss, 100)),
+                        accu=100*avg_evaluate_accuracy
+                    )
+                    save_logger(logger_str)
+                    logger.info(logger_str)
                     logger.info('Early Stopping.')
                     sys.exit(0)
 

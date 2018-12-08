@@ -49,8 +49,8 @@ def read_convos(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            #  if n == 20000:
-                #  break
+            if n == 20000:
+                break
 
             sub = line.split('\t')
 
@@ -73,22 +73,23 @@ def read_convos(args, logger):
             sentences = conversation.split('EOS')
             sentences_tokens = list()
 
-            for sentence in sentences:
+            for si, sentence in enumerate(sentences):
                 # token
+                if len(sentence.split()) > args.q_max_len:
+                    sentences_tokens = list()
+                    continue
+
                 tokens = tokenizer.tokenize(sentence)
                 if tokens is None or len(tokens) < args.min_len:
                     continue
+
                 sentences_tokens.append(tokens)
 
             if len(sentences_tokens) == 0:
                 continue
 
-            #  print('sentences_tokens: ', sentences_tokens)
-
             query_tokens = sentences_tokens[-1]
             context_tokens = sentences_tokens[:-1]
-            #  print('query_tokens: ', query_tokens)
-            #  print('context_tokens: ', context_tokens)
 
             response_tokens = tokenizer.tokenize(response)
             response_length = len(response_tokens)
@@ -135,18 +136,20 @@ def read_facts(args, logger):
             if n % 1e5 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            #  if n == 20000:
-                #  break
+            if n == 20000:
+                break
 
             sub = line.split('\t')
-
             fact = sub[-1]
+
+            if len(fact.split()) > args.f_max_len:
+                continue
 
             fact_tokens = tokenizer.tokenize(fact, html=True)
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
-            if fact_len < args.min_len or fact_len > args.f_max_len:
+            if fact_len < args.min_len:
                 continue
 
             facts.append(fact_tokens)
