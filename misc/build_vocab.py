@@ -45,8 +45,7 @@ def build_vocab():
 
     if args.vocab_size > 0 and len(freq_list) >= args.vocab_size:
         print('Clip tokens by vocab_size')
-
-    freq_list = freq_list[:args.vocab_size]
+        freq_list = freq_list[:args.vocab_size]
 
     vocab = Vocab()
     vocab.build_from_freq(freq_list)

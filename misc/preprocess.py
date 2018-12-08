@@ -3,6 +3,7 @@ from __future__ import division
 
 import os
 import sys
+import time
 import logging
 import argparse
 
@@ -44,6 +45,7 @@ def read_convos(args, logger):
     with open(args.convos_file_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
+            start_time = time.time()
             n += 1
             if n % 5e4 == 0:
                 logger.info('read %.2fM' % (n / 2e6))
