@@ -86,25 +86,31 @@ class Tokenizer:
         text = self.number_re.sub('__number__', text)
 
         # merge multi to single
-        text = text.replace('__number__ __number__', ' ')
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__url__ __url__', '')
+        text = text.replace('__number__ __url__', '')
+        text = text.replace('__url__ __number__', '')
+
+        text = re.sub(r'\(\s__url__\s\)', '__url__', text)
+        text = re.sub(r'(\s__url__)+', ' __url__', text)
+        text = re.sub(r'(__url__\s)+', '__url__ ', text)
+        text = re.sub(r'(__url__)+', '__url__', text)
+
+        text = re.sub(r'\(\s__number__\s\)', '__number__', text)
+        text = re.sub(r'(\s__number__\s)+', ' __number__ ', text)
+        text = re.sub(r'(\s__number__)+', ' __number__', text)
+        text = re.sub(r'(__number__\s)+', '__number__ ', text)
+
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__url__ __url__', '')
+        text = text.replace('__number__ __url__', '')
+        text = text.replace('__url__ __number__', '')
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__url__ __url__', '')
+        text = text.replace('__number__ __number__', '')
         text = text.replace('__url__ __url__', ' ')
-        text = text.replace('__number__ __url__', ' ')
-        text = text.replace('__url__ __number__', ' ')
-
-        text = re.sub(r'\( __url__ \)', '__url__', text)
-        text = re.sub(r' __url__+', ' __url__', text)
-        text = re.sub(r'__url__ +', '__url__ ', text)
-        text = re.sub(r' __url__ +', ' __url__ ', text)
-
-        text = re.sub(r'\( __number__ \)', '__number__', text)
-        text = re.sub(r' __number__+', ' __number__', text)
-        text = re.sub(r'__number__ +', '__number__ ', text)
-        text = re.sub(r' __number__ +', ' __number__ ', text)
-
-        text = text.replace('__number__ __number__', '__number__')
-        text = text.replace('__url__ __url__', '__url__')
-        text = text.replace('__number__ __url__', '__url__')
-        text = text.replace('__url__ __number__', '__url__')
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__number__ __number__', '')
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
@@ -115,7 +121,7 @@ class Tokenizer:
         # contraction
         add_space = ["'s", "'m", "'re", "n't", "'ll", "'ve", "'d", "'em"]
         tweet_tokenizer = TweetTokenizer(
-            preserve_case=False, strip_handles=False, reduce_len=True)
+            preserve_case=False, strip_handles=False, reduce_len=False)
         text = ' ' + ' '.join(tweet_tokenizer.tokenize(text)) + ' '
         text = text.replace(" won't ", " will n't ")
         text = text.replace(" can't ", " can n't ")
