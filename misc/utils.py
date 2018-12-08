@@ -6,7 +6,6 @@ Tokenize a reddit sequence.
 import re
 import string
 from nltk.corpus import stopwords
-#  from tokenizer import tokenizer
 from nltk.tokenize import TweetTokenizer
 from bs4 import BeautifulSoup
 import warnings
@@ -23,7 +22,6 @@ def is_english(text):
 stop_words = set(stopwords.words('english'))
 punctuations = list(string.punctuation)
 
-
 def remove_stop_words(words):
     words = [word for word in words if word not in stop_words]
     words = [word for word in words if word not in punctuations]
@@ -38,24 +36,21 @@ class Tokenizer:
         number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
 
         self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
+
         self.number_re = re.compile(
             number_regex_str, re.VERBOSE | re.IGNORECASE)
 
-    ''' replace number by NUMBER_TAG'''
-
-    def replace_number(self, tokens):
-        return ['__number__' if self.number_re.search(token) else token for token in tokens]
-
-    def tokenize(self, text):
+    def tokenize(self, text, html=False):
         if isinstance(text, list):
             text = ' '.join(text)
 
         if not is_english(text):
             return []
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            text = BeautifulSoup(text, "lxml").text
+        if html:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                text = BeautifulSoup(text, "lxml").text
 
         tokens = self.clean_str(text).split()
 
@@ -71,13 +66,13 @@ class Tokenizer:
         # url
         text = self.url_re.sub('__url__', text)
 
-        words = []
-        for word in text.split():
-            i = word.find('http')
-            if i >= 0:
-                word = word[:i] + ' ' + '__url__'
-            words.append(word.strip())
-        text = ' '.join(words)
+        #  words = []
+        #  for word in text.split():
+            #  i = word.find('http')
+            #  if i >= 0:
+                #  word = word[:i] + ' ' + '__url__'
+            #  words.append(word.strip())
+        #  text = ' '.join(words)
 
         # remove markdown URL
         text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
@@ -93,20 +88,18 @@ class Tokenizer:
         # merge multi to single
         text = re.sub(r'( __url__)+', ' __url__', text)
         text = re.sub(r'( __number__)+', ' __number__', text)
+
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
-        text = text.replace('.cn', ' ')
-        text = text.replace('.ai', ' ')
-        text = text.replace('.io', ' ')
         text = text.replace('.net', ' ')
         text = text.replace('.gov', ' ')
         text = text.replace('.edu', ' ')
 
         # contraction
         add_space = ["'s", "'m", "'re", "n't", "'ll", "'ve", "'d", "'em"]
-        tokenizer = TweetTokenizer(
+        tweet_tokenizer = TweetTokenizer(
             preserve_case=False, strip_handles=False, reduce_len=True)
-        text = ' ' + ' '.join(tokenizer.tokenize(text)) + ' '
+        text = ' ' + ' '.join(tweet_tokenizer.tokenize(text)) + ' '
         text = text.replace(" won't ", " will n't ")
         text = text.replace(" can't ", " can n't ")
         for a in add_space:
