@@ -50,6 +50,8 @@ def read_convos(args, logger):
             n += 1
             if n in remove_lines:
                 continue
+            if n <= 1342342:
+                continue
             #  print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
@@ -122,8 +124,6 @@ def read_convos(args, logger):
     return contexts, queries, responses, \
         hash_values, subreddit_names, conversation_ids, \
         response_scores, dialogue_turns
-
-
 
 
 '''
@@ -273,7 +273,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     model_name = args.model_name
 
-    """
     contexts, queries, responses, \
         hash_values, subreddit_names, conversation_ids, \
         response_scores, dialogue_turns = read_convos(args, logger)
@@ -290,7 +289,6 @@ if __name__ == '__main__':
         dialogue_turns,
         filename='train.pair.txt'
     )
-    """
 
     #  read facts
     facts, facts_hash_values, \
@@ -301,7 +299,6 @@ if __name__ == '__main__':
     save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
             domain_names, os.path.join(args.save_path, 'train.facts.txt'))
 
-    """
     datas = queries + responses + facts
     for context in contexts:
         datas += context
@@ -309,6 +306,5 @@ if __name__ == '__main__':
     datas_name = ['contexts', 'queries', 'responses', 'facts']
 
     sorted_freq_list = stat_frequency(datas, datas_name, logger)
-    """
 
     logger.info('Preprocessing finished.')
