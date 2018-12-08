@@ -103,8 +103,6 @@ class Tokenizer:
 
         text = text.replace('__number__ __number__', '__number__')
         text = text.replace('__url__ __url__', '__url__')
-        text = text.replace('__number__ __number__', '__number__')
-        text = text.replace('__url__ __url__', '__url__')
         text = text.replace('__number__ __url__', '__url__')
         text = text.replace('__url__ __number__', '__url__')
 

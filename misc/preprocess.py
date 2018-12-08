@@ -29,9 +29,8 @@ Read convos file.
 
 
 def read_convos(args, logger):
-    queries = list()
-
     contexts = list()
+    queries = list()
     responses = list()
 
     subreddit_names = list()
@@ -47,7 +46,7 @@ def read_convos(args, logger):
             line = line.rstrip()
             n += 1
             if n % 5e4 == 0:
-                logger.info('checked %.2fM' % (n / 1e6))
+                logger.info('read %.2fM' % (n / 2e6))
 
             #  if n == 20000:
                 #  break
@@ -59,6 +58,8 @@ def read_convos(args, logger):
 
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
+                continue
+            if len(conversation) > 15000:
                 continue
 
             if conversation.startswith('START EOS'):
@@ -137,13 +138,16 @@ def read_facts(args, logger):
             line = line.rstrip()
             n += 1
             if n % 5e4 == 0:
-                logger.info('checked %.2fM' % (n / 1e6))
+                logger.info('read %.2fM' % (n / 2e6))
 
             #  if n == 20000:
                 #  break
 
             sub = line.split('\t')
             fact = sub[-1]
+
+            if len(fact) > 3500:
+                continue
 
             if len(fact.split()) > args.f_max_len:
                 continue
