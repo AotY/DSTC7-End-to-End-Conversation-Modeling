@@ -22,6 +22,7 @@ def is_english(text):
 stop_words = set(stopwords.words('english'))
 punctuations = list(string.punctuation)
 
+
 def remove_stop_words(words):
     words = [word for word in words if word not in stop_words]
     words = [word for word in words if word not in punctuations]
@@ -65,7 +66,8 @@ class Tokenizer:
 
         # url
         text = self.url_re.sub('__url__', text)
-        if text.count('__url__') >= 5:
+
+        if text.count('__url__') > 5:
             return ''
 
         # remove markdown URL
@@ -77,31 +79,44 @@ class Tokenizer:
         text = re.sub('URL', '__url__', text)
 
         # number
+        words = []
+        for word in text.split():
+            try:
+                int(word)
+                words.append('__number__')
+            except ValueError as e:
+                words.append(word)
+                continue
+        #  print('words: ', words)
         #  text = self.number_re.sub('__number__', text)
+        text = ' '.join(words)
+        #  print(text)
 
-        if text.count('__number__') >= 9:
-            return ''
+        if text.count('__number__') > 10:
+            return '' # merge multi to single
 
-        # merge multi to single
-        text = text.replace('__url__ __url__', '')
-        text = text.replace('__number__ __number__', '')
-        text = text.replace('__number__ __url__', '')
-        text = text.replace('__url__ __number__', '')
+        text = text.replace('( __number__  )', '__number__')
+        text = text.replace('( __url__  )', '__url__')
 
-        text = re.sub(r'(number__ __number)+', 'number', text)
-        text = re.sub(r'(url__ __url)+', 'url', text)
+        text = re.sub(r'(\s?__number__\s?)+', ' __number__ ', text)
+        text = re.sub(r'(\s?__url__\s?)+', ' __url__ ', text)
 
-        text = re.sub(r'(url__ __number)+', 'url', text)
-        text = re.sub(r'(number__ __url)+', 'number', text)
+        text = re.sub(r'(\s?__url__ __number__\s?)+', ' __url__ ', text)
+        text = re.sub(r'(\s?__number__ __url__\s?)+', ' __number__ ', text)
 
-        text = text.replace('number__ __number', 'number')
-        text = text.replace('url__ __url', 'url')
-        text = text.replace('number__ __number', 'number')
-        text = text.replace('url__ __url', 'url')
-        text = text.replace('number__ __number', 'number')
-        text = text.replace('url__ __url', 'url')
-        text = text.replace('__number__ __number__', '')
-        text = text.replace('__url__ __url__', '')
+        text = re.sub(r'__number__\w+', '__number__', text)
+        text = re.sub(r'\w+__number__', '__number__', text)
+        text = re.sub(r'__url__\w+', '__url__', text)
+        text = re.sub(r'\w+__url__', '__url__', text)
+
+        text = re.sub(r'__number__ \S __number__', '__number__', text)
+        text = re.sub(r'__url__ \S __url__', '__url__', text)
+
+        text = re.sub(r'__url__ \S __number__', '__url__', text)
+        text = re.sub(r'__number__ \S __url__', '__number__', text)
+
+        text = text.replace('__number __', ' __number__ ')
+        text = text.replace('__url __', ' __url__ ')
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
@@ -130,9 +145,9 @@ if __name__ == '__main__':
     #  sequence = 'RT @marcobonzanini: just an example! 342 23424 '\
         #  ' trio.com www.trio.com :D https://www.youtube.com/watch?v=gGRyC8fjTUM http://example.com #NLP <title> 223: 113'
     sequence = """
-     Great infographic about lots of things F1. https://www.reddit.com/r/formula1/comments/ignfy/
-     1 * 2 = 3 1*2*4*5
+     Great infographic about lots of things F1. https://www.reddit.com/r/formula1/comments/ignfy/ hello 432
 
+     ... many of the characters cited in the lawsuit . EOS as someone who did         a lot of pvp in wow and remembers people like that , fuck that guy for bringing them into pvp . it's one thing to multibox pve , but it's straight up cheating in pvp         . EOS it's so unfair that 10 pcs attacking a single pc would win 100 % of the time . coordination in pvp is cheating ! EOS but it's not coordination , it's ten char        acters being controlled simultaneously with each button press . there's a huge difference . EOS yeah , there is a difference . it's considerably easier to ruin the o        perator's macros and rotations by sending the characters scrambling with ccs and fears making it incredibly difficult , if not impossible , for him to regroup before         he's killed off . not everyone is smart enough to do that though . here's the real question though : would you single handedly try to take on and kill 10 individual         players ? if not , why complain about 1 player controlling 10 characters ? you would still lose . EOS you never actually played against these people did you ?   yes         , on many occasions over the 11 years i played the game , a good portion of which i spent inside bgs and arenas . if you ever had a problem with them it's because y        ou weren't playing intelligently .
     """
     tokenizer = Tokenizer()
     print(sequence)
