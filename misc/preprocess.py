@@ -48,10 +48,13 @@ def read_convos(args, logger):
             line = line.rstrip()
             start_time = time.time()
             n += 1
+
             if n in remove_lines:
                 continue
-            if n <= 1342342:
-                continue
+
+            #  if n <= 1482342:
+                #  continue
+
             #  print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
@@ -85,16 +88,13 @@ def read_convos(args, logger):
 
             for si, sentence in enumerate(sentences):
                 # token
-                if len(sentence.split()) > args.q_max_len:
+                tokens = tokenizer.tokenize(sentence)
+                if len(tokens) > args.q_max_len or len(tokens) < args.min_len:
                     if si != len(sentences) - 1:
                         sentences_tokens = list()
                         continue
                     else:
                         continue
-
-                tokens = tokenizer.tokenize(sentence)
-                if tokens is None or len(tokens) < args.min_len:
-                    continue
 
                 sentences_tokens.append(tokens)
 
@@ -145,9 +145,9 @@ def read_facts(args, logger):
         for line in f:
             line = line.rstrip()
             n += 1
-            print('line: %d' % n)
-            #  if n % 5e4 == 0:
-                #  logger.info('read %d' % n)
+            #  print('line: %d' % n)
+            if n % 5e4 == 0:
+                logger.info('read %d' % n)
 
             #  if n == 20000:
                 #  break

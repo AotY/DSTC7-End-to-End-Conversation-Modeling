@@ -66,14 +66,6 @@ class Tokenizer:
         # url
         text = self.url_re.sub('__url__', text)
 
-        #  words = []
-        #  for word in text.split():
-            #  i = word.find('http')
-            #  if i >= 0:
-                #  word = word[:i] + ' ' + '__url__'
-            #  words.append(word.strip())
-        #  text = ' '.join(words)
-
         # remove markdown URL
         text = re.sub(r'\[([^\]]*)\] \( *__url__ *\)', r'\1', text)
 
@@ -84,6 +76,12 @@ class Tokenizer:
 
         # number
         text = self.number_re.sub('__number__', text)
+
+        if text.count('__number__') >= 7:
+            return ''
+
+        if text.count('__url__') >= 3:
+            return ''
 
         # merge multi to single
         text = text.replace('__url__ __url__', '')
@@ -101,6 +99,10 @@ class Tokenizer:
         text = text.replace('url__ __url', 'url')
         text = text.replace('number__ __number', 'number')
         text = text.replace('url__ __url', 'url')
+        text = text.replace('number__ __number', 'number')
+        text = text.replace('url__ __url', 'url')
+        text = text.replace('__number__ __number__', '')
+        text = text.replace('__url__ __url__', '')
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')
