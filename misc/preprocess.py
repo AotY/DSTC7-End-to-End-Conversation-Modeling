@@ -46,11 +46,11 @@ def read_convos(args, logger):
         for line in f:
             line = line.rstrip()
             n += 1
-            if n % 1e5 == 0:
+            if n % 5e4 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            if n == 20000:
-                break
+            #  if n == 20000:
+                #  break
 
             sub = line.split('\t')
 
@@ -133,11 +133,11 @@ def read_facts(args, logger):
         for line in f:
             line = line.rstrip()
             n += 1
-            if n % 1e5 == 0:
+            if n % 5e4 == 0:
                 logger.info('checked %.2fM' % (n / 1e6))
 
-            if n == 20000:
-                break
+            #  if n == 20000:
+                #  break
 
             sub = line.split('\t')
             fact = sub[-1]
