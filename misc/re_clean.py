@@ -5,9 +5,10 @@
 # Distributed under terms of the MIT license.
 
 
+import re
 import argparse
 from tqdm import tqdm
-from utils import tokenizer
+from collections import Counter
 
 parser = argparse.ArgumentParser()
 
@@ -21,13 +22,45 @@ parser.add_argument('--vocab_freq_path', type=str, default='./vocab_freq.txt')
 args = parser.parse_args()
 
 
+def clean_number_url(text):
+    if text.count('__number__') > 5:
+        return ''
+
+    if text.count('__url__') > 3:
+        return ''
+
+    text = text.replace('( __number__ )', '__number__')
+    text = text.replace('( __url__ )', '__url__')
+
+    text = re.sub(r'(\s?__number__\s?)+', ' __number__ ', text)
+    text = re.sub(r'(\s?__url__\s?)+', ' __url__ ', text)
+
+    text = re.sub(r'(\s?__url__ __number__\s?)+', ' __url__ ', text)
+    text = re.sub(r'(\s?__number__ __url__\s?)+', ' __number__ ', text)
+
+    text = text.replace('__url__ __url__', '__url__')
+    text = text.replace('__number__ __number__', '__number__')
+    text = text.replace('__number__ __url__', '__number__')
+    text = text.replace('__url__ __number__', '__url__')
+
+    text = re.sub(r'__number__\w+', '__number__', text)
+    text = re.sub(r'\w+__number__', '__number__', text)
+    text = re.sub(r'__url__\w+', '__url__', text)
+    text = re.sub(r'\w+__url__', '__url__', text)
+
+    text = re.sub(r'__number__ \S __number__', '__number__', text)
+    text = re.sub(r'__url__ \S __number__', '__url__', text)
+    text = re.sub(r'__number__ \S __url__', '__number__', text)
+
+    text = text.replace('__number __', ' __number__ ')
+    text = text.replace('__url __', ' __ulr__ ')
+    return text
 
 def main():
-    tokenizer = Tokenizer()
     freq_dict = Counter()
     # read pair
     pair_save_f = open(args.pair_save_path, 'w')
-    with open(self.config.pair_path, 'r', encoding='utf-8') as f:
+    with open(args.pair_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
             if not bool(line):
@@ -36,45 +69,47 @@ def main():
             subreddit_name, conversation_id, context, query, \
                 response, hash_value, score, turn = line.split(' SPLIT ')
 
+            #  print('context: ', context)
+            #  print('query: ', query)
+            #  print('response: ', response)
+
             if not bool(query) or not bool(response):
                 continue
-            
-            if context != '':
-                context_tokens = tokenizer.tokenize(context)
-                freq_dict.update(context_tokens)
-                context = ' '.join(context)
 
-            query_tokens = tokenizer.tokenize(query)
-            freq_dict.update(query_tokens)
-            query = ' '.join(query_tokens)
+            if len(context.split()) != 0:
+                context = clean_number_url(context)
+                freq_dict.update(context.split())
 
-            response_tokens = tokenizer.tokenize(response)
-            freq_dict.update(response_tokens)
-            response = ' '.join(response_tokens)
+            query = clean_number_url(query)
+            freq_dict.update(query.split())
+
+            response = clean_number_url(response)
+            freq_dict.update(response.split())
 
             pair_save_f.write('%s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s\n' % \
                     (subreddit_name, conversation_id, context, query, response, hash_value, score, turn))
 
     pair_save_f.close()
-    
+
     fact_save_f = open(args.fact_save_path, 'w')
-    with open(self.config.fact_path, 'r', encoding='utf-8') as f:
+    with open(args.fact_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
             if not bool(line):
                 continue
             subreddit_name, conversation_id, domain, fact = line.split('\t')
 
-            fact_save_f.write('%s\t%s\t%s\t%s\n' %
-                    (subreddit, conversation_id, domain, fact))
+            fact = clean_number_url(fact)
+            freq_dict.update(fact.split())
+
+            fact_save_f.write('%s\t%s\t%s\t%s\n' % (subreddit_name, conversation_id, domain, fact))
     fact_save_f.close()
 
-    freq_dict = list(freq_dict.items())
-    sorted_freq_list = sorted(freq_dict.items(), key=lambda d: d[1], reverse=True)
+    freq_list = list(freq_dict.items())
+    sorted_freq_list = sorted(freq_list, key=lambda item: item[1], reverse=True)
     with open(args.vocab_freq_path, 'w', encoding='utf-8') as f:
         for item in sorted_freq_list:
             f.write('%s\t%d\n' % (item[0], item[1]))
-
 
 
 if __name__ == '__main__':
