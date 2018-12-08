@@ -363,7 +363,8 @@ if __name__ == '__main__':
         domain_names = read_facts(args.facts_file_path, logger, args)
 
     #  save raw facts to txt
-    save_facts(facts, facts_subreddit_names, facts_conversation_ids, domain_names, os.path.join(args.save_path, 'facts.txt'))
+    save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
+            domain_names, os.path.join(args.save_path, 'facts.txt'))
 
     datas = queries + responses + facts
     for context in contexts:
