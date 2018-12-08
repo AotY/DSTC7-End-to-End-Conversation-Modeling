@@ -41,12 +41,17 @@ def read_convos(args, logger):
 
     logger.info('read convos...')
     n = 0
+    remove_lines = [121784, 160504, 161111, 537712, 633371, 741684, 1141582, 1172501, 1172681, 11245722, 1245725]
     with open(args.convos_file_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
             n += 1
+            if n in remove_lines:
+                continue
+            #  print("line: %d" % n)
+            #  print("line: %s" % line)
             if n % 5e4 == 0:
-                logger.info('read %.2fM' % (n / 2e6))
+                logger.info('read %d' % n)
 
             #  if n == 20000:
                 #  break
@@ -110,6 +115,7 @@ def read_convos(args, logger):
             conversation_ids.append(sub[2])
             response_scores.append(sub[3])
             dialogue_turns.append(sub[4])
+            del sub
 
     return contexts, queries, responses, \
         hash_values, subreddit_names, conversation_ids, \
@@ -137,14 +143,18 @@ def read_facts(args, logger):
         for line in f:
             line = line.rstrip()
             n += 1
-            if n % 5e4 == 0:
-                logger.info('read %.2fM' % (n / 2e6))
+            print('line: %d' % n)
+            #  if n % 5e4 == 0:
+                #  logger.info('read %d' % n)
 
             #  if n == 20000:
                 #  break
 
             sub = line.split('\t')
             fact = sub[-1]
+
+            if fact[0] not in ['<', '"', '^']:
+                continue
 
             if len(fact) > 3500:
                 continue
@@ -261,6 +271,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     model_name = args.model_name
 
+    """
     contexts, queries, responses, \
         hash_values, subreddit_names, conversation_ids, \
         response_scores, dialogue_turns = read_convos(args, logger)
@@ -277,6 +288,7 @@ if __name__ == '__main__':
         dialogue_turns,
         filename='train.pair.txt'
     )
+    """
 
     #  read facts
     facts, facts_hash_values, \
@@ -287,6 +299,7 @@ if __name__ == '__main__':
     save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
             domain_names, os.path.join(args.save_path, 'train.facts.txt'))
 
+    """
     datas = queries + responses + facts
     for context in contexts:
         datas += context
@@ -294,5 +307,6 @@ if __name__ == '__main__':
     datas_name = ['contexts', 'queries', 'responses', 'facts']
 
     sorted_freq_list = stat_frequency(datas, datas_name, logger)
+    """
 
     logger.info('Preprocessing finished.')
