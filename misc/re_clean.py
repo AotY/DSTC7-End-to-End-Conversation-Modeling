@@ -14,10 +14,10 @@ from collections import Counter
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--pseudo_convos_path', type=str, default='../data/pseudo_convos.txt')
+parser.add_argument('--pseudo_convos_path', type=str, default='../data/pseudo.convos.txt')
 parser.add_argument('--train_convos_path', type=str, default='../data/train.convos.txt')
 
-parser.add_argument('--pseudo_facts_path', type=str, default='../data/pseudo_facts.txt')
+parser.add_argument('--pseudo_facts_path', type=str, default='../data/pseudo.facts.txt')
 parser.add_argument('--train_facts_path', type=str, default='../data/train.facts.txt')
 
 parser.add_argument('--vocab_freq_path', type=str, default='./vocab_freq.txt')
@@ -57,7 +57,7 @@ def clean_number_url(text):
     text = text.replace('__url __', ' __url__ ')
     return text
 
-def clean_repeat(text, max_ngram=4):
+def clean_repeat(text, max_ngram=5):
     tmp_text = punc_regex.sub('', text)
     text_ngrams = ngrams(tmp_text.split(), max_ngram)
     for words in text_ngrams:
@@ -66,13 +66,15 @@ def clean_repeat(text, max_ngram=4):
 
     words = []
     for i, word in enumerate(text.split()):
+        #  print(i)
         if i == 0:
             words.append(word)
         else:
-            if word == words[i - 1]:
+            if word == words[len(words) - 1]:
                 continue
             else:
                 words.append(word)
+
     return ' '.join(words)
 
 
