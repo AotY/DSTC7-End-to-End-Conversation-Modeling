@@ -212,7 +212,7 @@ def save_distribution(distribution, name):
 ''' save data to pair, conversation - response '''
 
 
-def save_data_to_pair(args, contexts, queries,
+def save_train_convos(args, contexts, queries,
                       responses, names, conversation_ids,
                       hash_values, scores, turns, filename):
 
@@ -258,7 +258,7 @@ def main(args, logger):
     hash_values, subreddit_names, conversation_ids, \
     response_scores, dialogue_turns = read_convos(args, logger)
 
-    save_data_to_pair(
+    save_train_convos(
         args,
         contexts,
         queries,
