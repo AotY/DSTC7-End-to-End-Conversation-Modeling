@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.40004.dict \
     --turn_num 4 \
     --turn_min 1 \
-    --turn_type normal \
+    --turn_type concat \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -45,7 +45,7 @@ python train.py \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/epoch-1_seq2seq_5_none_2018_12_05_13:45.pth \
+    --checkpoint models/epoch-1_seq2seq_concat_1_4_2018_12_10_10:23.pth \
     # --smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \
