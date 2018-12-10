@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -42,7 +42,7 @@ python train.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type seq2seq \
-    --task train \
+    --task decode \
     --share_embedding \
     --offline_type elastic \
     --checkpoint models/epoch-1_seq2seq_concat_1_4_2018_12_10_10:23.pth \
