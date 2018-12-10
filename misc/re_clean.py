@@ -32,12 +32,6 @@ def clean_number_url(text):
     text = text.replace('( __number__ )', '__number__')
     text = text.replace('( __url__ )', '__url__')
 
-    text = re.sub(r'(\s?__number__\s?)+', ' __number__ ', text)
-    text = re.sub(r'(\s?__url__\s?)+', ' __url__ ', text)
-
-    text = re.sub(r'(\s?__url__ __number__\s?)+', ' __url__ ', text)
-    text = re.sub(r'(\s?__number__ __url__\s?)+', ' __number__ ', text)
-
     text = text.replace('__url__ __url__', '__url__')
     text = text.replace('__number__ __number__', '__number__')
     text = text.replace('__number__ __url__', '__number__')
