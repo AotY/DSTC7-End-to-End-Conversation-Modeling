@@ -575,8 +575,12 @@ if __name__ == '__main__':
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
         acc = checkpoint['acc']
-        logger_str = '\nevaluate --> loss: %.4f acc: %.4f ppl: %.4f' % (
-            loss, acc, ppl)
+        logger_str = ' (checkpoint) epoch: {epoch: 2d},' \
+            'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+            epoch=epoch,
+            loss=loss,
+            ppl=math.exp(min(loss, 100)),
+            accu=100*acc)
         logger.info(logger_str)
 
     if args.task == 'train':
