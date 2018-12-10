@@ -67,7 +67,7 @@ class Tokenizer:
         # url
         text = self.url_re.sub('__url__', text)
 
-        if text.count('__url__') > 5:
+        if text.count('__url__') > 6:
             return ''
 
         # remove markdown URL
@@ -79,10 +79,12 @@ class Tokenizer:
         text = re.sub('URL', '__url__', text)
 
         # number
+        text = text.replace(':', ' : ')
+        text = text.replace(',', ' , ')
         words = []
         for word in text.split():
             try:
-                int(word)
+                float(word)
                 words.append('__number__')
             except ValueError as e:
                 words.append(word)
@@ -92,7 +94,7 @@ class Tokenizer:
         text = ' '.join(words)
         #  print(text)
 
-        if text.count('__number__') > 10:
+        if text.count('__number__') > 15:
             return '' # merge multi to single
 
         text = text.replace('( __number__  )', '__number__')
@@ -138,6 +140,9 @@ class Tokenizer:
         text = re.sub(r'\s+$', '', text)
         text = re.sub(r'\s+', ' ', text)  # remove extra spaces
 
+        text = text.replace('"', '')
+        text = text.replace('^', '')
+
         return text
 
 
@@ -145,9 +150,8 @@ if __name__ == '__main__':
     #  sequence = 'RT @marcobonzanini: just an example! 342 23424 '\
         #  ' trio.com www.trio.com :D https://www.youtube.com/watch?v=gGRyC8fjTUM http://example.com #NLP <title> 223: 113'
     sequence = """
+     ... 100,3.32 many "fsd" of the characters cited in the lawsuit . EOS as someone who 435:23 did a lot of pvp in wow and remembers people like that , fuck that guy for bringing them into pvp . it's one thing to multibox pve , but it's straight up cheating in pvp         . EOS it's so unfair that 10 pcs attacking a single pc would win 100 % of the time . coordination in pvp is cheating ! EOS but it's not coordination , it's ten char        acters being controlled simultaneously with each button press . there's a huge difference . EOS yeah , there is a difference . it's considerably easier to ruin the o        perator's macros and rotations by sending the characters scrambling with ccs and fears making it incredibly difficult , if not impossible , for him to regroup before         he's killed off . not everyone is smart enough to do that though . here's the real question though : would you single handedly try to take on and kill 10 individual         players ? if not , why complain about 1 player controlling 10 characters ? you would still lose . EOS you never actually played against these people did you ?   yes         , on many occasions over the 11 years i played the game , a good portion of which i spent inside bgs and arenas . if you ever had a problem with them it's because y        ou weren't playing intelligently .
      Great infographic about lots of things F1. https://www.reddit.com/r/formula1/comments/ignfy/ hello 432
-
-     ... many of the characters cited in the lawsuit . EOS as someone who did         a lot of pvp in wow and remembers people like that , fuck that guy for bringing them into pvp . it's one thing to multibox pve , but it's straight up cheating in pvp         . EOS it's so unfair that 10 pcs attacking a single pc would win 100 % of the time . coordination in pvp is cheating ! EOS but it's not coordination , it's ten char        acters being controlled simultaneously with each button press . there's a huge difference . EOS yeah , there is a difference . it's considerably easier to ruin the o        perator's macros and rotations by sending the characters scrambling with ccs and fears making it incredibly difficult , if not impossible , for him to regroup before         he's killed off . not everyone is smart enough to do that though . here's the real question though : would you single handedly try to take on and kill 10 individual         players ? if not , why complain about 1 player controlling 10 characters ? you would still lose . EOS you never actually played against these people did you ?   yes         , on many occasions over the 11 years i played the game , a good portion of which i spent inside bgs and arenas . if you ever had a problem with them it's because y        ou weren't playing intelligently .
     """
     tokenizer = Tokenizer()
     print(sequence)
