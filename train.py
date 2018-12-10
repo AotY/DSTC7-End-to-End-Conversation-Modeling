@@ -572,7 +572,7 @@ if __name__ == '__main__':
     if checkpoint:
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
-        epoch = checkpoint['epoch'] + 1
+        epoch = checkpoint['epoch']
         args.start_epoch = epoch + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
