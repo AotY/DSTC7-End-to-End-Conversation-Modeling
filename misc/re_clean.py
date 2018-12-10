@@ -44,6 +44,9 @@ def clean_number_url(text):
     text = text.replace('__url __', ' __url__ ')
     return text
 
+def clean_repeat(text):
+
+
 def main():
     freq_dict = Counter()
     # read pair
