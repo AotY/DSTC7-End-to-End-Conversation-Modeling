@@ -32,7 +32,7 @@ python train_kg_model.py \
     --epochs 15 \
     --batch_size 200 \
     --teacher_forcing_ratio 1.0 \
-    --seed 19 \
+    --seed 23 \
     --device cuda \
     --eval_interval 100 \
     --log_interval 15 \
