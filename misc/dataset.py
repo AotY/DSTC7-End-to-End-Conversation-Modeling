@@ -48,6 +48,7 @@ class Dataset:
         if not os.path.exists(_data_dict_path):
             datas = []
             batch_size = self.config.batch_size
+            min_len = self.config.min_len
             c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
             with open(self.config.pair_path, 'r', encoding='utf-8') as f:
                 for line in tqdm(f):
@@ -58,31 +59,38 @@ class Dataset:
                     subreddit_name, conversation_id, context, query, \
                         response, hash_value, score, turn = line.split(' SPLIT ')
 
-                    if not bool(query) or not bool(response):
+                    if not bool(query) or not bool(response) \
+                        or len(query.split()) < min_len \
+                        or len(response.split()) < min_len: \
                         continue
 
                     # query
-                    query_ids = self.vocab.words_to_id(query.split(' '))
-                    if len(query_ids) <= self.config.min_len:
+                    words = [word for word in query.split() if len(word.split()) > 0]
+                    query_ids = self.vocab.words_to_id(words)
+                    if len(query_ids) < min_len:
                         continue
                     query_ids = query_ids[-min(q_max_len, len(query_ids)):]
 
                     # response
-                    response_ids = self.vocab.words_to_id(response.split(' '))
-                    if len(response_ids) <= self.config.min_len:
+                    words = [word for word in response.split() if len(word.split()) > 0]
+                    response_ids = self.vocab.words_to_id(words)
+                    if len(response_ids) < min_len:
                         continue
                     response_ids = response_ids[:min(r_max_len, len(response_ids))]
 
                     # context split by EOS
-                    sentences = self.parser_context(context)
-                    if sentences is None or len(sentences) < self.config.turn_min:
+                    context_sentences = self.parser_context(context)
+                    if context_sentences is None or len(context_sentences) < self.config.turn_min:
                         continue
 
-                    sentences = sentences[-min(self.config.turn_num, len(sentences)):]
+                    context_sentences = context_sentences[-min(self.config.turn_num, len(context_sentences)):]
+                    print('context: ', context)
+                    print('context_sentences: ', context_sentences)
 
                     context_ids = []
-                    for si, sentence in enumerate(sentences):
-                        ids = self.vocab.words_to_id(sentence.split(' '))
+                    for si, sentence in enumerate(context_sentences):
+                        words = [word for word in sentence.split() if len(word.split()) > 0]
+                        ids = self.vocab.words_to_id(words)
                         if si % 2 == 0:  # start
                             ids = ids[-min(c_max_len, len(ids)):]
                         else:  # reply
@@ -126,10 +134,18 @@ class Dataset:
         }
 
     def parser_context(self, context):
-        sentences = context.split('EOS')
-        sentences = [sentence for sentence in sentences if len(
-            sentence.split()) >= self.config.min_len]
-        return sentences
+        sentences = context.split(' EOS ')
+        context_sentences = list()
+        for i, sentence in enumerate(sentences):
+            if len(sentence.split()) < self.config.min_len:
+                if i != len(sentences) - 1:
+                    context_sentences = list()
+                    continue
+                else:
+                    continue
+            else:
+                context_sentences.append(sentence)
+        return context_sentences
 
     def reset_data(self, task, shuffle=True):
         if shuffle:
@@ -192,8 +208,8 @@ class Dataset:
             if self.config.turn_type == 'concat':
                 concat_ids = []
                 for ids in context_ids:
-                    concat_ids.extend(ids)
-                concat_ids.extend(query_ids)
+                    concat_ids.append(ids)
+                concat_ids.append(query_ids)
                 query_ids = concat_ids
                 query_ids = query_ids[-min(self.config.q_max_len, len(query_ids)):]
 
@@ -538,14 +554,12 @@ class Dataset:
 
                 if c_ids is not None:
                     for ci, ids in enumerate(c_ids):
-                        text = ' '.join(self.vocab.ids_to_word(ids))
+                        text = self.vocab.ids_to_text(ids)
                         f.write('c %d: %s\n' % (ci, text))
 
-                #  query_text = ' '.join(self.vocab.ids_to_word(q_ids))
                 query_text = self.vocab.ids_to_text(q_ids)
                 f.write('query: %s\n' % query_text)
 
-                #  response_text = ' '.join(self.vocab.ids_to_word(r_ids))
                 response_text = self.vocab.ids_to_text(r_ids)
                 f.write('response: %s\n' % response_text)
 
@@ -560,10 +574,10 @@ class Dataset:
 
                 if f_ids is not None:
                     for fi, ids in enumerate(f_ids):
-                        text = ' '.join(self.vocab.ids_to_word(ids))
+                        text = self.vocab.ids_to_text(ids)
                         f.write('fact %d: %s\n' % (fi, text))
 
-                f.write('---------------------------------\n')
+                f.write('-' * 70 + '\n')
 
         ground_truth_f.close()
         predicted_f.close()
