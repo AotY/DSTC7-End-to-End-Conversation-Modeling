@@ -91,10 +91,12 @@ class KGModel(nn.Module):
         if config.turn_type == 'session':
             self.session_encoder = SessionEncoder(config)
 
+        """
         if config.turn_type not in ['none', 'concat']:
             self.c_attn = Attention(config.hidden_size)
             self.c_linear = nn.Linear(config.hidden_size * 2, config.hidden_size)
             init_linear_wt(self.c_linear)
+        """
 
         # decoder
         self.decoder = LuongAttnDecoder(config, dec_embedding)
@@ -158,6 +160,7 @@ class KGModel(nn.Module):
         # init decoder hidden [num_layers, batch_size, hidden_size]
         dec_hidden = self.reduce_state(q_encoder_hidden)
 
+        """
         if c_enc_outputs is not None:
             # q_enc_outputs, c_enc_outputs attention
             c_context, _ = self.c_attn(dec_hidden, c_enc_outputs)
@@ -170,6 +173,7 @@ class KGModel(nn.Module):
             #  dec_hidden = torch.add(dec_hidden, c_context)
 
             c_enc_outputs = None
+        """
 
         # decoder
         dec_outputs, dec_hidden, _ = self.decoder(
@@ -224,6 +228,7 @@ class KGModel(nn.Module):
         # init decoder hidden
         dec_hidden = self.reduce_state(q_encoder_hidden)
 
+        """
         if c_enc_outputs is not None:
             # q_enc_outputs, c_enc_outputs attention
             c_context, _ = self.c_attn(dec_hidden, c_enc_outputs)
@@ -234,6 +239,7 @@ class KGModel(nn.Module):
             #  dec_hidden = torch.add(dec_hidden, c_context)
 
             c_enc_outputs = None
+        """
 
         # decoder
         beam_outputs, beam_score, beam_length = self.beam_decode(
