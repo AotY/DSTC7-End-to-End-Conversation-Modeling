@@ -8,15 +8,14 @@
 Save facts to elastic, and retrieval them.
 """
 import argparse
-import pickle
-
-import es_helper
 from tqdm import tqdm
 
+import es_helper
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--path', type=str, help='path of pkl file.')
+parser.add_argument('--facts_path', type=str, help='facts path.')
 parser.add_argument('--task', type=str, help='save | search')
-parser.add_argument('--conversation_id', type=str, help='conversatoin id')
+parser.add_argument('--conversation_id', type=str, help='conversation id')
 parser.add_argument('--query_text', type=str, help='query text')
 args = parser.parse_args()
 
@@ -24,12 +23,12 @@ args = parser.parse_args()
 es = es_helper.get_connection()
 
 def save():
-    #  es_helper.create_index(es, es_helper.index)
+
     # 2. delete index
-    #  es_helper.delete_index(es, es_helper.index)
+    es_helper.delete_index(es, es_helper.index)
 
     # 3. create index
-    #  es_helper.create_index(es, es_helper.index)
+    es_helper.create_index(es, es_helper.index)
 
     # 4. create settings, mappings
     settings_body = {
@@ -61,9 +60,9 @@ def save():
             }
         }
     }
-    #  es_helper.close_index(es, es_helper.index)
-    #  es_helper.put_settings(es, es_helper.index, settings_body)
-    #  es_helper.open_index(es, es_helper.index)
+    es_helper.close_index(es, es_helper.index)
+    es_helper.put_settings(es, es_helper.index, settings_body)
+    es_helper.open_index(es, es_helper.index)
 
     mappings_body = {
         "fact": {
@@ -81,23 +80,24 @@ def save():
         }
     }
 
-    #  es_helper.close_index(es, es_helper.index)
-    #  es_helper.put_mapping(es, es_helper.index, es_helper.fact_type, mappings_body)
-    #  es_helper.open_index(es, es_helper.index)
-
+    es_helper.close_index(es, es_helper.index)
+    es_helper.put_mapping(es, es_helper.index, es_helper.fact_type, mappings_body)
+    es_helper.open_index(es, es_helper.index)
 
     # 5. insert to es
-    facts_dict = pickle.load(open(args.path, 'rb'))
-    for conversation_id, texts in tqdm(facts_dict.items()):
-        if len(texts) == 0:
-            continue
-        for text in texts:
+    with open(args.facts_path, 'r') as f:
+        for line in tqdm(f):
+            line = line.rstrip()
+
+            _, conversation_id, _, fact = line.split('\t')
+            if len(fact.split()) == 0:
+                continue
+
             body = {
                 "conversation_id": conversation_id,
-                "text": text
+                "text": fact
             }
             es_helper.insert_to_es(es, es_helper.index, es_helper.fact_type, body)
-
 
     print('save success.')
 
