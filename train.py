@@ -181,7 +181,8 @@ def train_epochs(model,
         save_checkpoint(state=save_state,
                         is_best=False,
                         filename=os.path.join(args.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
-                                              (epoch, args.model_type, args.turn_type, args.min_turn, args.turn_num, time_str)))
+                                              (epoch, args.model_type, args.turn_type, \
+                                               args.turn_min, args.turn_num, time_str)))
         # generate sentence
         logger.info('generate...')
         decode(model, dataset, epoch)
@@ -342,7 +343,7 @@ def decode(model, dataset, epoch):
                 greedy_texts,
                 beam_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
-                    args.model_type, epoch, args.turn_type, args.min_turn, args.turn_num, time_str)),
+                    args.model_type, epoch, args.turn_type, args.turn_min, args.turn_num, time_str)),
             )
 
 
