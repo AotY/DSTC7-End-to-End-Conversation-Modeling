@@ -28,11 +28,11 @@ class LuongAttnDecoder(nn.Module):
         # q_attn
         self.q_attn = Attention(config.hidden_size)
 
-        """
         # c_attn
         if config.turn_type not in ['none', 'concat']:
             self.c_attn = Attention(config.hidden_size)
-        """
+            self.c_linear = nn.Linear(config.hidden_size * 2, config.hidden_size)
+            init_linear_wt(self.c_linear)
 
         # f_attn
         if config.model_type == 'kg':
@@ -61,7 +61,7 @@ class LuongAttnDecoder(nn.Module):
             else:
                 self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
         """
-        self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
+        self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
 
         init_linear_wt(self.linear)
 
@@ -96,11 +96,9 @@ class LuongAttnDecoder(nn.Module):
         q_context, q_attn_weights = self.q_attn(output, q_enc_outputs, q_enc_length)
 
         c_context = None
-        """
         if c_enc_outputs is not None:
             # output: [1, batch_size, 1 * hidden_size]
-            c_context, c_attn_weights = self.c_attn(output, c_enc_outputs, c_enc_length)
-        """
+            c_context, c_attn_weights = self.c_attn(q_context, c_enc_outputs, c_enc_length)
 
         f_context = None
         #  if f_enc_outputs is not None:
