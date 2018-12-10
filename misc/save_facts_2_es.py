@@ -25,7 +25,10 @@ es = es_helper.get_connection()
 def save():
 
     # 2. delete index
-    es_helper.delete_index(es, es_helper.index)
+    try:
+        es_helper.delete_index(es, es_helper.index)
+    except Exception as e:
+        print('%s does not exist' % es_helper.index)
 
     # 3. create index
     es_helper.create_index(es, es_helper.index)

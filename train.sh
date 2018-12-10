@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train.py \
     --pair_path data/train.convos.txt \
     --save_path data/ \
-    --vocab_path data/vocab_word2idx.40004.dict \
+    --vocab_path data/vocab_word2idx.60004.dict \
     --turn_num 4 \
     --turn_min 1 \
-    --turn_type normal \
+    --turn_type concat \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
