@@ -303,9 +303,9 @@ class Dataset:
 
                 phrases = list()
                 for hit in hits[:self.config.f_topk]:
-                    id = hit['_source']['conversation_id']
-                    assert (conversation_id == id), "%s != %s" % (
-                        conversation_id, id)
+                    hit_conversation_id = hit['_source']['conversation_id']
+                    assert (conversation_id == hit_conversation_id), "%s != %s" % (
+                        conversation_id, hit_conversation_id)
                     phrase = hit['_source']['text']
                     if len(phrase) <= self.config.f_max_len:
                         phrases.append(phrase)
@@ -508,11 +508,11 @@ class Dataset:
             # [batch_size, topk, max_len]
             f_inputs = f_inputs.transpose(0, 1).tolist()
 
-        ground_truth_path = os.path.join(opt.save_path, 'ground_truth/%s_%s.txt' % (
+        ground_truth_path = os.path.join(self.config..save_path, 'ground_truth/%s_%s.txt' % (
             self.config.turn_min, self.config.turn_num
         ))
 
-        predicted_path = os.path.join(opt.save_path, 'predicted/%s_%s_%s_%s.txt' % (
+        predicted_path = os.path.join(self.config..save_path, 'predicted/%s_%s_%s_%s.txt' % (
             self.config.turn_type, epoch, self.config.turn_min, self.config.turn_num
         ))
 
@@ -520,7 +520,8 @@ class Dataset:
         predicted_f = open(predicted_path, 'w')
 
         with open(filename, 'w', encoding='utf-8') as f:
-            for name, id, hash_value, q_ids, c_ids, f_ids, r_ids, g_text, b_text in \
+            for subreddit_name, conversation_id, hash_value, \
+                q_ids, c_ids, f_ids, r_ids, g_text, b_text in \
                     zip(names,
                         ids,
                         hash_values,
@@ -531,8 +532,8 @@ class Dataset:
                         greedy_texts,
                         beam_texts):
 
-                f.write('subreddit_name: %s\n' % name)
-                f.write('conversation_id: %s\n' % id)
+                f.write('subreddit_name: %s\n' % subreddit_name)
+                f.write('conversation_id: %s\n' % conversation_id)
                 f.write('hash_value: %s\n' % hash_value)
 
                 if c_ids is not None:

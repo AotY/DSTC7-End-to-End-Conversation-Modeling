@@ -14,8 +14,8 @@ default config
 '''
 index = 'dstc-7'
 conversation_type = 'conversation'
-#  fact_type = 'fact_tag'
 fact_type = 'fact'
+#  fact_type = 'fact_tag'
 
 def get_connection():
     es = Elasticsearch()
@@ -46,145 +46,70 @@ def insert_to_es(es, index, doc_type, body):
     '''insert item into es.'''
     es.index(index=index, doc_type=doc_type, body=body)
 
-def search(es, index, doc_type, query_body):
-    result = es.search(index, doc_type, query_body)
+def search(es, index, doc_type, query_body, size=20):
+    result = es.search(index, doc_type, query_body, size=size)
     hits = result['hits']['hits']
     count = result['hits']['total']
     return hits, count
 
-def assemble_search_fact_body(conversation_id, query_text):
-    query_body = {
-        'query': {
-            "bool": {
-                "must":{
-                    "match": {
-                        "conversation_id": conversation_id
-                    }
-                },
-                "should": [
-                    {
+def assemble_search_fact_body(conversation_id, query_text=None):
+    if query_text is None:
+        query_body = {
+            '_source': ['text'],
+            'query': {
+                "bool": {
+                    "must":{
                         "match": {
-                            "text": {
-                                "query": query_text,
-                                "operator": "and"
-                            }
+                            "conversation_id": conversation_id
                         }
                     }
-                ]
+                }
             }
         }
-    }
+    else:
+        query_body = {
+            '_source': ['text'],
+            'query': {
+                "bool": {
+                    "must":{
+                        "match": {
+                            "conversation_id": conversation_id
+                        }
+                    },
+                    "should": [
+                        {
+                            "match": {
+                                "text": {
+                                    "query": query_text,
+                                    "operator": "and"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
 
     return query_body
 
-
-def search_response_score_turn(es, hash_value):
+def search_all_conversation_ids(es, index, doc_type):
     query_body = {
-        'query': {
-            'match': {
-                'hash_value': hash_value
-            }
-        }
+        '_source': ['conversation_id'],
+        'query': {}
     }
-    result = es.search(index, conversation_type, query_body)
-    hits = result['hits']['hits']
-    response_score, response_turn = hits[0]['_source']['response_score'], hits[0]['_source']['dialogue_turn']
+    _, total = search(es, index, doc_type, query_body, size=0)
 
-    return response_score, response_turn
-
-def search_fact_count(es, hash_value):
-    query_body = {
-        'query': {
-            'match': {
-                'hash_value': hash_value
-            }
-        }
-    }
-    result = es.search(index, conversation_type, query_body)
-    hits = result['hits']['hits']
-    conversation_id = hits[0]['_source']['conversation_id']
-
-    # obtain  by conversation_id
-    query_body = {
-        'query': {
-            'match': {
-                'conversation_id': conversation_id
-            }
-        }
-    }
-    hits = result['hits']['hits']
-    total_count = 0
+    conversation_ids = set()
+    hits, _ = search(es, index, doc_type, query_body, size=total)
     for hit in hits:
-        if len(hit['_source']['fact']) <= 1:
-            continue
-        total_count += 1
+        conversation_id = hit['_source']['conversation_id']
+        conversation_ids.add(conversation_id)
 
-    return total_count
+    return list(conversation_ids)
 
-
-def search_conversation_id(es, hash_value):
-    query_body = {
-        'query': {
-            'match': {
-                'hash_value': hash_value
-            }
-        }
-    }
-
-    result = es.search(index, conversation_type, query_body)
-    hits = result['hits']['hits']
-    if len(hits) == 0:
-        return 0, None
-
-    subreddit_name, conversation_id = hits[0]['_source']['subreddit_name'], hits[0]['_source']['conversation_id']
-
-    return conversation_id
-
-
-def search_facts(es, hash_value):
-    # obtain subreddit_name, conversation_id
-    query_body = {
-        'query': {
-            'match': {
-                'hash_value': hash_value
-            }
-        }
-    }
-
-    result = es.search(index, conversation_type, query_body)
-    hits = result['hits']['hits']
-    if len(hits) == 0:
-        return 0, None
-
-    subreddit_name, conversation_id = hits[0]['_source']['subreddit_name'], hits[0]['_source']['conversation_id']
-
-    # obtain  by conversation_id
-    query_body = {
-        'query': {
-            'match': {
-                'conversation_id': conversation_id
-            }
-        }
-    }
-    result = es.search(index, fact_type, query_body)
-    hit_count = result['hits']['total']
-    hits = result['hits']['hits']
-
-    facts = []
-    for hit in hits:
-        hit = hit['_source']
-        fact = hit['fact']
-        if len(fact) <= 1:
-            continue
-
-        facts.append(fact)
-
-    #  assert hit_count == len()
-    return hit_count, facts
 
 
 if __name__ == '__main__':
     es = get_connection()
     hash_value = 'e16b4ec79cbf3bce455c55c82cacb2585faa4f312b680c6d3fbf5b8e'
-    id = search_conversation_id(es, hash_value)
-    print(id)
+    pass

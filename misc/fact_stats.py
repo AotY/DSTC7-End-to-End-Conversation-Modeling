@@ -455,7 +455,7 @@ def save_distribution(distribution, name):
 
 if __name__ == '__main__':
     facts_path = './../data/raw_facts.txt'
-    conversation_path = '../data/conversations_responses.pair.txt'
+    conversation_path = '../data/train.convos.txt'
 
     #  wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
     #  #  similarity words
