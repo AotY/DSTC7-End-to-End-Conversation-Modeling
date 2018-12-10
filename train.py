@@ -568,10 +568,12 @@ if __name__ == '__main__':
     )
 
     '''if load checkpoint'''
+    epoch = 1
     if checkpoint:
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.optimizer.load_state_dict(checkpoint['optimizer'])
-        args.start_epoch = checkpoint['epoch'] + 1
+        epoch = checkpoint['epoch'] + 1
+        args.start_epoch = epoch + 1
         loss = checkpoint['loss']
         ppl = checkpoint['ppl']
         acc = checkpoint['acc']
@@ -591,7 +593,7 @@ if __name__ == '__main__':
                  dataset,
                  criterion)
     elif args.task == 'decode':
-        decode(model, dataset)
+        decode(model, dataset, epoch)
     else:
         raise ValueError(
             "task must be train or eval, no %s " % args.task)

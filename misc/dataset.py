@@ -508,11 +508,11 @@ class Dataset:
             # [batch_size, topk, max_len]
             f_inputs = f_inputs.transpose(0, 1).tolist()
 
-        ground_truth_path = os.path.join(self.config..save_path, 'ground_truth/%s_%s.txt' % (
+        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
             self.config.turn_min, self.config.turn_num
         ))
 
-        predicted_path = os.path.join(self.config..save_path, 'predicted/%s_%s_%s_%s.txt' % (
+        predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s.txt' % (
             self.config.turn_type, epoch, self.config.turn_min, self.config.turn_num
         ))
 
