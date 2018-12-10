@@ -8,14 +8,19 @@
 statistics sentence num distribution.
 """
 
+import re
+import string
 import argparse
 from tqdm import tqdm
+from nltk import ngrams
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--convos_path', type=str, help='')
 
 args = parser.parse_args()
+
+punc_regex = re.compile('[%s]' % re.escape(string.punctuation.replace('_', '')))
 
 def stats():
     q_len_dict = {}
