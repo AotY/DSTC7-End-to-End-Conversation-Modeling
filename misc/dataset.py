@@ -125,8 +125,8 @@ class Dataset:
             'test': 0
         }
 
-    def parser_context(self, conversation):
-        sentences = conversation.split('EOS')
+    def parser_context(self, context):
+        sentences = context.split(' EOS ')
         sentences = [sentence for sentence in sentences if len(
             sentence.split()) >= self.config.min_len]
         return sentences
