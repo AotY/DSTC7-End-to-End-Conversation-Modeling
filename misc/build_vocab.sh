@@ -8,8 +8,8 @@
 
 
 python build_vocab.py \
-    --distribution ./contexts_queries_responses_facts.freq.txt \
-    --vocab_size 4e4 \
+    --distribution ./vocab_freq.txt \
+    --vocab_size 6e4 \
     --min_count 3 \
-    --vocab_path ./../data/vocab_word2idx.40004.dict
+    --vocab_path ./../data/vocab_word2idx.60004.dict
  

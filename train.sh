@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=6
 
-python train_kg_model.py \
-    --pair_path data/train.pair.txt \
+python train.py \
+    --pair_path data/train.convos.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.40004.dict \
     --turn_num 4 \
     --turn_min 1 \
-    --turn_type normal \
+    --turn_type cnn \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
     --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --dropout 0.1 \
+    --dropout 0.0 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
     --q_max_len 60 \
-    --c_max_len 35 \
+    --c_max_len 50 \
     --r_max_len 35 \
     --f_max_len 120 \
     --min_len 3 \

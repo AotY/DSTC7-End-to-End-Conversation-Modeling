@@ -59,7 +59,7 @@ if args.seed:
 
 # update max_len
 if args.turn_type == 'concat':
-    args.q_max_len = (args.q_max_len - int(args.q_max_len / 4)) * args.turn_num
+    args.q_max_len = args.q_max_len + (args.c_max_len - int(args.c_max_len / 4)) * args.turn_num
 
 logger.info('c_max_len: %d' % args.c_max_len)
 logger.info('q_max_len: %d' % args.q_max_len)
@@ -132,7 +132,7 @@ def train_epochs(model,
                 n_word_correct = 0
                 start = time.time()
 
-            
+
             if load % args.eval_interval == 0:
                 # evaluate
                 evaluate_loss, evaluate_accuracy = evaluate(model=model,

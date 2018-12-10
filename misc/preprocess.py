@@ -71,8 +71,6 @@ def read_convos(args, logger):
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
                 continue
-            if len(conversation) > 15000:
-                continue
 
             if conversation.startswith('START EOS'):
                 conversation = conversation[10:]
@@ -156,9 +154,6 @@ def read_facts(args, logger):
             fact = sub[-1]
 
             if fact[0] not in ['<', '"', '^']:
-                continue
-
-            if len(fact) > 3500:
                 continue
 
             if len(fact.split()) > args.f_max_len:
@@ -258,7 +253,7 @@ def save_facts(facts, subreddit_names, conversation_ids, domain_names, filename)
                     (subreddit, conversation_id, domain, fact))
 
 
-def init_clear_stats(args, logger):
+def main(args, logger):
     contexts, queries, responses, \
     hash_values, subreddit_names, conversation_ids, \
     response_scores, dialogue_turns = read_convos(args, logger)
@@ -273,7 +268,7 @@ def init_clear_stats(args, logger):
         hash_values,
         response_scores,
         dialogue_turns,
-        filename='train.pair.txt'
+        filename='train.pseudo_convos.txt'
     )
 
     #  read facts
@@ -283,7 +278,7 @@ def init_clear_stats(args, logger):
 
     #  save raw facts to txt
     save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
-            domain_names, os.path.join(args.save_path, 'train.facts.txt'))
+            domain_names, os.path.join(args.save_path, 'train.pseudo_facts.txt'))
 
     datas = queries + responses + facts
     for context in contexts:
@@ -308,6 +303,6 @@ if __name__ == '__main__':
     preprocess_opt(parser)
     args = parser.parse_args()
 
-    init_clear_stats(args, logger)
+    main(args, logger)
 
     logger.info('Preprocessing finished.')

@@ -5,8 +5,8 @@ python preprocess.py \
     --facts_file_path ./../data/raw.facts.txt \
     --save_path ./../data \
     --min_len 3 \
-    --c_max_len 180 \
-    --q_max_len 220 \
+    --c_max_len 200 \
+    --q_max_len 250 \
     --r_max_len 120 \
-    --f_max_len 300
+    --f_max_len 350
 /
