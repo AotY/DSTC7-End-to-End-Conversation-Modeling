@@ -39,9 +39,9 @@ class Dataset:
         self._data_dict = {}
         self._indicator_dict = {}
 
-        self.read_txt()
+        self.read_data()
 
-    def read_txt(self):
+    def read_data(self):
         self.logger.info('read data...')
         _data_dict_path = os.path.join(
             self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.turn_min, self.config.turn_num))
@@ -195,8 +195,7 @@ class Dataset:
                     concat_ids.extend(ids)
                 concat_ids.extend(query_ids)
                 query_ids = concat_ids
-                query_ids = query_ids[-min(self.config.q_max_len,
-                                           len(query_ids)):]
+                query_ids = query_ids[-min(self.config.q_max_len, len(query_ids)):]
 
             # q inputs
             q_inputs_length.append(len(query_ids))
