@@ -12,8 +12,8 @@ from collections import Counter
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--pair_path', type=str, default='../data/train.pseudo_pair.txt')
-parser.add_argument('--pair_save_path', type=str, default='../data/train.pair.txt')
+parser.add_argument('--pair_path', type=str, default='../data/train.pseudo_convos.txt')
+parser.add_argument('--pair_save_path', type=str, default='../data/train.convos.txt')
 
 parser.add_argument('--fact_path', type=str, default='../data/train.pseudo_facts.txt')
 parser.add_argument('--fact_save_path', type=str, default='../data/train.facts.txt')
@@ -23,12 +23,6 @@ args = parser.parse_args()
 
 
 def clean_number_url(text):
-    if text.count('__number__') > 5:
-        return ''
-
-    if text.count('__url__') > 3:
-        return ''
-
     text = text.replace('( __number__ )', '__number__')
     text = text.replace('( __url__ )', '__url__')
 
@@ -53,7 +47,7 @@ def clean_number_url(text):
     text = re.sub(r'__number__ \S __url__', '__number__', text)
 
     text = text.replace('__number __', ' __number__ ')
-    text = text.replace('__url __', ' __ulr__ ')
+    text = text.replace('__url __', ' __url__ ')
     return text
 
 def main():
