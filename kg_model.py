@@ -259,9 +259,12 @@ class KGModel(nn.Module):
             f_topk_length
         )
         topk_outputs = torch.stack(metadata['topk_sequence'], dim=0)
-        topk_outputs = topk_outputs.squeeze(3).squeeze(1).permute(1, 2, 0)
+        #  print('tok_outputs: ', topk_outputs.shape)
+        topk_outputs = topk_outputs.squeeze(3).permute(1, 2, 0)
         #  print(topk_outputs.shape) # [batch_size, topk, max_len]
         topk_length = metadata['topk_length']
+        #  print(topk_outputs)
+        topk_outputs = topk_outputs.tolist()
 
         beam_outputs, beam_score, beam_length = self.beam_decode(
             dec_hidden,
