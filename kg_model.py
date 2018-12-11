@@ -52,13 +52,13 @@ class KGModel(nn.Module):
 
         # c_encoder
         self.c_encoder = None
-        if config.turn_type == 'self_attn':
+        if config.turn_type in ['none', 'concat']:
+            pass
+        elif config.turn_type == 'self_attn':
             self.c_encoder = SelfAttentive(
                 config,
                 enc_embedding
             )
-        elif config.turn_type in ['none', 'concat']:
-            pass
         elif config.turn_type == 'cnn':
             self.c_encoder = NormalCNN(
                 config,
