@@ -243,6 +243,7 @@ class KGModel(nn.Module):
         """
 
         # decoder
+        """
         topk_decoder = TopKDecoder(
             self.config,
             self.decoder,
@@ -265,6 +266,9 @@ class KGModel(nn.Module):
         topk_length = metadata['topk_length']
         #  print(topk_outputs)
         topk_outputs = topk_outputs.tolist()
+        """
+        topk_outputs = None
+        topk_length = None
 
         beam_outputs, beam_score, beam_length = self.beam_decode(
             dec_hidden,

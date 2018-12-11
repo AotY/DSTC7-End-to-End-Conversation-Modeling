@@ -66,6 +66,7 @@ logger.info('q_max_len: %d' % args.q_max_len)
 logger.info('r_max_len: %d' % args.r_max_len)
 logger.info('f_max_len: %d' % args.f_max_len)
 
+
 def train_epochs(model,
                  dataset,
                  optimizer,
@@ -90,7 +91,8 @@ def train_epochs(model,
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('train')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data(
+                    'train')
 
             # train and get cur loss
             loss, n_correct, n_word = train(model,
@@ -116,14 +118,14 @@ def train_epochs(model,
                 train_accu = n_word_correct/n_word_total
 
                 logger_str = ' ( Training {progress: 3.3f}% ) epoch: {epoch: 2d}, ' \
-                'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, ' \
-                'elapse: {elapse:3.3f} min'.format(
-                    progress=100*(load / max_load),
-                    epoch=epoch,
-                    loss=train_loss,
-                    ppl=math.exp(min(train_loss, 100)),
-                    accu=100*train_accu,
-                    elapse=(time.time()-start)/60)
+                    'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %, ' \
+                    'elapse: {elapse:3.3f} min'.format(
+                        progress=100*(load / max_load),
+                        epoch=epoch,
+                        loss=train_loss,
+                        ppl=math.exp(min(train_loss, 100)),
+                        accu=100*train_accu,
+                        elapse=(time.time()-start)/60)
                 logger.info(logger_str)
                 #  print(logger_str)
                 save_logger(logger_str)
@@ -132,7 +134,6 @@ def train_epochs(model,
                 n_word_correct = 0
                 start = time.time()
 
-
             if load % args.eval_interval == 0:
                 # evaluate
                 evaluate_loss, evaluate_accuracy = evaluate(model=model,
@@ -140,10 +141,10 @@ def train_epochs(model,
                                                             criterion=criterion)
                 logger_str = ' (evaluate) epoch: {epoch: 2d},' \
                     'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
-                    epoch=epoch,
-                    loss=evaluate_loss,
-                    ppl=math.exp(min(evaluate_loss, 100)),
-                    accu=100*evaluate_accuracy)
+                        epoch=epoch,
+                        loss=evaluate_loss,
+                        ppl=math.exp(min(evaluate_loss, 100)),
+                        accu=100*evaluate_accuracy)
                 logger.info(logger_str)
                 save_logger(logger_str)
 
@@ -156,12 +157,13 @@ def train_epochs(model,
 
                 if is_stop:
                     avg_evaluate_loss = np.mean(evaluate_loss_list[-5:])
-                    avg_evaluate_accuracy = np.mean(evaluate_accuracy_list[-5:])
+                    avg_evaluate_accuracy = np.mean(
+                        evaluate_accuracy_list[-5:])
                     logger_str = ' (avg evaluate)' \
                         'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
-                        ppl=math.exp(min(avg_evaluate_loss, 100)),
-                        accu=100*avg_evaluate_accuracy
-                    )
+                            ppl=math.exp(min(avg_evaluate_loss, 100)),
+                            accu=100*avg_evaluate_accuracy
+                        )
                     save_logger(logger_str)
                     logger.info(logger_str)
                     logger.info('Early Stopping.')
@@ -181,12 +183,11 @@ def train_epochs(model,
         save_checkpoint(state=save_state,
                         is_best=False,
                         filename=os.path.join(args.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
-                                              (epoch, args.model_type, args.turn_type, \
+                                              (epoch, args.model_type, args.turn_type,
                                                args.turn_min, args.turn_num, time_str)))
         # generate sentence
         logger.info('generate...')
         decode(model, dataset, epoch)
-
 
 
 ''' start traing '''
@@ -266,7 +267,8 @@ def evaluate(model,
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('test')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data(
+                    'test')
 
             dec_outputs = model(
                 q_inputs,
@@ -307,7 +309,8 @@ def decode(model, dataset, epoch):
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data(
+                    'eval')
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
@@ -330,8 +333,9 @@ def decode(model, dataset, epoch):
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   decode_type='beam_search')
 
-            topk_texts = dataset.generating_texts(topk_outputs,
-                                                  decode_type='beam_search')
+            if topk_outputs is not None:
+                    topk_texts = dataset.generating_texts(topk_outputs,
+                                                          decode_type='beam_search')
             # save sentences
             dataset.save_generated_texts(
                 epoch,
@@ -347,6 +351,7 @@ def decode(model, dataset, epoch):
                 topk_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
                     args.model_type, epoch, args.turn_type, args.turn_min, args.turn_num, time_str)),
+				time_str
             )
 
 
@@ -355,8 +360,8 @@ def cal_performance(pred, gold, label_smoothing=False):
 
     loss = cal_loss(pred, gold, label_smoothing)
 
-    pred = pred.max(1)[1] # [max_len * batch_size]
-    gold = gold.contiguous().view(-1) # [max_len * batch_size]
+    pred = pred.max(1)[1]  # [max_len * batch_size]
+    gold = gold.contiguous().view(-1)  # [max_len * batch_size]
 
     non_pad_mask = gold.ne(PAD_ID)
     n_correct = pred.eq(gold)
@@ -368,13 +373,14 @@ def cal_performance(pred, gold, label_smoothing=False):
 def cal_loss(pred, gold, label_smoothing):
     ''' Calculate cross entropy loss, apply label smoothing if needed. '''
 
-    gold = gold.contiguous().view(-1) # [max_len * batch_size]
+    gold = gold.contiguous().view(-1)  # [max_len * batch_size]
 
     if label_smoothing:
         eps = 0.1
         n_class = pred.size(1)
 
-        one_hot = torch.zeros_like(pred).scatter(dim=1, index=gold.view(-1, 1), source=1)
+        one_hot = torch.zeros_like(pred).scatter(
+            dim=1, index=gold.view(-1, 1), source=1)
         one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
 
         log_prb = F.log_softmax(pred, dim=1)
@@ -582,10 +588,10 @@ if __name__ == '__main__':
         acc = checkpoint['acc']
         logger_str = ' (checkpoint) epoch: {epoch: 2d},' \
             'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
-            epoch=epoch,
-            loss=loss,
-            ppl=math.exp(min(loss, 100)),
-            accu=100*acc)
+                epoch=epoch,
+                loss=loss,
+                ppl=math.exp(min(loss, 100)),
+                accu=100*acc)
         logger.info(logger_str)
 
     if args.task == 'train':
