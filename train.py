@@ -226,7 +226,7 @@ def train(model,
     )
 
     loss, n_correct = cal_performance(
-        dec_outputs, dec_inputs[1:, :], smoothing=args.smoothing)
+        dec_outputs, dec_inputs[1:, :], label_smoothing=args.label_smoothing)
 
     non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
 
@@ -281,7 +281,7 @@ def evaluate(model,
             )
 
             loss, n_correct = cal_performance(
-                dec_outputs, dec_inputs[1:, :], smoothing=False)
+                dec_outputs, dec_inputs[1:, :], label_smoothing=False)
 
             non_pad_mask = dec_inputs[1:, :].ne(PAD_ID)
             n_word = non_pad_mask.sum().item()
@@ -347,10 +347,10 @@ def decode(model, dataset, epoch):
             )
 
 
-def cal_performance(pred, gold, smoothing=False):
+def cal_performance(pred, gold, label_smoothing=False):
     ''' Apply label smoothing if needed '''
 
-    loss = cal_loss(pred, gold, smoothing)
+    loss = cal_loss(pred, gold, label_smoothing)
 
     pred = pred.max(1)[1] # [max_len * batch_size]
     gold = gold.contiguous().view(-1) # [max_len * batch_size]
@@ -362,12 +362,12 @@ def cal_performance(pred, gold, smoothing=False):
     return loss, n_correct
 
 
-def cal_loss(pred, gold, smoothing):
+def cal_loss(pred, gold, label_smoothing):
     ''' Calculate cross entropy loss, apply label smoothing if needed. '''
 
     gold = gold.contiguous().view(-1) # [max_len * batch_size]
 
-    if smoothing:
+    if label_smoothing:
         eps = 0.1
         n_class = pred.size(1)
 
@@ -564,7 +564,7 @@ if __name__ == '__main__':
     early_stopping = EarlyStopping(
         type='min',
         min_delta=0.001,
-        patience=7
+        patience=3
     )
 
     '''if load checkpoint'''
