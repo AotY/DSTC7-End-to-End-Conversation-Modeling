@@ -84,8 +84,8 @@ class Dataset:
                         continue
 
                     context_sentences = context_sentences[-min(self.config.turn_num, len(context_sentences)):]
-                    print('context: ', context)
-                    print('context_sentences: ', context_sentences)
+                    #  print('context: ', context)
+                    #  print('context_sentences: ', context_sentences)
 
                     context_ids = []
                     for si, sentence in enumerate(context_sentences):
@@ -98,8 +98,7 @@ class Dataset:
 
                         context_ids.append(ids)
 
-                    datas.append((subreddit_name, conversation_id, query_ids,
-                                  context_ids, response_ids, hash_value))
+                    datas.append((subreddit_name, conversation_id, context_ids, query_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -156,6 +155,7 @@ class Dataset:
         task_len = len(self._data_dict[task])
         batch_size = self.config.batch_size
         c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
+        f_max_len = self.config.f_max_len
         if batch_size > task_len:
             raise ValueError('batch_size: %d is too large.' % batch_size)
 
@@ -185,8 +185,8 @@ class Dataset:
 
         """sort batch_data, by turn num"""
         batch_data = sorted(
-            batch_data, key=lambda item: len(item[2]), reverse=True)
-        for i, (subreddit_name, conversation_id, query_ids, context_ids, response_ids, hash_value) in enumerate(batch_data):
+            batch_data, key=lambda item: len(item[3]), reverse=True)
+        for i, (subreddit_name, conversation_id, context_ids, query_ids, response_ids, hash_value) in enumerate(batch_data):
             subreddit_names.append(subreddit_name)
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
@@ -208,15 +208,14 @@ class Dataset:
             if self.config.turn_type == 'concat':
                 concat_ids = []
                 for ids in context_ids:
-                    concat_ids.append(ids)
-                concat_ids.append(query_ids)
-                query_ids = concat_ids
-                query_ids = query_ids[-min(self.config.q_max_len, len(query_ids)):]
+                    concat_ids.extend(ids)
+                concat_ids.extend(query_ids)
+                query_ids = concat_ids[-min(q_max_len, len(concat_ids)):]
 
             # q inputs
             q_inputs_length.append(len(query_ids))
-            q_input = torch.LongTensor(
-                query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
+            #  print('query_ids: ', query_ids)
+            q_input = torch.LongTensor(query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
             q_inputs.append(q_input)
 
             # dec_inputs
@@ -226,7 +225,7 @@ class Dataset:
 
             if self.config.model_type == 'kg':
                 topk_facts_text = self.facts_topk_phrases.get(hash_value, None)
-                f_input = torch.zeros((self.config.f_topk, self.config.f_max_len),
+                f_input = torch.zeros((self.config.f_topk, f_max_len),
                                       dtype=torch.long,
                                       device=self.device)
 
@@ -240,7 +239,7 @@ class Dataset:
                     f_topk_length.append(
                         min(len(topk_facts_ids), self.config.f_topk))
                     for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
-                        ids = ids[:min(self.config.f_max_len, len(ids))]
+                        ids = ids[:min(f_max_len, len(ids))]
                         f_input_length[fi] = len(ids)
                         for fj, id in enumerate(ids):
                             f_input[fi, fj] = id
