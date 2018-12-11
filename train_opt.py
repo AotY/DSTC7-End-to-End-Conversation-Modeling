@@ -267,9 +267,9 @@ def train_opt(parser):
                         type=str,
                         help='seq2seq or kg model.')
 
-    group.add_argument('--smoothing',
+    group.add_argument('--label_smoothing',
                        action='store_true',
-                       help='loss smoothing.')
+                       help='loss label_smoothing.')
 
     group.add_argument('--offline_type',
                         type=str,
