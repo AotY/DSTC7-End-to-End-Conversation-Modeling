@@ -311,7 +311,7 @@ def decode(model, dataset, epoch):
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
-            greedy_outputs, beam_outputs, beam_length = model.decode(
+            greedy_outputs, beam_outputs, beam_length, topk_outputs, topk_length = model.decode(
                 q_inputs,
                 q_inputs_length,
                 c_inputs,
@@ -330,6 +330,8 @@ def decode(model, dataset, epoch):
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   decode_type='beam_search')
 
+            topk_texts = dataset.generating_texts(topk_outputs,
+                                                  decode_type='beam_search')
             # save sentences
             dataset.save_generated_texts(
                 epoch,
@@ -342,6 +344,7 @@ def decode(model, dataset, epoch):
                 dec_inputs[:-1, :],
                 greedy_texts,
                 beam_texts,
+                topk_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
                     args.model_type, epoch, args.turn_type, args.turn_min, args.turn_num, time_str)),
             )

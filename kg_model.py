@@ -10,6 +10,7 @@ from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
+from modules.topk_decoder import TopKDecoder
 from modules.beam import Beam
 from modules.attention import Attention
 from modules.utils import init_linear_wt, sequence_mask
@@ -262,7 +263,27 @@ class KGModel(nn.Module):
             f_topk_length
         )
 
-        return greedy_outputs, beam_outputs, beam_length
+        topk_decoder = TopKDecoder(
+            self.config,
+            self.decoder,
+            self.device
+        ).to(self.device)
+        _, _, metadata = topk_decoder(
+            dec_hidden,
+            q_enc_outputs,
+            q_inputs_length,
+            c_enc_outputs,
+            c_turn_length,
+            f_enc_outputs,
+            f_topk_length
+        )
+
+        topk_outputs = torch.stack(metadata['topk_sequence'], dim=0)
+        topk_outputs = topk_outputs.squeeze(3).squeeze(1).transpose(0, 1)
+        print(topk_outputs.shape)
+        topk_length = metadata['topk_length']
+
+        return greedy_outputs, beam_outputs, beam_length, topk_outputs, topk_length
 
     def greedy_decode(self,
                       dec_hidden,

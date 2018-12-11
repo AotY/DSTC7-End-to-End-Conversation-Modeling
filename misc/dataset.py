@@ -506,6 +506,7 @@ class Dataset:
                              r_inputs,
                              greedy_texts,
                              beam_texts,
+                             topk_texts,
                              filename):
 
         q_inputs = q_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
@@ -536,7 +537,7 @@ class Dataset:
 
         with open(filename, 'w', encoding='utf-8') as f:
             for subreddit_name, conversation_id, hash_value, \
-                q_ids, c_ids, f_ids, r_ids, g_text, b_text in \
+                q_ids, c_ids, f_ids, r_ids, g_text, b_text, t_text in \
                     zip(names,
                         ids,
                         hash_values,
@@ -545,7 +546,8 @@ class Dataset:
                         f_inputs,
                         r_inputs,
                         greedy_texts,
-                        beam_texts):
+                        beam_texts,
+                        topk_texts):
 
                 f.write('subreddit_name: %s\n' % subreddit_name)
                 f.write('conversation_id: %s\n' % conversation_id)
@@ -568,8 +570,11 @@ class Dataset:
                 ground_truth_f.write('%s\n' % response_text)
                 predicted_f.write('%s\n' % g_text)
 
-                for i, best_text in enumerate(b_text):
-                    f.write('beam %d: %s\n' % (i, best_text))
+                for i, text in enumerate(b_text):
+                    f.write('beam %d: %s\n' % (i, text))
+
+                for i, text in enumerate(t_text):
+                    f.write('topk %d: %s\n' % (i, text))
 
                 if f_ids is not None:
                     for fi, ids in enumerate(f_ids):
