@@ -507,7 +507,8 @@ class Dataset:
                              greedy_texts,
                              beam_texts,
                              topk_texts,
-                             filename):
+                             filename,
+							 time_str):
 
         q_inputs = q_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
         r_inputs = r_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
@@ -528,8 +529,8 @@ class Dataset:
             self.config.turn_min, self.config.turn_num
         ))
 
-        predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s.txt' % (
-            self.config.turn_type, epoch, self.config.turn_min, self.config.turn_num
+        predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s_%s.txt' % (
+            self.config.turn_type, epoch, self.config.turn_min, self.config.turn_num, time_str
         ))
 
         ground_truth_f = open(ground_truth_path, 'w')
@@ -562,6 +563,7 @@ class Dataset:
                 f.write('query: %s\n' % query_text)
 
                 response_text = self.vocab.ids_to_text(r_ids)
+                f.write('\n')
                 f.write('response: %s\n' % response_text)
 
                 f.write('greedy: %s\n' % g_text)
