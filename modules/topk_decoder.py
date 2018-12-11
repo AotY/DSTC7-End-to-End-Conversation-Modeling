@@ -88,9 +88,9 @@ class TopKDecoder(torch.nn.Module):
             [i * beam_size for i in range(0, batch_size)]).to(self.device), 0.0)
 
         # Initialize the dec_input vector
-        # [1, beam_size * batch_size]
+        # [batch_size * beam_size, 1]
         dec_input = torch.LongTensor(
-            [[SOS_ID] * batch_size * beam_size]).to(self.device)
+            [[SOS_ID] * batch_size * beam_size]).to(self.device).transpose(0, 1)
 
         # Store decisions for backtracking
         stored_scores = list()
@@ -100,7 +100,7 @@ class TopKDecoder(torch.nn.Module):
         for _ in range(0, max_len):
             # output: [batch_size * beam_size, vocab_size]
             output, dec_hidden, _ = self.decoder(
-                dec_input,
+                dec_input.transpose(0, 1), # [1, batch_size * beam_size]
                 dec_hidden,
                 q_enc_outputs=q_enc_outputs,
                 q_enc_length=q_inputs_length,
@@ -110,7 +110,10 @@ class TopKDecoder(torch.nn.Module):
                 f_enc_length=f_topk_length
             )
 
-            output = output.view(-1, vocab_size).contiguous()
+            # output: [1, batch_size * beam_size, vocab_size]
+            output = output.squeeze(0).contiguous()
+
+            # log_softmax_output: [batch_size * beam_size, vocab_size]
             log_softmax_output = F.log_softmax(output, dim=1)
 
             # To get the full sequence scores for the new candidates, add the local
@@ -120,11 +123,10 @@ class TopKDecoder(torch.nn.Module):
             #  print('log_softmax_output: ', log_softmax_output.shape)
             #  print('sequence_scores: ', sequence_scores.shape)
             sequence_scores = sequence_scores + log_softmax_output
-            scores, candidates = sequence_scores.view(batch_size, -1).topk(beam_size, dim=1)
             # [batch_size, beam_size]
+            scores, candidates = sequence_scores.view(batch_size, -1).topk(beam_size, dim=1)
 
-            # Reshape dec_input = (bk, 1) and sequence_scores = (bk, 1)
-            dec_input = (candidates % vocab_size).view(batch_size * beam_size, 1)  # [beam_size * batch_size, 1]
+            dec_input = (candidates % vocab_size).view(batch_size * beam_size, 1)  # [batch_size, beam_size, 1]
             sequence_scores = scores.view(batch_size * beam_size, 1)
 
             # Update fields for next timestep
@@ -205,8 +207,7 @@ class TopKDecoder(torch.nn.Module):
             current_symbol = symbols[t].index_select(0, t_predecessors)
             # Re-order the back pointer of the previous step with the back pointer of
             # the current step
-            t_predecessors = predecessors[t].index_select(
-                0, t_predecessors).squeeze()
+            t_predecessors = predecessors[t].index_select(0, t_predecessors).squeeze()
 
             # This tricky block handles dropped sequences that see eos_id earlier.
             # The basic idea is summarized below:
@@ -243,6 +244,7 @@ class TopKDecoder(torch.nn.Module):
                     # Replace the old information in return variables
                     # with the new ended sequence information
                     t_predecessors[res_idx] = predecessors[t][idx[0]]
+
                     current_symbol[res_idx, :] = symbols[t][idx[0]]
                     score[b_idx, res_k_idx] = scores[t][idx[0]].data[0]
                     topk_length[b_idx][res_k_idx] = t + 1 # record the back tracked results
@@ -257,13 +259,12 @@ class TopKDecoder(torch.nn.Module):
             topk_length[b_idx] = [topk_length[b_idx][k_idx.item()]
                                   for k_idx in re_sorted_idx[b_idx, :]]
 
-        re_sorted_idx = (re_sorted_idx + self.pos_index.expand_as(re_sorted_idx)
-                         ).view(batch_size * beam_size)
+        re_sorted_idx = (re_sorted_idx + self.pos_index.expand_as(re_sorted_idx)).view(batch_size * beam_size)
 
         # Reverse the sequences and re-order at the same time
         # It is reversed because the backtracking happens in reverse time order
-        topk_sequence = [step.index_select(0, re_sorted_idx).view(
-            batch_size, beam_size, -1) for step in reversed(topk_sequence)]
+        topk_sequence = [step.index_select(0, re_sorted_idx).view(batch_size, beam_size, -1) for step in reversed(topk_sequence)]
+
         score = score.data
 
         return score, topk_length, topk_sequence
