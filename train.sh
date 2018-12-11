@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.60004.dict \
     --turn_num 4 \
     --turn_min 1 \
-    --turn_type none \
+    --turn_type concat \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
