@@ -61,7 +61,7 @@ class LuongAttnDecoder(nn.Module):
             else:
                 self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
         """
-        self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
+        self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
 
         init_linear_wt(self.linear)
 
