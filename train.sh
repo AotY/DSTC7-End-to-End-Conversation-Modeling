@@ -44,7 +44,7 @@ python train.py \
     --test_split 0.07 \
     --start_epoch 1 \
     --model_type seq2seq \
-    --task decode \
+    --task train \
     --share_embedding \
     --offline_type elastic \
     --checkpoint models/epoch-2_seq2seq_normal_1_4_2018_12_11_20:10.pth \
