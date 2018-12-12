@@ -36,6 +36,8 @@ python train.py \
     --device cuda \
     --eval_interval 1800 \
     --log_interval 90 \
+    --lr_patience 2 \
+    --es_patience 3 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --eval_split 0.0001 \
