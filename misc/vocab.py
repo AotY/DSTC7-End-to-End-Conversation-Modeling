@@ -132,7 +132,7 @@ class Vocab(object):
     def ids_to_text(self, ids):
         final_ids = []
         for id in ids:
-			if id in [self.padid, self.sosid]:
+            if id in [self.padid, self.sosid]:
                 continue
             elif id == self.eosid:
                 break

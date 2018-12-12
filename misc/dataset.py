@@ -166,12 +166,11 @@ class Dataset:
 
         cur_indicator = self._indicator_dict[task] + batch_size
         if cur_indicator > self._size_dict[task]:
-            if task == 'train' or task = 'test':
+            if task == 'train' or task == 'test':
                 self.reset_data(task, True)
                 cur_indicator = batch_size
             else:
                 self.reset_data(task, False)
-                
         q_inputs = list()
         q_inputs_length = list()
 
