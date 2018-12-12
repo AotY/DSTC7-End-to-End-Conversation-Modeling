@@ -333,9 +333,10 @@ def decode(model, dataset, epoch):
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   decode_type='beam_search')
 
+            topk_texts = None
             if topk_outputs is not None:
-				topk_texts = dataset.generating_texts(topk_outputs,
-														decode_type='beam_search')
+                topk_texts = dataset.generating_texts(topk_outputs, decode_type='beam_search')
+
             # save sentences
             dataset.save_generated_texts(
                 epoch,

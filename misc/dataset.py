@@ -586,9 +586,9 @@ class Dataset:
                 for i, text in enumerate(b_text):
                     f.write('beam %d: %s\n' % (i, text))
 
-				if t_text is not None:
-					for i, text in enumerate(t_text):
-						f.write('topk %d: %s\n' % (i, text))
+                if t_text is not None:
+                    for i, text in enumerate(t_text):
+                        f.write('topk %d: %s\n' % (i, text))
 
                 if f_ids is not None:
                     for fi, ids in enumerate(f_ids):
