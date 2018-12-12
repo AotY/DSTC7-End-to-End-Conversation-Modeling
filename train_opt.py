@@ -61,9 +61,9 @@ def data_set_opt(parser):
                        Context-Sensitive Generation of Open-Domain Conversational Responses
                        ''')
 
-    group.add_argument('--eval_split',
-                       type=float,
-                       help="Ratio for splitting data set.")
+    group.add_argument('--eval_batch',
+                       type=int,
+                       help="batch num for splitting data set.")
 
     group.add_argument('--test_split',
                        type=float,

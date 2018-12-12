@@ -109,9 +109,8 @@ class Dataset:
 
             np.random.shuffle(datas)
             # train-eval split
-            n_train = int(
-                len(datas) * (1. - self.config.eval_split - self.config.test_split))
-            n_eval = max(int(len(datas) * self.config.eval_split), batch_size)
+            n_eval = self.config.eval_batch * batch_size
+            n_train = int(len(datas) * (1. - self.config.test_split) - n_eval)
             n_test = len(datas) - n_train - n_eval
             self._size_dict = {
                 'train': n_train,
@@ -159,18 +158,20 @@ class Dataset:
         self._indicator_dict[task] = 0
 
     def load_data(self, task):
-        task_len = len(self._data_dict[task])
         batch_size = self.config.batch_size
         c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
         f_max_len = self.config.f_max_len
-        if batch_size > task_len:
+        if batch_size > self._size_dict[task]:
             raise ValueError('batch_size: %d is too large.' % batch_size)
 
         cur_indicator = self._indicator_dict[task] + batch_size
         if cur_indicator > self._size_dict[task]:
-            self.reset_data(task)
-            cur_indicator = batch_size
-
+            if task == 'train' or task = 'test':
+                self.reset_data(task, True)
+                cur_indicator = batch_size
+            else:
+                self.reset_data(task, False)
+                
         q_inputs = list()
         q_inputs_length = list()
 
