@@ -458,7 +458,7 @@ class KGModel(nn.Module):
             c_turn_length: [batch_size]
         turn_type: [max_len, turn_num, hidden_size]
         """
-        stack_outputs = list()
+        c_enc_outputs = list()
         # query encode separately.
         for ti in range(self.config.turn_num):
             inputs = c_inputs[ti, :, :]  # [max_len, batch_size]
@@ -469,20 +469,18 @@ class KGModel(nn.Module):
             outputs, hidden_state = self.c_encoder(
                 inputs, inputs_length, sort=False)
 
-            stack_outputs.append(outputs[-1].unsqueeze(0))
+            c_enc_outputs.append(outputs[-1].unsqueeze(0))
 
         # [turn_num, batch_size, hidden_size]
-        stack_outputs = torch.cat(stack_outputs, dim=0)
-        #  print('stack_outputs: ', stack_outputs.shape)
-
+        c_enc_outputs = torch.cat(c_enc_outputs, dim=0)
+        #  print('c_enc_outputs: ', c_enc_outputs.shape)
         """
         if self.config.turn_type == 'session':
             # [turn_num, batch_size, hidden_size]
-            session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)
+            session_outputs, session_hidden_state = self.session_encoder(c_enc_outputs, c_turn_length)
             return session_outputs
         """
-
-        return stack_outputs
+        return c_enc_outputs
 
     def f_forward(self,
                   f_inputs,
@@ -499,4 +497,3 @@ class KGModel(nn.Module):
         f_enc_outputs = f_enc_outputs.transpose(0, 1)
 
         return f_enc_outputs
-
