@@ -310,8 +310,7 @@ def decode(model, dataset, epoch):
                 q_inputs, q_inputs_length, \
                 c_inputs, c_inputs_length, c_turn_length, \
                 f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data(
-                    'eval')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
@@ -335,8 +334,8 @@ def decode(model, dataset, epoch):
                                                   decode_type='beam_search')
 
             if topk_outputs is not None:
-                    topk_texts = dataset.generating_texts(topk_outputs,
-                                                          decode_type='beam_search')
+				topk_texts = dataset.generating_texts(topk_outputs,
+														decode_type='beam_search')
             # save sentences
             dataset.save_generated_texts(
                 epoch,

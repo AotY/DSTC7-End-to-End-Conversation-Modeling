@@ -57,39 +57,45 @@ class Dataset:
                         continue
 
                     subreddit_name, conversation_id, context, query, \
-                        response, hash_value, score, turn = line.split(' SPLIT ')
+                        response, hash_value, score, turn = line.split(
+                            ' SPLIT ')
 
                     if not bool(query) or not bool(response) \
-                        or len(query.split()) < min_len \
-                        or len(response.split()) < min_len: \
+                            or len(query.split()) < min_len \
+                            or len(response.split()) < min_len:
                         continue
 
                     # query
-                    words = [word for word in query.split() if len(word.split()) > 0]
+                    words = [word for word in query.split()
+                             if len(word.split()) > 0]
                     query_ids = self.vocab.words_to_id(words)
                     if len(query_ids) < min_len:
                         continue
                     query_ids = query_ids[-min(q_max_len, len(query_ids)):]
 
                     # response
-                    words = [word for word in response.split() if len(word.split()) > 0]
+                    words = [word for word in response.split()
+                             if len(word.split()) > 0]
                     response_ids = self.vocab.words_to_id(words)
                     if len(response_ids) < min_len:
                         continue
-                    response_ids = response_ids[:min(r_max_len, len(response_ids))]
+                    response_ids = response_ids[:min(
+                        r_max_len, len(response_ids))]
 
                     # context split by EOS
                     context_sentences = self.parser_context(context)
                     if context_sentences is None or len(context_sentences) < self.config.turn_min:
                         continue
 
-                    context_sentences = context_sentences[-min(self.config.turn_num, len(context_sentences)):]
+                    context_sentences = context_sentences[-min(
+                        self.config.turn_num, len(context_sentences)):]
                     #  print('context: ', context)
                     #  print('context_sentences: ', context_sentences)
 
                     context_ids = []
                     for si, sentence in enumerate(context_sentences):
-                        words = [word for word in sentence.split() if len(word.split()) > 0]
+                        words = [word for word in sentence.split()
+                                 if len(word.split()) > 0]
                         ids = self.vocab.words_to_id(words)
                         if si % 2 == 0:  # start
                             ids = ids[-min(c_max_len, len(ids)):]
@@ -98,7 +104,8 @@ class Dataset:
 
                         context_ids.append(ids)
 
-                    datas.append((subreddit_name, conversation_id, context_ids, query_ids, response_ids, hash_value))
+                    datas.append((subreddit_name, conversation_id,
+                                  context_ids, query_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -215,7 +222,8 @@ class Dataset:
             # q inputs
             q_inputs_length.append(len(query_ids))
             #  print('query_ids: ', query_ids)
-            q_input = torch.LongTensor(query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
+            q_input = torch.LongTensor(
+                query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
             q_inputs.append(q_input)
 
             # dec_inputs
@@ -508,7 +516,7 @@ class Dataset:
                              beam_texts,
                              topk_texts,
                              filename,
-							 time_str):
+                             time_str):
 
         q_inputs = q_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
         r_inputs = r_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
@@ -524,6 +532,9 @@ class Dataset:
         else:
             # [batch_size, topk, max_len]
             f_inputs = f_inputs.transpose(0, 1).tolist()
+
+        if topk_texts is None:
+            topk_texts = [None] * self.config.batch_size
 
         ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
             self.config.turn_min, self.config.turn_num
@@ -575,8 +586,9 @@ class Dataset:
                 for i, text in enumerate(b_text):
                     f.write('beam %d: %s\n' % (i, text))
 
-                for i, text in enumerate(t_text):
-                    f.write('topk %d: %s\n' % (i, text))
+				if t_text is not None:
+					for i, text in enumerate(t_text):
+						f.write('topk %d: %s\n' % (i, text))
 
                 if f_ids is not None:
                     for fi, ids in enumerate(f_ids):
