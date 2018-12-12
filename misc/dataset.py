@@ -294,7 +294,7 @@ class Dataset:
     def load_similarity_facts(self, offline_filename):
         self.facts_topk_phrases = pickle.load(open(offline_filename, 'rb'))
 
-    def retrieval_similarity_facts(self, offline_filename):
+    def retrieval_similarity_facts(self, offline_filename, facts_tfidf_dict):
         es = es_helper.get_connection()
         r = Rake(
             min_length=1,
@@ -304,50 +304,56 @@ class Dataset:
         for task, task_datas in self._data_dict.items():
             self.logger.info('retrieval similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
-                conversation_id, sentences_text, _, _, hash_value = data
-                #  sentences_text = [' '.join(remove_stop_words(sentence.split())) for sentence in sentences_text]
-                sentences_text = [re.sub(r'<number>|<url>|<unk>', '', sentence)
-                                  for sentence in sentences_text]
-                #  print('sentences_text: ', sentences_text)
-                if len(sentences_text) >= 2:
-                    r.extract_keywords_from_sentences(sentences_text[:-1])
-                    ranked_text = ' '.join(r.get_ranked_phrases())
-                    query_text = ranked_text + ' ' + sentences_text[-1]
-                else:
-                    query_text = ' '.join(sentences_text)
+                _, conversation_id, context_ids, query_ids, _, hash_value = data
+                query = self.vocab.ids_to_text(query_ids)
+                query = re.sub(r'__number__|__url__|__unk__', '', query)
+                context_sentences = []
+                for ids in context_ids:
+                    sentence = self.vocab.ids_to_text(ids)
+                    sentence = re.sub(r'__number__|__url__|__unk__', '', sentence)
+                    context_sentences.append(sentence)
+
+                query_text = query + ' ' + ' '.join(context_sentences)
 
                 #  print('query_text: ', query_text)
-                query_body = es_helper.assemble_search_fact_body(
-                    conversation_id, query_text)
-                hits, hit_count = es_helper.search(
-                    es, es_helper.index, es_helper.fact_type, query_body)
+                query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
+                hits, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body)
                 if hit_count == 0:
                     continue
 
                 phrases = list()
+                words = set()
                 for hit in hits[:self.config.f_topk]:
                     hit_conversation_id = hit['_source']['conversation_id']
                     assert (conversation_id == hit_conversation_id), "%s != %s" % (
                         conversation_id, hit_conversation_id)
                     phrase = hit['_source']['text']
-                    if len(phrase) <= self.config.f_max_len:
-                        phrases.append(phrase)
-                        continue
 
-                    parts = [part for part in phrase.split(
-                        '.') if len(part.split()) > 2]
+                    """
+                    parts = [part for part in phrase.split('.') if len(part.split()) > 2]
                     if len(parts) == 0:
                         phrases.append(phrase)
                     elif len(parts) == 1:
                         phrases.append(parts[0] + ' .')
                     else:
                         #  phrases.append(parts[-1])
-                        phrases.append('.'.join(parts))
+                    phrases.append('.'.join(parts))
+                    """
+                    phrases.append(phrase)
+                    for word in phrase.split():
+                        words.add(word)
 
-                #  print('conversation_id: ', conversation_id)
-                #  print('phrases: {}'.format(phrases))
+                words_tfidf = []
+                for word in words:
+                    value = facts_tfidf_dict[conversation_id].get(word, 0.0)
+                    words_tfidf.append((word, value))
 
-                facts_topk_phrases[hash_value] = phrases
+                words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
+                words = [item[0] for item in words_tfidf[self.config.f_topk]]
+                print('words: ', words)
+
+                #  facts_topk_phrases[hash_value] = phrases
+                facts_topk_phrases[hash_value] = words
 
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
         self.facts_topk_phrases = facts_topk_phrases
@@ -355,6 +361,7 @@ class Dataset:
     def build_similarity_facts_offline(self,
                                        facts_dict=None,
                                        offline_filename=None,
+                                       facts_tfidf_dict=None,
                                        embedding=None):
         if os.path.exists(offline_filename):
             self.load_similarity_facts(offline_filename)
@@ -362,7 +369,7 @@ class Dataset:
 
         offline_type = self.config.offline_type
         if offline_type in ['elastic', 'elastic_tag']:
-            self.retrieval_similarity_facts(offline_filename)
+            self.retrieval_similarity_facts(offline_filename, facts_tfidf_dict)
             return
 
         ranked_phrase_dict_path = self.config.save_path + \
