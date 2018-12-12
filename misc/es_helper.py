@@ -46,8 +46,8 @@ def insert_to_es(es, index, doc_type, body):
     '''insert item into es.'''
     es.index(index=index, doc_type=doc_type, body=body)
 
-def search(es, index, doc_type, query_body, size=20):
-    result = es.search(index, doc_type, query_body, size=size)
+def search(es, index, doc_type, query_body, from_=0, size=20):
+    result = es.search(index, doc_type, query_body, from_=from_, size=size)
     hits = result['hits']['hits']
     count = result['hits']['total']
     return hits, count
@@ -94,16 +94,27 @@ def assemble_search_fact_body(conversation_id, query_text=None):
 
 def search_all_conversation_ids(es, index, doc_type):
     query_body = {
-        '_source': ['conversation_id'],
-        'query': {}
+        '_source': ['conversation_id']
     }
     _, total = search(es, index, doc_type, query_body, size=0)
 
     conversation_ids = set()
-    hits, _ = search(es, index, doc_type, query_body, size=total)
-    for hit in hits:
-        conversation_id = hit['_source']['conversation_id']
-        conversation_ids.add(conversation_id)
+    from_ = 0
+    size = 100
+    while True:
+        hits, total = search(es, index, doc_type, query_body, from_=from_, size=size)
+        #  print('len(hits): %d' % len(hits))
+        print('from_: %d' % from_)
+        if len(hits) > 0:
+            for hit in hits:
+                conversation_id = hit['_source']['conversation_id']
+                conversation_ids.add(conversation_id)
+        from_ += size
+        if from_ > total:
+            break
+
+        if from_ + size > total:
+            size = total - from_
 
     return list(conversation_ids)
 
