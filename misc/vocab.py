@@ -13,6 +13,7 @@ UNK_ID = 1
 SOS_ID = 2
 EOS_ID = 3
 
+
 class Vocab(object):
     def __init__(self):
         self.init_vocab()
@@ -46,6 +47,7 @@ class Vocab(object):
         return self.idx2word.get(id, self.unk)
 
     '''ids to word'''
+
     def ids_to_word(self, ids):
         words = [self.id_to_word(id) for id in ids]
         return words
@@ -130,8 +132,7 @@ class Vocab(object):
     def ids_to_text(self, ids):
         final_ids = []
         for id in ids:
-            #  if id in [self.padid, self.sosid]:
-            if id == self.padid:
+			if id in [self.padid, self.sosid]:
                 continue
             elif id == self.eosid:
                 break
