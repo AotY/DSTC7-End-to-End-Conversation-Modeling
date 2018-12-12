@@ -40,8 +40,8 @@ python train.py \
     --es_patience 3 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
-    --eval_split 0.0001 \
-    --test_split 0.07 \
+    --test_split 0.08 \
+    --eval_batch 5 \
     --start_epoch 1 \
     --model_type seq2seq \
     --task train \

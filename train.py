@@ -260,7 +260,7 @@ def evaluate(model,
     n_word_correct = 0
 
     max_load = int(np.ceil(dataset._size_dict['test'] / args.batch_size))
-    dataset.reset_data('test', False)
+    dataset.reset_data('test', True)
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             # load data
@@ -303,7 +303,7 @@ def decode(model, dataset, epoch):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     dataset.reset_data('eval', False)
-    max_load = int(np.ceil(dataset._size_dict['eval'] / args.batch_size))
+    max_load = int(np.floor(dataset._size_dict['eval'] / args.batch_size))
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             dec_inputs, \
