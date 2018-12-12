@@ -171,6 +171,7 @@ class Dataset:
                 cur_indicator = batch_size
             else:
                 self.reset_data(task, False)
+
         q_inputs = list()
         q_inputs_length = list()
 
@@ -199,7 +200,7 @@ class Dataset:
             hash_values.append(hash_value)
 
             if self.config.turn_type not in ['none', 'concat']:
-                # c inputs
+                # c_input: [turn_num, c_max_len]
                 c_turn_length.append(len(context_ids))
                 c_inputs_length.append(list([1]) * (self.config.turn_num))
 
