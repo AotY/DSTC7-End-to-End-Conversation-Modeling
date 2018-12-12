@@ -237,10 +237,10 @@ class Dataset:
                     f_inputs_length.append(1)
                 else:
                     f_inputs_length.append(len(words))
+
                 f_input = torch.zeros((self.config.f_topk),
                                       dtype=torch.long,
                                       device=self.device)
-
                 if words is not None:
                     ids = self.vocab.words_to_id(words)
                     for fi, id in enumerate(ids):
@@ -325,8 +325,8 @@ class Dataset:
                     words_tfidf.append((word, value))
 
                 words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
-                words = [item[0] for item in words_tfidf[self.config.f_topk]]
-                print('words: ', words)
+                words = [item[0] for item in words_tfidf[:self.config.f_topk]]
+                #  print('words: ', words)
 
                 facts_topk_phrases[hash_value] = words
 

@@ -55,7 +55,6 @@ def search(es, index, doc_type, query_body, from_=0, size=20):
 def assemble_search_fact_body(conversation_id, query_text=None):
     if query_text is None:
         query_body = {
-            '_source': ['text'],
             'query': {
                 "bool": {
                     "must":{
@@ -68,7 +67,6 @@ def assemble_search_fact_body(conversation_id, query_text=None):
         }
     else:
         query_body = {
-            '_source': ['text'],
             'query': {
                 "bool": {
                     "must":{

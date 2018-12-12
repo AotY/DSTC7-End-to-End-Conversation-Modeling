@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -31,7 +31,7 @@ python train.py \
     --min_len 3 \
     --beam_size 8 \
     --best_n 3 \
-    --f_topk 10 \
+    --f_topk 15 \
     --lr 0.001 \
     --max_grad_norm 15.0 \
     --epochs 15 \
