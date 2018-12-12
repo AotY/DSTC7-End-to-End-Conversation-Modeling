@@ -62,6 +62,7 @@ class NormalEncoder(nn.Module):
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
+
             inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
 
         # embedded
