@@ -61,7 +61,7 @@ class LuongAttnDecoder(nn.Module):
             else:
                 self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
         """
-        self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
+        self.linear = nn.Linear(config.hidden_size * 4, config.vocab_size)
 
         init_linear_wt(self.linear)
 
@@ -98,12 +98,12 @@ class LuongAttnDecoder(nn.Module):
         c_context = None
         if c_enc_outputs is not None:
             # output: [1, batch_size, 1 * hidden_size]
-            c_context, c_attn_weights = self.c_attn(q_context, c_enc_outputs, c_enc_length)
+            c_context, c_attn_weights = self.c_attn(output, c_enc_outputs, c_enc_length)
 
         f_context = None
-        #  if f_enc_outputs is not None:
-            #  # [1, batch_size, hidden_size]
-            #  f_context, f_attn_weights = self.f_attn(c_context, f_enc_outputs, f_enc_length)
+        if f_enc_outputs is not None:
+            # [1, batch_size, hidden_size]
+            f_context, f_attn_weights = self.f_attn(output, f_enc_outputs, f_enc_length)
 
         output_list = [output, q_context]
         if c_context is not None:

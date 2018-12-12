@@ -19,35 +19,33 @@ from modules.utils import init_wt_normal
 class  MultiHeadAttention(nn.Module):
     """Multi-Head Attention module."""
     def __init__(self,
-                 n_head,
-                 model_dim,
-                 k_dim,
-                 v_dim,
-                 dropout=0.1):
+                config):
         super().__init__()
 
-        self.n_head = n_head
-        self.k_dim = k_dim
-        self.v_dim = v_dim
+        self.num_heads = config.num_heads
 
-        self.q_linear = nn.Linear(model_dim, n_head * k_dim)
-        self.k_linear = nn.Linear(model_dim, n_head * k_dim)
+        self.k_size = config.k_size
+        self.v_size = config.v_size
 
-        self.v_linear = nn.Linear(model_dim, n_head * v_dim)
+        self.q_linear = nn.Linear(config.transformer_size, config.num_heads * config.k_size)
+        self.k_linear = nn.Linear(config.transformer_size, config.num_heads * config.k_size)
 
-        init_wt_normal(self.q_linear.weight)
-        init_wt_normal(self.k_linear.weight)
-        init_wt_normal(self.v_linear.weight)
+        self.v_linear = nn.Linear(config.transformer_size, config.num_heads * config.v_size)
 
-        self.sdp_attn = ScaleDotProductAttention(temperature=np.power(k_dim, 0.5))
+        init_wt_normal(self.q_linear.weight, (config.transformer_size + config.k_size))
+        init_wt_normal(self.k_linear.weight, (config.transformer_size + config.k_size))
+
+        init_wt_normal(self.v_linear.weight, (config.transformer_size + config.v_size))
+
+        self.attention = ScaleDotProductAttention(temperature=np.power(config.k_size, 0.5))
 
         # Applies Layer Normalization over a mini-batch of inputs
-        self.layer_norm = nn.LayerNorm(model_dim)
+        self.layer_norm = nn.LayerNorm(config.transformer_size)
 
-        self.fc = nn.Linear(n_head * v_dim, model_dim)
+        self.fc = nn.Linear(config.num_heads * config.v_size, config.transformer_size)
         nn.init.xavier_normal_(self.fc.weight)
 
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, q, k, v, mask=None):
         """
@@ -63,25 +61,24 @@ class  MultiHeadAttention(nn.Module):
         sz_b, len_k, _ = k.size()
         sz_b, len_v, _ = v.size()
 
-        q = self.q_linear(q).view(sz_b, len_q, self.n_head, self.k_dim) #[16, 35, 8 * 32]
-        k = self.k_linear(k).view(sz_b, len_k, self.n_head, self.k_dim)
-        v = self.v_linear(v).view(sz_b, len_v, self.n_head, self.v_dim)
-        #  print('q size: ', q.shape)
+        q = self.q_linear(q).view(sz_b, len_q, self.num_heads, self.k_size) #[16, 35, 8 * 32]
+        k = self.k_linear(k).view(sz_b, len_k, self.num_heads, self.k_size)
+        v = self.v_linear(v).view(sz_b, len_v, self.num_heads, self.v_size)
+        #  print('q size: ', q.shape) # [128, 50, 8, 64]
         #  print('k size: ', k.shape)
         #  print('v size: ', v.shape)
 
-        q = q.permute(2, 0, 1, 3).contiguous().view(-1, len_q, self.k_dim) # # (n*b) x lq x dk
-        k = k.permute(2, 0, 1, 3).contiguous().view(-1, len_k, self.k_dim)
-        v = v.permute(2, 0, 1, 3).contiguous().view(-1, len_v, self.v_dim)
-        #  print('q size: ', q.shape)
+        q = q.permute(2, 0, 1, 3).contiguous().view(-1, len_q, self.k_size) # # (n*b) x lq x dk
+        k = k.permute(2, 0, 1, 3).contiguous().view(-1, len_k, self.k_size)
+        v = v.permute(2, 0, 1, 3).contiguous().view(-1, len_v, self.v_size)
+        #  print('q size: ', q.shape) # [1024, 50, 64]
         #  print('k size: ', k.shape)
         #  print('v size: ', v.shape)
 
-        mask = mask.repeat(self.n_head, 1, 1) # (n*b) x .. x ..
- #[16, 35, 8 * 32]
-        output, sdp_attn_weight = self.sdp_attn(q, k, v, mask=mask)
+        mask = mask.repeat(self.num_heads, 1, 1) # (n*b) x .. x .. #[16, 35, 8 * 32]
+        output, sdp_attn_weight = self.attention(q, k, v, mask=mask)
 
-        output = output.view(self.n_head, sz_b, len_q, self.v_dim)
+        output = output.view(self.num_heads, sz_b, len_q, self.v_size)
         output = output.permute(1, 2, 0, 3).contiguous().view(sz_b, len_q, -1)
 
         output = self.fc(output)
@@ -95,24 +92,24 @@ class  MultiHeadAttention(nn.Module):
 class PositionwiseFeedForward(nn.Module):
     """A two feed forward layer module."""
     def __init__(self,
-                 in_dim,
-                 hid_dim,
-                 dropout=0.1):
+                config):
         super().__init__()
 
-        self.cnn1 = nn.Conv1d(in_dim, hid_dim, 1) # position wise
-        self.cnn2 = nn.Conv1d(hid_dim, in_dim, 1) # position wise
+        self.cnn1 = nn.Conv1d(config.transformer_size, config.inner_hidden_size, 1) # position wise
+        self.cnn2 = nn.Conv1d(config.inner_hidden_size, config.transformer_size, 1) # position wise
 
-        self.layer_norm = nn.LayerNorm(in_dim)
+        self.layer_norm = nn.LayerNorm(config.transformer_size)
 
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, input):
         """
         Args:
-            input:
+            input: [batch_size, max_len, transformer_size]
+        Return: [batch_size, max_len, transformer_size]
         """
 
+        #  print('sub_layer pff input: ', input.shape)
         residual = input
         output = input.transpose(1, 2)
 
@@ -125,10 +122,6 @@ class PositionwiseFeedForward(nn.Module):
         output = self.dropout(output)
 
         output = self.layer_norm(output + residual)
+        #  print('sub_layer pff output: ', output.shape)
 
         return output
-
-
-
-
-

@@ -232,35 +232,25 @@ class Dataset:
             dec_inputs.append(dec_input)
 
             if self.config.model_type == 'kg':
-                topk_facts_text = self.facts_topk_phrases.get(hash_value, None)
-                f_input = torch.zeros((self.config.f_topk, f_max_len),
+                words = self.facts_topk_phrases.get(hash_value, None)
+                if words is None:
+                    f_inputs_length.append(1)
+                else:
+                    f_inputs_length.append(len(words))
+                f_input = torch.zeros((self.config.f_topk),
                                       dtype=torch.long,
                                       device=self.device)
 
-                f_input_length = torch.ones(self.config.f_topk,
-                                            dtype=torch.long,
-                                            device=self.device)
-
-                if topk_facts_text is not None:
-                    topk_facts_ids = [self.vocab.words_to_id(
-                        text.split()) for text in topk_facts_text]
-                    f_topk_length.append(
-                        min(len(topk_facts_ids), self.config.f_topk))
-                    for fi, ids in enumerate(topk_facts_ids[:self.config.f_topk]):
-                        ids = ids[:min(f_max_len, len(ids))]
-                        f_input_length[fi] = len(ids)
-                        for fj, id in enumerate(ids):
-                            f_input[fi, fj] = id
-                else:
-                    f_topk_length.append(1)
+                if words is not None:
+                    ids = self.vocab.words_to_id(words)
+                    for fi, id in enumerate(ids):
+                        f_input[fi] = id
 
                 f_inputs.append(f_input)
-                f_inputs_length.append(f_input_length)
 
         # q [max_len, batch_size]
         q_inputs = torch.stack(q_inputs, dim=1)
-        q_inputs_length = torch.tensor(
-            q_inputs_length, dtype=torch.long, device=self.device)
+        q_inputs_length = torch.tensor(q_inputs_length, dtype=torch.long, device=self.device)
 
         if self.config.turn_type not in ['none', 'concat']:
             # [turn_num, max_len, batch_size]
@@ -270,16 +260,15 @@ class Dataset:
             # [turn_num, batch_size]
             c_inputs_length = torch.tensor(
                 c_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
+
         # decoder [max_len, batch_size]
         dec_inputs = torch.stack(dec_inputs, dim=1)
 
         if self.config.model_type == 'kg':
-            # [topk, batch_size, max_len]
-            f_inputs = torch.stack(f_inputs, dim=1)
-            f_inputs_length = torch.stack(f_inputs_length, dim=1)  # [f_topk, batch_size]
-
-            f_topk_length = torch.tensor(
-                f_topk_length, dtype=torch.long, device=self.device)
+            # [batch_size, f_topk]
+            f_inputs = torch.stack(f_inputs, dim=0)
+            # [batch_size]
+            f_inputs_length = torch.tensor(f_inputs_length, dtype=torch.long, device=self.device)
 
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
@@ -320,27 +309,26 @@ class Dataset:
                 if hit_count == 0:
                     continue
 
-                phrases = list()
+                words = set()
                 for hit in hits[:self.config.f_topk]:
                     hit_conversation_id = hit['_source']['conversation_id']
                     assert (conversation_id == hit_conversation_id), "%s != %s" % (
                         conversation_id, hit_conversation_id)
                     phrase = hit['_source']['text']
 
-                    """
-                    parts = [part for part in phrase.split('.') if len(part.split()) > 2]
-                    if len(parts) == 0:
-                        phrases.append(phrase)
-                    elif len(parts) == 1:
-                        phrases.append(parts[0] + ' .')
-                    else:
-                        #  phrases.append(parts[-1])
-                    phrases.append('.'.join(parts))
-                    """
+                    for word in phrase.split():
+                        words.add(word)
 
-                    phrases.append(phrase)
+                words_tfidf = []
+                for word in words:
+                    value = facts_tfidf_dict[conversation_id].get(word, 0.0)
+                    words_tfidf.append((word, value))
 
-                facts_topk_phrases[hash_value] = phrases
+                words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
+                words = [item[0] for item in words_tfidf[self.config.f_topk]]
+                print('words: ', words)
+
+                facts_topk_phrases[hash_value] = words
 
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
         self.facts_topk_phrases = facts_topk_phrases

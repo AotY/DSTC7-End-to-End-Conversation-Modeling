@@ -104,35 +104,18 @@ def model_opt(parser):
                        type=int,
                        default=300,
                        help='number of hidden units per layer')
+    
+    group.add_argument('--transformer_size', type=int, default=512)
 
-    group.add_argument('--latent_size',
-                       type=int,
-                       default=0,
-                       help='number of latent units per layer')
+    group.add_argument('--inner_hidden_size', type=int, default=2048)
 
-    group.add_argument("--kl_anneal",
-                       type=str,
-                       default='',
-                       help="KL Annealing function, select 'logistic' or 'step'.")
+    group.add_argument('--k_size', type=int, default=64)
 
-    group.add_argument("--kla_denom",
-                       type=int,
-                       default=10,
-                       help="For 'step' KL Annealing: Epoch denominator.")
+    group.add_argument('--v_size', type=int, default=64)
 
-    group.add_argument("--kla_k",
-                       type=float,
-                       default=0.00025,
-                       help="For 'logistic' KL Annealing: Steepness of Annealing function")
+    group.add_argument('--num_heads', type=int, default=8)
 
-    group.add_argument("--kla_x0",
-                       type=int,
-                       default=15000,
-                       help="For 'logistic' KL Annealing: Midpoint of Annealing function (i.e. weight=0.5)")
-
-
-
-    group.add_argument('--num_layers',
+    group.add_argument('--t_num_layers',
                        type=int,
                        help='number of layers')
 
@@ -143,10 +126,6 @@ def model_opt(parser):
     group.add_argument('--decoder_num_layers',
                        type=int,
                        help='number of layers')
-
-    group.add_argument('--cnn_kernel_width',
-                       type=int,
-                       help='Size of the convolving kernel.')
 
     group.add_argument('--dropout',
                        type=float,
@@ -206,9 +185,6 @@ def train_opt(parser):
 
     group.add_argument('--lr', type=float, default=0.001,
                        help='initial learning rate')
-
-    group.add_argument('--n_warmup_steps', type=int, default=3000,
-                       help='warm up step.')
 
     group.add_argument('--max_grad_norm',
                        type=float,
