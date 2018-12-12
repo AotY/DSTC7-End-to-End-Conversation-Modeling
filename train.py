@@ -156,11 +156,12 @@ def train_epochs(model,
                 is_stop = early_stopping.step(evaluate_loss)
 
                 if is_stop:
-                    avg_evaluate_loss = np.mean(evaluate_loss_list[-5:])
+                    avg_evaluate_loss = np.mean(evaluate_loss_list[-(args.es_patience + 2):])
                     avg_evaluate_accuracy = np.mean(
-                        evaluate_accuracy_list[-5:])
+                        evaluate_accuracy_list[-(args.es_patience + 2):])
                     logger_str = ' (avg evaluate)' \
                         'loss: {loss: 8.5f}, ppl: {ppl: 8.5f}, accuracy: {accu: 3.3f} %'.format(
+                            loss=avg_evaluate_loss,
                             ppl=math.exp(min(avg_evaluate_loss, 100)),
                             accu=100*avg_evaluate_accuracy
                         )
@@ -417,7 +418,7 @@ def build_optimizer(model):
         optim,
         mode='min',
         factor=0.1,
-        patience=5
+        patience=args.lr_patience
     )
 
     optimizer = ScheduledOptimizer(
@@ -573,7 +574,7 @@ if __name__ == '__main__':
     early_stopping = EarlyStopping(
         type='min',
         min_delta=0.001,
-        patience=3
+        patience=args.es_patience
     )
 
     '''if load checkpoint'''

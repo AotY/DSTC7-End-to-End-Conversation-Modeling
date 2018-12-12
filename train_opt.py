@@ -267,6 +267,14 @@ def train_opt(parser):
                         type=str,
                         help='seq2seq or kg model.')
 
+    group.add_argument('--lr_patience',
+                       type=int,
+                       help='Number of epochs with no improvement after which learning rate will be reduced')
+
+    group.add_argument('--es_patience',
+                       type=int,
+                       help='early stopping patience.')
+
     group.add_argument('--label_smoothing',
                        action='store_true',
                        help='loss label_smoothing.')
