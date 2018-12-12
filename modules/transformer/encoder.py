@@ -22,27 +22,34 @@ class Encoder(nn.Module):
     def __init__(
             self,
             config,
-            embedding):
+            embedding,
+            has_position=True):
 
         super(Encoder, self).__init__()
 
-        n_position = config.c_max_len + 1
-
         self.embedding = embedding
         self.embedding_size = embedding.embedding_dim
+        self.has_position = has_position
 
-        self.pos_embedding = nn.Embedding.from_pretrained(
-            get_sinusoid_encoding_table(n_position,
-                                        self.embedding_size,
-                                        padid=PAD_ID),
-            freeze=True
-        )
+        self.dropout = nn.Dropout(config.dropout)
+
+        if has_position:
+            n_position = config.c_max_len + 1
+            self.pos_embedding = nn.Embedding.from_pretrained(
+                get_sinusoid_encoding_table(n_position,
+                                            self.embedding_size,
+                                            padid=PAD_ID),
+                freeze=True
+            )
 
         self.layer_stack = nn.ModuleList([
             EncoderLayer(config) for _ in range(config.t_num_layers)]
         )
 
-    def forward(self, enc_inputs, enc_inputs_pos, return_attns=False):
+    def forward(self,
+                enc_inputs,
+                enc_inputs_pos,
+                return_attns=False):
         """
         Args:
             enc_inputs: [batch_size, max_len]
@@ -61,16 +68,17 @@ class Encoder(nn.Module):
         non_pad_mask = get_non_pad_mask(enc_inputs, PAD_ID)
         #  print('non_pad_mask: ', non_pad_mask)
 
-        embedded = self.embedding(enc_inputs) # [batch_size, max_len, embedding_size]
+        enc_embedded = self.embedding(enc_inputs) # [batch_size, max_len, embedding_size]
+        enc_embedded = self.dropout(enc_embedded)
 
-        pos_embedded = self.pos_embedding(enc_inputs_pos).to(enc_inputs.device)
+        if self.has_position:
+            pos_embedded = self.pos_embedding(enc_inputs_pos).to(enc_inputs.device)
+            #  print('embedded: ', embedded.shape)
+            #  print('pos_embedded: ', pos_embedded.shape)
+            enc_embedded = enc_embedded + pos_embedded
 
-        #  print('embedded: ', embedded.shape)
-        #  print('pos_embedded: ', pos_embedded.shape)
-
-        enc_embedded = embedded + pos_embedded
-        #  print('enc_embedded shape: ', enc_embedded.shape) # [b, max_len, embedding_size]
-        print('enc_embedded: ', enc_embedded)
+            #  print('enc_embedded shape: ', enc_embedded.shape) # [b, max_len, embedding_size]
+            #  print('enc_embedded: ', enc_embedded)
 
         enc_output = enc_embedded
         for enc_layer in self.layer_stack:

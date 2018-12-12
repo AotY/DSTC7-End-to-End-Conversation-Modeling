@@ -12,9 +12,14 @@ python train.py \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
-    --num_layers 2 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
+    --t_num_layers 4 \
+    --transformer_size 512 \
+    --inner_hidden_size 1024 \
+    --k_size 64 \
+    --v_size 64 \
+    --num_heads 6 \
     --dropout 0.1 \
     --bidirectional \
     --tied \
@@ -43,7 +48,7 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 5 \
     --start_epoch 1 \
-    --model_type seq2seq \
+    --model_type kg \
     --task train \
     --share_embedding \
     --offline_type elastic \
