@@ -276,8 +276,7 @@ class Dataset:
         if self.config.model_type == 'kg':
             # [topk, batch_size, max_len]
             f_inputs = torch.stack(f_inputs, dim=1)
-            f_inputs_length = torch.stack(
-                f_inputs_length, dim=1)  # [f_topk, batch_size]
+            f_inputs_length = torch.stack(f_inputs_length, dim=1)  # [f_topk, batch_size]
 
             f_topk_length = torch.tensor(
                 f_topk_length, dtype=torch.long, device=self.device)
@@ -322,7 +321,6 @@ class Dataset:
                     continue
 
                 phrases = list()
-                words = set()
                 for hit in hits[:self.config.f_topk]:
                     hit_conversation_id = hit['_source']['conversation_id']
                     assert (conversation_id == hit_conversation_id), "%s != %s" % (
@@ -339,21 +337,10 @@ class Dataset:
                         #  phrases.append(parts[-1])
                     phrases.append('.'.join(parts))
                     """
+
                     phrases.append(phrase)
-                    for word in phrase.split():
-                        words.add(word)
 
-                words_tfidf = []
-                for word in words:
-                    value = facts_tfidf_dict[conversation_id].get(word, 0.0)
-                    words_tfidf.append((word, value))
-
-                words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
-                words = [item[0] for item in words_tfidf[self.config.f_topk]]
-                print('words: ', words)
-
-                #  facts_topk_phrases[hash_value] = phrases
-                facts_topk_phrases[hash_value] = words
+                facts_topk_phrases[hash_value] = phrases
 
         pickle.dump(facts_topk_phrases, open(offline_filename, 'wb'))
         self.facts_topk_phrases = facts_topk_phrases
