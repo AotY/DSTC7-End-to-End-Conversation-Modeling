@@ -542,9 +542,11 @@ if __name__ == '__main__':
         offline_filename = os.path.join(
             args.save_path, 'facts_topk_phrases.%s.pkl' % args.offline_type)
 
+        facts_tfidf_dict = pickle.load(open('./data/facts_tfidf_dict.pkl', 'rb'))
         if args.offline_type in ['elastic', 'elastic_tag']:
             dataset.build_similarity_facts_offline(
                 offline_filename=offline_filename,
+                facts_tfidf_dict=facts_tfidf_dict
             )
         elif args.offline_type == 'fasttext':
             facts_dict = None
