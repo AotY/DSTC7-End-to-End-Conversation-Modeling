@@ -48,7 +48,7 @@ args = parser.parse_args()
 # logger file
 time_str = time.strftime('%Y_%m_%d_%H:%M')
 args.log_path = args.log_path.format(
-    args.model_type, args.turn_type, args.turn_min, args.turn_num, time_str)
+    args.model_type, args.enc_type, args.c_min, args.c_max, time_str)
 logger.info('log_path: {}'.format(args.log_path))
 
 device = torch.device(args.device)
@@ -58,14 +58,16 @@ if args.seed:
     torch.manual_seed(args.seed)
 
 # update max_len
-if args.turn_type == 'concat':
-    args.q_max_len = args.q_max_len + args.c_max_len * args.turn_num
+if args.enc_type == 'concat':
+    args.q_max_len = args.q_max_len + args.c_max_len * args.c_max
 
 logger.info('c_max_len: %d' % args.c_max_len)
 logger.info('q_max_len: %d' % args.q_max_len)
 logger.info('r_max_len: %d' % args.r_max_len)
 logger.info('f_max_len: %d' % args.f_max_len)
 
+# update turn min
+args.turn_num = args.c_max + 1
 
 def train_epochs(model,
                  dataset,
@@ -87,20 +89,15 @@ def train_epochs(model,
 
         for load in range(1, max_load + 1):
             # load data
-            dec_inputs, \
-                q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_length, c_turn_length, \
-                f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data(
-                    'train')
+            dec_inputs, enc_inputs, enc_inputs_length, \
+                enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('train')
 
             # train and get cur loss
             loss, n_correct, n_word = train(model,
-                                            q_inputs,
-                                            q_inputs_length,
-                                            c_inputs,
-                                            c_inputs_length,
-                                            c_turn_length,
+                                            enc_inputs,
+                                            enc_inputs_length,
+                                            enc_turn_length,
                                             dec_inputs,
                                             f_inputs,
                                             f_inputs_length,
@@ -184,8 +181,8 @@ def train_epochs(model,
         save_checkpoint(state=save_state,
                         is_best=False,
                         filename=os.path.join(args.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
-                                              (epoch, args.model_type, args.turn_type,
-                                               args.turn_min, args.turn_num, time_str)))
+                                              (epoch, args.model_type, args.enc_type,
+                                               args.c_min, args.c_max, time_str)))
         # generate sentence
         logger.info('generate...')
         decode(model, dataset, epoch)
@@ -195,11 +192,9 @@ def train_epochs(model,
 
 
 def train(model,
-          q_inputs,
-          q_inputs_length,
-          c_inputs,
-          c_inputs_length,
-          c_turn_length,
+          enc_inputs,
+          enc_inputs_length,
+          enc_turn_length,
           dec_inputs,
           f_inputs,
           f_inputs_length,
@@ -216,11 +211,9 @@ def train(model,
 
     # [max_len, batch_size, vocab_size]
     dec_outputs = model(
-        q_inputs,
-        q_inputs_length,
-        c_inputs,
-        c_inputs_length,
-        c_turn_length,
+        enc_inputs,
+        enc_inputs_length,
+        enc_turn_length,
         dec_inputs[:-1, :],
         f_inputs,
         f_inputs_length,
@@ -264,19 +257,14 @@ def evaluate(model,
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             # load data
-            dec_inputs, \
-                q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_length, c_turn_length, \
-                f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data(
-                    'test')
+            dec_inputs, enc_inputs, enc_inputs_length, \
+                enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
 
             dec_outputs = model(
-                q_inputs,
-                q_inputs_length,
-                c_inputs,
-                c_inputs_length,
-                c_turn_length,
+                enc_inputs,
+                enc_inputs_length,
+                enc_turn_length,
                 dec_inputs[:-1, :],
                 f_inputs,
                 f_inputs_length,
@@ -306,20 +294,16 @@ def decode(model, dataset, epoch):
     max_load = int(np.floor(dataset._size_dict['eval'] / args.batch_size))
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
-            dec_inputs, \
-                q_inputs, q_inputs_length, \
-                c_inputs, c_inputs_length, c_turn_length, \
-                f_inputs, f_inputs_length, f_topk_length, \
+            dec_inputs, enc_inputs, enc_inputs_length, \
+                enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
                 subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
 
             # greedy: [batch_size, r_max_len]
             # beam_search: [batch_sizes, best_n, len]
-            greedy_outputs, beam_outputs, beam_length, topk_outputs, topk_length = model.decode(
-                q_inputs,
-                q_inputs_length,
-                c_inputs,
-                c_inputs_length,
-                c_turn_length,
+            greedy_outputs, beam_outputs, beam_length = model.decode(
+                enc_inputs,
+                enc_inputs_length,
+                enc_turn_length,
                 f_inputs,
                 f_inputs_length,
                 f_topk_length
@@ -332,26 +316,20 @@ def decode(model, dataset, epoch):
 
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   decode_type='beam_search')
-
-            topk_texts = None
-            if topk_outputs is not None:
-                topk_texts = dataset.generating_texts(topk_outputs, decode_type='beam_search')
-
             # save sentences
             dataset.save_generated_texts(
                 epoch,
                 subreddit_names,
                 conversation_ids,
                 hash_values,
-                q_inputs,
-                c_inputs,
+                enc_inputs,
                 f_inputs,
                 dec_inputs[:-1, :],
                 greedy_texts,
                 beam_texts,
                 topk_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
-                    args.model_type, epoch, args.turn_type, args.turn_min, args.turn_num, time_str)),
+                    args.model_type, epoch, args.enc_type, args.c_min, args.c_max, time_str)),
 				time_str
             )
 

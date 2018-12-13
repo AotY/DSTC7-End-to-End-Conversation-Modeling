@@ -42,15 +42,19 @@ def data_set_opt(parser):
                        type=int,
                        help='response max len.')
 
-    group.add_argument('--turn_num', type=int,
+    group.add_argument('--c_max', type=int,
                        default=1,
                        help='input of the model including how many turn dialogue.')
 
-    group.add_argument('--turn_min', type=int,
+    group.add_argument('--c_min', type=int,
                        default=1,
                        help='minimal turn num.')
 
-    group.add_argument('--turn_type',
+    group.add_argument('--turn_min', type=int,
+                       default=4,
+                       help='turn num.')
+
+    group.add_argument('--enc_type',
                        type=str,
                        default='concat',
                        help='''how to process conversation historys.

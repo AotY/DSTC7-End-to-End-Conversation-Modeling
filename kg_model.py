@@ -5,16 +5,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.normal_cnn import NormalCNN
-from modules.normal_encoder import NormalEncoder
+from modules.encoder import NormalEncoder
 from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
 import modules.transformer as transformer
-#  from modules.topk_decoder import TopKDecoder
-#  from modules.attention import Attention
-#  from modules.utils import init_linear_wt, sequence_mask
+from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
@@ -52,41 +50,14 @@ class KGModel(nn.Module):
             PAD_ID
         )
 
-        # c_encoder
-        self.c_encoder = None
-        #  if config.turn_type in ['none', 'concat']:
-        if self.config.turn_type.count('none') != 0 or \
-            self.config.turn_type.count('concat') != 0:
-            pass
-        elif config.turn_type == 'self_attn':
-            self.c_encoder = SelfAttentive(
-                config,
-                enc_embedding
-            )
-        elif config.turn_type == 'cnn':
-            self.c_encoder = NormalCNN(
-                config,
-                enc_embedding,
-                type='context'
-            )
-        else:
-            self.c_encoder = NormalEncoder(
-                config,
-                enc_embedding
-            )
-
-        # q encoder
-        self.q_encoder = NormalEncoder(
+        # c,q encoder
+        self.encoder = NormalEncoder(
             config,
             enc_embedding
         )
 
         self.f_encoder = None
         if config.model_type == 'kg':
-            #  self.f_encoder = NormalCNN(
-                #  config,
-                #  enc_embedding
-            #  )
             """
             self.f_encoder = transformer.Encoder(
                 config,
@@ -96,70 +67,81 @@ class KGModel(nn.Module):
             """
             self.f_encoder = enc_embedding
 
-        # encoder hidden_state -> decoder hidden_state
-        self.reduce_state = ReduceState(config.rnn_type)
-
         # session encoder
-        if config.turn_type == 'session':
+        if config.enc_type.endswith('seq'):
             self.session_encoder = SessionEncoder(config)
 
-        """
-        if config.turn_type not in ['none', 'concat']:
-            self.c_attn = Attention(config.hidden_size)
-            self.c_linear = nn.Linear(config.hidden_size * 2, config.hidden_size)
-            init_linear_wt(self.c_linear)
-        """
+        if config.enc_type.count('concat') != 0 and \
+            config.enc_type != 'concat':
+            self.concat_linear = nn.Linear(
+                (config.c_max + 1) * config.hidden_size,
+                config.hidden_size
+            )
+            init_linear_wt(self.concat_linear)
 
         # decoder
         self.decoder = LuongAttnDecoder(config, dec_embedding)
 
-        # encoder embedding share
-        if self.c_encoder is not None:
-            self.c_encoder.embedding.weight = self.q_encoder.embedding.weight
-
         if self.f_encoder is not None:
-            #  self.f_encoder.embedding.weight = self.q_encoder.embedding.weight
-            self.f_encoder.weight = self.q_encoder.embedding.weight
+            #  self.f_encoder.embedding.weight = self.encoder.embedding.weight
+            self.f_encoder.weight = self.encoder.embedding.weight
 
         # encoder, decode embedding share
         if config.share_embedding:
-            self.decoder.embedding.weight = self.q_encoder.embedding.weight
+            self.decoder.embedding.weight = self.encoder.embedding.weight
 
     def forward(self,
-                q_inputs,
-                q_inputs_length,
-                c_inputs,
-                c_inputs_length,
-                c_turn_length,
+                enc_inputs,
+                enc_inputs_length,
+                enc_turn_length,
                 dec_inputs,
                 f_inputs,
                 f_inputs_length,
                 f_topk_length):
         '''
         Args:
-            q_inputs: [max_len, batch_size]
-
-            c_inputs: # [turn_num, max_len, batch_size] [c1, c2, ..., q]
-            c_inputs_length: [turn_num, batch_size]
-            c_turn_length: [batch_size]
+            enc_inputs: [max_len, batch_size] or [c_max + 1, max_len, batch_size]
+            enc_inputs_length: [batch_size] or [c_max + 1, batch_size]
+            enc_turn_length: [] or [batch_size]
 
             dec_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
 
             f_inputs: [f_max_len, batch_size, topk] or [batch_size, f_topk]
             f_inputs_length: [f_max_len, batch_size, topk] or [batch_size]
             f_topk_length: [batch_size]
-            f_embedded_inputs_length: [batch_size]
         '''
-        c_enc_outputs = None
-        #  if self.config.turn_type not in ['none', 'concat']:
-        if self.config.turn_type.count('none') == 0 and \
-            self.config.turn_type.count('concat') == 0:
-            # [turn_num, batch_size, hidden_size]
-            c_enc_outputs = self.c_forward(
-                c_inputs,
-                c_inputs_length,
-                c_turn_length,
+        enc_type = self.config.enc_type
+        if enc_type == 'none' or \
+            enc_type == 'concat':
+            # [max_len, batch_size]
+            enc_outputs, enc_hidden = self.encoder(
+                enc_inputs,
+                enc_inputs_length
             )
+
+            dec_input = enc_hidden
+        else:
+            # [turn_num, batch_size, hidden_size]
+            enc_outputs, enc_hidden = self.utterance_forward(
+                enc_inputs,
+                enc_inputs_length
+            )
+
+            if enc_type.count('seq') != 0:
+                # [turn_num, batch_size, hidden_size]
+                enc_outputs, enc_hidden = self.inter_utterance_forward(
+                    enc_outputs,
+                    enc_turn_length
+                )
+
+            if enc_type.count('sum') != 0:
+                # [1, batch_size, hidden_size]
+                dec_input = enc_outputs.sum(dim=0).unsqueeze(0)
+            elif enc_type.count('concat') != 0:
+                dec_input = enc_outputs.transpose(0, 1).view(self.config.c_max+1, -1)
+                dec_input = self.concat_linear(dec_input)
+            else:
+                dec_input = enc_hidden
 
         # fact encoder
         f_enc_outputs = None
@@ -170,38 +152,13 @@ class KGModel(nn.Module):
                 f_topk_length
             )
 
-        # [max_len, batch_size, hidden_size]
-        q_enc_outputs, q_encoder_hidden = self.q_encoder(
-            q_inputs,
-            q_inputs_length
-        )
-
         # init decoder hidden [num_layers, batch_size, hidden_size]
-        dec_hidden = self.reduce_state(q_encoder_hidden)
-
-        """
-        if c_enc_outputs is not None:
-            # q_enc_outputs, c_enc_outputs attention
-            c_context, _ = self.c_attn(dec_hidden, c_enc_outputs)
-            #  print('c_context: ', c_context.shape)
-            #  print('dec_hidden: ', dec_hidden.shape)
-
-            dec_hidden = torch.cat((dec_hidden, c_context), dim=2)
-            dec_hidden = self.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
-
-            #  dec_hidden = torch.add(dec_hidden, c_context)
-
-            c_enc_outputs = None
-        """
+        dec_hidden = dec_input.repeat(self.config.decoder_num_layers, 1, 1)
 
         # decoder
         dec_outputs, dec_hidden, _ = self.decoder(
             dec_inputs,
             dec_hidden,
-            q_enc_outputs=q_enc_outputs,
-            q_enc_length=q_inputs_length,
-            c_enc_outputs=c_enc_outputs,
-            c_enc_length=c_turn_length,
             f_enc_outputs=f_enc_outputs,
             f_enc_length=f_inputs_length
         )
@@ -215,25 +172,44 @@ class KGModel(nn.Module):
     '''decode'''
 
     def decode(self,
-               q_inputs,
-               q_inputs_length,
-               c_inputs,
-               c_inputs_length,
-               c_turn_length,
+               enc_inputs,
+               enc_inputs_length,
+               enc_turn_length,
                f_inputs,
                f_inputs_length,
                f_topk_length):
 
-        c_enc_outputs = None
-        #  if self.config.turn_type not in ['none', 'concat']:
-        if self.config.turn_type.count('none') == 0 and \
-            self.config.turn_type.count('concat') == 0:
-            # [turn_num, batch_size, hidden_size]
-            c_enc_outputs = self.c_forward(
-                c_inputs,
-                c_inputs_length,
-                c_turn_length,
+        enc_type = self.config.enc_type
+        if enc_type == 'none' or \
+            enc_type == 'concat':
+            # [max_len, batch_size]
+            enc_outputs, enc_hidden = self.encoder(
+                enc_inputs,
+                enc_inputs_length
             )
+            dec_input = enc_hidden 
+        else:
+            # [turn_num, batch_size, hidden_size]
+            enc_outputs, enc_hidden = self.utterance_forward(
+                enc_inputs,
+                enc_inputs_length
+            )
+
+            if enc_type.count('seq') != 0:
+                # [turn_num, batch_size, hidden_size]
+                enc_outputs, enc_hidden = self.inter_utterance_forward(
+                    enc_outputs,
+                    enc_turn_length
+                )
+
+            if enc_type.count('sum') != 0:
+                # [1, batch_size, hidden_size]
+                dec_input = enc_outputs.sum(dim=0).unsqueeze(0)
+            elif enc_type.count('concat') != 0:
+                dec_input = enc_outputs.transpose(0, 1).view(self.config.c_max+1, -1)
+                dec_input = self.concat_linear(dec_input)
+            else:
+                dec_input = enc_hidden
 
         # fact encoder
         f_enc_outputs = None
@@ -244,84 +220,25 @@ class KGModel(nn.Module):
                 f_topk_length
             )
 
-        # query forward
-        q_enc_outputs, q_encoder_hidden = self.q_encoder(
-            q_inputs,
-            q_inputs_length
-        )
-
-        # init decoder hidden
-        dec_hidden = self.reduce_state(q_encoder_hidden)
-
-        """
-        if c_enc_outputs is not None:
-            # q_enc_outputs, c_enc_outputs attention
-            c_context, _ = self.c_attn(dec_hidden, c_enc_outputs)
-
-            dec_hidden = torch.cat((dec_hidden, c_context), dim=2)
-            dec_hidden = self.c_linear(dec_hidden) # [num_layers, batch_size, hidden_size]
-
-            #  dec_hidden = torch.add(dec_hidden, c_context)
-
-            c_enc_outputs = None
-        """
+        dec_hidden = dec_input.repeat(self.config.decoder_num_layers, 1, 1)
 
         # decoder
-        """
-        topk_decoder = TopKDecoder(
-            self.config,
-            self.decoder,
-            self.device
-        ).to(self.device)
-
-        metadata = topk_decoder(
-            dec_hidden,
-            q_enc_outputs,
-            q_inputs_length,
-            c_enc_outputs,
-            c_turn_length,
-            f_enc_outputs,
-            f_topk_length
-        )
-        topk_outputs = torch.stack(metadata['topk_sequence'], dim=0)
-        #  print('tok_outputs: ', topk_outputs.shape)
-        topk_outputs = topk_outputs.squeeze(3).permute(1, 2, 0)
-        #  print(topk_outputs.shape) # [batch_size, topk, max_len]
-        topk_length = metadata['topk_length']
-        #  print(topk_outputs)
-        topk_outputs = topk_outputs.tolist()
-        """
-        topk_outputs = None
-        topk_length = None
-
         beam_outputs, beam_score, beam_length = self.beam_decode(
             dec_hidden,
-            q_enc_outputs,
-            q_inputs_length,
-            c_enc_outputs,
-            c_turn_length,
             f_enc_outputs,
             f_inputs_length
         )
 
         greedy_outputs = self.greedy_decode(
             dec_hidden,
-            q_enc_outputs,
-            q_inputs_length,
-            c_enc_outputs,
-            c_turn_length,
             f_enc_outputs,
             f_inputs_length
         )
 
-        return greedy_outputs, beam_outputs, beam_length, topk_outputs, topk_length
+        return greedy_outputs, beam_outputs, beam_length
 
     def greedy_decode(self,
                       dec_hidden,
-                      q_enc_outputs,
-                      q_inputs_length,
-                      c_enc_outputs,
-                      c_enc_length,
                       f_enc_outputs,
                       f_enc_length):
 
@@ -333,10 +250,6 @@ class KGModel(nn.Module):
             output, dec_hidden,  _ = self.decoder(
                 dec_input,
                 dec_hidden,
-                q_enc_outputs=q_enc_outputs,
-                q_enc_length=q_inputs_length,
-                c_enc_outputs=c_enc_outputs,
-                c_enc_length=c_enc_length,
                 f_enc_outputs=f_enc_outputs,
                 f_enc_length=f_enc_length
             )
@@ -352,10 +265,6 @@ class KGModel(nn.Module):
 
     def beam_decode(self,
                     dec_hidden,
-                    q_enc_outputs,
-                    q_inputs_length,
-                    c_enc_outputs,
-                    c_enc_length,
                     f_enc_outputs,
                     f_enc_length):
         '''
@@ -376,13 +285,6 @@ class KGModel(nn.Module):
 
         # [num_layers, batch_size * beam_size, hidden_size]
         dec_hidden = dec_hidden.repeat(1, beam_size, 1)
-
-        q_enc_outputs = q_enc_outputs.repeat(1, beam_size, 1)
-        q_inputs_length = q_inputs_length.repeat(beam_size)
-
-        if c_enc_outputs is not None:
-            c_enc_outputs = c_enc_outputs.repeat(1, beam_size, 1)
-            c_enc_length = c_enc_length.repeat(beam_size)
 
         if f_enc_outputs is not None:
             f_enc_outputs = f_enc_outputs.repeat(1, beam_size, 1)
@@ -410,10 +312,6 @@ class KGModel(nn.Module):
             output, dec_hidden, _ = self.decoder(
                 dec_input.view(1, -1),
                 dec_hidden,
-                q_enc_outputs=q_enc_outputs,
-                q_enc_length=q_inputs_length,
-                c_enc_outputs=c_enc_outputs,
-                c_enc_length=c_enc_length,
                 f_enc_outputs=f_enc_outputs,
                 f_enc_length=f_enc_length
             )
@@ -458,39 +356,39 @@ class KGModel(nn.Module):
 
         return prediction, final_score, length
 
-    def c_forward(self,
-                  c_inputs,
-                  c_inputs_length,
-                  c_turn_length):
+    def utterance_forward(self,
+                           enc_inputs,
+                           enc_inputs_length):
         """
         Args:
-            c_inputs: # [turn_num, max_len, batch_size]  [c1, c2, ..., q]
-            c_inputs_length: [turn_num, batch_size]
-            c_turn_length: [batch_size]
-        turn_type: [max_len, turn_num, hidden_size]
-        """
-        c_enc_outputs = list()
-        # query encode separately.
-        for ti in range(self.config.turn_num):
-            inputs = c_inputs[ti, :, :]  # [max_len, batch_size]
-            inputs_length = c_inputs_length[ti, :]  # [batch_size]
+            enc_inputs: [max_len, batch_size] or [c_max + 1, max_len, batch_size]
+            enc_inputs_length: [batch_size] or [c_max + 1, batch_size]
 
-            if self.config.turn_type == 'cnn':
-                inputs = inputs.transpose(0, 1)
-            outputs, hidden_state = self.c_encoder(inputs, inputs_length, sort=False)
-
-            c_enc_outputs.append(outputs[-1].unsqueeze(0))
-
-        # [turn_num, batch_size, hidden_size]
-        c_enc_outputs = torch.cat(c_enc_outputs, dim=0)
-        #  print('c_enc_outputs: ', c_enc_outputs.shape)
         """
-        if self.config.turn_type == 'session':
-            # [turn_num, batch_size, hidden_size]
-            session_outputs, session_hidden_state = self.session_encoder(c_enc_outputs, c_turn_length)
-            return session_outputs
-        """
-        return c_enc_outputs
+        utterance_outputs = list()
+
+        hidden_state = None
+        for ti in range(self.config.c_max + 1):
+            inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
+            inputs_length = enc_inputs_length[ti, :]  # [batch_size]
+
+            outputs, hidden_state = self.encoder(inputs, inputs_length, hidden_state)
+
+            utterance_outputs.append(outputs[-1].unsqueeze(0))
+
+        # [c_max + 1, batch_size, hidden_size]
+        utterance_outputs = torch.cat(utterance_outputs, dim=0)
+
+        return utterance_outputs, hidden_state
+
+    def inter_utterance_forward(self,
+                                 utterance_outputs,
+                                 enc_turn_length):
+        # [c_max + 1, batch_size, hidden_size]
+        outputs, hidden_state = self.session_encoder(utterance_outputs, enc_turn_length)
+
+        return outputs, hidden_state
+
 
     def f_forward(self,
                   f_inputs,
