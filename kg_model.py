@@ -10,11 +10,11 @@ from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
-#  from modules.topk_decoder import TopKDecoder
 from modules.beam import Beam
+import modules.transformer as transformer
+#  from modules.topk_decoder import TopKDecoder
 #  from modules.attention import Attention
 #  from modules.utils import init_linear_wt, sequence_mask
-import modules.transformer as transformer
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
