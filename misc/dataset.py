@@ -44,7 +44,7 @@ class Dataset:
     def read_data(self):
         self.logger.info('read data...')
         _data_dict_path = os.path.join(
-            self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.turn_min, self.config.turn_num))
+            self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
         if not os.path.exists(_data_dict_path):
             datas = []
             batch_size = self.config.batch_size
@@ -71,7 +71,6 @@ class Dataset:
                     query_ids = self.vocab.words_to_id(words)
                     if len(query_ids) < min_len:
                         continue
-                    query_ids = query_ids[-min(q_max_len, len(query_ids)):]
 
                     # response
                     words = [word for word in response.split()
@@ -79,15 +78,14 @@ class Dataset:
                     response_ids = self.vocab.words_to_id(words)
                     if len(response_ids) < min_len:
                         continue
-                    response_ids = response_ids[:min(r_max_len, len(response_ids))]
 
                     # context split by EOS
                     context_sentences = self.parser_context(context)
-                    if context_sentences is None or len(context_sentences) < self.config.turn_min:
+                    if context_sentences is None or len(context_sentences) < self.config.c_min:
                         continue
 
                     context_sentences = context_sentences[-min(
-                        self.config.turn_num, len(context_sentences)):]
+                        self.config.c_max, len(context_sentences)):]
                     #  print('context: ', context)
                     #  print('context_sentences: ', context_sentences)
 
@@ -171,12 +169,9 @@ class Dataset:
             else:
                 self.reset_data(task, False)
 
-        q_inputs = list()
-        q_inputs_length = list()
-
-        c_inputs = list()
-        c_inputs_length = list()
-        c_turn_length = list()
+        enc_inputs = list()
+        enc_inputs_length = list()
+        enc_turn_length = list()
 
         dec_inputs = list()
 
@@ -198,38 +193,42 @@ class Dataset:
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
-            if self.config.turn_type.count('none') != 0 and \
-                self.config.turn_type.count('concat') != 0:
-                # c_input: [turn_num, c_max_len]
-                c_turn_length.append(len(context_ids))
-                c_inputs_length.append(list([1]) * (self.config.turn_num))
-
-                context_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
-
-                context_ids = torch.LongTensor([
-                    ids + [PAD_ID] * (c_max_len - len(ids))
-                    for ids in context_ids
-                ]).to(self.device)
-                c_input = torch.zeros((self.config.turn_num, c_max_len),
-                                      dtype=torch.long).to(self.device)
-                c_input[:len(context_ids), :] = context_ids
-                c_inputs.append(c_input)
-
-            if self.config.turn_type.count('concat') != 0:
+            if self.config.enc_type == 'none':
+                query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                enc_inputs_length.append(len(query_ids))
+                enc_input = torch.LongTensor(query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
+                enc_inputs.append(enc_input)
+            elif self.config.enc_type == 'concat':
                 concat_ids = []
                 for ids in context_ids:
                     concat_ids.extend(ids)
                 concat_ids.extend(query_ids)
-                query_ids = concat_ids[-min(q_max_len, len(concat_ids)):]
+                concat_ids = concat_ids[-min(q_max_len, len(concat_ids)):]
+                enc_inputs_length.append(len(concat_ids))
+                enc_input = torch.LongTensor(concat_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
+                enc_inputs.append(enc_input)
+            else:
+                enc_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
+                query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                enc_ids.append(query_ids)
 
-            # q inputs
-            q_inputs_length.append(len(query_ids))
-            #  print('query_ids: ', query_ids)
-            q_input = torch.LongTensor(
-                query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
-            q_inputs.append(q_input)
+                enc_turn_length.append(len(enc_ids))
+                enc_input_length = [1] * self.config.turn_num
+                pad_enc_ids = []
+                for idx, ids in enumerate(enc_ids):
+                    enc_input_length[idx] = len(ids)
+                    ids = ids + [PAD_ID] * (q_max_len - len(ids))
+                    pad_enc_ids.append(pad_enc_ids)
+                enc_inputs_length.append(enc_input_length)
+
+                enc_ids = torch.LongTensor(pad_enc_ids).to(self.device)
+                enc_input = torch.zeros((self.config.turn_num, q_max_len),
+                                      dtype=torch.long).to(self.device)
+                enc_input[:len(pad_enc_ids), :] = enc_ids
+                c_inputs.append(enc_input)
 
             # dec_inputs
+            response_ids = response_ids[:min(r_max_len, len(response_ids))]
             dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID]
                                          + [PAD_ID] * (r_max_len - len(response_ids))).to(self.device)
             dec_inputs.append(dec_input)
@@ -251,20 +250,23 @@ class Dataset:
 
                 f_inputs.append(f_input)
 
-        # q [max_len, batch_size]
-        q_inputs = torch.stack(q_inputs, dim=1)
-        q_inputs_length = torch.tensor(q_inputs_length, dtype=torch.long, device=self.device)
 
-        #  if self.config.turn_type not in ['none', 'concat']:
-        if self.config.turn_type.count('none') != 0 and \
-            self.config.turn_type.count('concat') != 0:
+        if self.config.enc_type == 'none' or \
+            self.config.enc_type == 'concat':
+            # [max_len, batch_size]
+            enc_inputs = torch.stack(enc_inputs, dim=1)
+            enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
+        else:
             # [turn_num, max_len, batch_size]
-            c_inputs = torch.stack(c_inputs, dim=2)
-            c_turn_length = torch.tensor(
-                c_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
+            enc_inputs = torch.stack(enc_inputs, dim=2)
+
             # [turn_num, batch_size]
-            c_inputs_length = torch.tensor(
-                c_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
+            enc_inputs_length = torch.tensor(
+                enc_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
+
+            # [batch_size]
+            enc_turn_length = torch.tensor(
+                enc_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
 
         # decoder [max_len, batch_size]
         dec_inputs = torch.stack(dec_inputs, dim=1)
@@ -278,9 +280,8 @@ class Dataset:
         # update _indicator_dict[task]
         self._indicator_dict[task] = cur_indicator
 
-        return dec_inputs, \
-            q_inputs, q_inputs_length, \
-            c_inputs, c_inputs_length, c_turn_length, \
+        return dec_inputs, enc_inputs, \
+            enc_inputs_length, enc_turn_length, \
             f_inputs, f_inputs_length, f_topk_length, \
             subreddit_names, conversation_ids, hash_values
 
@@ -526,47 +527,41 @@ class Dataset:
     def save_generated_texts(self,
                              epoch,
                              names,
-                             ids,
+                             conversation_ids,
                              hash_values,
-                             q_inputs,
-                             c_inputs,
+                             enc_inputs,
                              f_inputs,
-                             r_inputs,
+                             dec_inputs,
                              greedy_texts,
                              beam_texts,
                              topk_texts,
                              filename,
                              time_str):
 
-        q_inputs = q_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
-        r_inputs = r_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
+        enc_inputs = enc_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
+        dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
 
-        if len(c_inputs) == 0:
-            c_inputs = [None] * self.config.batch_size
+        if len(enc_inputs) == 0:
+            enc_inputs = [None] * self.config.batch_size
         else:
-            # c [batch_size, turn_num, max_len]
-            c_inputs = c_inputs.permute(2, 0, 1).tolist()
+            # c [batch_size, c_max, max_len]
+            enc_inputs = enc_inputs.permute(2, 0, 1).tolist()
 
-        if len(f_inputs) == 0:
+        if f_inputs is None or len(f_inputs) == 0:
             f_inputs = [None] * self.config.batch_size
         else:
             # [batch_size, topk, max_len]
             #  f_inputs = f_inputs.transpose(0, 1).tolist()
-
             # [batch_size, f_topk]
             f_inputs = f_inputs.tolist()
 
-
-        if topk_texts is None:
-            topk_texts = [None] * self.config.batch_size
-
         ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
-            self.config.turn_min, self.config.turn_num
+            self.config.c_min, self.config.c_max
         ))
 
         predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s_%s_%s.txt' % (
-            self.config.model_type, self.config.turn_type, epoch, \
-            self.config.turn_min, self.config.turn_num, time_str
+            self.config.model_type, self.config.enc_type, epoch, \
+            self.config.c_min, self.config.c_max, time_str
         ))
 
         ground_truth_f = open(ground_truth_path, 'w')
@@ -574,33 +569,27 @@ class Dataset:
 
         with open(filename, 'w', encoding='utf-8') as f:
             for subreddit_name, conversation_id, hash_value, \
-                q_ids, c_ids, f_ids, r_ids, g_text, b_text, t_text in \
+                enc_ids, f_ids, dec_ids, g_text, b_text in \
                     zip(names,
-                        ids,
+                        conversation_ids,
                         hash_values,
-                        q_inputs,
-                        c_inputs,
+                        enc_inputs,
                         f_inputs,
-                        r_inputs,
                         greedy_texts,
-                        beam_texts,
-                        topk_texts):
+                        beam_texts):
 
                 f.write('subreddit_name: %s\n' % subreddit_name)
                 f.write('conversation_id: %s\n' % conversation_id)
                 f.write('hash_value: %s\n' % hash_value)
 
-                if c_ids is not None:
-                    for ci, ids in enumerate(c_ids):
+                if enc_ids is not None:
+                    for i, ids in enumerate(enc_ids):
                         text = self.vocab.ids_to_text(ids)
-                        f.write('c %d: %s\n' % (ci, text))
+                        f.write('> %d: %s\n' % (ci, text))
 
-                query_text = self.vocab.ids_to_text(q_ids)
-                f.write('query: %s\n' % query_text)
-
-                response_text = self.vocab.ids_to_text(r_ids)
-                f.write('\n')
+                response_text = self.vocab.ids_to_text(dec_ids)
                 f.write('response: %s\n' % response_text)
+                f.write('\n')
 
                 f.write('greedy: %s\n' % g_text)
 
@@ -611,21 +600,11 @@ class Dataset:
                 for i, text in enumerate(b_text):
                     f.write('beam %d: %s\n' % (i, text))
 
-                if t_text is not None:
-                    for i, text in enumerate(t_text):
-                        f.write('topk %d: %s\n' % (i, text))
-
-                """
                 if f_ids is not None:
-                    for fi, ids in enumerate(f_ids):
-                        text = self.vocab.ids_to_text(ids)
-                        f.write('fact %d: %s\n' % (fi, text))
-                """
-                f_text = self.vocab.ids_to_text(f_ids)
-                f.write('fact : %s\n' % f_text)
+                    f_text = self.vocab.ids_to_text(f_ids)
+                    f.write('fact : %s\n' % f_text)
 
                 f.write('-' * 70 + '\n')
 
         ground_truth_f.close()
         predicted_f.close()
-
