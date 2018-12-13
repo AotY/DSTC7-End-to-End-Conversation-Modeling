@@ -26,7 +26,7 @@ class SessionEncoder(nn.Module):
             config.rnn_type,
             input_size=config.hidden_size,
             hidden_size=config.hidden_size // self.bidirection_num,
-            num_layers=config.num_layers,
+            num_layers=config.encoder_num_layers,
             bidirectional=config.bidirectional,
             dropout=config.dropout
         )

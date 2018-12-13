@@ -42,7 +42,7 @@ class LuongAttnDecoder(nn.Module):
             config.rnn_type,
             input_size=self.embedding_size,
             hidden_size=config.hidden_size,
-            num_layers=config.num_layers,
+            num_layers=config.decoder_num_layers,
             dropout=config.dropout
         )
 
@@ -115,6 +115,7 @@ class LuongAttnDecoder(nn.Module):
         output = torch.cat(output_list, dim=2)
 
         # [, batch_size, vocab_size]
+        #  print('output: ', output.shape)
         output = self.linear(output)
 
         return output, dec_hidden, q_attn_weights
