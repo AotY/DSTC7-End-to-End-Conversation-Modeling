@@ -199,7 +199,8 @@ class Dataset:
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
-            if self.config.turn_type not in ['none', 'concat']:
+            if self.config.turn_type.count('none') != 0 and \
+                self.config.turn_type.count('concat') != 0:
                 # c_input: [turn_num, c_max_len]
                 c_turn_length.append(len(context_ids))
                 c_inputs_length.append(list([1]) * (self.config.turn_num))
@@ -213,7 +214,7 @@ class Dataset:
                 c_input[:len(context_ids), :] = context_ids
                 c_inputs.append(c_input)
 
-            if self.config.turn_type == 'concat':
+            if self.config.turn_type.count('concat') != 0:
                 concat_ids = []
                 for ids in context_ids:
                     concat_ids.extend(ids)
@@ -253,7 +254,9 @@ class Dataset:
         q_inputs = torch.stack(q_inputs, dim=1)
         q_inputs_length = torch.tensor(q_inputs_length, dtype=torch.long, device=self.device)
 
-        if self.config.turn_type not in ['none', 'concat']:
+        #  if self.config.turn_type not in ['none', 'concat']:
+        if self.config.turn_type.count('none') != 0 and \
+            self.config.turn_type.count('concat') != 0:
             # [turn_num, max_len, batch_size]
             c_inputs = torch.stack(c_inputs, dim=2)
             c_turn_length = torch.tensor(
