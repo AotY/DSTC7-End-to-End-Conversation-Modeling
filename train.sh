@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=4
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -8,18 +8,18 @@ python train.py \
     --vocab_path data/vocab_word2idx.60004.dict \
     --turn_num 4 \
     --turn_min 1 \
-    --turn_type concat \
+    --turn_type normal \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --t_num_layers 4 \
+    --t_num_layers 2 \
     --transformer_size 512 \
     --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
-    --num_heads 6 \
+    --num_heads 4 \
     --dropout 0.1 \
     --bidirectional \
     --tied \
@@ -52,9 +52,10 @@ python train.py \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/epoch-2_seq2seq_normal_1_4_2018_12_11_20:10.pth \
+    # --checkpoint models/epoch-1_kg_concat_1_4_2018_12_12_18:46.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
-    # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ # --pre_trained_embedding \
+    # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
+    # --pre_trained_embedding \
 
 /

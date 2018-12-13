@@ -171,6 +171,7 @@ class Dataset:
                 cur_indicator = batch_size
             else:
                 self.reset_data(task, False)
+
         q_inputs = list()
         q_inputs_length = list()
 
@@ -199,7 +200,7 @@ class Dataset:
             hash_values.append(hash_value)
 
             if self.config.turn_type not in ['none', 'concat']:
-                # c inputs
+                # c_input: [turn_num, c_max_len]
                 c_turn_length.append(len(context_ids))
                 c_inputs_length.append(list([1]) * (self.config.turn_num))
 
@@ -513,7 +514,11 @@ class Dataset:
             f_inputs = [None] * self.config.batch_size
         else:
             # [batch_size, topk, max_len]
-            f_inputs = f_inputs.transpose(0, 1).tolist()
+            #  f_inputs = f_inputs.transpose(0, 1).tolist()
+
+            # [batch_size, f_topk]
+            f_inputs = f_inputs.tolist()
+
 
         if topk_texts is None:
             topk_texts = [None] * self.config.batch_size
@@ -572,10 +577,14 @@ class Dataset:
                     for i, text in enumerate(t_text):
                         f.write('topk %d: %s\n' % (i, text))
 
+                """
                 if f_ids is not None:
                     for fi, ids in enumerate(f_ids):
                         text = self.vocab.ids_to_text(ids)
                         f.write('fact %d: %s\n' % (fi, text))
+                """
+                f_text = self.vocab.ids_to_text(f_ids)
+                f.write('fact : %s\n' % f_text)
 
                 f.write('-' * 70 + '\n')
 

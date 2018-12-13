@@ -10,10 +10,10 @@ from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
-from modules.topk_decoder import TopKDecoder
+#  from modules.topk_decoder import TopKDecoder
 from modules.beam import Beam
-from modules.attention import Attention
-from modules.utils import init_linear_wt, sequence_mask
+#  from modules.attention import Attention
+#  from modules.utils import init_linear_wt, sequence_mask
 import modules.transformer as transformer
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -87,8 +87,10 @@ class KGModel(nn.Module):
             #  )
             self.f_encoder = transformer.Encoder(
                 config,
-                enc_embedding
+                enc_embedding,
+                has_position=False
             )
+            self.f_encoder = enc_embedding
 
         # encoder hidden_state -> decoder hidden_state
         self.reduce_state = ReduceState(config.rnn_type)
@@ -112,7 +114,8 @@ class KGModel(nn.Module):
             self.c_encoder.embedding.weight = self.q_encoder.embedding.weight
 
         if self.f_encoder is not None:
-            self.f_encoder.embedding.weight = self.q_encoder.embedding.weight
+            #  self.f_encoder.embedding.weight = self.q_encoder.embedding.weight
+            self.f_encoder.weight = self.q_encoder.embedding.weight
 
         # encoder, decode embedding share
         if config.share_embedding:
@@ -458,7 +461,7 @@ class KGModel(nn.Module):
             c_turn_length: [batch_size]
         turn_type: [max_len, turn_num, hidden_size]
         """
-        stack_outputs = list()
+        c_enc_outputs = list()
         # query encode separately.
         for ti in range(self.config.turn_num):
             inputs = c_inputs[ti, :, :]  # [max_len, batch_size]
@@ -469,20 +472,18 @@ class KGModel(nn.Module):
             outputs, hidden_state = self.c_encoder(
                 inputs, inputs_length, sort=False)
 
-            stack_outputs.append(outputs[-1].unsqueeze(0))
+            c_enc_outputs.append(outputs[-1].unsqueeze(0))
 
         # [turn_num, batch_size, hidden_size]
-        stack_outputs = torch.cat(stack_outputs, dim=0)
-        #  print('stack_outputs: ', stack_outputs.shape)
-
+        c_enc_outputs = torch.cat(c_enc_outputs, dim=0)
+        #  print('c_enc_outputs: ', c_enc_outputs.shape)
         """
         if self.config.turn_type == 'session':
             # [turn_num, batch_size, hidden_size]
-            session_outputs, session_hidden_state = self.session_encoder(stack_outputs, c_turn_length)
+            session_outputs, session_hidden_state = self.session_encoder(c_enc_outputs, c_turn_length)
             return session_outputs
         """
-
-        return stack_outputs
+        return c_enc_outputs
 
     def f_forward(self,
                   f_inputs,
@@ -494,9 +495,13 @@ class KGModel(nn.Module):
             -f_inputs_length: [topk, batch_size] or [batch_size]
             -f_topk_length: [batch_size]
         """
+        #  print('f_inputs: ', f_inputs)
         # [batch_size, max_len, hidden_size]
-        f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
+        #  f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
+        f_enc_outputs = self.f_encoder(f_inputs)
+
+        # [max_len, batch_size, hidden_size]
         f_enc_outputs = f_enc_outputs.transpose(0, 1)
+        #  print('f_enc_outputs: ', f_enc_outputs.shape)
 
         return f_enc_outputs
-
