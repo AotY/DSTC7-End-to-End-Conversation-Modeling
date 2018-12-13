@@ -10,6 +10,6 @@
 python metrics/embedding_metrics.py \
     --embeddings ~/Research/data/GoogleNews-vectors-negative300.bin \
     --ground_truth ../data/ground_truth/1_4.txt \
-    --predicted ../data/predicted/normal_3_1_4_2018_12_12_11:24.txt \
+    --predicted ../data/predicted/none_3_1_4.txt \
 
 /

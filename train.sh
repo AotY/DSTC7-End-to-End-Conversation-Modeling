@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=2
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.60004.dict \
     --turn_num 4 \
     --turn_min 1 \
-    --turn_type concat_smoothing \
+    --turn_type none \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -52,7 +52,7 @@ python train.py \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    --label_smoothing \
+    # --label_smoothing \
     # --checkpoint models/epoch-1_kg_concat_1_4_2018_12_12_18:46.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
