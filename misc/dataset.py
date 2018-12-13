@@ -79,8 +79,7 @@ class Dataset:
                     response_ids = self.vocab.words_to_id(words)
                     if len(response_ids) < min_len:
                         continue
-                    response_ids = response_ids[:min(
-                        r_max_len, len(response_ids))]
+                    response_ids = response_ids[:min(r_max_len, len(response_ids))]
 
                     # context split by EOS
                     context_sentences = self.parser_context(context)
@@ -94,14 +93,14 @@ class Dataset:
 
                     context_ids = []
                     for si, sentence in enumerate(context_sentences):
-                        words = [word for word in sentence.split()
-                                 if len(word.split()) > 0]
+                        words = [word for word in sentence.split() if len(word.split()) > 0]
                         ids = self.vocab.words_to_id(words)
+                        """
                         if si % 2 == 0:  # start
                             ids = ids[-min(c_max_len, len(ids)):]
                         else:  # reply
                             ids = ids[:min(c_max_len, len(ids))]
-
+                        """
                         context_ids.append(ids)
 
                     datas.append((subreddit_name, conversation_id,
@@ -204,6 +203,8 @@ class Dataset:
                 # c_input: [turn_num, c_max_len]
                 c_turn_length.append(len(context_ids))
                 c_inputs_length.append(list([1]) * (self.config.turn_num))
+
+                context_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
 
                 context_ids = torch.LongTensor([
                     ids + [PAD_ID] * (c_max_len - len(ids))

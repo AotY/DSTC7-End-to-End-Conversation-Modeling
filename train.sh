@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 
 python train.py \
     --pair_path data/train.convos.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.60004.dict \
-    --turn_num 4 \
+    --turn_num 3 \
     --turn_min 1 \
     --turn_type none \
     --rnn_type GRU \
@@ -45,10 +45,10 @@ python train.py \
     --es_patience 3 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
-    --test_split 0.08 \
+    --test_split 0.07 \
     --eval_batch 5 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task train \
     --share_embedding \
     --offline_type elastic \
