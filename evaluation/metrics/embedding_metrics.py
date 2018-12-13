@@ -31,7 +31,8 @@ __docformat__ = 'restructedtext en'
 __authors__ = ("Chia-Wei Liu", "Iulian Vlad Serban")
 
 from random import randint
-from gensim.models import Word2Vec
+#  from gensim.models import Word2Vec
+from gensim.models import KeyedVectors
 import numpy as np
 import argparse
 
@@ -49,7 +50,7 @@ def greedy_score(fileone, filetwo, w2v):
     f2 = open(filetwo, 'r')
     r1 = f1.readlines()
     r2 = f2.readlines()
-    dim = w2v.layer1_size  # embedding dimensions
+    dim = w2v.vector_size  # embedding dimensions
 
     scores = []
 
@@ -63,14 +64,20 @@ def greedy_score(fileone, filetwo, w2v):
         Y = np.zeros((dim, 1))
         for tok in tokens2:
             if tok in w2v:
-                Y = np.hstack((Y, (w2v[tok].reshape((dim, 1)))))
-                y_count += 1
+                try:
+                    Y = np.hstack((Y, (w2v[tok].reshape((dim, 1)))))
+                    y_count += 1
+                except KeyError as e:
+                    continue
 
         for tok in tokens1:
             if tok in w2v:
-                tmp = w2v[tok].reshape((1, dim)).dot(Y)
-                o += np.max(tmp)
-                x_count += 1
+                try:
+                    tmp = w2v[tok].reshape((1, dim)).dot(Y)
+                    o += np.max(tmp)
+                    x_count += 1
+                except KeyError as e:
+                    continue
 
         # if none of the words in response or ground truth have embeddings, count result as zero
         if x_count < 1 or y_count < 1:
@@ -97,11 +104,17 @@ def extrema_score(fileone, filetwo, w2v):
         X = []
         for tok in tokens1:
             if tok in w2v:
-                X.append(w2v[tok])
+                try:
+                    X.append(w2v[tok])
+                except KeyError as e:
+                    continue
         Y = []
         for tok in tokens2:
             if tok in w2v:
-                Y.append(w2v[tok])
+                try:
+                    Y.append(w2v[tok])
+                except KeyError as e:
+                    continue
 
         # if none of the words have embeddings in ground truth, skip
         if np.linalg.norm(X) < 0.00000000001:
@@ -145,7 +158,7 @@ def average(fileone, filetwo, w2v):
     f2 = open(filetwo, 'r')
     r1 = f1.readlines()
     r2 = f2.readlines()
-    dim = w2v.layer1_size  # dimension of embeddings
+    dim = w2v.vector_size  # dimension of embeddings
 
     scores = []
 
@@ -155,11 +168,18 @@ def average(fileone, filetwo, w2v):
         X = np.zeros((dim,))
         for tok in tokens1:
             if tok in w2v:
-                X += w2v[tok]
+                try:
+                    X += w2v[tok]
+                except KeyError as e:
+                    continue
+
         Y = np.zeros((dim,))
         for tok in tokens2:
             if tok in w2v:
-                Y += w2v[tok]
+                try:
+                    Y += w2v[tok]
+                except KeyError as e:
+                    continue
 
         # if none of the words in ground truth have embeddings, skip
         if np.linalg.norm(X) < 0.00000000001:
@@ -190,7 +210,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("loading embeddings file...")
-    w2v = Word2Vec.load_word2vec_format(args.embeddings, binary=True)
+    #  w2v = Word2Vec.load_word2vec_format(args.embeddings, binary=True)
+    w2v = KeyedVectors.load_word2vec_format(args.embeddings, binary=True)
 
     r = average(args.ground_truth, args.predicted, w2v)
     print("Embedding Average Score: %f +/- %f ( %f )" % (r[0], r[1], r[2]))

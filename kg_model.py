@@ -54,7 +54,9 @@ class KGModel(nn.Module):
 
         # c_encoder
         self.c_encoder = None
-        if config.turn_type in ['none', 'concat']:
+        #  if config.turn_type in ['none', 'concat']:
+        if self.config.turn_type.count('none') != 0 or \
+            self.config.turn_type.count('concat') != 0:
             pass
         elif config.turn_type == 'self_attn':
             self.c_encoder = SelfAttentive(
@@ -85,11 +87,13 @@ class KGModel(nn.Module):
                 #  config,
                 #  enc_embedding
             #  )
+            """
             self.f_encoder = transformer.Encoder(
                 config,
                 enc_embedding,
                 has_position=False
             )
+            """
             self.f_encoder = enc_embedding
 
         # encoder hidden_state -> decoder hidden_state
@@ -147,7 +151,9 @@ class KGModel(nn.Module):
             f_embedded_inputs_length: [batch_size]
         '''
         c_enc_outputs = None
-        if self.config.turn_type not in ['none', 'concat']:
+        #  if self.config.turn_type not in ['none', 'concat']:
+        if self.config.turn_type.count('none') == 0 and \
+            self.config.turn_type.count('concat') == 0:
             # [turn_num, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
@@ -219,7 +225,9 @@ class KGModel(nn.Module):
                f_topk_length):
 
         c_enc_outputs = None
-        if self.config.turn_type not in ['none', 'concat']:
+        #  if self.config.turn_type not in ['none', 'concat']:
+        if self.config.turn_type.count('none') == 0 and \
+            self.config.turn_type.count('concat') == 0:
             # [turn_num, batch_size, hidden_size]
             c_enc_outputs = self.c_forward(
                 c_inputs,
@@ -469,8 +477,7 @@ class KGModel(nn.Module):
 
             if self.config.turn_type == 'cnn':
                 inputs = inputs.transpose(0, 1)
-            outputs, hidden_state = self.c_encoder(
-                inputs, inputs_length, sort=False)
+            outputs, hidden_state = self.c_encoder(inputs, inputs_length, sort=False)
 
             c_enc_outputs.append(outputs[-1].unsqueeze(0))
 
