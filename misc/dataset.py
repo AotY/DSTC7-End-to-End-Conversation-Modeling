@@ -486,6 +486,39 @@ class Dataset:
 
         return new_facts, facts_weight
 
+    def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
+        """ decode_type == greedy:
+            outputs: [batch_size, max_len]
+            return: [batch_size]
+        decode_type == 'beam_search':
+            outputs: [batch_size, topk, max_len]
+            outputs_length: [batch_size, topk]
+            return: [batch_size, topk]
+        """
+
+        batch_generated_texts = []
+        if decode_type == 'greedy':
+            for bi in range(self.config.batch_size):
+                text = self.vocab.ids_to_text(outputs[bi].tolist())
+                batch_generated_texts.append(text)
+        elif decode_type == 'beam_search':
+            for bi in range(self.config.batch_size):
+                topk_ids = outputs[bi]
+                topk_texts = []
+                if outputs_length is not None:
+                    topk_length = outputs_length[bi]
+                    for ids, length in zip(topk_ids, topk_length):
+                        text = self.vocab.ids_to_text(ids[:length])
+                        topk_texts.append(text)
+                else:
+                    for ids in topk_ids:
+                        text = self.vocab.ids_to_text(ids)
+                        topk_texts.append(text)
+
+                batch_generated_texts.append(topk_texts)
+
+        return batch_generated_texts
+
     def save_generated_texts(self,
                              epoch,
                              names,
@@ -527,8 +560,9 @@ class Dataset:
             self.config.turn_min, self.config.turn_num
         ))
 
-        predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s_%s.txt' % (
-            self.config.turn_type, epoch, self.config.turn_min, self.config.turn_num, time_str
+        predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s_%s_%s.txt' % (
+            self.config.model_type, self.config.turn_type, epoch, \
+            self.config.turn_min, self.config.turn_num, time_str
         ))
 
         ground_truth_f = open(ground_truth_path, 'w')
@@ -591,35 +625,3 @@ class Dataset:
         ground_truth_f.close()
         predicted_f.close()
 
-    def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
-        """ decode_type == greedy:
-            outputs: [batch_size, max_len]
-            return: [batch_size]
-        decode_type == 'beam_search':
-            outputs: [batch_size, topk, max_len]
-            outputs_length: [batch_size, topk]
-            return: [batch_size, topk]
-        """
-
-        batch_generated_texts = []
-        if decode_type == 'greedy':
-            for bi in range(self.config.batch_size):
-                text = self.vocab.ids_to_text(outputs[bi].tolist())
-                batch_generated_texts.append(text)
-        elif decode_type == 'beam_search':
-            for bi in range(self.config.batch_size):
-                topk_ids = outputs[bi]
-                topk_texts = []
-                if outputs_length is not None:
-                    topk_length = outputs_length[bi]
-                    for ids, length in zip(topk_ids, topk_length):
-                        text = self.vocab.ids_to_text(ids[:length])
-                        topk_texts.append(text)
-                else:
-                    for ids in topk_ids:
-                        text = self.vocab.ids_to_text(ids)
-                        topk_texts.append(text)
-
-                batch_generated_texts.append(topk_texts)
-
-        return batch_generated_texts
