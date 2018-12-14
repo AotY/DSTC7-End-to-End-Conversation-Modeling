@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=7
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc_seq_h \
+    --enc_type qc_seq_h_attn \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
