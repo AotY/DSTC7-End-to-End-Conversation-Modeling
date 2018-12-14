@@ -525,7 +525,7 @@ class Dataset:
 
     def save_generated_texts(self,
                              epoch,
-                             names,
+                             subreddit_names,
                              conversation_ids,
                              hash_values,
                              enc_inputs,
@@ -569,11 +569,12 @@ class Dataset:
         with open(filename, 'w', encoding='utf-8') as f:
             for subreddit_name, conversation_id, hash_value, \
                 enc_ids, f_ids, dec_ids, g_text, b_text in \
-                    zip(names,
+                    zip(subreddit_names,
                         conversation_ids,
                         hash_values,
                         enc_inputs,
                         f_inputs,
+                        dec_inputs,
                         greedy_texts,
                         beam_texts):
 
