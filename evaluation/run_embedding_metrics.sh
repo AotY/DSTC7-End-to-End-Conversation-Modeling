@@ -8,7 +8,7 @@
 
 python metrics/embedding_metrics.py \
     --embeddings ~/Research/data/GoogleNews-vectors-negative300.bin \
-    --ground_truth ../data/ground_truth/1_4.txt \
-    --predicted ../data/predicted/kg_none_5_1_4_2018_12_13_13:33.txt \
+    --ground_truth ../data/ground_truth/eval_1_3.txt \
+    --predicted ../data/predicted/seq2seq_qc_3_1_3_2018_12_14_17:26.txt \
 
 /

@@ -11,7 +11,6 @@ Diversity metric
 import argparse
 from tqdm import tqdm
 from collections import defaultdict
-from collections import Counter
 
 parser = argparse.ArgumentParser()
 
@@ -25,7 +24,7 @@ def calc_diversity():
     tokens = [0.0, 0.0]
     types = [defaultdict(int), defaultdict(int)]
     with open(args.predicted, 'r') as f:
-        for line in tqdm(f):
+        for line in f:
             words = line.strip('\n').split()
             for n in range(2):
                 for idx in range(len(words)-n):
@@ -41,7 +40,7 @@ def main():
     sentence_dict = {}
     line_num = 0
     with open(args.predicted, 'r') as f:
-        for line in tqdm(f):
+        for line in f:
             line = line.rstrip()
             sentence_dict[line] = sentence_dict.get(line, 0) + 1
 
@@ -50,9 +49,9 @@ def main():
     diff_num = len(sentence_dict)
     sentence_list = sorted(sentence_dict.items(), key=lambda item: item[1], reverse=True)
 
-    avg_diff_num = line_num / diff_num
+    avg_diff_num = diff_num / line_num
     most_comm_sentence = sentence_list[0][0]
-    print('avg_diff_num: %.4f' % avg_diff_num)
+    print('diff ratio: %.4f' % avg_diff_num)
     print('most_comm_sentence: %s' % most_comm_sentence)
 
     div1, div2 = calc_diversity()
