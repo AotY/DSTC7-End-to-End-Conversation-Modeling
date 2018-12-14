@@ -180,8 +180,8 @@ def train_epochs(model,
         # save checkpoint, including epoch, seq2seq_mode.state_dict() and
         save_checkpoint(state=save_state,
                         is_best=False,
-                        filename=os.path.join(args.model_path, 'epoch-%d_%s_%s_%s_%s_%s.pth' %
-                                              (epoch, args.model_type, args.enc_type,
+                        filename=os.path.join(args.model_path, '%s_%s_%s_%s_%s_%s.pth' %
+                                              (args.model_type, args.enc_type, epoch,
                                                args.c_min, args.c_max, time_str)))
         # generate sentence
         logger.info('generate...')
@@ -292,6 +292,7 @@ def decode(model, dataset, epoch):
     model.eval()
     dataset.reset_data('eval', False)
     max_load = int(np.floor(dataset._size_dict['eval'] / args.batch_size))
+    dataset.save_ground_truth('eval')
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             dec_inputs, enc_inputs, enc_inputs_length, \
