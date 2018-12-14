@@ -106,7 +106,7 @@ class KGModel(nn.Module):
             enc_inputs_length: [batch_size] or [turn_num, batch_size]
             enc_turn_length: [] or [batch_size]
 
-            dec_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
+            dec_inputs: [max_len, batch_size], first step: [sos * batch_size]
 
             f_inputs: [f_max_len, batch_size, topk] or [batch_size, f_topk]
             f_inputs_length: [f_max_len, batch_size, topk] or [batch_size]
@@ -277,7 +277,7 @@ class KGModel(nn.Module):
         dec_input = torch.ones((1, self.config.batch_size),
                                dtype=torch.long, device=self.device) * SOS_ID
 
-        for i in range(self.config.r_max_len):
+        for i in range(self.config.r_max_len + 1):
             output, dec_hidden,  _ = self.decoder(
                 dec_input,
                 dec_hidden,
@@ -341,12 +341,12 @@ class KGModel(nn.Module):
         beam = Beam(
             batch_size,
             beam_size,
-            self.config.r_max_len,
+            self.config.r_max_len + 1,
             batch_position,
             EOS_ID
         )
 
-        for i in range(self.config.r_max_len):
+        for i in range(self.config.r_max_len + 1):
             output, dec_hidden, _ = self.decoder(
                 dec_input.view(1, -1),
                 dec_hidden,
