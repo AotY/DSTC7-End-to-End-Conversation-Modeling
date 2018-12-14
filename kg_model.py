@@ -4,14 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modules.normal_cnn import NormalCNN
+#  from modules.normal_cnn import NormalCNN
 from modules.encoder import NormalEncoder
-from modules.self_attn import SelfAttentive
+#  from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
-import modules.transformer as transformer
+#  import modules.transformer as transformer
 from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -72,12 +72,14 @@ class KGModel(nn.Module):
             self.session_encoder = SessionEncoder(config)
 
         if config.enc_type.count('concat') != 0 and \
-            config.enc_type != 'concat':
+                config.enc_type != 'concat':
             self.concat_linear = nn.Linear(
-                (config.c_max + 1) * config.hidden_size,
+                (config.turn_num) * config.hidden_size,
                 config.hidden_size
             )
             init_linear_wt(self.concat_linear)
+
+        self.reduce_state = ReduceState(config.rnn_type)
 
         # decoder
         self.decoder = LuongAttnDecoder(config, dec_embedding)
@@ -100,8 +102,8 @@ class KGModel(nn.Module):
                 f_topk_length):
         '''
         Args:
-            enc_inputs: [max_len, batch_size] or [c_max + 1, max_len, batch_size]
-            enc_inputs_length: [batch_size] or [c_max + 1, batch_size]
+            enc_inputs: [max_len, batch_size] or [turn_num, max_len, batch_size]
+            enc_inputs_length: [batch_size] or [turn_num, batch_size]
             enc_turn_length: [] or [batch_size]
 
             dec_inputs: [r_max_len, batch_size], first step: [sos * batch_size]
@@ -111,37 +113,50 @@ class KGModel(nn.Module):
             f_topk_length: [batch_size]
         '''
         enc_type = self.config.enc_type
-        if enc_type == 'none' or \
-            enc_type == 'concat':
+        if enc_type == 'q' or \
+                enc_type == 'qc':
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
                 enc_inputs_length
             )
 
-            dec_input = enc_hidden
-        else:
+            dec_hidden = self.reduce_state(enc_hidden)
+            enc_length = enc_inputs_length
+        else:  # []
             # [turn_num, batch_size, hidden_size]
             enc_outputs, enc_hidden = self.utterance_forward(
                 enc_inputs,
                 enc_inputs_length
             )
+            enc_length = enc_turn_length
 
-            if enc_type.count('seq') != 0:
+            if enc_type.count('_h') != 0:  # hierarchical
                 # [turn_num, batch_size, hidden_size]
                 enc_outputs, enc_hidden = self.inter_utterance_forward(
                     enc_outputs,
                     enc_turn_length
                 )
 
+            # [qc_concat, qc_sum, qc_concat_h, qc_sum_h]
             if enc_type.count('sum') != 0:
                 # [1, batch_size, hidden_size]
                 dec_input = enc_outputs.sum(dim=0).unsqueeze(0)
+                dec_hidden = dec_input.repeat(
+                    self.config.decoder_num_layers, 1, 1)
             elif enc_type.count('concat') != 0:
-                dec_input = enc_outputs.transpose(0, 1).view(self.config.c_max+1, -1)
+                dec_input = enc_outputs.transpose(
+                    0, 1).view(self.config.turn_num, -1)
                 dec_input = self.concat_linear(dec_input)
+                dec_hidden = dec_input.repeat(
+                    self.config.decoder_num_layers, 1, 1)
             else:
-                dec_input = enc_hidden
+                # [qc_seq, qc_seq_h]
+                dec_hidden = self.reduce_state(enc_hidden)
+
+        # [q_attn, qc_attn, qc_seq_attn, qc_seq_h_attn]
+        if enc_type.count('attn') == 0:
+            enc_outputs = None
 
         # fact encoder
         f_enc_outputs = None
@@ -152,13 +167,12 @@ class KGModel(nn.Module):
                 f_topk_length
             )
 
-        # init decoder hidden [num_layers, batch_size, hidden_size]
-        dec_hidden = dec_input.repeat(self.config.decoder_num_layers, 1, 1)
-
         # decoder
         dec_outputs, dec_hidden, _ = self.decoder(
             dec_inputs,
             dec_hidden,
+            enc_outputs,
+            enc_length,
             f_enc_outputs=f_enc_outputs,
             f_enc_length=f_inputs_length
         )
@@ -178,38 +192,51 @@ class KGModel(nn.Module):
                f_inputs,
                f_inputs_length,
                f_topk_length):
-
         enc_type = self.config.enc_type
-        if enc_type == 'none' or \
-            enc_type == 'concat':
+        if enc_type == 'q' or \
+                enc_type == 'qc':
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
                 enc_inputs_length
             )
-            dec_input = enc_hidden 
-        else:
+
+            dec_hidden = self.reduce_state(enc_hidden)
+            enc_length = enc_inputs_length
+        else:  # []
             # [turn_num, batch_size, hidden_size]
             enc_outputs, enc_hidden = self.utterance_forward(
                 enc_inputs,
                 enc_inputs_length
             )
+            enc_length = enc_turn_length
 
-            if enc_type.count('seq') != 0:
+            if enc_type.count('_h') != 0:  # hierarchical
                 # [turn_num, batch_size, hidden_size]
                 enc_outputs, enc_hidden = self.inter_utterance_forward(
                     enc_outputs,
                     enc_turn_length
                 )
 
+            # [qc_concat, qc_sum, qc_concat_h, qc_sum_h]
             if enc_type.count('sum') != 0:
                 # [1, batch_size, hidden_size]
                 dec_input = enc_outputs.sum(dim=0).unsqueeze(0)
+                dec_hidden = dec_input.repeat(
+                    self.config.decoder_num_layers, 1, 1)
             elif enc_type.count('concat') != 0:
-                dec_input = enc_outputs.transpose(0, 1).view(self.config.c_max+1, -1)
+                dec_input = enc_outputs.transpose(
+                    0, 1).view(self.config.turn_num, -1)
                 dec_input = self.concat_linear(dec_input)
+                dec_hidden = dec_input.repeat(
+                    self.config.decoder_num_layers, 1, 1)
             else:
-                dec_input = enc_hidden
+                # [qc_seq, qc_seq_h]
+                dec_hidden = self.reduce_state(enc_hidden)
+
+        # [q_attn, qc_attn, qc_seq_attn, qc_seq_h_attn]
+        if enc_type.count('attn') == 0:
+            enc_outputs = None
 
         # fact encoder
         f_enc_outputs = None
@@ -220,17 +247,19 @@ class KGModel(nn.Module):
                 f_topk_length
             )
 
-        dec_hidden = dec_input.repeat(self.config.decoder_num_layers, 1, 1)
-
         # decoder
         beam_outputs, beam_score, beam_length = self.beam_decode(
             dec_hidden,
+            enc_outputs,
+            enc_length,
             f_enc_outputs,
             f_inputs_length
         )
 
         greedy_outputs = self.greedy_decode(
             dec_hidden,
+            enc_outputs,
+            enc_length,
             f_enc_outputs,
             f_inputs_length
         )
@@ -239,6 +268,8 @@ class KGModel(nn.Module):
 
     def greedy_decode(self,
                       dec_hidden,
+                      enc_outputs,
+                      enc_length,
                       f_enc_outputs,
                       f_enc_length):
 
@@ -250,6 +281,8 @@ class KGModel(nn.Module):
             output, dec_hidden,  _ = self.decoder(
                 dec_input,
                 dec_hidden,
+                enc_outputs,
+                enc_length,
                 f_enc_outputs=f_enc_outputs,
                 f_enc_length=f_enc_length
             )
@@ -265,13 +298,15 @@ class KGModel(nn.Module):
 
     def beam_decode(self,
                     dec_hidden,
+                    enc_outputs,
+                    enc_length,
                     f_enc_outputs,
                     f_enc_length):
         '''
         Args:
             dec_hidden : [num_layers, batch_size, hidden_size] (optional)
-            c_enc_outputs : [max_len, batch_size, hidden_size]
-            c_encoder_lengths : [batch_size] (optional)
+            enc_outputs : [max_len, batch_size, hidden_size]
+            enc_length : [batch_size] (optional)
 
         Return:
             prediction: [batch_size, beam, max_len]
@@ -285,6 +320,9 @@ class KGModel(nn.Module):
 
         # [num_layers, batch_size * beam_size, hidden_size]
         dec_hidden = dec_hidden.repeat(1, beam_size, 1)
+        if enc_outputs is not None:
+            enc_outputs = enc_outputs.repeat(1, beam_size, 1)
+            enc_length = enc_length.repeat(beam_size)
 
         if f_enc_outputs is not None:
             f_enc_outputs = f_enc_outputs.repeat(1, beam_size, 1)
@@ -312,6 +350,8 @@ class KGModel(nn.Module):
             output, dec_hidden, _ = self.decoder(
                 dec_input.view(1, -1),
                 dec_hidden,
+                enc_outputs,
+                enc_length,
                 f_enc_outputs=f_enc_outputs,
                 f_enc_length=f_enc_length
             )
@@ -357,38 +397,39 @@ class KGModel(nn.Module):
         return prediction, final_score, length
 
     def utterance_forward(self,
-                           enc_inputs,
-                           enc_inputs_length):
+                          enc_inputs,
+                          enc_inputs_length):
         """
         Args:
-            enc_inputs: [max_len, batch_size] or [c_max + 1, max_len, batch_size]
-            enc_inputs_length: [batch_size] or [c_max + 1, batch_size]
+            enc_inputs: [max_len, batch_size] or [turn_num, max_len, batch_size]
+            enc_inputs_length: [batch_size] or [turn_num, batch_size]
 
         """
         utterance_outputs = list()
 
         hidden_state = None
-        for ti in range(self.config.c_max + 1):
+        for ti in range(self.config.turn_num):
             inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = enc_inputs_length[ti, :]  # [batch_size]
 
-            outputs, hidden_state = self.encoder(inputs, inputs_length, hidden_state)
+            outputs, hidden_state = self.encoder(
+                inputs, inputs_length, hidden_state)
 
             utterance_outputs.append(outputs[-1].unsqueeze(0))
 
-        # [c_max + 1, batch_size, hidden_size]
+        # [turn_num, batch_size, hidden_size]
         utterance_outputs = torch.cat(utterance_outputs, dim=0)
 
         return utterance_outputs, hidden_state
 
     def inter_utterance_forward(self,
-                                 utterance_outputs,
-                                 enc_turn_length):
-        # [c_max + 1, batch_size, hidden_size]
-        outputs, hidden_state = self.session_encoder(utterance_outputs, enc_turn_length)
+                                utterance_outputs,
+                                enc_turn_length):
+        # [turn_num, batch_size, hidden_size]
+        outputs, hidden_state = self.session_encoder(
+            utterance_outputs, enc_turn_length)
 
         return outputs, hidden_state
-
 
     def f_forward(self,
                   f_inputs,
