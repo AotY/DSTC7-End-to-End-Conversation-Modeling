@@ -540,34 +540,28 @@ class Dataset:
         if os.path.exists(save_path):
             save_mode = 'a'
 
-        dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [size, max_len]
+        dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
 
         if self.config.enc_type == 'q' or \
             self.config.enc_type == 'qc':
-            # [max_len, size] -> [size, max_len]
+            # [max_len, batch_size] -> [batch_size, max_len]
             enc_inputs = enc_inputs.transpose(0, 1).tolist()
         else:
-            # [turn_num, max_len, size] -> [size, turn_num, max_len]
+            # [turn_num, max_len, batch_size] -> [batch_size, turn_num, max_len]
             enc_inputs = enc_inputs.permute(2, 0, 1)
 
         if f_inputs is None or len(f_inputs) == 0:
-            f_inputs = [None] * self.config.size
+            f_inputs = [None] * self.config.batch_size
         else:
-            # [size, topk, max_len]
+            # [batch_size, topk, max_len]
             #  f_inputs = f_inputs.transpose(0, 1).tolist()
-            # [size, f_topk]
+            # [batch_size, f_topk]
             f_inputs = f_inputs.tolist()
-
-        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
-            self.config.c_min, self.config.c_max
-        ))
 
         predicted_path = os.path.join(self.config.save_path, 'predicted/%s_%s_%s_%s_%s_%s.txt' % (
             self.config.model_type, self.config.enc_type, epoch, \
             self.config.c_min, self.config.c_max, time_str
         ))
-
-        ground_truth_f = open(ground_truth_path, save_mode)
         predicted_f = open(predicted_path, save_mode)
 
         with open(save_path, save_mode, encoding='utf-8') as f:
@@ -602,7 +596,6 @@ class Dataset:
                 f.write('greedy: %s\n' % g_text)
 
                 # for embedding metrics
-                ground_truth_f.write('%s\n' % response_text)
                 predicted_f.write('%s\n' % g_text)
 
                 for i, text in enumerate(b_text):
@@ -614,5 +607,17 @@ class Dataset:
 
                 f.write('-' * 70 + '\n')
 
-        ground_truth_f.close()
         predicted_f.close()
+
+    def save_ground_truth(self, task):
+        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.txt' % (
+            task, self.config.c_min, self.config.c_max
+        ))
+        if os.path.exists(ground_truth_path):
+            return
+        ground_truth_f = open(ground_truth_path, 'w')
+
+        for _, _, _, _, response_ids, _ in self._data_dict[task]:
+            response_text = self.vocab.ids_to_text(response_ids)
+            ground_truth_f.write('%s\n' % response_text)
+        ground_truth_f.close()
