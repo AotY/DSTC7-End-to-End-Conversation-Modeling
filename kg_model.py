@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 #  from modules.normal_cnn import NormalCNN
-from modules.encoder import NormalEncoder
+from modules.normal_encoder import NormalEncoder
 #  from modules.self_attn import SelfAttentive
 from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
@@ -68,7 +68,7 @@ class KGModel(nn.Module):
             self.f_encoder = enc_embedding
 
         # session encoder
-        if config.enc_type.endswith('seq'):
+        if config.enc_type.count('_h') != 0:
             self.session_encoder = SessionEncoder(config)
 
         if config.enc_type.count('concat') != 0 and \
@@ -168,7 +168,7 @@ class KGModel(nn.Module):
             )
 
         # decoder
-        dec_outputs, dec_hidden, _ = self.decoder(
+        dec_outputs, _, _ = self.decoder(
             dec_inputs,
             dec_hidden,
             enc_outputs,

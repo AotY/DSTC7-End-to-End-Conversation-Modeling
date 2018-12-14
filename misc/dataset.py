@@ -205,7 +205,7 @@ class Dataset:
                 concat_ids.extend(query_ids)
                 concat_ids = concat_ids[-min(q_max_len, len(concat_ids)):]
                 enc_inputs_length.append(len(concat_ids))
-                enc_input = torch.LongTensor(concat_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
+                enc_input = torch.LongTensor(concat_ids + [PAD_ID] * (q_max_len - len(concat_ids))).to(self.device)
                 enc_inputs.append(enc_input)
             else:
                 enc_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
@@ -218,14 +218,14 @@ class Dataset:
                 for idx, ids in enumerate(enc_ids):
                     enc_input_length[idx] = len(ids)
                     ids = ids + [PAD_ID] * (q_max_len - len(ids))
-                    pad_enc_ids.append(pad_enc_ids)
+                    pad_enc_ids.append(ids)
                 enc_inputs_length.append(enc_input_length)
 
                 enc_ids = torch.LongTensor(pad_enc_ids).to(self.device)
                 enc_input = torch.zeros((self.config.turn_num, q_max_len),
                                       dtype=torch.long).to(self.device)
                 enc_input[:len(pad_enc_ids), :] = enc_ids
-                c_inputs.append(enc_input)
+                enc_inputs.append(enc_input)
 
             # dec_inputs
             response_ids = response_ids[:min(r_max_len, len(response_ids))]
@@ -253,6 +253,8 @@ class Dataset:
 
         if self.config.enc_type == 'q' or \
             self.config.enc_type == 'qc':
+            #  print(enc_inputs)
+            #  print(enc_inputs_length)
             # [max_len, batch_size]
             enc_inputs = torch.stack(enc_inputs, dim=1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
@@ -585,7 +587,7 @@ class Dataset:
                 if enc_ids is not None:
                     for i, ids in enumerate(enc_ids):
                         text = self.vocab.ids_to_text(ids)
-                        f.write('> %d: %s\n' % (ci, text))
+                        f.write('> %s\n' % (text))
 
                 response_text = self.vocab.ids_to_text(dec_ids)
                 f.write('response: %s\n' % response_text)
