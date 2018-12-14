@@ -533,25 +533,29 @@ class Dataset:
                              dec_inputs,
                              greedy_texts,
                              beam_texts,
-                             filename,
+                             save_path,
                              time_str):
 
-        dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
+        save_mode = 'w'
+        if os.path.exists(save_path):
+            save_mode = 'a'
+
+        dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [size, max_len]
 
         if self.config.enc_type == 'q' or \
             self.config.enc_type == 'qc':
-            # [max_len, batch_size] -> [batch_size, max_len]
+            # [max_len, size] -> [size, max_len]
             enc_inputs = enc_inputs.transpose(0, 1).tolist()
         else:
-            # [turn_num, max_len, batch_size] -> [batch_size, turn_num, max_len]
+            # [turn_num, max_len, size] -> [size, turn_num, max_len]
             enc_inputs = enc_inputs.permute(2, 0, 1)
 
         if f_inputs is None or len(f_inputs) == 0:
-            f_inputs = [None] * self.config.batch_size
+            f_inputs = [None] * self.config.size
         else:
-            # [batch_size, topk, max_len]
+            # [size, topk, max_len]
             #  f_inputs = f_inputs.transpose(0, 1).tolist()
-            # [batch_size, f_topk]
+            # [size, f_topk]
             f_inputs = f_inputs.tolist()
 
         ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
@@ -563,10 +567,10 @@ class Dataset:
             self.config.c_min, self.config.c_max, time_str
         ))
 
-        ground_truth_f = open(ground_truth_path, 'w')
-        predicted_f = open(predicted_path, 'w')
+        ground_truth_f = open(ground_truth_path, save_mode)
+        predicted_f = open(predicted_path, save_mode)
 
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(save_path, save_mode, encoding='utf-8') as f:
             for subreddit_name, conversation_id, hash_value, \
                 enc_ids, f_ids, dec_ids, g_text, b_text in \
                     zip(subreddit_names,
