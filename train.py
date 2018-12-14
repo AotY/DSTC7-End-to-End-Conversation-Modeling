@@ -330,7 +330,7 @@ def decode(model, dataset, epoch):
                 greedy_texts,
                 beam_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
-                    args.model_type, epoch, args.enc_type, args.c_min, args.c_max, time_str)),
+                    args.model_type, args.enc_type, epoch, args.c_min, args.c_max, time_str)),
                 time_str
             )
 
