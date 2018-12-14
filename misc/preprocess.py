@@ -3,7 +3,6 @@ from __future__ import division
 
 import os
 import sys
-import time
 import logging
 import argparse
 
@@ -14,12 +13,6 @@ from misc_opts import preprocess_opt
 '''
 Generate
 
-vocab
-source_num.txt
-target_num.txt
-
-and
-fact_num.txt
 '''
 
 tokenizer = Tokenizer()
@@ -46,22 +39,15 @@ def read_convos(args, logger):
     with open(args.convos_file_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
-            start_time = time.time()
             n += 1
 
             if n in remove_lines:
                 continue
 
-            #  if n <= 1482342:
-                #  continue
-
             #  print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
-
-            #  if n == 20000:
-                #  break
 
             sub = line.split('\t')
 
@@ -147,23 +133,17 @@ def read_facts(args, logger):
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
 
-            #  if n == 20000:
-                #  break
-
             sub = line.split('\t')
             fact = sub[-1]
 
             if fact[0] not in ['<', '"', '^']:
                 continue
 
-            if len(fact.split()) > args.f_max_len:
-                continue
-
             fact_tokens = tokenizer.tokenize(fact, html=True)
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
-            if fact_len < args.min_len:
+            if fact_len < args.min_len or fact_len > args.f_max_len:
                 continue
 
             facts.append(fact_tokens)
@@ -214,38 +194,34 @@ def save_distribution(distribution, name):
 
 def save_train_convos(args, contexts, queries,
                       responses, names, conversation_ids,
-                      hash_values, scores, turns, filename):
+                      hash_values, scores, turns, save_path):
 
     '''Save data in pair format.'''
-    save_file = open(os.path.join(args.save_path, filename), 'w', encoding='utf-8')
-    for name, conversation_id, context, \
+    save_file = open(save_path, 'w', encoding='utf-8')
+    for subreddit_name, conversation_id, context, \
         query, response, hash_value, score, turn in \
-            zip(names, conversation_ids, contexts, \
+            zip(subreddit_names, conversation_ids, contexts, \
                 queries, responses, hash_values, scores, turns):
-
-        #  print('context: ', context)
-        #  print('query: ', query)
-        #  print('response: ', response)
 
         if len(context) == 0:
             context = ''
         else:
-            texts = []
+            context_texts = []
             for tokens in context:
                 text = ' '.join(tokens)
-                texts.append(text)
-            context = ' EOS '.join(texts)
+                context_texts.append(text)
+            context = ' EOS '.join(context_texts)
 
         query = ' '.join(query)
         response = ' '.join(response)
         save_file.write('%s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s\n' % \
-                (name, conversation_id, context, query, response, hash_value, score, turn))
+                (subreddit_name, conversation_id, context, query, response, hash_value, score, turn))
 
     save_file.close()
 
 
-def save_facts(facts, subreddit_names, conversation_ids, domain_names, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
+def save_facts(facts, subreddit_names, conversation_ids, domain_names, save_path):
+    with open(save_path, 'w', encoding='utf-8') as f:
         for fact, subreddit, conversation_id, domain in zip(facts, subreddit_names, conversation_ids, domain_names):
             if isinstance(fact, list):
                 fact = ' '.join(fact)
@@ -268,7 +244,7 @@ def main(args, logger):
         hash_values,
         response_scores,
         dialogue_turns,
-        filename='train.pseudo_convos.txt'
+        save_path=args.convos_save_path
     )
 
     #  read facts
@@ -278,16 +254,7 @@ def main(args, logger):
 
     #  save raw facts to txt
     save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
-            domain_names, os.path.join(args.save_path, 'train.pseudo_facts.txt'))
-
-    datas = queries + responses + facts
-    for context in contexts:
-        datas += context
-
-    datas_name = ['contexts', 'queries', 'responses', 'facts']
-    sorted_freq_list = stat_frequency(datas, datas_name, logger)
-
-
+            domain_names, args.facts_save_path)
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
