@@ -48,14 +48,14 @@ class LuongAttnDecoder(nn.Module):
         # linear  [q, c, f]
         if config.model_type == 'kg':
             if config.enc_type.count('attn') != 0:
-                self.linear = nn.Linear(config.hidden_size * 4, config.vocab_size)
-            else:
-                self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
-        else:
-            if config.enc_type.count('attn') != 0:
                 self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
             else:
                 self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
+        else:
+            if config.enc_type.count('attn') != 0:
+                self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
+            else:
+                self.linear = nn.Linear(config.hidden_size * 1, config.vocab_size)
         #  self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
         init_linear_wt(self.linear)
 
@@ -90,7 +90,7 @@ class LuongAttnDecoder(nn.Module):
             # [1, batch_size, hidden_size]
             f_context, _ = self.f_attn(output, f_enc_outputs, f_enc_length)
 
-        output_list = [output, q_context]
+        output_list = [output]
 
         if enc_context is not None:
             output_list.append(enc_context)
@@ -104,4 +104,4 @@ class LuongAttnDecoder(nn.Module):
         #  print('output: ', output.shape)
         output = self.linear(output)
 
-        return output, dec_hidden, q_attn_weights
+        return output, dec_hidden, None

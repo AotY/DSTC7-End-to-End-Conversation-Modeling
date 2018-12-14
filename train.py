@@ -58,7 +58,7 @@ if args.seed:
     torch.manual_seed(args.seed)
 
 # update max_len
-if args.enc_type == 'concat':
+if args.enc_type == 'qc':
     args.q_max_len = args.q_max_len + args.c_max_len * args.c_max
 
 logger.info('c_max_len: %d' % args.c_max_len)
@@ -259,7 +259,7 @@ def evaluate(model,
             # load data
             dec_inputs, enc_inputs, enc_inputs_length, \
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data('test')
 
             dec_outputs = model(
                 enc_inputs,
