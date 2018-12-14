@@ -193,12 +193,12 @@ class Dataset:
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
-            if self.config.enc_type == 'none':
+            if self.config.enc_type == 'q':
                 query_ids = query_ids[-min(q_max_len, len(query_ids)):]
                 enc_inputs_length.append(len(query_ids))
                 enc_input = torch.LongTensor(query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
                 enc_inputs.append(enc_input)
-            elif self.config.enc_type == 'concat':
+            elif self.config.enc_type == 'qc':
                 concat_ids = []
                 for ids in context_ids:
                     concat_ids.extend(ids)
@@ -251,8 +251,8 @@ class Dataset:
                 f_inputs.append(f_input)
 
 
-        if self.config.enc_type == 'none' or \
-            self.config.enc_type == 'concat':
+        if self.config.enc_type == 'q' or \
+            self.config.enc_type == 'qc':
             # [max_len, batch_size]
             enc_inputs = torch.stack(enc_inputs, dim=1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
