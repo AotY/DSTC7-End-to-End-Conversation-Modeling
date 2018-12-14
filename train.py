@@ -310,8 +310,8 @@ def decode(model, dataset, epoch):
             )
 
             # generate sentence, and save to file
-            # [max_length, batch_size] greedy_texts = dataset.generating_texts(greedy_outputs,
-                                                    decode_type='greedy')
+            # [max_length, batch_size]
+            greedy_texts = dataset.generating_texts(greedy_outputs, decode_type='greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   decode_type='beam_search')
