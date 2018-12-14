@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=3
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -49,11 +49,11 @@ python train.py \
     --eval_batch 5 \
     --start_epoch 1 \
     --model_type seq2seq \
-    --task train \
+    --task decode \
     --share_embedding \
     --offline_type elastic \
+    --checkpoint models/epoch-1_seq2seq_q_1_3_2018_12_14_12:48.pth \
     # --label_smoothing \
-    # --checkpoint models/epoch-1_kg_concat_1_4_2018_12_12_18:46.pth \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
     # --pre_trained_embedding \

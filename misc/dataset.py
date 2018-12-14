@@ -250,11 +250,8 @@ class Dataset:
 
                 f_inputs.append(f_input)
 
-
         if self.config.enc_type == 'q' or \
             self.config.enc_type == 'qc':
-            #  print(enc_inputs)
-            #  print(enc_inputs_length)
             # [max_len, batch_size]
             enc_inputs = torch.stack(enc_inputs, dim=1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
@@ -270,7 +267,7 @@ class Dataset:
             enc_turn_length = torch.tensor(
                 enc_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
 
-        # decoder [max_len, batch_size]
+        # decoder [max_len + 1, batch_size]
         dec_inputs = torch.stack(dec_inputs, dim=1)
 
         if self.config.model_type == 'kg':
@@ -536,18 +533,18 @@ class Dataset:
                              dec_inputs,
                              greedy_texts,
                              beam_texts,
-                             topk_texts,
                              filename,
                              time_str):
 
-        enc_inputs = enc_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
         dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
 
-        if len(enc_inputs) == 0:
-            enc_inputs = [None] * self.config.batch_size
+        if self.config.enc_type == 'q' or \
+            self.config.enc_type == 'qc':
+            # [max_len, batch_size] -> [batch_size, max_len]
+            enc_inputs = enc_inputs.transpose(0, 1).tolist()
         else:
-            # c [batch_size, c_max, max_len]
-            enc_inputs = enc_inputs.permute(2, 0, 1).tolist()
+            # [turn_num, max_len, batch_size] -> [batch_size, turn_num, max_len]
+            enc_inputs = enc_inputs.permute(2, 0, 1)
 
         if f_inputs is None or len(f_inputs) == 0:
             f_inputs = [None] * self.config.batch_size
@@ -584,8 +581,12 @@ class Dataset:
                 f.write('conversation_id: %s\n' % conversation_id)
                 f.write('hash_value: %s\n' % hash_value)
 
-                if enc_ids is not None:
-                    for i, ids in enumerate(enc_ids):
+                if self.config.enc_type == 'q' or \
+                    self.config.enc_type == 'qc':
+                    text = self.vocab.ids_to_text(enc_ids)
+                    f.write('> %s\n' % (text))
+                else:
+                    for ids in enc_ids:
                         text = self.vocab.ids_to_text(ids)
                         f.write('> %s\n' % (text))
 

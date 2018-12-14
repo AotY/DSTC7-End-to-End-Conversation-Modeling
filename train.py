@@ -298,7 +298,7 @@ def decode(model, dataset, epoch):
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
                 subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
 
-            # greedy: [batch_size, r_max_len]
+            # greedy: [batch_size, max_len]
             # beam_search: [batch_sizes, best_n, len]
             greedy_outputs, beam_outputs, beam_length = model.decode(
                 enc_inputs,
@@ -310,8 +310,7 @@ def decode(model, dataset, epoch):
             )
 
             # generate sentence, and save to file
-            # [max_length, batch_size]
-            greedy_texts = dataset.generating_texts(greedy_outputs,
+            # [max_length, batch_size] greedy_texts = dataset.generating_texts(greedy_outputs,
                                                     decode_type='greedy')
 
             beam_texts = dataset.generating_texts(beam_outputs,
@@ -327,7 +326,6 @@ def decode(model, dataset, epoch):
                 dec_inputs[:-1, :],
                 greedy_texts,
                 beam_texts,
-                topk_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
                     args.model_type, epoch, args.enc_type, args.c_min, args.c_max, time_str)),
 				time_str
