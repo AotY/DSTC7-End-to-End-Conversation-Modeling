@@ -310,11 +310,13 @@ def decode(model, dataset, epoch):
             )
 
             # generate sentence, and save to file
-            # [max_length, batch_size]
+            # [batch_size, max_len]
             greedy_texts = dataset.generating_texts(greedy_outputs, decode_type='greedy')
 
+            # [batch_size, topk, max_len]
             beam_texts = dataset.generating_texts(beam_outputs,
                                                   decode_type='beam_search')
+
             # save sentences
             dataset.save_generated_texts(
                 epoch,
@@ -323,12 +325,12 @@ def decode(model, dataset, epoch):
                 hash_values,
                 enc_inputs,
                 f_inputs,
-                dec_inputs[:-1, :],
+                dec_inputs,
                 greedy_texts,
                 beam_texts,
                 os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
                     args.model_type, epoch, args.enc_type, args.c_min, args.c_max, time_str)),
-				time_str
+                time_str
             )
 
 

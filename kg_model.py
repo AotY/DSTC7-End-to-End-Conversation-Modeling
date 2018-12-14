@@ -192,6 +192,7 @@ class KGModel(nn.Module):
                f_inputs,
                f_inputs_length,
                f_topk_length):
+
         enc_type = self.config.enc_type
         if enc_type == 'q' or \
                 enc_type == 'qc':
