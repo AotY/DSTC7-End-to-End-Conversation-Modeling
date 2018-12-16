@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc \
+    --enc_type q \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -20,7 +20,7 @@ python train.py \
     --k_size 64 \
     --v_size 64 \
     --num_heads 4 \
-    --dropout 0.1 \
+    --dropout 0.2 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
@@ -32,9 +32,9 @@ python train.py \
     --beam_size 8 \
     --best_n 3 \
     --f_topk 15 \
-    --lr 0.001 \
+    --lr 0.0005 \
     --max_grad_norm 5.0 \
-    --epochs 15 \
+    --epochs 25 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
@@ -48,11 +48,11 @@ python train.py \
     --test_split 0.07 \
     --eval_batch 5 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/epoch-2_seq2seq_qc_seq_1_3_2018_12_14_15:01.pth \
+    --checkpoint models/seq2seq_q_15_1_3_2018_12_14_20:18.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
