@@ -24,6 +24,7 @@ parser.add_argument('--vocab_freq_path', type=str, default='./vocab_freq.txt')
 args = parser.parse_args()
 
 punc_regex = re.compile('[%s]' % re.escape(string.punctuation.replace('_', '')))
+punctuations = list(string.punctuation)
 
 def clean_number_url(text):
     text = text.replace('( )', '')
@@ -70,11 +71,13 @@ def clean_repeat(text, max_ngram=5):
         if i == 0:
             words.append(word)
         else:
-            if word == words[len(words) - 1]:
-                continue
-            else:
+            if word in punctuations:
                 words.append(word)
-
+            else:
+                if word == words[len(words) - 1]:
+                    continue
+                else:
+                    words.append(word)
     return ' '.join(words)
 
 
@@ -128,6 +131,7 @@ def main():
             subreddit_name, conversation_id, domain, fact = line.split('\t')
 
             fact = clean_number_url(fact)
+            fact = clean_repeat(fact)
             freq_dict.update(fact.split())
 
             fact_save_f.write('%s\t%s\t%s\t%s\n' % (subreddit_name, conversation_id, domain, fact))
