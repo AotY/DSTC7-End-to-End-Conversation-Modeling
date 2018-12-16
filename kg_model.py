@@ -416,6 +416,8 @@ class KGModel(nn.Module):
             outputs, hidden_state = self.encoder(
                 inputs, inputs_length, hidden_state)
 
+            #  output = self.reduce_state(hidden_state)
+            #  utterance_outputs.append(output)
             utterance_outputs.append(outputs[-1].unsqueeze(0))
 
         # [turn_num, batch_size, hidden_size]
