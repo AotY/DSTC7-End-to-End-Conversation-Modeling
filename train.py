@@ -169,9 +169,9 @@ def train_epochs(model,
 
         # save model of each epoch
         save_state = {
-            'loss': train_loss,
-            'ppl': math.exp(min(train_loss, 100)),
-            'acc': train_accu,
+            'loss': evaluate_loss,
+            'ppl': math.exp(min(evaluate_loss, 100)),
+            'acc': evaluate_accuracy,
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.optimizer.state_dict()
