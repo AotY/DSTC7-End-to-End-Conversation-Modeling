@@ -22,7 +22,6 @@ def is_english(text):
 stop_words = set(stopwords.words('english'))
 punctuations = list(string.punctuation)
 
-
 def remove_stop_words(words):
     words = [word for word in words if word not in stop_words]
     words = [word for word in words if word not in punctuations]
@@ -94,7 +93,7 @@ class Tokenizer:
         text = ' '.join(words)
         #  print(text)
 
-        if text.count('__number__') > 15:
+        if text.count('__number__') > 12:
             return '' # merge multi to single
 
         text = text.replace('( __number__  )', '__number__')
@@ -119,6 +118,20 @@ class Tokenizer:
 
         text = text.replace('__number __', ' __number__ ')
         text = text.replace('__url __', ' __url__ ')
+
+        # removal duplicate words
+        text_words = text.split()
+        words = [text_words[0]]
+        for word in text_words[1:]:
+            if word in punctuations:
+                words.append(word)
+            else:
+                if word == words[len(words) - 1]:
+                    continue
+                else:
+                    words.append(word)
+
+        text = ' '.join(words)
 
         text = text.replace('.com', ' ')
         text = text.replace('.org', ' ')

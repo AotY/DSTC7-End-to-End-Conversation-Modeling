@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 
 python train.py \
     --pair_path data/train.convos.txt \
@@ -20,7 +20,7 @@ python train.py \
     --k_size 64 \
     --v_size 64 \
     --num_heads 4 \
-    --dropout 0.2 \
+    --dropout 0.1 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
@@ -48,11 +48,11 @@ python train.py \
     --test_split 0.07 \
     --eval_batch 5 \
     --start_epoch 1 \
-    --model_type seq2seq \
+    --model_type kg \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/seq2seq_q_15_1_3_2018_12_14_20:18.pth \
+    # --checkpoint models/seq2seq_q_15_1_3_2018_12_14_20:18.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
