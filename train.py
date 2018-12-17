@@ -165,24 +165,11 @@ def train_epochs(model,
                     save_logger(logger_str)
                     logger.info(logger_str)
                     logger.info('Early Stopping.')
+                    save_model(epoch, avg_evaluate_loss, avg_evaluate_accuracy, model, optimizer)
                     sys.exit(0)
 
-        # save model of each epoch
-        save_state = {
-            'loss': evaluate_loss,
-            'ppl': math.exp(min(evaluate_loss, 100)),
-            'acc': evaluate_accuracy,
-            'epoch': epoch,
-            'state_dict': model.state_dict(),
-            'optimizer': optimizer.optimizer.state_dict()
-        }
+        save_model(epoch, evaluate_loss, evaluate_accuracy, model, optimizer)
 
-        # save checkpoint, including epoch, seq2seq_mode.state_dict() and
-        save_checkpoint(state=save_state,
-                        is_best=False,
-                        filename=os.path.join(args.model_path, '%s_%s_%s_%s_%s_%s.pth' %
-                                              (args.model_type, args.enc_type, epoch,
-                                               args.c_min, args.c_max, time_str)))
         # generate sentence
         logger.info('generate...')
         decode(model, dataset, epoch)
@@ -455,6 +442,23 @@ def build_dataset(vocab):
 
     return dataset
 
+def save_model(epoch, loss, accuracy, model, optimizer):
+    # save model of each epoch
+    save_state = {
+        'loss': loss,
+        'ppl': math.exp(min(loss, 100)),
+        'acc': accuracy,
+        'epoch': epoch,
+        'state_dict': model.state_dict(),
+        'optimizer': optimizer.optimizer.state_dict()
+    }
+
+    # save checkpoint, including epoch, seq2seq_mode.state_dict() and
+    save_checkpoint(state=save_state,
+                    is_best=False,
+                    filename=os.path.join(args.model_path, '%s_%s_%s_%s_%s_%s.pth' %
+                                            (args.model_type, args.enc_type, epoch,
+                                            args.c_min, args.c_max, time_str)))
 
 def save_checkpoint(state, is_best, filename):
     '''
