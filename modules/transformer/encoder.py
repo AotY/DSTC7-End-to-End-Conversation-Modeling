@@ -48,7 +48,7 @@ class Encoder(nn.Module):
 
     def forward(self,
                 enc_inputs,
-                enc_inputs_pos,
+                enc_inputs_pos=None,
                 return_attns=False):
         """
         Args:
@@ -59,7 +59,8 @@ class Encoder(nn.Module):
         """
         #  print('enc_inputs: ', enc_inputs.shape)
         #  print('enc_inputs_pos: ', enc_inputs_pos.shape)
-        enc_slf_attn_list = list()
+        if return_attns:
+            enc_slf_attn_list = list()
 
         # -- Prepare masks
         attn_mask = get_attn_key_pad_mask(k=enc_inputs, q=enc_inputs, padid=PAD_ID)
@@ -69,6 +70,8 @@ class Encoder(nn.Module):
         #  print('non_pad_mask: ', non_pad_mask)
 
         enc_embedded = self.embedding(enc_inputs) # [batch_size, max_len, embedding_size]
+
+        # dropout, default: 0.1
         enc_embedded = self.dropout(enc_embedded)
 
         if self.has_position:
@@ -78,11 +81,10 @@ class Encoder(nn.Module):
             enc_embedded = enc_embedded + pos_embedded
 
             #  print('enc_embedded shape: ', enc_embedded.shape) # [b, max_len, embedding_size]
-            #  print('enc_embedded: ', enc_embedded)
 
         enc_output = enc_embedded
-        for enc_layer in self.layer_stack:
-            enc_output, en_slf_attn = enc_layer(
+        for layer in self.layer_stack:
+            enc_output, en_slf_attn = layer(
                 enc_output,
                 non_pad_mask=non_pad_mask,
                 attn_mask=attn_mask)

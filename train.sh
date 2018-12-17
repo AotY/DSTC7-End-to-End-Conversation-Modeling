@@ -14,12 +14,12 @@ python train.py \
     --hidden_size 512 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
-    --t_num_layers 2 \
+    --t_num_layers 1 \
+    --num_heads 1 \
     --transformer_size 512 \
     --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
-    --num_heads 4 \
     --dropout 0.2 \
     --bidirectional \
     --tied \

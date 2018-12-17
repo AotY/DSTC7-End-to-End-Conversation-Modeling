@@ -7,14 +7,15 @@
 """
 Save facts to elastic, and retrieval them.
 """
+import re
 import argparse
 from tqdm import tqdm
 
 import es_helper
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--facts_path', type=str, help='facts path.')
-parser.add_argument('--task', type=str, help='save | search')
+parser.add_argument('--facts_path', type=str, help='facts path.', default='../data/train.facts.txt')
+parser.add_argument('--task', type=str, help='save | search', default='save')
 parser.add_argument('--conversation_id', type=str, help='conversation id')
 parser.add_argument('--query_text', type=str, help='query text')
 args = parser.parse_args()
@@ -42,15 +43,17 @@ def save():
                         "type": "custom",
                         "tokenizer": "standard",
                         "filter": [
-                                "lowercase"
+                            "lowercase",
+                            "asciifolding"
                         ]
                     },
                     "my_stop_analyzer": {
                         "type": "custom",
                         "tokenizer": "standard",
                         "filter": [
-                                "lowercase",
-                                "english_stop"
+                            "lowercase",
+                            "english_stop",
+                            "asciifolding"
                         ]
                     }
                 },
@@ -72,9 +75,9 @@ def save():
             "properties": {
                 "text": {
                     "type": "text",
-                    "analyzer": "my_analyzer",
+                    "analyzer": "my_stop_analyzer",
                     "search_analyzer": "my_stop_analyzer",
-                    "search_quote_analyzer": "my_analyzer"
+                    "search_quote_analyzer": "my_stop_analyzer"
                 },
                 "conversation_id": {
                     "type": "keyword"
@@ -93,7 +96,8 @@ def save():
             line = line.rstrip()
 
             _, conversation_id, _, fact = line.split('\t')
-            if len(fact.split()) == 0:
+            fact = re.sub(r'__number__|__url__|__unk__', '', fact)
+            if len(fact.split()) <= 3:
                 continue
 
             body = {

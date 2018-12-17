@@ -53,11 +53,11 @@ class EncoderLayer(nn.Module):
         )
         #  print('layer enc_output: ', enc_output)
 
-        enc_output *= non_pad_mask
+        enc_output = enc_output * non_pad_mask
 
         enc_output = self.pos_ffn(enc_output)
 
-        enc_output *= non_pad_mask
+        enc_output = enc_output * non_pad_mask
 
         return enc_output, enc_attn
 
@@ -111,10 +111,10 @@ class DecoderLayer(nn.Module):
             mask=dec_enc_attn_mask
         )
 
-        dec_output *= non_pad_mask
+        dec_output = dec_output * non_pad_mask
 
         dec_output = self.pos_ffn(dec_output)
 
-        dec_output *= non_pad_mask
+        dec_output = dec_output * non_pad_mask
 
         return dec_output, dec_slf_attn, dec_enc_attn

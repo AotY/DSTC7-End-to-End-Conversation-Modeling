@@ -310,18 +310,19 @@ class Dataset:
 
                 #  print('query_text: ', query_text)
                 query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
-                hits, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body)
+                _, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=0)
                 if hit_count == 0:
                     continue
+                hits, _ = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=hit_count)
 
                 words = set()
                 for hit in hits[:self.config.f_topk]:
                     hit_conversation_id = hit['_source']['conversation_id']
                     assert (conversation_id == hit_conversation_id), "%s != %s" % (
                         conversation_id, hit_conversation_id)
-                    phrase = hit['_source']['text']
+                    text = hit['_source']['text']
 
-                    for word in phrase.split():
+                    for word in text.split():
                         words.add(word)
 
                 words_tfidf = []

@@ -16,9 +16,9 @@ from collections import Counter
 import es_helper
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--idf_path', type=str, help='path of idf file.')
-parser.add_argument('--facts_path', type=str, help='facts path')
-parser.add_argument('--save_path', type=str, help='tf-idf save path')
+parser.add_argument('--idf_path', type=str, help='path of idf file.', default='../data/wiki_terms_idf.csv')
+parser.add_argument('--facts_path', type=str, help='facts path', default='../data/train.facts.txt')
+parser.add_argument('--save_path', type=str, help='tf-idf save path', default='../data/facts_tfidf_dict.pkl')
 args = parser.parse_args()
 
 def main():
@@ -62,6 +62,7 @@ def main():
         for hit in hits:
             text = hit['_source']['text']
             text.replace('__number__', '')
+            text.replace('__unk__', '')
             text.replace('__url__', '')
             texts += text + ' '
         c = Counter(texts.split())
