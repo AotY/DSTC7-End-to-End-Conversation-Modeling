@@ -36,9 +36,14 @@ def main():
             if not bool(line):
                 continue
 
-            _, conversation_id, _, _ = line.split('\t')
+            parts = line.split('\t')
+            if len(parts) != 4:
+                #  print('parts: %d' % len(parts))
+                continue
+
+            conversation_id = parts[1]
             conversation_ids.add(conversation_id)
-    conversation_ids = list(conversation_ids)
+    #  conversation_ids = list(conversation_ids)
 
 
     # 2, load wiki idf.
@@ -56,18 +61,23 @@ def main():
     for conversation_id in conversation_ids:
         query_body = es_helper.assemble_search_fact_body(conversation_id)
         _, total = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=0)
+        #  print('total: %d' % total)
+        if total == 0:
+            continue
         hits, _ = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=total)
-        texts = ''
+        texts = []
         tfidf_dict = {}
         for hit in hits:
             text = hit['_source']['text']
             text.replace('__number__', '')
             text.replace('__unk__', '')
             text.replace('__url__', '')
-            texts += text + ' '
-        c = Counter(texts.split())
-        total_count = sum(c.values())
-        for token, count in c.items():
+            texts.append(text)
+        words = ' '.join(texts).split()
+        words = [word for word in words if len(word.split()) > 0]
+        counter = Counter(words)
+        total_count = sum(counter.values())
+        for token, count in counter.items():
             tf = count / total_count
             tfidf = tf * idf_dict.get(token, 0.0)
             tfidf_dict[token] = tfidf

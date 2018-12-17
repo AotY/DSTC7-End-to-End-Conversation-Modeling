@@ -94,8 +94,11 @@ def save():
     with open(args.facts_path, 'r') as f:
         for line in tqdm(f):
             line = line.rstrip()
-
-            _, conversation_id, _, fact = line.split('\t')
+            parts = line.split('\t')
+            if len(parts) != 4:
+                print('parts: %d' % len(parts))
+                continue
+            conversation_id, fact = parts[1], parts[-1]
             fact = re.sub(r'__number__|__url__|__unk__', '', fact)
             if len(fact.split()) <= 3:
                 continue
