@@ -447,10 +447,10 @@ class KGModel(nn.Module):
         #  print('f_inputs: ', f_inputs)
 
         # [batch_size, max_len, hidden_size]
-        f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
+        #  f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
 
         # [batch_size, f_topk, embedding_size]
-        #  f_enc_outputs = self.f_encoder(f_inputs)
+        f_enc_outputs = self.f_encoder(f_inputs)
 
         # [max_len, batch_size, hidden_size]
         f_enc_outputs = f_enc_outputs.transpose(0, 1)
