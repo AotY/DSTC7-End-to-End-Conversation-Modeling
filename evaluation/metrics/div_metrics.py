@@ -49,8 +49,11 @@ def main():
     diff_num = len(sentence_dict)
     sentence_list = sorted(sentence_dict.items(), key=lambda item: item[1], reverse=True)
 
-    avg_diff_num = diff_num / line_num
+    print('div stats: %s' % args.predicted)
+
     most_comm_sentence = sentence_list[0][0]
+    avg_diff_num = diff_num / line_num
+
     print('diff ratio: %.4f' % avg_diff_num)
     print('most_comm_sentence: %s' % most_comm_sentence)
 
