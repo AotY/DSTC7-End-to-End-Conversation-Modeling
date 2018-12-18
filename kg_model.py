@@ -113,8 +113,7 @@ class KGModel(nn.Module):
             f_topk_length: [batch_size]
         '''
         enc_type = self.config.enc_type
-        if enc_type == 'q' or \
-                enc_type == 'qc':
+        if enc_type == 'q' or enc_type == 'qc':
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,

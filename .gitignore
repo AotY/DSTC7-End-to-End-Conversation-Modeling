@@ -5,6 +5,8 @@
 data/
 misc/*.txt
 *.txt
+.DS_Store
+*.DS_Store
 
 ### log
 logs/

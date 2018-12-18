@@ -57,7 +57,7 @@ class NormalEncoder(nn.Module):
             hidden_state: (h_n, c_n)
         '''
 
-        print('lengths: ', lengths)
+        #  print('lengths: ', lengths)
         """
         if lengths is not None and not sort:
             # sort lengths
