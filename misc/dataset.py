@@ -43,8 +43,7 @@ class Dataset:
 
     def read_data(self):
         self.logger.info('read data...')
-        _data_dict_path = os.path.join(
-            self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
         if not os.path.exists(_data_dict_path):
             datas = []
             batch_size = self.config.batch_size
@@ -57,8 +56,7 @@ class Dataset:
                         continue
 
                     subreddit_name, conversation_id, context, query, \
-                        response, hash_value, score, turn = line.split(
-                            ' SPLIT ')
+                        response, hash_value, score, turn = line.split(' SPLIT ')
 
                     if not bool(query) or not bool(response) \
                             or len(query.split()) < min_len \
