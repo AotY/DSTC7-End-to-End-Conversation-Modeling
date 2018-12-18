@@ -35,7 +35,9 @@ def read_convos(args, logger):
 
     logger.info('read convos...')
     n = 0
-    remove_lines = [121784, 160504, 161111, 537712, 633371, 741684, 1141582, 1172501, 1172681, 11245722, 1245725]
+    remove_lines = [121784, 160504, 161111, 537231, 537712, 633371, \
+                    740969, 741684, 1140310, 1141582, 1171210, 1172501, \
+                    1171390, 1172681, 11245722, 1244313, 1244316, 1245725]
     with open(args.raw_convos_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
@@ -44,10 +46,10 @@ def read_convos(args, logger):
             if n in remove_lines:
                 continue
 
-            #  if n == 200:
-                #  break
+            if n <= 1244316:
+                continue
 
-            #  print("line: %d" % n)
+            print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
