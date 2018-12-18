@@ -9,6 +9,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import TweetTokenizer
 from bs4 import BeautifulSoup
 import warnings
+from nltk import ngrams
+from collections import Counter
 
 
 def is_english(text):
@@ -21,6 +23,7 @@ def is_english(text):
 
 stop_words = set(stopwords.words('english'))
 punctuations = list(string.punctuation)
+punc_regex = re.compile('[%s]' % re.escape(string.punctuation.replace('_', '')))
 
 def remove_stop_words(words):
     words = [word for word in words if word not in stop_words]
@@ -58,6 +61,28 @@ class Tokenizer:
 
         return tokens
 
+    def clean_repeat(self, text, max_ngram=5):
+        tmp_text = punc_regex.sub('', text)
+        text_ngrams = ngrams(tmp_text.split(), max_ngram)
+        for words in text_ngrams:
+            if len(set(words)) == 1:
+                return ''
+
+        words = []
+        for i, word in enumerate(text.split()):
+            #  print(i)
+            if i == 0:
+                words.append(word)
+            else:
+                if word in punctuations:
+                    words.append(word)
+                else:
+                    if word == words[len(words) - 1]:
+                        continue
+                    else:
+                        words.append(word)
+        return ' '.join(words)
+
     def clean_str(self, text):
         text = text.lower()
         text = re.sub('^', ' ', text)
@@ -91,7 +116,6 @@ class Tokenizer:
         #  print('words: ', words)
         #  text = self.number_re.sub('__number__', text)
         text = ' '.join(words)
-        #  print(text)
 
         if text.count('__number__') > 12:
             return '' # merge multi to single
@@ -118,6 +142,11 @@ class Tokenizer:
 
         text = text.replace('__number __', ' __number__ ')
         text = text.replace('__url __', ' __url__ ')
+
+        text = self.clean_repeat(text)
+
+        if text == '':
+            return text
 
         # removal duplicate words
         text_words = text.split()
@@ -153,8 +182,17 @@ class Tokenizer:
         text = re.sub(r'\s+$', '', text)
         text = re.sub(r'\s+', ' ', text)  # remove extra spaces
 
-        text = text.replace('"', '')
-        text = text.replace('^', '')
+        #  text = text.replace('"', '')
+        #  text = text.replace('^', '')
+        text = text.replace('( )', '')
+        text = text.replace('[ ]', '')
+        text = text.replace('{ }', '')
+        text = text.replace("' '", '')
+        text = text.replace('" "', '')
+        text = text.replace('. .', '.')
+        text = text.replace(', ,', ',')
+        text = text.replace(': :', ':')
+        text = text.replace('; ;', ';')
 
         return text
 

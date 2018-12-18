@@ -26,11 +26,20 @@ def preprocess_opt(parser):
     # Data options
     group = parser.add_argument_group('Preprocess')
 
-    group.add_argument('--convos_file_path', required=True,
+    group.add_argument('--raw_convos_path', required=True,
                        help="train, test or valid convos.txt file path.")
 
-    group.add_argument('--facts_file_path', required=True,
+    group.add_argument('--raw_facts_path', required=True,
                        help="train, test or valid facts.txt file path.")
+
+    group.add_argument('--train_convos_path', required=True,
+                       help="train, test or valid convos.txt file path.")
+
+    group.add_argument('--train_facts_path', required=True,
+                       help="train, test or valid facts.txt file path.")
+
+    group.add_argument('--freq_save_path', required=True,
+                       help="word freq path")
 
     group.add_argument('--save_path', required=True, help="save path.")
 

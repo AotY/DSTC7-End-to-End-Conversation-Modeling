@@ -35,7 +35,7 @@ python train.py \
     --lr 0.0001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 1 \
+    --batch_size 10 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
@@ -52,7 +52,7 @@ python train.py \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/kg_qc_9_1_3_2018_12_17_10:48.pth \
+    # --checkpoint models/kg_qc_9_1_3_2018_12_17_10:48.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
