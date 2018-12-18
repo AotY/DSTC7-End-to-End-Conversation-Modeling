@@ -8,6 +8,7 @@
 Utils for transformer model.
 """
 import torch
+import torch.nn as nn
 import numpy as np
 
 
@@ -38,9 +39,26 @@ def get_sinusoid_encoding_table(n_position, embedding_size, padid=None):
 
     return torch.tensor(sinusoid_table, dtype=torch.float)
 
+def get_relative_encoding_table(n_position, embedding_size=512, max_relative_pos=10):
+    """
+    From tensor2tensor: https://github.com/tensorflow/tensor2tensor
+    return: [n_position, n_position, embedding_size]
+    """
+    range_vec = torch.arange(n_position)
+    range_mat = range_vec.repeat(n_position).view(n_position, n_position)
+    distance_mat = range_mat - range_mat.transpose(0, 1)
+    distance_mat_clipped = torch.clamp(distance_mat, -max_relative_pos, max_relative_pos)
+    final_mat = distance_mat_clipped + max_relative_pos
+
+    pos_size = max_relative_pos * 2 + 1
+    embedding_table = torch.rand(pos_size, embedding_size)
+    embedding = embedding_table.index_select(0, final_mat.view(-1)).view(n_position, n_position, embedding_size)
+
+    return embedding
+
 def get_attn_key_pad_mask(k, q, padid):
     '''
-        For masking out the padding part of key sequence. 
+        For masking out the padding part of key sequence.
         k: [batch_size, max_len]
         q: [batch_size, max_len]
     '''

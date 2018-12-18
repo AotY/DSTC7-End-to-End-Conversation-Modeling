@@ -87,7 +87,8 @@ class Encoder(nn.Module):
             enc_output, en_slf_attn = layer(
                 enc_output,
                 non_pad_mask=non_pad_mask,
-                attn_mask=attn_mask)
+                attn_mask=attn_mask
+            )
 
             if return_attns:
                 enc_slf_attn_list.append(en_slf_attn)
