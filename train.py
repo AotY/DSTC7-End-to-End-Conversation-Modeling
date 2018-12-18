@@ -383,7 +383,7 @@ def build_optimizer(model):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optim,
         mode='min',
-        factor=0.1,
+        factor=0.2,
         patience=args.lr_patience
     )
 
