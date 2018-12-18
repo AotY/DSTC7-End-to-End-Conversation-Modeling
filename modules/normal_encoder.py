@@ -57,11 +57,15 @@ class NormalEncoder(nn.Module):
             hidden_state: (h_n, c_n)
         '''
 
+        print('lengths: ', lengths)
         if lengths is not None and not sort:
             # sort lengths
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
+            print('sorted_indexes: ', sorted_indexes)
+
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
+            print('restore_indexes: ', restore_indexes)
 
             inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
 

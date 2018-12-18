@@ -20,7 +20,7 @@ python train.py \
     --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
-    --dropout 0.2 \
+    --dropout 0.0 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
@@ -35,12 +35,12 @@ python train.py \
     --lr 0.0001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 128 \
+    --batch_size 1 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
     --eval_interval 1800 \
-    --log_interval 90 \
+    --log_interval 10 \
     --lr_patience 3 \
     --es_patience 6 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
@@ -48,7 +48,7 @@ python train.py \
     --test_split 0.07 \
     --eval_batch 5 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task train \
     --share_embedding \
     --offline_type elastic \
