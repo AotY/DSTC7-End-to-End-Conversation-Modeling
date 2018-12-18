@@ -43,7 +43,12 @@ class Dataset:
 
     def read_data(self):
         self.logger.info('read data...')
-        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+        enc_type = self.config.enc_type
+        if enc_type in ['q', 'qc']:
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
+        else:
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+
         if not os.path.exists(_data_dict_path):
             datas = []
             batch_size = self.config.batch_size
@@ -64,18 +69,19 @@ class Dataset:
                         continue
 
                     # query
-                    words = [word for word in query.split()
-                             if len(word.split()) > 0]
-                    query_ids = self.vocab.words_to_id(words)
+                    q_words = [word for word in query.split() if len(word.split()) > 0]
+
+                    query_ids = self.vocab.words_to_id(q_words)
                     if len(query_ids) < min_len:
                         continue
+                    query_ids = query_ids[-min(q_max_len, len(query_ids)):]
 
                     # response
-                    words = [word for word in response.split()
-                             if len(word.split()) > 0]
-                    response_ids = self.vocab.words_to_id(words)
+                    r_words = [word for word in response.split() if len(word.split()) > 0]
+                    response_ids = self.vocab.words_to_id(r_words)
                     if len(response_ids) < min_len:
                         continue
+                    response_ids = response_ids[:min(r_max_len, len(response_ids))]
 
                     # context split by EOS
                     context_sentences = self.parser_context(context)
@@ -84,23 +90,31 @@ class Dataset:
 
                     context_sentences = context_sentences[-min(
                         self.config.c_max, len(context_sentences)):]
-                    #  print('context: ', context)
-                    #  print('context_sentences: ', context_sentences)
 
                     context_ids = []
                     for si, sentence in enumerate(context_sentences):
                         words = [word for word in sentence.split() if len(word.split()) > 0]
                         ids = self.vocab.words_to_id(words)
-                        """
-                        if si % 2 == 0:  # start
-                            ids = ids[-min(c_max_len, len(ids)):]
-                        else:  # reply
-                            ids = ids[:min(c_max_len, len(ids))]
-                        """
                         context_ids.append(ids)
 
-                    datas.append((subreddit_name, conversation_id,
-                                  context_ids, query_ids, response_ids, hash_value))
+                    if enc_type == 'q':
+                        query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                        enc_ids = query_ids
+                    elif enc_type == 'qc':
+                        enc_ids = []
+                        for ids in context_ids:
+                            enc_ids.extend(ids)
+                        enc_ids.extend(query_ids)
+                        enc_ids = enc_ids[-min(q_max_len, len(enc_ids)):]
+                    else:
+                        enc_ids = []
+                        enc_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
+                        query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                        enc_ids.append(query_ids)
+
+                    #  datas.append((subreddit_name, conversation_id,
+                                  #  context_ids, query_ids, response_ids, hash_value))
+                    datas.append((subreddit_name, conversation_id, enc_ids, response_ids, hash_value))
 
             np.random.shuffle(datas)
             # train-eval split
@@ -140,9 +154,7 @@ class Dataset:
             if len(sentence.split()) < self.config.min_len:
                 if i != len(sentences) - 1:
                     context_sentences = list()
-                    continue
-                else:
-                    continue
+                continue
             else:
                 context_sentences.append(sentence)
         return context_sentences
@@ -156,6 +168,7 @@ class Dataset:
         batch_size = self.config.batch_size
         c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
         f_max_len = self.config.f_max_len
+        enc_type = self.config.enc_type
         if batch_size > self._size_dict[task]:
             raise ValueError('batch_size: %d is too large.' % batch_size)
 
@@ -164,8 +177,6 @@ class Dataset:
             if task == 'train' or task == 'test':
                 self.reset_data(task, True)
                 cur_indicator = batch_size
-            else:
-                self.reset_data(task, False)
 
         enc_inputs = list()
         enc_inputs_length = list()
@@ -183,33 +194,20 @@ class Dataset:
 
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
 
-        """sort batch_data, by turn num"""
-        batch_data = sorted(
-            batch_data, key=lambda item: len(item[3]), reverse=True)
-        for i, (subreddit_name, conversation_id, context_ids, query_ids, response_ids, hash_value) in enumerate(batch_data):
+        """sort batch_data"""
+        batch_data = sorted(batch_data, key=lambda item: len(item[2]), reverse=True)
+
+        #  for i, (subreddit_name, conversation_id, context_ids, query_ids, response_ids, hash_value) in enumerate(batch_data):
+        for i, (subreddit_name, conversation_id, enc_ids, response_ids, hash_value) in enumerate(batch_data):
             subreddit_names.append(subreddit_name)
             conversation_ids.append(conversation_id)
             hash_values.append(hash_value)
 
-            if self.config.enc_type == 'q':
-                query_ids = query_ids[-min(q_max_len, len(query_ids)):]
-                enc_inputs_length.append(len(query_ids))
-                enc_input = torch.LongTensor(query_ids + [PAD_ID] * (q_max_len - len(query_ids))).to(self.device)
-                enc_inputs.append(enc_input)
-            elif self.config.enc_type == 'qc':
-                concat_ids = []
-                for ids in context_ids:
-                    concat_ids.extend(ids)
-                concat_ids.extend(query_ids)
-                concat_ids = concat_ids[-min(q_max_len, len(concat_ids)):]
-                enc_inputs_length.append(len(concat_ids))
-                enc_input = torch.LongTensor(concat_ids + [PAD_ID] * (q_max_len - len(concat_ids))).to(self.device)
+            if enc_type == 'q' or enc_type == 'qc':
+                enc_inputs_length.append(len(enc_ids))
+                enc_input = torch.LongTensor(enc_ids + [PAD_ID] * (q_max_len - len(enc_ids))).to(self.device)
                 enc_inputs.append(enc_input)
             else:
-                enc_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
-                query_ids = query_ids[-min(q_max_len, len(query_ids)):]
-                enc_ids.append(query_ids)
-
                 enc_turn_length.append(len(enc_ids))
                 enc_input_length = [1] * self.config.turn_num
                 pad_enc_ids = []
@@ -226,7 +224,6 @@ class Dataset:
                 enc_inputs.append(enc_input)
 
             # dec_inputs
-            response_ids = response_ids[:min(r_max_len, len(response_ids))]
             dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID]
                                          + [PAD_ID] * (r_max_len - len(response_ids))).to(self.device)
             dec_inputs.append(dec_input)
@@ -248,8 +245,7 @@ class Dataset:
 
                 f_inputs.append(f_input)
 
-        if self.config.enc_type == 'q' or \
-            self.config.enc_type == 'qc':
+        if enc_type == 'q' or enc_type == 'qc':
             # [max_len, batch_size]
             enc_inputs = torch.stack(enc_inputs, dim=1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
