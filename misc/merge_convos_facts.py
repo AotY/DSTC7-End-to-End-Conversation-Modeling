@@ -9,30 +9,44 @@ import logging
 from misc_opts import merge_convos_facts_opt
 
 '''
-merge data-official-2011,  data-official-2012-13
+merge data-official-2011,  data-official-2012-13 2014 2015-2017
 to
-train.convos.txt, train.facts.txt
+raw.convos.txt, raw.facts.txt
 '''
 
 
 def merge(opt, logger):
     convos_file = open(opt.save_convos_path, 'w', encoding='utf-8')
     facts_file = open(opt.save_facts_path, 'w', encoding='utf-8')
+    convos_hash_set = set()
+    facts_hash_set = set()
 
     for convos_facts_folder in opt.convos_facts_folder_list:
         # Return a list containing the names of the files in the directory.
         for file_name in os.listdir(convos_facts_folder):
             if file_name.endswith('convos.txt'):
-                logger.info("merge %s" % (file_name))
+                logger.info("merge concos: %s" % (file_name))
                 file_path = os.path.join(convos_facts_folder, file_name)
                 with open(file_path, 'r', encoding='utf-8') as f:
-                    convos_file.writelines(f.readlines())
+                    for line in f:
+                        line = line.rstrip()
+                        hash_value = line.split('\t')[0]
+                        if hash_value in convos_hash_set:
+                            continue
+                        convos_hash_set.add(hash_value)
+                        convos_file.write('%s\n' % line)
 
             elif file_name.endswith('facts.txt'):
-                logger.info("merge %s" % (file_name))
+                logger.info("merge facts: %s" % (file_name))
                 file_path = os.path.join(convos_facts_folder, file_name)
                 with open(file_path, 'r', encoding='utf-8') as f:
-                    facts_file.writelines(f.readlines())
+                    for line in f:
+                        line = line.rstrip()
+                        hash_value = line.split('\t')[0]
+                        if hash_value in facts_hash_set:
+                            continue
+                        facts_hash_set.add(hash_value)
+                        facts_file.write('%s\n' % line)
             else:
                 continue
 
@@ -57,8 +71,3 @@ if __name__ == '__main__':
     merge(opt, logger)
 
     logger.info('Merge finished.')
-
-
-
-
-
