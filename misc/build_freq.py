@@ -34,14 +34,18 @@ def main():
             if not bool(query) or not bool(response):
                 continue
 
+            context = context.replace('EOS', '')
             if len(context.split()) > 0:
-                freq_dict.update(context.split())
+                words = [word for word in context.split() if len(word.split()) > 0]
+                freq_dict.update(words)
 
             if len(query.split()) > 0:
-                freq_dict.update(query.split())
+                words = [word for word in query.split() if len(word.split()) > 0]
+                freq_dict.update(words)
 
             if len(response.split()) > 0:
-                freq_dict.update(response.split())
+                words = [word for word in response.split() if len(word.split()) > 0]
+                freq_dict.update(words)
 
     with open(args.facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
@@ -52,13 +56,13 @@ def main():
             _, _, _, fact = line.split('\t')
 
             if len(fact.split()) > 0:
-                freq_dict.update(fact.split())
+                words = [word for word in fact.split() if len(word.split()) > 0]
+                freq_dict.update(words)
 
     sorted_freq_list = sorted(freq_dict.items(), key=lambda item: item[1], reverse=True)
     with open(args.freq_path, 'w', encoding='utf-8') as f:
         for item in sorted_freq_list:
             f.write('%s\t%d\n' % (item[0], item[1]))
-
 
 if __name__ == '__main__':
     main()
