@@ -108,8 +108,7 @@ class Dataset:
                     else:
                         enc_ids = []
                         enc_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
-                        query_ids = query_ids[-min(q_max_len, len(query_ids)):]
-                        enc_ids.append(query_ids)
+                        enc_ids.append(query_ids[-min(q_max_len, len(query_ids)):])
 
                     #  datas.append((subreddit_name, conversation_id,
                                   #  context_ids, query_ids, response_ids, hash_value))

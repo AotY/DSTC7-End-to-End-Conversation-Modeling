@@ -24,8 +24,9 @@ class LuongAttnDecoder(nn.Module):
 
         # dropout
         self.dropout = nn.Dropout(config.dropout)
+        enc_type = config.enc_type
 
-        if config.enc_type.count('attn') != 0:
+        if enc_type.count('attn') != 0 or enc_type in ['q', 'qc']:
             self.enc_attn = Attention(config.hidden_size)
 
         # f_attn
@@ -47,12 +48,14 @@ class LuongAttnDecoder(nn.Module):
 
         # linear  [q, c, f]
         if config.model_type == 'kg':
-            if config.enc_type.count('attn') != 0:
+            #  if enc_type.count('attn') != 0:
+            if enc_type.count('attn') != 0 or enc_type in ['q', 'qc']:
                 self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
             else:
                 self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
         else:
-            if config.enc_type.count('attn') != 0:
+            #  if enc_type.count('attn') != 0:
+            if enc_type.count('attn') != 0 or enc_type in ['q', 'qc']:
                 self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
             else:
                 self.linear = nn.Linear(config.hidden_size * 1, config.vocab_size)
