@@ -251,6 +251,7 @@ def main(args, logger):
             domain_names, args.train_facts_path)
 
     # stats freq
+    """
     datas = queries + responses + facts
     for context in contexts:
         if len(context) != 0:
@@ -258,6 +259,7 @@ def main(args, logger):
 
     stat_frequency(datas, args.freq_save_path)
 
+    """
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
     logger = logging.getLogger(program)
