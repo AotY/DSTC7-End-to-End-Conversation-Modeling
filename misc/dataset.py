@@ -605,14 +605,22 @@ class Dataset:
         predicted_f.close()
 
     def save_ground_truth(self, task):
-        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.txt' % (
-            task, self.config.c_min, self.config.c_max
-        ))
+        enc_type = self.config.enc_type
+        if enc_type == 'q' or enc_type == 'qc':
+            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.txt' % (
+                enc_type, self.config.c_min, self.config.c_max
+            ))
+        else:
+            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
+                self.config.c_min, self.config.c_max
+            ))
+
         if os.path.exists(ground_truth_path):
             return
         ground_truth_f = open(ground_truth_path, 'w')
 
-        for _, _, _, _, response_ids, _ in self._data_dict[task]:
+        #  for i, (subreddit_name, conversation_id, enc_ids, response_ids, hash_value) in enumerate(batch_data):
+        for _, _, _, response_ids, _ in self._data_dict[task]:
             response_text = self.vocab.ids_to_text(response_ids)
             ground_truth_f.write('%s\n' % response_text)
         ground_truth_f.close()

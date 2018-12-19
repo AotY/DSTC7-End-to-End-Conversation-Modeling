@@ -61,7 +61,7 @@ class Tokenizer:
 
         return tokens
 
-    def clean_repeat(self, text, max_ngram=5):
+    def clean_repeat(self, text, max_ngram=6):
         tmp_text = punc_regex.sub('', text)
         text_ngrams = ngrams(tmp_text.split(), max_ngram)
         for words in text_ngrams:
@@ -120,7 +120,12 @@ class Tokenizer:
         if text.count('__number__') > 12:
             return '' # merge multi to single
 
-        text = text.replace('( __number__  )', '__number__')
+        text = self.clean_repeat(text)
+
+        if text == '':
+            return text
+
+        text = text.replace('( __number__ )', '__number__')
         text = text.replace('( __url__  )', '__url__')
 
         text = re.sub(r'(\s?__number__\s?)+', ' __number__ ', text)
@@ -143,21 +148,22 @@ class Tokenizer:
         text = text.replace('__number __', ' __number__ ')
         text = text.replace('__url __', ' __url__ ')
 
-        text = self.clean_repeat(text)
-
-        if text == '':
-            return text
+        text = text.replace('__url__ __url__', '__url__')
+        text = text.replace('__number__ __number__', '__number__')
+        text = text.replace('__number__ __url__', '__number__')
+        text = text.replace('__url__ __number__', '__url__')
+        text = text.replace('( __number__ )', '__number__')
+        text = text.replace('( __url__ )', '__url__')
 
         # removal duplicate words
         text_words = text.split()
         words = [text_words[0]]
+
         for word in text_words[1:]:
             if word in punctuations:
                 words.append(word)
             else:
-                if word == words[len(words) - 1]:
-                    continue
-                else:
+                if word != words[len(words) - 1]:
                     words.append(word)
 
         text = ' '.join(words)

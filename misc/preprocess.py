@@ -46,10 +46,10 @@ def read_convos(args, logger):
             if n in remove_lines:
                 continue
 
-            if n <= 1244316:
-                continue
+            #  if n <= 1244316:
+                #  continue
 
-            print("line: %d" % n)
+            #  print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
@@ -80,7 +80,7 @@ def read_convos(args, logger):
                 tokens = tokenizer.tokenize(sentence)
                 if len(tokens) > args.q_max_len or len(tokens) < args.min_len:
                     if si != len(sentences) - 1:
-                        sentences_tokens = list()
+                        sentences_tokens.clear()
                     continue
 
                 sentences_tokens.append(tokens)
@@ -208,11 +208,13 @@ def save_facts(facts, subreddit_names, conversation_ids, domain_names, save_path
                     (subreddit, conversation_id, domain, fact))
 
 def stat_frequency(datas, freq_save_path):
-    freq_dict = {}
+    #  freq_dict = {}
+    freq_dict = Counter()
     for data in datas:
-        for token in data:
-            freq_dict.setdefault(token, 0)
-            freq_dict[token] += 1
+        freq_dict.update(data)
+        #  for token in data:
+            #  freq_dict.setdefault(token, 0)
+            #  freq_dict[token] += 1
 
     sorted_freq_list = sorted(freq_dict.items(), key=lambda d: d[1], reverse=True)
     with open(freq_save_path, 'w', encoding='utf-8') as f:
@@ -248,7 +250,7 @@ def main(args, logger):
             domain_names, args.train_facts_path)
 
     # stats freq
-    datas = queries + responses
+    datas = queries + responses + facts
     for context in contexts:
         if len(context) != 0:
             datas.extend(context)

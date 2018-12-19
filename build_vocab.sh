@@ -9,7 +9,7 @@
 
 python misc/build_vocab.py \
     --distribution ./data/word.freq.txt \
-    --vocab_size 6e4 \
+    --vocab_size 5e4 \
     --min_count 3 \
-    --vocab_path ./data/vocab_word2idx.60004.dict
+    --vocab_path ./data/vocab_word2idx.50004.dict
  
