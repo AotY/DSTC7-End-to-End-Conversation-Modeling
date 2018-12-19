@@ -45,9 +45,9 @@ class Dataset:
         self.logger.info('read data...')
         enc_type = self.config.enc_type
         if enc_type in ['q', 'qc']:
-            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict2.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
         else:
-            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict2.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
 
         if not os.path.exists(_data_dict_path):
             datas = []
@@ -606,11 +606,11 @@ class Dataset:
     def save_ground_truth(self, task):
         enc_type = self.config.enc_type
         if enc_type == 'q' or enc_type == 'qc':
-            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.txt' % (
+            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.2.txt' % (
                 enc_type, self.config.c_min, self.config.c_max
             ))
         else:
-            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.txt' % (
+            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.2.txt' % (
                 self.config.c_min, self.config.c_max
             ))
 
