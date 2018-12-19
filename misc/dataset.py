@@ -115,7 +115,7 @@ class Dataset:
                                   #  context_ids, query_ids, response_ids, hash_value))
                     datas.append((subreddit_name, conversation_id, enc_ids, response_ids, hash_value))
 
-            np.random.shuffle(datas)
+            #  np.random.shuffle(datas)
             # train-eval split
             n_eval = self.config.eval_batch * batch_size
             n_train = int(len(datas) * (1. - self.config.test_split) - n_eval)

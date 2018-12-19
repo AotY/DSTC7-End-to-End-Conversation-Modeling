@@ -50,13 +50,16 @@ def main():
 
     print('div stats: %s' % args.predicted)
 
-    most_comm_sentence = sentence_list[0][0]
-    most_comm_count = sentence_list[0][1]
-
     avg_diff_num = diff_num / line_num
 
     print('diff ratio: %.4f' % avg_diff_num)
-    print('most_comm_sentence: %s  %d/%d' % (most_comm_sentence, most_comm_count, line_num))
+
+    topk = 5
+    for i in range(topk):
+        most_comm_sentence = sentence_list[i][0]
+        most_comm_count = sentence_list[i][1]
+
+        print('most_comm_sentence: %s  %d/%d' % (most_comm_sentence, most_comm_count, line_num))
 
     div1, div2 = calc_diversity()
     print('div1: %.4f' % div1)
