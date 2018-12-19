@@ -82,8 +82,8 @@ def read_convos(args, logger):
                     if si != len(sentences) - 1:
                         sentences_tokens.clear()
                     continue
-
-                sentences_tokens.append(tokens)
+                else:
+                    sentences_tokens.append(tokens)
 
             if len(sentences_tokens) == 0:
                 continue

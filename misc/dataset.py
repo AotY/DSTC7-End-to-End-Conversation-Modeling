@@ -74,7 +74,7 @@ class Dataset:
                     query_ids = self.vocab.words_to_id(q_words)
                     if len(query_ids) < min_len:
                         continue
-                    query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                    #  query_ids = query_ids[-min(q_max_len, len(query_ids)):]
 
                     # response
                     r_words = [word for word in response.split() if len(word.split()) > 0]
@@ -88,8 +88,7 @@ class Dataset:
                     if context_sentences is None or len(context_sentences) < self.config.c_min:
                         continue
 
-                    context_sentences = context_sentences[-min(
-                        self.config.c_max, len(context_sentences)):]
+                    context_sentences = context_sentences[-min(self.config.c_max, len(context_sentences)):]
 
                     context_ids = []
                     for si, sentence in enumerate(context_sentences):
@@ -153,7 +152,7 @@ class Dataset:
         for i, sentence in enumerate(sentences):
             if len(sentence.split()) < self.config.min_len:
                 if i != len(sentences) - 1:
-                    context_sentences = list()
+                    context_sentences.clear()
                 continue
             else:
                 context_sentences.append(sentence)
