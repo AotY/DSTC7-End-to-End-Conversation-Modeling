@@ -8,6 +8,7 @@ import argparse
 
 
 from utils import Tokenizer
+from collections import Counter
 from misc_opts import preprocess_opt
 
 '''

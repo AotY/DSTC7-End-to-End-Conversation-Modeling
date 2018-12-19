@@ -56,7 +56,7 @@ def main():
     avg_diff_num = diff_num / line_num
 
     print('diff ratio: %.4f' % avg_diff_num)
-    print('most_comm_sentence: %s,  %d/%d' % (most_comm_sentence, most_comm_count, line_num))
+    print('most_comm_sentence: %s  %d/%d' % (most_comm_sentence, most_comm_count, line_num))
 
     div1, div2 = calc_diversity()
     print('div1: %.4f' % div1)
