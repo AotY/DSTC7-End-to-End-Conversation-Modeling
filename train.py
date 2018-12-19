@@ -81,7 +81,7 @@ def train_epochs(model,
     evaluate_loss_list = []
     evaluate_accuracy_list = []
     for epoch in range(args.start_epoch, args.epochs + 1):
-        dataset.reset_data('train')
+        dataset.reset_data('train', True)
         total_loss = 0
         n_word_total = 0
         n_word_correct = 0

@@ -8,8 +8,7 @@
 Normal Encoder.
 """
 import torch
-import torch.nn as nn
-
+import torch.nn as nn 
 from modules.utils import rnn_factory
 from modules.utils import init_gru_orth, init_lstm_orth
 
@@ -68,7 +67,7 @@ class NormalEncoder(nn.Module):
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
             print('restore_indexes: ', restore_indexes)
 
-            inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
+            inputs = inputs.index_select(1, lengths)
         """
 
         # embedded
@@ -88,8 +87,8 @@ class NormalEncoder(nn.Module):
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
             """
             if not sort:
-                outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-                hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
+                outputs = outputs.index_select(1, restore_indexes)
+                hidden_state = hidden_state.index_select(1, restore_indexes)
             """
 
         return outputs, hidden_state
