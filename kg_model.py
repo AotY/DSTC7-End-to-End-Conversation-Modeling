@@ -11,7 +11,7 @@ from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
-import modules.transformer as transformer
+#  import modules.transformer as transformer
 from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -154,8 +154,9 @@ class KGModel(nn.Module):
                 dec_hidden = self.reduce_state(enc_hidden)
 
         # [q_attn, qc_attn, qc_seq_attn, qc_seq_h_attn]
-        if enc_type.count('attn') == 0:
-            enc_outputs = None
+        if enc_type not in ['q', 'qc']:
+            if enc_type.count('attn') == 0:
+                enc_outputs = None
 
         # fact encoder
         f_enc_outputs = None
@@ -235,8 +236,9 @@ class KGModel(nn.Module):
                 dec_hidden = self.reduce_state(enc_hidden)
 
         # [q_attn, qc_attn, qc_seq_attn, qc_seq_h_attn]
-        if enc_type.count('attn') == 0:
-            enc_outputs = None
+        if enc_type not in ['q', 'qc']:
+            if enc_type.count('attn') == 0:
+                enc_outputs = None
 
         # fact encoder
         f_enc_outputs = None
@@ -287,8 +289,7 @@ class KGModel(nn.Module):
                 f_enc_length=f_enc_length
             )
             output = F.log_softmax(output, dim=2)
-            dec_input = torch.argmax(output, dim=2).detach().view(
-                1, -1)  # [1, batch_size]
+            dec_input = torch.argmax(output, dim=2).detach().view(1, -1)  # [1, batch_size]
             greedy_outputs.append(dec_input)
 
         # [len, batch_size]  -> [batch_size, len]
