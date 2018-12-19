@@ -45,7 +45,7 @@ python train.py \
     --es_patience 10 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
-    --test_split 0.07 \
+    --test_split 0.08 \
     --eval_batch 10 \
     --start_epoch 1 \
     --model_type seq2seq \
