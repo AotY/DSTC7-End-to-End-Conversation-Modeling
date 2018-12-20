@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=7
 
 python train.py \
-    --pair_path data/train.convos.txt \
+    --pair_path data/train2.convos.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.60004.dict \
     --turn_num 3 \
     --turn_min 1 \
-    --turn_type concat \
+    --turn_type none \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -40,9 +40,9 @@ python train.py \
     --seed 23 \
     --device cuda \
     --eval_interval 1800 \
-    --log_interval 90 \
-    --lr_patience 2 \
-    --es_patience 3 \
+    --log_interval 100 \
+    --lr_patience 3 \
+    --es_patience 7 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --test_split 0.07 \
