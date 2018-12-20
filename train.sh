@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=5
 
 python train.py \
     --pair_path data/train2.convos.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
-    --c_min 0 \
-    --enc_type q \
+    --c_min 1 \
+    --enc_type qc \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -35,7 +35,7 @@ python train.py \
     --lr 0.001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 128 \
+    --batch_size 64 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
@@ -48,10 +48,10 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type seq2seq \
+    --model_type kg \
     --task train \
     --share_embedding \
-    # --offline_type elastic \
+    --offline_type elastic \
     # --checkpoint models/kg_qc_9_1_3_2018_12_17_10:48.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
