@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=3
 
 python train.py \
     --pair_path data/train2.convos.txt \
@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type q \
+    --enc_type qc \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -20,7 +20,7 @@ python train.py \
     --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
-    --dropout 0.0 \
+    --dropout 0.1 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
@@ -42,11 +42,11 @@ python train.py \
     --eval_interval 1800 \
     --log_interval 100 \
     --lr_patience 3 \
-    --es_patience 10 \
+    --es_patience 8 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --test_split 0.08 \
-    --eval_batch 10 \
+    --eval_batch 12 \
     --start_epoch 1 \
     --model_type seq2seq \
     --task train \
