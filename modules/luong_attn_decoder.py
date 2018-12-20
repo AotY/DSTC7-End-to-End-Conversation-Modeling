@@ -91,7 +91,7 @@ class LuongAttnDecoder(nn.Module):
         f_context = None
         if f_enc_outputs is not None:
             # [1, batch_size, hidden_size]
-            f_context, _ = self.f_attn(output, f_enc_outputs, f_enc_length)
+            f_context, _ = self.f_attn(enc_context, f_enc_outputs, f_enc_length)
 
         output_list = [output]
 

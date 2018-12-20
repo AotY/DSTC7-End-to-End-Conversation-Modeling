@@ -12,7 +12,7 @@ from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
 #  import modules.transformer as transformer
-from modules import tf
+#  import modules.tf as tf
 from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -66,19 +66,21 @@ class KGModel(nn.Module):
                 has_position=False
             )
             """
+            """
             self.f_encoder = tf.Models.Encoder(
-                n_src_vocab=config.vocab_size, 
-                len_max_seq=config.f_topk, 
+                n_src_vocab=config.vocab_size,
+                len_max_seq=config.f_topk,
                 d_word_vec=config.embedding_size,
-                n_layers=config.t_num_layers, 
-                n_head=config.num_heads, 
-                d_k=config.k_size, 
+                n_layers=config.t_num_layers,
+                n_head=config.num_heads,
+                d_k=config.k_size,
                 d_v=config.v_size,
-                d_model=config.transformer_size, 
-                d_inner=config.inner_hidden_size, 
+                d_model=config.transformer_size,
+                d_inner=config.inner_hidden_size,
                 dropout=config.dropout
             )
-            #  self.f_encoder = enc_embedding
+            """
+            self.f_encoder = enc_embedding
 
         # session encoder
         if config.enc_type.count('_h') != 0:
@@ -98,8 +100,9 @@ class KGModel(nn.Module):
         self.decoder = LuongAttnDecoder(config, dec_embedding)
 
         if self.f_encoder is not None:
-            self.f_encoder.embedding.weight = self.encoder.embedding.weight
-            #  self.f_encoder.weight = self.encoder.embedding.weight
+            #  self.f_encoder.embedding.weight = self.encoder.embedding.weight
+            #  self.f_encoder.src_word_emb.weight = self.encoder.embedding.weight
+            self.f_encoder.weight = self.encoder.embedding.weight
 
         # encoder, decode embedding share
         if config.share_embedding:
@@ -460,10 +463,10 @@ class KGModel(nn.Module):
         #  print('f_inputs: ', f_inputs)
 
         # [batch_size, max_len, hidden_size]
-        f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
+        #  f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
 
         # [batch_size, f_topk, embedding_size]
-        #  f_enc_outputs = self.f_encoder(f_inputs)
+        f_enc_outputs = self.f_encoder(f_inputs)
 
         # [max_len, batch_size, hidden_size]
         f_enc_outputs = f_enc_outputs.transpose(0, 1)

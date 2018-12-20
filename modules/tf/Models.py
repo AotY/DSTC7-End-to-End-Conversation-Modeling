@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import modules.tf.Constants as Constants
+from modules.tf import Constants
 from modules.tf.Layers import EncoderLayer, DecoderLayer
 
 __author__ = "Yu-Hsiang Huang"
@@ -62,7 +62,7 @@ class Encoder(nn.Module):
 
         super().__init__()
 
-        n_position = len_max_seq + 1
+        #  n_position = len_max_seq + 1
 
         self.src_word_emb = nn.Embedding(
             n_src_vocab, d_word_vec, padding_idx=Constants.PAD)
@@ -101,7 +101,7 @@ class Encoder(nn.Module):
         if return_attns:
             return enc_output, enc_slf_attn_list
 
-        return enc_output,
+        return enc_output
 
 class Decoder(nn.Module):
     ''' A decoder model with self attention mechanism. '''
