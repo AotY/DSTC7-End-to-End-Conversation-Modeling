@@ -11,7 +11,8 @@ from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
-import modules.transformer as transformer
+#  import modules.transformer as transformer
+from modules import tf
 from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -58,10 +59,24 @@ class KGModel(nn.Module):
 
         self.f_encoder = None
         if config.model_type == 'kg':
+            """
             self.f_encoder = transformer.Encoder(
                 config,
                 enc_embedding,
                 has_position=False
+            )
+            """
+            self.f_encoder = tf.Models.Encoder(
+                n_src_vocab=config.vocab_size, 
+                len_max_seq=config.f_topk, 
+                d_word_vec=config.embedding_size,
+                n_layers=config.t_num_layers, 
+                n_head=config.num_heads, 
+                d_k=config.k_size, 
+                d_v=config.v_size,
+                d_model=config.transformer_size, 
+                d_inner=config.inner_hidden_size, 
+                dropout=config.dropout
             )
             #  self.f_encoder = enc_embedding
 
