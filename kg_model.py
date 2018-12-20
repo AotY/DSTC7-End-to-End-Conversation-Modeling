@@ -11,7 +11,7 @@ from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
-#  import modules.transformer as transformer
+import modules.transformer as transformer
 from modules.utils import init_linear_wt
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
@@ -58,14 +58,12 @@ class KGModel(nn.Module):
 
         self.f_encoder = None
         if config.model_type == 'kg':
-            """
             self.f_encoder = transformer.Encoder(
                 config,
                 enc_embedding,
                 has_position=False
             )
-            """
-            self.f_encoder = enc_embedding
+            #  self.f_encoder = enc_embedding
 
         # session encoder
         if config.enc_type.count('_h') != 0:
@@ -85,8 +83,8 @@ class KGModel(nn.Module):
         self.decoder = LuongAttnDecoder(config, dec_embedding)
 
         if self.f_encoder is not None:
-            #  self.f_encoder.embedding.weight = self.encoder.embedding.weight
-            self.f_encoder.weight = self.encoder.embedding.weight
+            self.f_encoder.embedding.weight = self.encoder.embedding.weight
+            #  self.f_encoder.weight = self.encoder.embedding.weight
 
         # encoder, decode embedding share
         if config.share_embedding:
@@ -447,10 +445,10 @@ class KGModel(nn.Module):
         #  print('f_inputs: ', f_inputs)
 
         # [batch_size, max_len, hidden_size]
-        #  f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
+        f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
 
         # [batch_size, f_topk, embedding_size]
-        f_enc_outputs = self.f_encoder(f_inputs)
+        #  f_enc_outputs = self.f_encoder(f_inputs)
 
         # [max_len, batch_size, hidden_size]
         f_enc_outputs = f_enc_outputs.transpose(0, 1)
