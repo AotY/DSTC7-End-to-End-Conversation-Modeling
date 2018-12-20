@@ -45,9 +45,9 @@ class Dataset:
         self.logger.info('read data...')
         enc_type = self.config.enc_type
         if enc_type in ['q', 'qc']:
-            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.2.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.3.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
         else:
-            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.2.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.3.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
 
         if not os.path.exists(_data_dict_path):
             datas = []
@@ -96,23 +96,23 @@ class Dataset:
                         c_ids.append(ids)
 
                     if enc_type == 'q':
-                        enc_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                        enc_ids = q_ids[-min(q_max_len, len(q_ids)):]
                     elif enc_type == 'qc':
                         enc_ids = []
                         for ids in c_ids:
                             enc_ids.extend(ids)
-                        enc_ids.extend(query_ids)
+                        enc_ids.extend(q_ids)
                         enc_ids = enc_ids[-min(q_max_len, len(enc_ids)):]
                     else:
                         enc_ids = []
-                        enc_ids = [ids[-min(q_max_len, len(ids)):] for ids in context_ids]
-                        enc_ids.append(query_ids[-min(q_max_len, len(query_ids)):])
+                        enc_ids = [ids[-min(q_max_len, len(ids)):] for ids in c_ids]
+                        enc_ids.append(q_ids[-min(q_max_len, len(q_ids)):])
 
                     #  datas.append((subreddit_name, conversation_id,
-                                  #  context_ids, query_ids, response_ids, hash_value))
-                    datas.append((subreddit_name, conversation_id, enc_ids, response_ids, hash_value))
+                                  #  context_ids, q_ids, r_ids, hash_value))
+                    datas.append((subreddit_name, conversation_id, enc_ids, r_ids, hash_value))
 
-            #  np.random.shuffle(datas)
+            np.random.shuffle(datas)
             # train-eval split
             n_eval = self.config.eval_batch * batch_size
             n_train = int(len(datas) * (1. - self.config.test_split) - n_eval)
@@ -603,11 +603,11 @@ class Dataset:
     def save_ground_truth(self, task):
         enc_type = self.config.enc_type
         if enc_type == 'q' or enc_type == 'qc':
-            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.2.txt' % (
+            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.3.txt' % (
                 enc_type, self.config.c_min, self.config.c_max
             ))
         else:
-            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.2.txt' % (
+            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.3.txt' % (
                 self.config.c_min, self.config.c_max
             ))
 
