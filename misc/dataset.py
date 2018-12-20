@@ -96,21 +96,21 @@ class Dataset:
                         c_ids.append(ids)
 
                     if enc_type == 'q':
-                        enc_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                        enc_ids = q_ids[-min(q_max_len, len(q_ids)):]
                     elif enc_type == 'qc':
                         enc_ids = []
                         for ids in c_ids:
                             enc_ids.extend(ids)
-                        enc_ids.extend(query_ids)
+                        enc_ids.extend(q_ids)
                         enc_ids = enc_ids[-min(q_max_len, len(enc_ids)):]
                     else:
                         enc_ids = []
-                        enc_ids = [ids[-min(q_max_len, len(ids)):] for ids in context_ids]
-                        enc_ids.append(query_ids[-min(q_max_len, len(query_ids)):])
+                        enc_ids = [ids[-min(q_max_len, len(ids)):] for ids in c_ids]
+                        enc_ids.append(q_ids[-min(q_max_len, len(q_ids)):])
 
                     #  datas.append((subreddit_name, conversation_id,
-                                  #  context_ids, query_ids, response_ids, hash_value))
-                    datas.append((subreddit_name, conversation_id, enc_ids, response_ids, hash_value))
+                                  #  context_ids, query_ids, r_ids, hash_value))
+                    datas.append((subreddit_name, conversation_id, enc_ids, r_ids, hash_value))
 
             #  np.random.shuffle(datas)
             # train-eval split
@@ -220,8 +220,8 @@ class Dataset:
                 enc_inputs.append(enc_input)
 
             # dec_inputs
-            dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID]
-                                         + [PAD_ID] * (r_max_len - 1 - len(response_ids))).to(self.device)
+            dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID] \
+                                            + [PAD_ID] * (r_max_len - len(response_ids))).to(self.device)
             dec_inputs.append(dec_input)
 
             if self.config.model_type == 'kg':

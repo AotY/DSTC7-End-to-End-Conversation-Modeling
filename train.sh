@@ -6,9 +6,9 @@ python train.py \
     --pair_path data/train2.convos.txt \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.60004.dict \
-    --c_max 3 \
-    --c_min 1 \
-    --enc_type q \
+    --c_max 4 \
+    --c_min 2 \
+    --enc_type qc \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
