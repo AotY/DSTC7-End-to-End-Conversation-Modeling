@@ -220,8 +220,8 @@ class Dataset:
                 enc_inputs.append(enc_input)
 
             # dec_inputs
-            dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID]
-                                         + [PAD_ID] * (r_max_len - 1 - len(response_ids))).to(self.device)
+            dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID] \
+                                            + [PAD_ID] * (r_max_len - len(response_ids))).to(self.device)
             dec_inputs.append(dec_input)
 
             if self.config.model_type == 'kg':
