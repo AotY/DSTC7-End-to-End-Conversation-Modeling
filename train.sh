@@ -7,8 +7,8 @@ python train.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
-    --c_min 1 \
-    --enc_type qc \
+    --c_min 0 \
+    --enc_type q \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -35,7 +35,7 @@ python train.py \
     --lr 0.001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 64 \
+    --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
