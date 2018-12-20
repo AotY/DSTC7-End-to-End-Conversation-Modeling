@@ -45,9 +45,9 @@ class Dataset:
         self.logger.info('read data...')
         enc_type = self.config.enc_type
         if enc_type in ['q', 'qc']:
-            _data_dict_path = os.path.join(self.config.save_path, '_data_dict2.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.2.%s_%s_%s.pkl' % (enc_type, self.config.c_min, self.config.c_max))
         else:
-            _data_dict_path = os.path.join(self.config.save_path, '_data_dict2.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+            _data_dict_path = os.path.join(self.config.save_path, '_data_dict.2.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
 
         if not os.path.exists(_data_dict_path):
             datas = []
@@ -70,44 +70,42 @@ class Dataset:
 
                     # query
                     q_words = [word for word in query.split() if len(word.split()) > 0]
-
-                    query_ids = self.vocab.words_to_id(q_words)
-                    if len(query_ids) < min_len:
+                    q_ids = self.vocab.words_to_id(q_words)
+                    if len(q_ids) < min_len:
                         continue
-                    #  query_ids = query_ids[-min(q_max_len, len(query_ids)):]
+                    #  q_ids = q_ids[-min(q_max_len, len(q_ids)):]
 
                     # response
                     r_words = [word for word in response.split() if len(word.split()) > 0]
-                    response_ids = self.vocab.words_to_id(r_words)
-                    if len(response_ids) < min_len:
+                    r_ids = self.vocab.words_to_id(r_words)
+                    if len(r_ids) < min_len:
                         continue
-                    response_ids = response_ids[:min(r_max_len, len(response_ids))]
+                    r_ids = r_ids[:min(r_max_len, len(r_ids))]
 
                     # context split by EOS
-                    context_sentences = self.parser_context(context)
-                    if context_sentences is None or len(context_sentences) < self.config.c_min:
+                    c_sentences = self.parser_context(context)
+                    if c_sentences is None or len(c_sentences) < self.config.c_min:
                         continue
 
-                    context_sentences = context_sentences[-min(self.config.c_max, len(context_sentences)):]
+                    c_sentences = c_sentences[-min(self.config.c_max, len(c_sentences)):]
 
-                    context_ids = []
-                    for si, sentence in enumerate(context_sentences):
+                    c_ids = []
+                    for si, sentence in enumerate(c_sentences):
                         words = [word for word in sentence.split() if len(word.split()) > 0]
                         ids = self.vocab.words_to_id(words)
-                        context_ids.append(ids)
+                        c_ids.append(ids)
 
                     if enc_type == 'q':
-                        query_ids = query_ids[-min(q_max_len, len(query_ids)):]
-                        enc_ids = query_ids
+                        enc_ids = query_ids[-min(q_max_len, len(query_ids)):]
                     elif enc_type == 'qc':
                         enc_ids = []
-                        for ids in context_ids:
+                        for ids in c_ids:
                             enc_ids.extend(ids)
                         enc_ids.extend(query_ids)
                         enc_ids = enc_ids[-min(q_max_len, len(enc_ids)):]
                     else:
                         enc_ids = []
-                        enc_ids = [ids[-min(c_max_len, len(ids)):] for ids in context_ids]
+                        enc_ids = [ids[-min(q_max_len, len(ids)):] for ids in context_ids]
                         enc_ids.append(query_ids[-min(q_max_len, len(query_ids)):])
 
                     #  datas.append((subreddit_name, conversation_id,
@@ -223,7 +221,7 @@ class Dataset:
 
             # dec_inputs
             dec_input = torch.LongTensor([SOS_ID] + response_ids + [EOS_ID]
-                                         + [PAD_ID] * (r_max_len - len(response_ids))).to(self.device)
+                                         + [PAD_ID] * (r_max_len - 1 - len(response_ids))).to(self.device)
             dec_inputs.append(dec_input)
 
             if self.config.model_type == 'kg':

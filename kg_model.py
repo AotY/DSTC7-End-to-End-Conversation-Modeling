@@ -50,7 +50,7 @@ class KGModel(nn.Module):
             PAD_ID
         )
 
-        # c,q encoder
+        # c, q encoder
         self.encoder = NormalEncoder(
             config,
             enc_embedding
@@ -279,7 +279,7 @@ class KGModel(nn.Module):
         dec_input = torch.ones((1, self.config.batch_size),
                                dtype=torch.long, device=self.device) * SOS_ID
 
-        for i in range(self.config.r_max_len + 1):
+        for i in range(self.config.r_max_len):
             output, dec_hidden,  _ = self.decoder(
                 dec_input,
                 dec_hidden,
@@ -342,12 +342,12 @@ class KGModel(nn.Module):
         beam = Beam(
             batch_size,
             beam_size,
-            self.config.r_max_len + 1,
+            self.config.r_max_len,
             batch_position,
             EOS_ID
         )
 
-        for i in range(self.config.r_max_len + 1):
+        for i in range(self.config.r_max_len):
             output, dec_hidden, _ = self.decoder(
                 dec_input.view(1, -1),
                 dec_hidden,
