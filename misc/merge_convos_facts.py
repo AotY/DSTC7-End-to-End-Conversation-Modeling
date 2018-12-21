@@ -6,8 +6,8 @@ import os
 import argparse
 import logging
 
-from misc.misc_opts import merge_convos_facts_opt
-from misc.data_targets import targets_dict
+from misc_opts import merge_convos_facts_opt
+from data_targets import targets_dict
 
 '''
 merge train, dev, valid, test
@@ -28,10 +28,12 @@ def merge(args, logger):
                 missings.append(name)
                 continue
 
-            data_type = name.split('_')[1]
-            if name.endswith('REFS'):
+            logger.info("merge: %s" % (target))
+
+            data_type = target.split('_')[1]
+            if target.endswith('REFS'):
                 data_type = 'REFS'
-            logger.info("merge convos: %s" % (name))
+
             with open(path, 'r', encoding='utf-8') as f:
                 for line in f:
                     line = line.rstrip()

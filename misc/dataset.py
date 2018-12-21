@@ -20,10 +20,9 @@ from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
 class Dataset:
     """
-        assumptions of the data files
-        * SOS and EOS are top 2 tokens
-        * dictionary ordered by frequency
-        """
+    Read data, and
+    Load data
+    """
 
     def __init__(self,
                  config,
