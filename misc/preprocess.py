@@ -36,21 +36,22 @@ def read_convos(args, logger):
 
     logger.info('read convos...')
     n = 0
-    remove_lines = [121784, 160504, 161111, 537231, 537712, 633371, \
-                    740969, 741684, 1140310, 1141582, 1171210, 1172501, \
-                    1171390, 1172681, 11245722, 1244313, 1244316, 1245725]
+    remove_lines = [358572, 465433, 686444, 741684, 1128983]
     with open(args.raw_convos_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
             n += 1
 
-            #  if n in remove_lines:
+            if n in remove_lines:
+                continue
+
+            #  if n >= 1000:
+                #  break
+
+            #  if n <= 1128983:
                 #  continue
 
-            #  if n <= 1244316:
-                #  continue
-
-            print("line: %d" % n)
+            #  print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
@@ -171,6 +172,7 @@ def read_facts(args, logger):
     return facts, data_types, hash_values, \
         subreddit_names, conversation_ids, domain_names
 
+
 '''
 Statistical frequency
 datas, may be contexts + responses or contexts individually.
@@ -180,9 +182,9 @@ datas, may be contexts + responses or contexts individually.
 ''' save data to pair, conversation - response '''
 
 
-def save_train_convos(args, contexts, queries, data_types,
-                      responses, subreddit_names, conversation_ids,
-                      hash_values, scores, turns, save_path):
+def save_convos(args, contexts, queries, responses,
+                data_types, subreddit_names, conversation_ids,
+                hash_values, scores, turns, save_path):
 
     '''Save data in pair format.'''
     save_file = open(save_path, 'w', encoding='utf-8')
@@ -224,7 +226,7 @@ def main(args, logger):
     hash_values, subreddit_names, conversation_ids, \
     response_scores, dialogue_turns = read_convos(args, logger)
 
-    save_train_convos(
+    save_convos(
         args,
         contexts,
         queries,
