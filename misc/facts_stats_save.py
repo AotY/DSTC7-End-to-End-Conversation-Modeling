@@ -343,7 +343,8 @@ def facts_stas():
             if not bool(line):
                 continue
 
-            data_type, _, conversation_id, _, fact = line.split('\t')
+            # should filter by data_type
+            _, _, conversation_id, _, fact = line.split('\t')
 
             words = fact.split()
 

@@ -274,7 +274,7 @@ class Dataset:
         for task, task_datas in self._data_dict.items():
             self.logger.info('retrieval similarity facts for: %s data.' % task)
             for data in tqdm(task_datas):
-                _, conversation_id, context_ids, query_ids, _, hash_value = data
+                hash_value, _, conversation_id, context_ids, query_ids, _ = data
                 query = self.vocab.ids_to_text(query_ids)
                 query = re.sub(r'__number__|__url__|__unk__', '', query)
                 context_sentences = []

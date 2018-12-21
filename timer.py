@@ -6,6 +6,6 @@ import os
 
 time.sleep(3600 * 2)
 
-os.system('./train.pc.sh')
+os.system('./train.sh')
 
 
