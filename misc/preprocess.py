@@ -8,7 +8,6 @@ import argparse
 
 
 from utils import Tokenizer
-from collections import Counter
 from misc_opts import preprocess_opt
 
 '''
@@ -28,6 +27,7 @@ def read_convos(args, logger):
     queries = list()
     responses = list()
 
+    data_types = list()
     subreddit_names = list()
     conversation_ids = list()
     response_scores = list()
@@ -44,13 +44,13 @@ def read_convos(args, logger):
             line = line.rstrip()
             n += 1
 
-            if n in remove_lines:
-                continue
+            #  if n in remove_lines:
+                #  continue
 
             #  if n <= 1244316:
                 #  continue
 
-            #  print("line: %d" % n)
+            print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
@@ -59,6 +59,7 @@ def read_convos(args, logger):
 
             conversation = sub[-2]
             response = sub[-1]
+            data_type = sub[0]
 
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
@@ -92,23 +93,27 @@ def read_convos(args, logger):
             query_tokens = sentences_tokens[-1]
             context_tokens = sentences_tokens[:-1]
 
-            response_tokens = tokenizer.tokenize(response)
-            response_length = len(response_tokens)
+            if data_type != 'REFS':
+                response_tokens = tokenizer.tokenize(response)
+                response_length = len(response_tokens)
 
-            if response_length < args.min_len or response_length > args.r_max_len:
-                continue
+                if response_length < args.min_len or response_length > args.r_max_len:
+                    continue
+            else:
+                response_tokens = response.split()
 
             contexts.append(context_tokens)
             queries.append(query_tokens)
             responses.append(response_tokens)
 
-            hash_values.append(sub[0])
-            subreddit_names.append(sub[1])
-            conversation_ids.append(sub[2])
-            response_scores.append(sub[3])
-            dialogue_turns.append(sub[4])
+            data_types.append(data_type)
+            hash_values.append(sub[1])
+            subreddit_names.append(sub[2])
+            conversation_ids.append(sub[3])
+            response_scores.append(sub[4])
+            dialogue_turns.append(sub[5])
 
-    return contexts, queries, responses, \
+    return contexts, queries, responses, data_types, \
         hash_values, subreddit_names, conversation_ids, \
         response_scores, dialogue_turns
 
@@ -121,6 +126,7 @@ Read facts file.
 def read_facts(args, logger):
     facts = []
 
+    data_types = []
     hash_values = []
     subreddit_names = []
     conversation_ids = []
@@ -142,7 +148,7 @@ def read_facts(args, logger):
 
             sub = line.split('\t')
             fact = sub[-1]
-
+            data_type = sub[0]
             #  if fact[0] not in ['<', '"', '^']:
                 #  continue
 
@@ -155,14 +161,15 @@ def read_facts(args, logger):
 
             facts.append(fact_tokens)
 
-            hash_values.append(sub[0])
-            subreddit_names.append(sub[1])
-            conversation_ids.append(sub[2])
-            domain_names.append(sub[3])
+            data_types.append(data_type)
+            hash_values.append(sub[1])
+            subreddit_names.append(sub[2])
+            conversation_ids.append(sub[3])
+            domain_names.append(sub[4])
 
 
-    return facts, hash_values, subreddit_names, \
-            conversation_ids, domain_names
+    return facts, data_types, hash_values, \
+        subreddit_names, conversation_ids, domain_names
 
 '''
 Statistical frequency
@@ -173,14 +180,15 @@ datas, may be contexts + responses or contexts individually.
 ''' save data to pair, conversation - response '''
 
 
-def save_train_convos(args, contexts, queries,
+def save_train_convos(args, contexts, queries, data_types,
                       responses, subreddit_names, conversation_ids,
                       hash_values, scores, turns, save_path):
 
     '''Save data in pair format.'''
     save_file = open(save_path, 'w', encoding='utf-8')
-    for subreddit_name, conversation_id, context, \
-        query, response, hash_value, score, turn in zip(subreddit_names, conversation_ids, contexts, \
+    for data_type, subreddit_name, conversation_id, context, \
+        query, response, hash_value, score, turn \
+        in zip(data_types, subreddit_names, conversation_ids, contexts, \
                 queries, responses, hash_values, scores, turns):
 
         if len(context) == 0:
@@ -194,37 +202,25 @@ def save_train_convos(args, contexts, queries,
 
         query = ' '.join(query)
         response = ' '.join(response)
-        save_file.write('%s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s\n' % \
-                (subreddit_name, conversation_id, context, query, response, hash_value, score, turn))
+        save_file.write('%s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s\n' % \
+                (data_type, subreddit_name, conversation_id, context, query, response, hash_value, score, turn))
 
     save_file.close()
 
 
-def save_facts(facts, subreddit_names, conversation_ids, domain_names, save_path):
+def save_facts(facts, data_types, subreddit_names, conversation_ids, domain_names, save_path):
     with open(save_path, 'w', encoding='utf-8') as f:
-        for fact, subreddit, conversation_id, domain in zip(facts, subreddit_names, conversation_ids, domain_names):
+        for data_type, fact, subreddit, conversation_id, domain \
+            in zip(data_types, facts, subreddit_names, conversation_ids, domain_names):
+
             if isinstance(fact, list):
                 fact = ' '.join(fact)
-            f.write('%s\t%s\t%s\t%s\n' %
-                    (subreddit, conversation_id, domain, fact))
 
-def stat_frequency(datas, freq_save_path):
-    #  freq_dict = {}
-    freq_dict = Counter()
-    for data in datas:
-        freq_dict.update(data)
-        #  for token in data:
-            #  freq_dict.setdefault(token, 0)
-            #  freq_dict[token] += 1
-
-    sorted_freq_list = sorted(freq_dict.items(), key=lambda d: d[1], reverse=True)
-    with open(freq_save_path, 'w', encoding='utf-8') as f:
-        for item in sorted_freq_list:
-            f.write('%s\t%d\n' % (item[0], item[1]))
-
+            f.write('%s\t%s\t%s\t%s\t%s\n' %
+                    (data_type, subreddit, conversation_id, domain, fact))
 
 def main(args, logger):
-    contexts, queries, responses, \
+    contexts, queries, responses, data_types, \
     hash_values, subreddit_names, conversation_ids, \
     response_scores, dialogue_turns = read_convos(args, logger)
 
@@ -233,6 +229,7 @@ def main(args, logger):
         contexts,
         queries,
         responses,
+        data_types,
         subreddit_names,
         conversation_ids,
         hash_values,
@@ -242,24 +239,14 @@ def main(args, logger):
     )
 
     #  read facts
-    facts, facts_hash_values, \
+    facts, facts_data_types, facts_hash_values, \
         facts_subreddit_names, facts_conversation_ids, \
         domain_names = read_facts(args, logger)
 
     #  save raw facts to txt
-    save_facts(facts, facts_subreddit_names, facts_conversation_ids, \
+    save_facts(facts, facts_data_types, facts_subreddit_names, facts_conversation_ids, \
             domain_names, args.train_facts_path)
 
-    # stats freq
-    """
-    datas = queries + responses + facts
-    for context in contexts:
-        if len(context) != 0:
-            datas.extend(context)
-
-    stat_frequency(datas, args.freq_save_path)
-
-    """
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
     logger = logging.getLogger(program)

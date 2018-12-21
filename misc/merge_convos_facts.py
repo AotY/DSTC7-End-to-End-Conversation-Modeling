@@ -6,52 +6,44 @@ import os
 import argparse
 import logging
 
-from misc_opts import merge_convos_facts_opt
+from misc.misc_opts import merge_convos_facts_opt
+from misc.data_targets import targets_dict
 
 '''
-merge data-official-2011,  data-official-2012-13 2014 2015-2017
+merge train, dev, valid, test
 to
 raw.convos.txt, raw.facts.txt
 '''
 
+def merge(args, logger):
+    convos_file = open(args.save_convos_path, 'w', encoding='utf-8')
+    facts_file = open(args.save_facts_path, 'w', encoding='utf-8')
 
-def merge(opt, logger):
-    convos_file = open(opt.save_convos_path, 'w', encoding='utf-8')
-    facts_file = open(opt.save_facts_path, 'w', encoding='utf-8')
-    convos_hash_set = set()
-    facts_hash_set = set()
-
-    for convos_facts_folder in opt.convos_facts_folder_list:
-        # Return a list containing the names of the files in the directory.
-        for file_name in os.listdir(convos_facts_folder):
-            if file_name.endswith('convos.txt'):
-                logger.info("merge concos: %s" % (file_name))
-                file_path = os.path.join(convos_facts_folder, file_name)
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        line = line.rstrip()
-                        hash_value = line.split('\t')[0]
-                        if hash_value in convos_hash_set:
-                            continue
-                        convos_hash_set.add(hash_value)
-                        convos_file.write('%s\n' % line)
-
-            elif file_name.endswith('facts.txt'):
-                logger.info("merge facts: %s" % (file_name))
-                file_path = os.path.join(convos_facts_folder, file_name)
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        line = line.rstrip()
-                        hash_value = line.split('\t')[0]
-                        if hash_value in facts_hash_set:
-                            continue
-                        facts_hash_set.add(hash_value)
-                        facts_file.write('%s\n' % line)
-            else:
+    missings = []
+    for target, names in targets_dict.items():
+        names = names.split()
+        for name in names:
+            path = os.path.join(args.data_dir, name)
+            if not os.path.exists(path):
+                missings.append(name)
                 continue
+
+            data_type = name.split('_')[1]
+            if name.endswith('REFS'):
+                data_type = 'REFS'
+            logger.info("merge convos: %s" % (name))
+            with open(path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.rstrip()
+
+                    if name.endswith('convos.txt') or name.endswith('refs.txt'):
+                        convos_file.write('%s\t%s\n' % (data_type, line))
+                    elif name.endswith('facts.txt'):
+                        facts_file.write('%s\t%s\n' % (data_type, line))
 
     convos_file.close()
     facts_file.close()
+    logger.info('missing: {}'.format(missings))
 
 
 if __name__ == '__main__':
@@ -66,8 +58,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=program,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     merge_convos_facts_opt(parser)
-    opt = parser.parse_args()
+    args = parser.parse_args()
 
-    merge(opt, logger)
+    merge(args, logger)
 
     logger.info('Merge finished.')
