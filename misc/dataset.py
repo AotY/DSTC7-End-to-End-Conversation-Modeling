@@ -44,10 +44,9 @@ class Dataset:
         """split to train, dev, valid, test"""
         self.logger.info('read data...')
         _data_dict_path = os.path.join(self.config.save_path, '_data_dict.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
-
         if not os.path.exists(_data_dict_path):
-            c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
             min_len = self.config.min_len
+            c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
             with open(self.config.convos_path, 'r', encoding='utf-8') as f:
                 for line in tqdm(f):
                     line = line.rstrip()
@@ -65,7 +64,6 @@ class Dataset:
                     q_ids = self.vocab.words_to_id(q_words)
                     if len(q_ids) < min_len:
                         continue
-                    #  q_ids = q_ids[-min(q_max_len, len(q_ids)):]
 
                     # response
                     if data_type != 'TEST':
@@ -75,7 +73,7 @@ class Dataset:
                             continue
                         r_ids = r_ids[:min(r_max_len, len(r_ids))]
                     else:
-                        rids = []
+                        r_ids = []
 
                     # context split by EOS
                     c_sentences = self.parser_context(context)
@@ -93,7 +91,7 @@ class Dataset:
                     if self._data_dict.get(data_type) is None:
                         self._data_dict[data_type] = list()
 
-                    self._data_dict[data_type].append((subreddit_name, conversation_id, c_ids, q_ids, r_ids, hash_value))
+                    self._data_dict[data_type].append((hash_value, subreddit_name, conversation_id, c_ids, q_ids, r_ids))
 
             pickle.dump(self._data_dict, open(_data_dict_path, 'wb'))
         else:
@@ -140,7 +138,7 @@ class Dataset:
         batch_data = self._data_dict[task][self._indicator_dict[task]: cur_indicator]
 
         padded_batch_data = list()
-        for subreddit_name, conversation_id, c_ids, q_ids, r_ids, hash_value in batch_data:
+        for hash_value, subreddit_name, conversation_id, c_ids, q_ids, r_ids in batch_data:
             enc_len = None
             turn_len = None
             enc_ids = None
@@ -589,21 +587,25 @@ class Dataset:
 
     def save_ground_truth(self, task):
         enc_type = self.config.enc_type
-        if enc_type == 'q' or enc_type == 'qc':
-            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s_%s.3.txt' % (
-                enc_type, self.config.c_min, self.config.c_max
-            ))
-        else:
-            ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s_%s.3.txt' % (
-                self.config.c_min, self.config.c_max
-            ))
+        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s.ground_truth.txt' % (
+            task
+        ))
 
         if os.path.exists(ground_truth_path):
             return
         ground_truth_f = open(ground_truth_path, 'w')
 
-        #  for i, (subreddit_name, conversation_id, enc_ids, response_ids, hash_value) in enumerate(batch_data):
-        for _, _, _, response_ids, _ in self._data_dict[task]:
-            response_text = self.vocab.ids_to_text(response_ids)
+        test_hash_values = list()
+        for hash_value, _, _, _, _, _ in self._data_dict[task]:
+            test_hash_values.append(hash_value)
+
+        refs_response_dict = {}
+        for hash_value, _, _, _, _, r_ids in self._data_dict['REFS']:
+            response_text = self.vocab.ids_to_text(r_ids)
+            refs_response_dict[hash_value] = response_text
+
+        for hash_value in test_hash_values:
+            response_text = refs_response_dict.get(hash_value, '')
             ground_truth_f.write('%s\n' % response_text)
+
         ground_truth_f.close()

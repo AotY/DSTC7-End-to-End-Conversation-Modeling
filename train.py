@@ -75,13 +75,13 @@ def train_epochs(model,
                  criterion,
                  vocab,
                  early_stopping):
-
+    task = 'TRAIN'
     start = time.time()
-    max_load = int(np.ceil(dataset._size_dict['train'] / args.batch_size))
+    max_load = int(np.ceil(len(dataset._data_dict[task]) / args.batch_size))
     evaluate_loss_list = []
     evaluate_accuracy_list = []
     for epoch in range(args.start_epoch, args.epochs + 1):
-        dataset.reset_data('train', True)
+        dataset.reset_data(task, True)
         total_loss = 0
         n_word_total = 0
         n_word_correct = 0
@@ -91,7 +91,7 @@ def train_epochs(model,
             # load data
             dec_inputs, enc_inputs, enc_inputs_length, \
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('train')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data(task)
 
             # train and get cur loss
             loss, n_correct, n_word = train(model,
@@ -225,6 +225,7 @@ def train(model,
 
 '''
 evaluate model.
+dev, eval
 '''
 
 
@@ -239,14 +240,16 @@ def evaluate(model,
     n_word_total = 0
     n_word_correct = 0
 
-    max_load = int(np.ceil(dataset._size_dict['test'] / args.batch_size))
-    dataset.reset_data('test', True)
+    task = 'VALID'
+    max_load = int(np.ceil(len(dataset._data_dict[task]) / args.batch_size))
+
+    dataset.reset_data(task, True)
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             # load data
             dec_inputs, enc_inputs, enc_inputs_length, \
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('test')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data(task)
 
             dec_outputs = model(
                 enc_inputs,
@@ -273,18 +276,25 @@ def evaluate(model,
     return loss_per_word, accuracy
 
 
+"""
+test
+"""
+
 def decode(model, dataset, epoch):
     logger.info('decode...')
     # Turn on evaluation mode which disables dropout.
     model.eval()
-    dataset.reset_data('eval', False)
-    max_load = int(np.floor(dataset._size_dict['eval'] / args.batch_size))
-    dataset.save_ground_truth('eval')
+    task = 'TEST'
+
+    dataset.reset_data(task, False)
+    max_load = int(np.floor(len(dataset._data_dict[task]) / args.batch_size))
+    dataset.save_ground_truth(task)
+
     with torch.no_grad():
         for load in tqdm(range(1, max_load + 1)):
             dec_inputs, enc_inputs, enc_inputs_length, \
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
-                subreddit_names, conversation_ids, hash_values = dataset.load_data('eval')
+                subreddit_names, conversation_ids, hash_values = dataset.load_data(task)
 
             # greedy: [batch_size, max_len]
             # beam_search: [batch_sizes, best_n, len]

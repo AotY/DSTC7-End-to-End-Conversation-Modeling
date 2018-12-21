@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=6
 
 python train.py \
     --save_path data/ \
-    --convos_path ./data/cleaned.2.convos.txt \
-    --facts_path ./data/cleaned.2.convos.txt \
-    --vocab_path data/vocab_word2idx.2.60004.dict \
+    --convos_path ./data/cleaned.2.convos.txt.simpler \
+    --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
     --c_min 1 \
     --enc_type qc \
@@ -49,14 +48,15 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/kg_qc_1_1_3_2018_12_20_15:17.pth \
+    # --checkpoint models/kg_qc_1_1_3_2018_12_20_15:17.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
     # --pre_trained_embedding \
+    # --facts_path ./data/cleaned.2.convos.txt \
 
 /
