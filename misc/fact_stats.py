@@ -4,38 +4,11 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-<title>(total): 8471
-Wikipedia: 6925
-
-title_count: 8555
-wiki_count: 6925
-wiki ratio: 0.8095
-wiki_table_count: 5351
-table_ratio: 0.7727
-h2 count: 6909
-h2 ratio: 0.9977
-abstract count: 6916
-abstract ratio: 0.9987
-
-
-title_count: 33386
-wiki_count: 15211
-
-wiki ratio: 0.4556
-
-wiki_table_count: 11062
-table_ratio: 0.7272
-
-h2 count: 139
-h2 ratio: 0.0091
-
-abstract count: 15116
-abstract ratio: 0.9938
-"""
+import os
 import re
 import string
 import pickle
+import argparse
 from tqdm import tqdm
 from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
@@ -45,14 +18,17 @@ from utils import Tokenizer
 from gensim.models import KeyedVectors
 from utils import remove_stop_words
 
-#  import es_helper
-#  es = es_helper.get_connection()
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--facts_path', type=str, help='', default='')
+parser.add_argument('--f_min_len', type=int, help='', default='')
+parser.add_argument('--save_path', type=int, help='', default='')
+
+args = parser.parse_args()
 
 tokenizer = Tokenizer()
 
-
-
-def wiki_stats(facts_path):
+def wiki_stats():
     title_count = 0
     wiki_count = 0
     wiki_table_count = 0
@@ -78,7 +54,7 @@ def wiki_stats(facts_path):
     wiki_reference_dict = {}
     abstract_count = 0
 
-    with open(facts_path, 'r', encoding='utf-8') as f:
+    with open(args.facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
             if not bool(line):
@@ -356,58 +332,57 @@ def conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, 
     save_f.close()
 
 
-def facts_p_stats(facts_path):
-    total_p = 0
-    p_count_dict = Counter()
-    p_len_dict = Counter()
-    facts_p_dict = {}
-    with open(facts_path, 'r', encoding='utf-8') as f:
+def facts_stas():
+    total = 0
+    count_dict = Counter()
+    len_dict = Counter()
+    facts_dict = {}
+    with open(args.facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
             if not bool(line):
                 continue
 
-            _, conversation_id, _, fact = line.split('\t')
+            data_type, _, conversation_id, _, fact = line.split('\t')
 
-            if p_count_dict.get(conversation_id, 0) == 0:
-                p_count_dict[conversation_id] = 0
-                facts_p_dict[conversation_id] = []
+            words = fact.split()
 
-            if fact.startswith('<p>'):
-                total_p += 1
-                p_count_dict[conversation_id] += 1
-                p_len_dict[len(fact.split())] = p_len_dict.get(len(fact.split()), 0) + 1
+            if len(words) < args.f_min_len:
+                continue
 
-                p = BeautifulSoup(fact, 'lxml').text
-                p = re.sub(r'\[ [\d|\w]+ ]', '', p)
-                p_words = tokenizer.tokenize(p)
-                # remove <number>, <url>
-                p_words = [word for word in p_words if word not in ['<number>', '<url>']]
+            if count_dict.get(conversation_id, 0) == 0:
+                count_dict[conversation_id] = 0
+                facts_dict[conversation_id] = []
 
-                if len(p_words) < 5:
-                    continue
-                p_words = p_words[:250]
-                facts_p_dict[conversation_id].append(' '.join(p_words))
+            total += 1
 
-    print('total p: %d' % total_p)
-    print('avg p: %.4f' % (total_p / len(p_count_dict)))
+            count_dict[conversation_id] += 1
+
+            len_dict[len(words)] = len_dict.get(len(words), 0) + 1
+
+            facts_dict[conversation_id].append(' '.join(words))
+
+    print('total : %d' % total)
+    print('avg : %.4f' % (total / len(count_dict)))
+
     """
-    total p: 577087
-    avg p: 29.7437
+    total : 577087
+    avg : 29.7437
     """
 
-    save_distribution(p_count_dict, 'facts_p_count')
-    save_distribution(p_len_dict, 'facts_p_len')
+    save_distribution(count_dict, 'facts_count')
+    save_distribution(len_dict, 'facts_len')
 
-    pickle.dump(facts_p_dict, open('./../data/facts_p_dict.pkl', 'wb'))
+    facts_save_path = os.path.join(args.save_path, 'facts_dict.pkl')
+    pickle.dump(facts_dict, open(facts_save_path, 'wb'))
 
 
-def facts_tag_stats(facts_path):
+def facts_tag_stats():
     total_tag = 0
     tag_count_dict = Counter()
     tag_len_dict = Counter()
     facts_tag_dict = {}
-    with open(facts_path, 'r', encoding='utf-8') as f:
+    with open(args.facts_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
             if not bool(line):
@@ -449,13 +424,12 @@ def facts_tag_stats(facts_path):
 
 def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[1], reverse=True)
-    with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
+    with open(name + '.dist.txt', 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
 
 if __name__ == '__main__':
-    facts_path = './../data/raw_facts.txt'
-    conversation_path = '../data/train.convos.txt'
+    #  conversation_path = '../data/train.convos.txt'
 
     #  wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, wiki_reference_dict = wiki_stats(facts_path)
     #  #  similarity words
@@ -463,7 +437,39 @@ if __name__ == '__main__':
     #  fasttext = KeyedVectors.load_word2vec_format(vec_file, binary=True)
     #  conversation_table_stats(wiki_table_dict, wiki_h2_dict, wiki_abstract_dict, conversation_path, fasttext)
 
-    facts_tag_stats(facts_path)
-    facts_p_stats(facts_path)
+    #  facts_tag_stats(facts_path)
+    facts_stas()
 
     print('stats finishing...')
+
+
+"""
+<title>(total): 8471
+Wikipedia: 6925
+
+title_count: 8555
+wiki_count: 6925
+wiki ratio: 0.8095
+wiki_table_count: 5351
+table_ratio: 0.7727
+h2 count: 6909
+h2 ratio: 0.9977
+abstract count: 6916
+abstract ratio: 0.9987
+
+
+title_count: 33386
+wiki_count: 15211
+
+wiki ratio: 0.4556
+
+wiki_table_count: 11062
+table_ratio: 0.7272
+
+h2 count: 139
+h2 ratio: 0.0091
+
+abstract count: 15116
+abstract ratio: 0.9938
+"""
+

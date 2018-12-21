@@ -20,27 +20,29 @@ def merge(args, logger):
     facts_file = open(args.save_facts_path, 'w', encoding='utf-8')
 
     missings = []
-    for target, names in targets_dict.items():
-        names = names.split()
-        for name in names:
-            path = os.path.join(args.data_dir, name)
-            if not os.path.exists(path):
-                missings.append(name)
+    for target_name, names_str in targets_dict.items():
+        filenames = names_str.split()
+        for filename in filenames:
+            filepath = os.path.join(args.data_dir, filename)
+            if not os.path.exists(filepath):
+                missings.append(filename)
                 continue
 
-            logger.info("merge: %s" % (target))
+            logger.info("merge: %s" % (target_name))
 
-            data_type = target.split('_')[1]
-            if target.endswith('REFS'):
+            parts = target_name.split('_')[1]
+            data_type = parts[1]
+            #  if target_name.endswith('REFS'):
+            if parts[-1] == 'REFS':
                 data_type = 'REFS'
 
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 for line in f:
                     line = line.rstrip()
 
-                    if name.endswith('convos.txt') or name.endswith('refs.txt'):
+                    if filename.endswith('convos.txt') or filename.endswith('refs.txt'):
                         convos_file.write('%s\t%s\n' % (data_type, line))
-                    elif name.endswith('facts.txt'):
+                    elif filename.endswith('facts.txt'):
                         facts_file.write('%s\t%s\n' % (data_type, line))
 
     convos_file.close()
