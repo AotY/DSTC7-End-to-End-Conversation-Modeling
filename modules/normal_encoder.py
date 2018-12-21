@@ -8,7 +8,7 @@
 Normal Encoder.
 """
 import torch
-import torch.nn as nn 
+import torch.nn as nn
 from modules.utils import rnn_factory
 from modules.utils import init_gru_orth, init_lstm_orth
 
@@ -56,6 +56,7 @@ class NormalEncoder(nn.Module):
             hidden_state: (h_n, c_n)
         '''
 
+        #  print('inputs: ', inputs)
         #  print('lengths: ', lengths)
         """
         if lengths is not None and not sort:

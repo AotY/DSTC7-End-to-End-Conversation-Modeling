@@ -219,6 +219,8 @@ class Dataset:
             conversation_ids.append(conversation_id)
 
             enc_inputs.append(enc_ids)
+            enc_inputs_length.append(enc_len)
+            enc_turn_length.append(turn_len)
 
             dec_inputs.append(dec_ids)
 
