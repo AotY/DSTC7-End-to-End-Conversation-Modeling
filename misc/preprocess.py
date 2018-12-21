@@ -58,9 +58,9 @@ def read_convos(args, logger):
 
             sub = line.split('\t')
 
+            data_type = sub[0]
             conversation = sub[-2]
             response = sub[-1]
-            data_type = sub[0]
 
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
@@ -81,7 +81,7 @@ def read_convos(args, logger):
             for si, sentence in enumerate(sentences):
                 # token
                 tokens = tokenizer.tokenize(sentence)
-                if len(tokens) > args.q_max_len or len(tokens) < args.min_len:
+                if len(tokens) > args.c_max_len or len(tokens) < args.min_len:
                     if si != len(sentences) - 1:
                         sentences_tokens.clear()
                     continue
@@ -94,10 +94,9 @@ def read_convos(args, logger):
             query_tokens = sentences_tokens[-1]
             context_tokens = sentences_tokens[:-1]
 
-            if data_type != 'REFS':
+            if data_type != 'TEST':
                 response_tokens = tokenizer.tokenize(response)
                 response_length = len(response_tokens)
-
                 if response_length < args.min_len or response_length > args.r_max_len:
                     continue
             else:
@@ -240,6 +239,7 @@ def main(args, logger):
         save_path=args.train_convos_path
     )
 
+    """
     #  read facts
     facts, facts_data_types, facts_hash_values, \
         facts_subreddit_names, facts_conversation_ids, \
@@ -248,6 +248,8 @@ def main(args, logger):
     #  save raw facts to txt
     save_facts(facts, facts_data_types, facts_subreddit_names, facts_conversation_ids, \
             domain_names, args.train_facts_path)
+
+    """
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
