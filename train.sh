@@ -28,7 +28,7 @@ python train.py \
     --q_max_len 60 \
     --c_max_len 55 \
     --r_max_len 38 \
-    --f_max_len 120 \
+    --f_max_len 15 \
     --min_len 3 \
     --beam_size 8 \
     --best_n 3 \
@@ -36,7 +36,7 @@ python train.py \
     --lr 0.001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 128 \
+    --batch_size 200 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
