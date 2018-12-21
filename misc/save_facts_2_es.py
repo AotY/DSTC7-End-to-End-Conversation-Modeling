@@ -8,13 +8,15 @@
 Save facts to elastic, and retrieval them.
 """
 import re
+import pickle
 import argparse
 from tqdm import tqdm
 
 import es_helper
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--facts_path', type=str, help='facts path.', default='../data/train.facts.txt')
+parser.add_argument('--facts_dict_path', type=str, help='facts dict path.', default='')
+parser.add_argument('--f_min_len', type=int, help='', default='')
 parser.add_argument('--task', type=str, help='save | search', default='save')
 parser.add_argument('--conversation_id', type=str, help='conversation id')
 parser.add_argument('--query_text', type=str, help='query text')
@@ -91,16 +93,11 @@ def save():
     es_helper.open_index(es, es_helper.index)
 
     # 5. insert to es
-    with open(args.facts_path, 'r') as f:
-        for line in tqdm(f):
-            line = line.rstrip()
-            parts = line.split('\t')
-            if len(parts) != 4:
-                print('parts: %d' % len(parts))
-                continue
-            conversation_id, fact = parts[1], parts[-1]
+    facts_dict = pickle.load(open(args.facts_dict_path, 'rb'))
+    for conversation_id, facts in tqdm(facts_dict.items()):
+        for fact in facts:
             fact = re.sub(r'__number__|__url__|__unk__', '', fact)
-            if len(fact.split()) <= 3:
+            if len(fact.split()) <= args.f_min_len:
                 continue
 
             body = {
