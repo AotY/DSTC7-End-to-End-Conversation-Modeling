@@ -8,12 +8,14 @@
 statistics sentence num distribution.
 """
 
+import os
 import argparse
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--convos_path', type=str, help='')
+parser.add_argument('--convos_path', type=str, help='', default='./data/cleaned.convos.txt')
+parser.add_argument('--save_path', type=str, help='', default='./data')
 
 args = parser.parse_args()
 
@@ -31,17 +33,21 @@ def stats():
     with open(args.convos_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
-            subreddit_name, conversation_id, context, query, \
+            data_type, subreddit_name, conversation_id, context, query, \
                 response, hash_value, score, turn = line.split(' SPLIT ')
 
-            sentences = context.split('EOS')
-            sentences = [s for s in sentences if len(s.split()) >= 3]
-
-            if len(sentences) < 1:
+            if data_type in ['TEST']:
                 continue
 
-            context_texts = sentences[:-1]
-            context = ''.join(context_texts)
+            if not bool(query) or not bool(response):
+                continue
+
+            context_sentences = context.split('EOS')
+            if len(context_sentences) > 0:
+                context_sentences = [s for s in context_sentences if len(s.split()) >= 3]
+                context = ''.join(context_sentences)
+            else:
+                context = ''
 
             # sentences
             q_sentences = query.split('.')
@@ -62,12 +68,12 @@ def stats():
             r_len_dict[len(response_tokens)] = r_len_dict.get(len(response_tokens), 0) + 1
             r_sentence_count_dict[len(r_sentences)] = r_sentence_count_dict.get(len(r_sentences), 0) + 1
 
-            for text in context_texts:
-                tokens = text.split()
+            for sentence in context_sentences:
+                tokens = sentence.split()
                 c_len_dict[len(tokens)] = c_len_dict.get(len(tokens), 0) + 1
 
             c_sentence_count_dict[len(c_sentences)] = c_sentence_count_dict.get(len(c_sentences), 0) + 1
-            c_num_dict[len(context_texts)] = c_num_dict.get(len(context_texts), 0) + 1
+            c_num_dict[len(context_sentences)] = c_num_dict.get(len(context_sentences), 0) + 1
 
         save_distribution(q_len_dict, 'q_len')
         save_distribution(q_sentence_count_dict, 'q_sentence_count')
@@ -81,7 +87,7 @@ def stats():
 
 def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[0], reverse=False)
-    with open(name + '.distribution.txt', 'w', encoding="utf-8") as f:
+    with open(os.path.join(args.save_path, name + '.dist.txt'), 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
 
