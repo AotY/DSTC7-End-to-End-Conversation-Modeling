@@ -14,8 +14,8 @@ from collections import Counter
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--convos_path', type=str, default='./data/train.convos.txt')
-parser.add_argument('--facts_path', type=str, default='./data/train.facts.txt')
+parser.add_argument('--convos_path', type=str, default='./data/cleaned.convos.txt')
+parser.add_argument('--facts_path', type=str, default='./data/cleaned.facts.txt')
 parser.add_argument('--freq_path', type=str, default='./data/word.freq.txt')
 args = parser.parse_args()
 
@@ -28,8 +28,11 @@ def main():
             if not bool(line):
                 continue
 
-            subreddit_name, conversation_id, context, query, \
+            data_type, subreddit_name, conversation_id, context, query, \
                 response, hash_value, score, turn = line.split(' SPLIT ')
+
+            if data_type in ['TEST', 'REFS', 'VALID']:
+                continue
 
             if not bool(query) or not bool(response):
                 continue
@@ -52,8 +55,10 @@ def main():
             line = line.rstrip()
             if not bool(line):
                 continue
+            data_type, _, _, _, fact = line.split('\t')
 
-            _, _, _, fact = line.split('\t')
+            if data_type in ['TEST', 'REFS', 'VALID']:
+                continue
 
             if len(fact.split()) > 0:
                 words = [word for word in fact.split() if len(word.split()) > 0]
