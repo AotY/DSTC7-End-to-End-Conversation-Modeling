@@ -7,8 +7,8 @@ python train.py \
     --save_path data/ \
     --vocab_path data/vocab_word2idx.60004.dict \
     --c_max 3 \
-    --c_min 0 \
-    --enc_type q \
+    --c_min 1 \
+    --enc_type qc \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -52,7 +52,7 @@ python train.py \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    # --checkpoint models/kg_qc_9_1_3_2018_12_17_10:48.pth \
+    --checkpoint models/kg_qc_1_1_3_2018_12_20_15:17.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
