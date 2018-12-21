@@ -5,9 +5,13 @@ def data_set_opt(parser):
     # Data options
     group = parser.add_argument_group('Data Set Opt.')
 
-    group.add_argument('--pair_path',
+    group.add_argument('--convos_path',
                        type=str,
-                       help='path of the conversations and responses pair. ')
+                       help='convos path')
+
+    group.add_argument('--facts_path',
+                       type=str,
+                       help='facts path')
 
     group.add_argument('--save_path',
                        type=str,
@@ -108,7 +112,7 @@ def model_opt(parser):
                        type=int,
                        default=300,
                        help='number of hidden units per layer')
-    
+
     group.add_argument('--transformer_size', type=int, default=512)
 
     group.add_argument('--inner_hidden_size', type=int, default=2048)

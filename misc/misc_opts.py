@@ -10,10 +10,6 @@ def merge_convos_facts_opt(parser):
     # Data options
     group = parser.add_argument_group('Merge Convos Facts')
 
-    group.add_argument('--convos_facts_folder_list',
-                       nargs='+',
-                       required=True,
-                       help="Path to the convos and facts folders.")
     group.add_argument('--data_dir',
                        type=str,
                        required=True,
@@ -41,9 +37,6 @@ def preprocess_opt(parser):
 
     group.add_argument('--train_facts_path', required=True,
                        help="train, test or valid facts.txt file path.")
-
-    group.add_argument('--freq_save_path', required=True,
-                       help="word freq path")
 
     group.add_argument('--save_path', required=True, help="save path.")
 

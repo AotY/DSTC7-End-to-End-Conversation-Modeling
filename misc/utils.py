@@ -64,8 +64,8 @@ class Tokenizer:
     def clean_repeat(self, text, max_ngram=6):
         tmp_text = punc_regex.sub('', text)
         text_ngrams = ngrams(tmp_text.split(), max_ngram)
-        for words in text_ngrams:
-            if len(set(words)) == 1:
+        for ngram in text_ngrams:
+            if len(set(ngram)) == 1:
                 return ''
 
         words = []
@@ -77,9 +77,7 @@ class Tokenizer:
                 if word in punctuations:
                     words.append(word)
                 else:
-                    if word == words[len(words) - 1]:
-                        continue
-                    else:
+                    if word != words[len(words) - 1]:
                         words.append(word)
         return ' '.join(words)
 
