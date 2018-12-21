@@ -14,6 +14,10 @@ def merge_convos_facts_opt(parser):
                        nargs='+',
                        required=True,
                        help="Path to the convos and facts folders.")
+    group.add_argument('--data_dir',
+                       type=str,
+                       required=True,
+                       help="path to train, dev, valid, test")
 
     group.add_argument('--save_convos_path', required=True,
                        help="Output file for the convos.")
