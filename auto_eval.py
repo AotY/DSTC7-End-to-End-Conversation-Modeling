@@ -11,7 +11,6 @@ Automatic evaluation.
 
 import os
 import argparse
-from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 
@@ -22,7 +21,3 @@ args = parser.parse_args()
 
 
 os.system('python evaluation/src/dstc.py -c %s --refs %s' % (args.submission, args.refs))
-
-
-
-
