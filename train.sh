@@ -52,7 +52,7 @@ python train.py \
     --task decode \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/seq2seq_qc_1_1_3_2018_12_22_11:10.pth \
+    --checkpoint models/seq2seq_qc_2_1_3_2018_12_22_11:10.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 

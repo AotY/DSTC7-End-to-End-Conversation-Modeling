@@ -18,12 +18,11 @@ def extract_cells(path_in, path_hash):
 
 
 def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False, vshuman=-1):
-	cells_hyp = extract_cells(raw_hyp, path_hash)
+    cells_hyp = extract_cells(raw_hyp, path_hash)
+    cells_ref = extract_cells(raw_ref, path_hash)
 
-	cells_ref = extract_cells(raw_ref, path_hash)
-
-	if not os.path.exists(fld_out):
-		os.makedirs(fld_out)
+    if not os.path.exists(fld_out):
+        os.makedirs(fld_out)
 
     def _clean(s):
         return s
@@ -32,38 +31,38 @@ def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False
         #  else:
             #  return s
 
-	keys = sorted(cells_hyp.keys())
-	with open(fld_out + '/hash.txt', 'w', encoding='utf-8') as f:
-		f.write(unicode('\n'.join(keys)))
+    keys = sorted(cells_hyp.keys())
+    with open(fld_out + '/hash.txt', 'w', encoding='utf-8') as f:
+        f.write(unicode('\n'.join(keys)))
 
-	lines = [_clean(cells_hyp[k][-1]) for k in keys]
-	path_hyp = fld_out + '/hyp.txt'
-	with open(path_hyp, 'w', encoding='utf-8') as f:
-		f.write(unicode('\n'.join(lines)))
+    lines = [_clean(cells_hyp[k][-1]) for k in keys]
+    path_hyp = fld_out + '/hyp.txt'
+    with open(path_hyp, 'w', encoding='utf-8') as f:
+        f.write(unicode('\n'.join(lines)))
 
-	lines = []
-	for _ in range(n_refs):
-		lines.append([])
-	for k in keys:
-		refs = cells_ref[k]
-		for i in range(n_refs):
-			idx = i % len(refs)
-			if idx == vshuman:
+    lines = []
+    for _ in range(n_refs):
+        lines.append([])
+
+    for k in keys:
+        refs = cells_ref[k]
+        for i in range(n_refs):
+            idx = i % len(refs)
+            if idx == vshuman:
                 idx = (idx + 1) % len(refs)
-			lines[i].append(_clean(refs[idx].split('|')[1]))
+                lines[i].append(_clean(refs[idx].split('|')[1]))
 
-	path_refs = []
-	for i in range(n_refs):
-		path_ref = fld_out + '/ref%i.txt'%i
-		with open(path_ref, 'w', encoding='utf-8') as f:
-			f.write(unicode('\n'.join(lines[i])))
-		path_refs.append(path_ref)
+    path_refs = []
+    for i in range(n_refs):
+        path_ref = fld_out + '/ref%i.txt'%i
+        with open(path_ref, 'w', encoding='utf-8') as f:
+            f.write(unicode('\n'.join(lines[i])))
+            path_refs.append(path_ref)
 
-	return path_hyp, path_refs
+    return path_hyp, path_refs
 
 
 def eval_one_system(submitted, keys, multi_ref, n_refs=6, n_lines=None, clean=False, vshuman=-1, PRINT=True):
-
 	print('evaluating %s' % submitted)
 
 	fld_out = submitted.replace('.txt','')
@@ -132,7 +131,8 @@ if __name__ == '__main__':
 	parser.add_argument('--vshuman', '-v', type=int, default='1') # when evaluating against human performance (N in refN.txt that should be removed)
 	                                                                      # in which case we need to remove human output from refs
 	parser.add_argument('--refs', '-g', default='dstc/test.refs')
-	parser.add_argument('--keys', '-k', default='keys/test.2k.txt')
+	#  parser.add_argument('--keys', '-k', default='keys/test.2k.txt')
+	parser.add_argument('--keys', '-k', default='')
 	parser.add_argument('--teams', '-i', type=str, default='dstc/teams.txt')
 	parser.add_argument('--report', '-o', type=str, default=None)
 	args = parser.parse_args()
