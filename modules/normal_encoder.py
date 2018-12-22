@@ -83,7 +83,6 @@ class NormalEncoder(nn.Module):
         else:
             outputs, hidden_state = self.rnn(embedded)
 
-        ""
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
             """
