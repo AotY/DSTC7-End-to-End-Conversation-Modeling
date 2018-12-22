@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 
 
 parser.add_argument('--vocab', action='store_true', help='')
-parser.add_argument('--distribution', type=str, help='')
+parser.add_argument('--dist', type=str, help='')
 parser.add_argument('--num', type=int, help='')
 
 args = parser.parse_args()
@@ -21,7 +21,7 @@ args = parser.parse_args()
 def cover():
     total_value = 0
     cover_value = 0
-    with open(args.distribution) as f:
+    with open(args.dist) as f:
         for i, line in enumerate(f):
             line = line.rstrip()
             if args.vocab:

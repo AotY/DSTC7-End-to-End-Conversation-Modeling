@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--facts_path', type=str, help='', default='')
 parser.add_argument('--f_min_len', type=int, help='', default='')
-parser.add_argument('--save_path', type=int, help='', default='')
+parser.add_argument('--save_path', type=str, help='', default='')
 
 args = parser.parse_args()
 
@@ -363,12 +363,12 @@ def facts_stas():
 
             facts_dict[conversation_id].append(' '.join(words))
 
-    print('total : %d' % total)
-    print('avg : %.4f' % (total / len(count_dict)))
+    print('total facts: %d' % total)
+    print('avg facts: %.4f' % (total / len(count_dict)))
 
     """
-    total : 577087
-    avg : 29.7437
+    total : 2139145
+    avg : 110.3164
     """
 
     save_distribution(count_dict, 'facts_count')
@@ -425,7 +425,7 @@ def facts_tag_stats():
 
 def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[1], reverse=True)
-    with open(name + '.dist.txt', 'w', encoding="utf-8") as f:
+    with open(os.path.join(args.save_path, name + '.dist.txt'), 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
 
