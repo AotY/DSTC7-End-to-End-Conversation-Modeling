@@ -7,6 +7,10 @@ misc/*.txt
 *.txt
 .DS_Store
 *.DS_Store
+*.pkl
+*.pickle
+*.tar.gz
+*.bz2
 
 ### log
 logs/
