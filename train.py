@@ -240,7 +240,7 @@ def evaluate(model,
     n_word_total = 0
     n_word_correct = 0
 
-    task = 'VALID'
+    task = 'DEV'
     max_load = int(np.ceil(len(dataset._data_dict[task]) / args.batch_size))
 
     dataset.reset_data(task, True)

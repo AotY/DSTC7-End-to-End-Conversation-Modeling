@@ -3,7 +3,8 @@
 
 from util import *
 from metrics import *
-from tokenizers import *
+#  from tokenizers import *
+
 
 def extract_cells(path_in, path_hash):
 	keys = [line.strip('\n') for line in open(path_hash)]
@@ -18,15 +19,17 @@ def extract_cells(path_in, path_hash):
 
 def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False, vshuman=-1):
 	cells_hyp = extract_cells(raw_hyp, path_hash)
+
 	cells_ref = extract_cells(raw_ref, path_hash)
 	if not os.path.exists(fld_out):
 		os.makedirs(fld_out)
 
-	def _clean(s):
-		if clean:
-			return clean_str(s)
-		else:
-			return s
+    def _clean(s):
+        return s
+        #  if clean:
+            #  return clean_str(s)
+        #  else:
+            #  return s
 
 	keys = sorted(cells_hyp.keys())
 	with open(fld_out + '/hash.txt', 'w', encoding='utf-8') as f:
@@ -36,7 +39,7 @@ def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False
 	path_hyp = fld_out + '/hyp.txt'
 	with open(path_hyp, 'w', encoding='utf-8') as f:
 		f.write(unicode('\n'.join(lines)))
-	
+
 	lines = []
 	for _ in range(n_refs):
 		lines.append([])
@@ -65,9 +68,11 @@ def eval_one_system(submitted, keys, multi_ref, n_refs=6, n_lines=None, clean=Fa
 	fld_out = submitted.replace('.txt','')
 	if clean:
 		fld_out += '_cleaned'
+
 	path_hyp, path_refs = extract_hyp_refs(submitted, multi_ref, keys, fld_out, n_refs, clean=clean, vshuman=vshuman)
+
 	nist, bleu, meteor, entropy, div, avg_len = nlp_metrics(path_refs, path_hyp, fld_out, n_lines=n_lines)
-	
+
 	if n_lines is None:
 		n_lines = len(open(path_hyp, encoding='utf-8').readlines())
 
@@ -123,7 +128,7 @@ if __name__ == '__main__':
 	parser.add_argument('--clean', '-c', action='store_true')     # whether to clean ref and hyp before eval
 	parser.add_argument('--n_lines', '-n', type=int, default=-1)  # eval all lines (default) or top n_lines (e.g., for fast debugging)
 	parser.add_argument('--n_refs', '-r', type=int, default=6)    # number of references
-	parser.add_argument('--vshuman', '-v', type=int, default='1') # when evaluating against human performance (N in refN.txt that should be removed) 
+	parser.add_argument('--vshuman', '-v', type=int, default='1') # when evaluating against human performance (N in refN.txt that should be removed)
 	                                                                      # in which case we need to remove human output from refs
 	parser.add_argument('--refs', '-g', default='dstc/test.refs')
 	parser.add_argument('--keys', '-k', default='keys/test.2k.txt')

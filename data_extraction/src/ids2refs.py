@@ -2,13 +2,18 @@ import sys
 import os
 
 refs = {}
-for line in sys.stdin:
-	line = line.rstrip()
-	els = line.split("\t")
-	hashstr = els[0]
-	response = els[6]
-	refs[hashstr] = response
+print('sys.stdin: ', sys.stdin)
+print('sys.argv[1]: ', sys.argv[1])
 
+for line in sys.stdin:
+    line = line.rstrip()
+    #  print(line)
+    els = line.split("\t")
+    hashstr = els[0]
+    response = els[6]
+    refs[hashstr] = response
+
+#  print('refs: ', len(refs))
 with open(sys.argv[1]) as f:
 	for line in f:
 		line = line.rstrip()
