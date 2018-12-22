@@ -14,7 +14,7 @@ from vocab import Vocab
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--distribution', type=str, help='')
+parser.add_argument('--dist', type=str, help='')
 parser.add_argument('--vocab_size', type=float, default=6e4)
 parser.add_argument('--min_count', type=int, default=3)
 parser.add_argument('--vocab_path', type=str, default=3)
@@ -26,7 +26,7 @@ args.vocab_size = int(args.vocab_size)
 
 def read_distribution():
     freq_list = []
-    with open(args.distribution, 'r') as f:
+    with open(args.dist, 'r') as f:
         for line in tqdm(f):
             line = line.rstrip()
             word, freq = line.split()
