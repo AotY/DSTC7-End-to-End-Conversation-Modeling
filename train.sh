@@ -5,7 +5,7 @@ export CUDA_VISIBLE_DEVICES=6
 python train.py \
     --save_path data/ \
     --convos_path ./data/cleaned.2.convos.txt.simpler \
-    --vocab_path data/vocab_word2idx.60004.dict \
+    --vocab_path data/vocab_word2idx.2.60004.dict \
     --c_max 3 \
     --c_min 1 \
     --enc_type qc \
