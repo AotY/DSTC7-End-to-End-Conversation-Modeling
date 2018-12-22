@@ -15,13 +15,15 @@ def calc_nist_bleu(path_refs, path_hyp, fld_out='temp', n_lines=None):
 
     if n_lines is None:
         n_lines = len(open(path_hyp, encoding='utf-8').readlines())
+    print('n_lines: ', n_lines)
+
     _write_xml([''], fld_out + '/src.xml', 'src', n_lines=n_lines)
     _write_xml([path_hyp], fld_out + '/hyp.xml', 'hyp', n_lines=n_lines)
     _write_xml(path_refs, fld_out + '/ref.xml', 'ref', n_lines=n_lines)
 
     time.sleep(1)
     cmd = [
-        'perl', '3rdparty/mteval-v14c.pl',
+        'perl', 'evaluation/src/3rdparty/mteval-v14c.pl',
         '-s', '%s/src.xml' % fld_out,
         '-t', '%s/hyp.xml' % fld_out,
         '-r', '%s/ref.xml' % fld_out,
@@ -51,7 +53,7 @@ def calc_cum_bleu(path_refs, path_hyp):
     # NOTE: this func doesn't support n_lines argument and output is not parsed yet
 
     process = subprocess.Popen(
-        ['perl', '3rdparty/multi-bleu.perl'] + path_refs,
+        ['perl', 'evaluation/src/3rdparty/multi-bleu.perl'] + path_refs,
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE
     )
@@ -73,7 +75,7 @@ def calc_meteor(path_refs, path_hyp, fld_out='temp', n_lines=None, pretokenized=
 
     cmd = [
         'java', '-Xmx1g',  # heapsize of 1G to avoid OutOfMemoryError
-        '-jar', '3rdparty/meteor-1.5/meteor-1.5.jar',
+        '-jar', 'evaluation/src/3rdparty/meteor-1.5/meteor-1.5.jar',
         path_hyp, path_merged_refs,
         '-r', '%i' % len(path_refs), 	# refCount
         '-l', 'en', '-norm' 	# also supports language: cz de es fr ar
@@ -146,6 +148,9 @@ def calc_diversity(path_hyp):
 
 
 def nlp_metrics(path_refs, path_hyp, fld_out='temp',  n_lines=None):
+    print('path_refs: %s' % path_refs)
+    print('path_hyp: %s' % path_hyp)
+    print('fld_out: %s' % fld_out)
     nist, bleu = calc_nist_bleu(path_refs, path_hyp, fld_out, n_lines)
     meteor = calc_meteor(path_refs, path_hyp, fld_out, n_lines)
     entropy = calc_entropy(path_hyp, n_lines)
