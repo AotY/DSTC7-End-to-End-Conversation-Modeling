@@ -18,18 +18,20 @@ def extract_cells(path_in, path_hash):
 
 
 def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False, vshuman=-1):
+    # hyp
     cells_hyp = extract_cells(raw_hyp, path_hash)
+
+    # ref
     cells_ref = extract_cells(raw_ref, path_hash)
 
     if not os.path.exists(fld_out):
         os.makedirs(fld_out)
 
     def _clean(s):
-        return s
-        #  if clean:
-            #  return clean_str(s)
-        #  else:
-            #  return s
+        if clean:
+            return clean_str(s)
+        else:
+            return s
 
     keys = sorted(cells_hyp.keys())
     with open(fld_out + '/hash.txt', 'w', encoding='utf-8') as f:
@@ -75,6 +77,8 @@ def eval_one_system(submitted, keys, multi_ref, n_refs=6, n_lines=None, clean=Fa
 
 	if n_lines is None:
 		n_lines = len(open(path_hyp, encoding='utf-8').readlines())
+
+    print('n_lines: %d' % n_lines)
 
 	if PRINT:
 		print('n_lines = '+str(n_lines))
