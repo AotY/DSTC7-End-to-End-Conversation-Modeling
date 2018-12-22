@@ -429,8 +429,12 @@ class KGModel(nn.Module):
             inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = enc_inputs_length[ti, :]  # [batch_size]
 
-            outputs, hidden_state = self.encoder(
-                inputs, inputs_length, hidden_state)
+            #  outputs, hidden_state = self.encoder(
+                #  inputs, inputs_length, hidden_state)
+            outputs, hidden_state = selef.encoder(
+                inputs,
+                hidden_state=hidden_state
+            )
 
             #  output = self.reduce_state(hidden_state)
             #  utterance_outputs.append(output)
