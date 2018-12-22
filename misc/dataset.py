@@ -543,6 +543,12 @@ class Dataset:
         ))
         predicted_f = open(predicted_path, save_mode)
 
+        submission_path = os.path.join(self.config.save_path, 'submission/%s_%s_%s_%s_%s_%s.txt' % (
+            self.config.model_type, self.config.enc_type, epoch, \
+            self.config.c_min, self.config.c_max, time_str
+        ))
+        submission_f = open(submission_path, save_mode)
+
         with open(save_path, save_mode, encoding='utf-8') as f:
             for subreddit_name, conversation_id, hash_value, \
                 enc_ids, f_ids, dec_ids, g_text, b_text in \
@@ -577,6 +583,9 @@ class Dataset:
                 # for embedding metrics
                 predicted_f.write('%s\n' % g_text)
 
+                # submission
+                submission_f.write('%s\t-\t-\t-\t-\t-\t%s\n' % (hash_value, g_text))
+
                 for i, text in enumerate(b_text):
                     f.write('beam %d: %s\n' % (i, text))
 
@@ -587,6 +596,7 @@ class Dataset:
                 f.write('-' * 70 + '\n')
 
         predicted_f.close()
+        submission_f.close()
 
     def save_ground_truth(self, task):
         enc_type = self.config.enc_type
