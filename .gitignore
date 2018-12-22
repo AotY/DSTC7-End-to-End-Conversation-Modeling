@@ -22,6 +22,7 @@ models/
 kg_models/
 lv_models/
 evaluation/src/3rdparty/mosesdecoder/
+evaluation/src/3rdparty/meteor-1.5/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
