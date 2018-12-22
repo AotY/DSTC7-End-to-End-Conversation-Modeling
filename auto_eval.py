@@ -21,18 +21,17 @@ parser.add_argument('--refs', type=str, help='')
 args = parser.parse_args()
 
 # create keys
-keys_path = '.tmp.keys'
+keys_path = 'tmp.keys'
 keys = open(keys_path, 'w')
 with open(args.submission, 'r') as f:
     for line in f:
         line = line.rstrip()
-        hash_value = line.split('\t')
+        hash_value = line.split('\t')[0]
         keys.write('%s\n' % hash_value)
 
 keys.close()
 
-os.system('python evaluation/src/dstc.py -c %s --refs %s --keys %s' % \
+os.system('python evaluation/src/dstc.py %s --refs %s --keys %s' % \
           (args.submission, args.refs, keys_path))
 
-os.system('rm %s' % keys_path)
-
+#  os.system('rm %s' % keys_path)
