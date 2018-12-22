@@ -26,10 +26,12 @@ def main():
     # 1, load wiki idf.
     idf_dict = {}
     with open(args.idf_path, 'r') as csvf:
-        spamreader = csv.reader(csvf, delimiter=',')
-        for row in tqdm(spamreader):
+        csv_reader = csv.reader(csvf, delimiter=',')
+        next(csv_reader, None)  # skip the headers
+        for row in tqdm(csv_reader):
             token, frequency, total, idf = row
-            idf_dict[token] = idf
+            #  print('idf: %s' % idf)
+            idf_dict[token] = float(idf)
 
     # 2, get all conversation_ids
     """
@@ -41,7 +43,8 @@ def main():
 
     # 3, compute tf-idf
     facts_tfidf_dict = {}
-    for conversation_id in conversation_ids:
+    for conversation_id in tqdm(conversation_ids):
+        #  print('conversation_ids: %s' % conversation_id)
         '''
         query_body = es_helper.assemble_search_fact_body(conversation_id)
         _, total = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=0)
@@ -58,20 +61,30 @@ def main():
 
         tf_idf_dict = {}
         texts = facts_dict[conversation_id]
-        words = ' '.join(texts).split()
+        #  print(texts)
+        text = ' '.join(texts)
+
+        text = text.replace('__number__', '')
+        text = text.replace('__unk__', '')
+        text = text.replace('__url__', '')
+        words = text.split()
+
         words = [word for word in words if len(word) > 0]
 
         counter = Counter(words)
         total_count = sum(counter.values())
         for word, count in counter.items():
             tf = count / total_count
-            tfidf = tf * idf_dict.get(word, 0)
+            idf = idf_dict.get(word, 0.0)
+            #  print('tf: ', tf)
+            #  print('idf: ', idf)
+            tfidf = tf * idf
             tf_idf_dict[word] = tfidf
 
         facts_tfidf_dict[conversation_id] = facts_tfidf_dict
 
     # 4, save
-    print(facts_tfidf_dict)
+    print(len(facts_tfidf_dict))
     pickle.dump(facts_tfidf_dict, open(args.tf_idf_path, 'wb'))
 
 
