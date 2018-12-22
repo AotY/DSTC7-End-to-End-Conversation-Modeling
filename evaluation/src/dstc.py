@@ -49,10 +49,12 @@ def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False
     for k in keys:
         refs = cells_ref[k]
         for i in range(n_refs):
+            if len(refs) == 0:
+                continue
             idx = i % len(refs)
             if idx == vshuman:
                 idx = (idx + 1) % len(refs)
-                lines[i].append(_clean(refs[idx].split('|')[1]))
+            lines[i].append(_clean(refs[idx].split('|')[1]))
 
     path_refs = []
     for i in range(n_refs):
@@ -78,7 +80,7 @@ def eval_one_system(submitted, keys, multi_ref, n_refs=6, n_lines=None, clean=Fa
 	if n_lines is None:
 		n_lines = len(open(path_hyp, encoding='utf-8').readlines())
 
-    print('n_lines: %d' % n_lines)
+    #  print('n_lines: %d' % n_lines)
 
 	if PRINT:
 		print('n_lines = '+str(n_lines))
