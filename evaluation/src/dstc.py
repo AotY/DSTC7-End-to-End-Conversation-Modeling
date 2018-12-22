@@ -21,6 +21,7 @@ def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False
 	cells_hyp = extract_cells(raw_hyp, path_hash)
 
 	cells_ref = extract_cells(raw_ref, path_hash)
+
 	if not os.path.exists(fld_out):
 		os.makedirs(fld_out)
 
@@ -48,7 +49,7 @@ def extract_hyp_refs(raw_hyp, raw_ref, path_hash, fld_out, n_refs=6, clean=False
 		for i in range(n_refs):
 			idx = i % len(refs)
 			if idx == vshuman:
-			    idx = (idx + 1) % len(refs)
+                idx = (idx + 1) % len(refs)
 			lines[i].append(_clean(refs[idx].split('|')[1]))
 
 	path_refs = []

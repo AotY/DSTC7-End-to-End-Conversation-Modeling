@@ -14,17 +14,24 @@ for line in sys.stdin:
     refs[hashstr] = response
 
 #  print('refs: ', len(refs))
+total = 0
+missing_count = 0
 with open(sys.argv[1]) as f:
 	for line in f:
 		line = line.rstrip()
 		els = line.split("\t")
 		sys.stdout.write(els[0])
 		for i in range(1,len(els)):
+            total += 1
 			p = els[i].split('|')
 			score = p[0]
 			hashstr = p[1]
 			if hashstr in refs.keys():
 				sys.stdout.write("\t" + score + "|" + refs[hashstr])
 			else:
+                missing_count += 1
 				print("WARNING: missing ref, automatic eval scores may differ: [%s]" % hashstr, file=sys.stderr)
 		sys.stdout.write("\n")
+
+print('total: %d' % total)
+print('missing_count: %d' % missing_count)

@@ -7,6 +7,10 @@ misc/*.txt
 *.txt
 .DS_Store
 *.DS_Store
+*.pkl
+*.pickle
+*.tar.gz
+*.bz2
 
 ### log
 logs/
@@ -17,6 +21,7 @@ lv_logs/
 models/
 kg_models/
 lv_models/
+evaluation/src/3rdparty/mosesdecoder/
 
 ### Python template
 # Byte-compiled / optimized / DLL files

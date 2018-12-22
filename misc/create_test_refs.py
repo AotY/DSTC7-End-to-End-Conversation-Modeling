@@ -32,11 +32,16 @@ with open(args.convos_path) as f:
             response, hash_value, score, turn = line.split(' SPLIT ')
 
         if data_type == 'REFS':
-            test_refs_txt.write('%s\n' % line)
+            r = response
+            context_sentences = context.split(' EOS ')
+            c = ' '.join(context_sentences)
+            qc = c + r
+            test_refs_txt.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
+                                (hash_value, subreddit_name, conversation_id, \
+                                 score, turn, qc, r))
 
 test_refs_txt.close()
 
 # 2.
 os.system('cat %s | python data_extraction/src/ids2refs.py data_extraction/lists/test-multiref.sets > %s' %
           (args.test_refs_txt_path, args.test_refs_path))
-
