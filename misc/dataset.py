@@ -165,7 +165,7 @@ class Dataset:
                     ids = ids + [PAD_ID] * (q_max_len - len(ids))
                     enc_ids.append(ids)
                 if len(enc_ids) < turn_num:
-                    for _ in (turn_num - len(enc_ids)):
+                    for _ in range(turn_num - len(enc_ids)):
                         enc_ids.append([PAD_ID] * q_max_len)
 
             dec_len = len(r_ids)
@@ -235,7 +235,7 @@ class Dataset:
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
         else:
             # [turn_num, max_len, batch_size]
-            enc_inputs = torch.LongTensor(enc_inputs).to(self.device).transpose(1, 2, 0)
+            enc_inputs = torch.LongTensor(enc_inputs).to(self.device).permute(1, 2, 0)
 
             # [turn_num, batch_size]
             enc_inputs_length = torch.tensor(
@@ -447,27 +447,6 @@ class Dataset:
             # vectors: [3, len(tokens), 1024]
             mean_embedded = vectors[2].mean(dim=0)
             return mean_embedded
-
-    def get_facts_weight(self, facts):
-        """ facts: [[w_n] * size]"""
-        facts_weight = []
-        new_facts = []
-        for fact in facts:
-            if len(fact) < self.config.min_len:
-                continue
-            fact_str = " ".join(fact)
-            fact_weight = default_weight
-            for tag, weight in tag_weight_dict.items():
-                if fact_str.find(tag) != -1:
-                    fact_weight = max(fact_weight, weight)
-                    fact_str = fact_str.replace(tag, '')
-                    fact_str = fact_str.replace(tag[0] + '/' + tag[1:], '')
-
-            if len(fact_str.split(" ")) >= self.config.min_len:
-                new_facts.append(fact_str)
-                facts_weight.append(fact_weight)
-
-        return new_facts, facts_weight
 
     def generating_texts(self, outputs, outputs_length=None, decode_type='greedy'):
         """ decode_type == greedy:

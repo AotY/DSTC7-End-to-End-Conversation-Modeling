@@ -431,7 +431,7 @@ class KGModel(nn.Module):
 
             #  outputs, hidden_state = self.encoder(
                 #  inputs, inputs_length, hidden_state)
-            outputs, hidden_state = selef.encoder(
+            outputs, hidden_state = self.encoder(
                 inputs,
                 hidden_state=hidden_state
             )
