@@ -86,8 +86,7 @@ class KGModel(nn.Module):
         if config.enc_type.count('_h') != 0:
             self.session_encoder = SessionEncoder(config)
 
-        if config.enc_type.count('concat') != 0 and \
-                config.enc_type != 'concat':
+        if config.enc_type.count('concat') != 0:
             self.concat_linear = nn.Linear(
                 (config.turn_num) * config.hidden_size,
                 config.hidden_size
