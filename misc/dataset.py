@@ -309,7 +309,7 @@ class Dataset:
                     words_tfidf.append((word, value))
 
                 words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
-                words = [item[0] for item in words_tfidf[:self.config.f_topk]]
+                words = [item[0] for item in words_tfidf[:self.config.f_max_len]]
                 #  print('words: ', words)
 
                 facts_topk_phrases[hash_value] = words

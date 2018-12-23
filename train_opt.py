@@ -54,7 +54,7 @@ def data_set_opt(parser):
                        default=1,
                        help='minimal turn num.')
 
-    group.add_argument('--turn_min', type=int,
+    group.add_argument('--turn_num', type=int,
                        default=4,
                        help='turn num.')
 
