@@ -16,10 +16,10 @@ targets_dict = {
 
     # dev
     #  "OFFICIAL_DEV_CONVOS": "data-official/2017-01.convos.txt data-official/2017-02.convos.txt data-official/2017-03.convos.txt",
-    "OFFICIAL_DEV_CONVOS": "dev.convos.txt",
+    "OFFICIAL_DEV_CONVOS": "data-official/dev.convos.txt",
 
     #  "OFFICIAL_DEV_FACTS": "data-official/2017-01.facts.txt data-official/2017-02.facts.txt data-official/2017-03.facts.txt",
-    "OFFICIAL_DEV_FACTS": "dev.facts.txt",
+    "OFFICIAL_DEV_FACTS": "data-official/dev.facts.txt",
 
     # Note: validation == dev set, but validation is a subset used for automatic evaluation
     # valid

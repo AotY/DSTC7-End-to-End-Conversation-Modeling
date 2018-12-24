@@ -38,10 +38,11 @@ class Tokenizer:
 
         number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
 
-        self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
+        #  self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
+        self.url_re = re.compile(url_regex_str)
 
-        self.number_re = re.compile(
-            number_regex_str, re.VERBOSE | re.IGNORECASE)
+        #  self.number_re = re.compile(
+            #  number_regex_str, re.VERBOSE | re.IGNORECASE)
 
     def tokenize(self, text, html=False):
         if isinstance(text, list):
@@ -58,6 +59,7 @@ class Tokenizer:
         tokens = self.clean_str(text).split()
 
         tokens = [token for token in tokens if len(token.split()) > 0]
+        tokens = [token for token in tokens if len(token) <= 25]
 
         return tokens
 
