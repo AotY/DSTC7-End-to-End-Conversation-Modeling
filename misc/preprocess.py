@@ -42,8 +42,8 @@ def read_convos(args, logger):
             #  if n >= 200:
                 #  break
 
-            if n <= 206247:
-                continue
+            #  if n <= 206247:
+                #  continue
 
             print("line: %d" % n)
             #  print("line: %s" % line)
@@ -73,14 +73,19 @@ def read_convos(args, logger):
             sentences_tokens = list()
 
             for si, sentence in enumerate(sentences):
-                # token
-                tokens = tokenizer.tokenize(sentence)
-                if len(tokens) > args.c_max_len or len(tokens) < args.min_len:
+                if len(sentence.split()) > args.q_max_len or len(sentence.split()) < args.min_len:
                     if si != len(sentences) - 1:
                         sentences_tokens.clear()
                     continue
-                else:
-                    sentences_tokens.append(tokens)
+
+                # token
+                tokens = tokenizer.tokenize(sentence)
+                if len(tokens) < args.min_len:
+                    if si != len(sentences) - 1:
+                        sentences_tokens.clear()
+                    continue
+
+                sentences_tokens.append(tokens)
 
             if len(sentences_tokens) == 0:
                 continue
@@ -145,6 +150,9 @@ def read_facts(args, logger):
             data_type = sub[0]
             #  if fact[0] not in ['<', '"', '^']:
                 #  continue
+
+            if len(fact.split()) < args.min_len or len(facts.split()) > args.f_max_len:
+                continue
 
             fact_tokens = tokenizer.tokenize(fact, html=True)
             fact_len = len(fact_tokens)
