@@ -10,7 +10,6 @@ from nltk.tokenize import TweetTokenizer
 from bs4 import BeautifulSoup
 import warnings
 from nltk import ngrams
-from collections import Counter
 
 
 def is_english(text):
@@ -59,20 +58,20 @@ class Tokenizer:
         tokens = self.clean_str(text).split()
 
         tokens = [token for token in tokens if len(token.split()) > 0]
-        tokens = [token for token in tokens if len(token) <= 25]
+        #  tokens = [token for token in tokens if len(token) <= 25]
 
         return tokens
 
-    def clean_repeat(self, text, max_ngram=6):
+    def clean_repeat(self, text, max_ngram=5):
         tmp_text = punc_regex.sub('', text)
         text_ngrams = ngrams(tmp_text.split(), max_ngram)
         for ngram in text_ngrams:
             if len(set(ngram)) == 1:
                 return ''
 
+        """
         words = []
         for i, word in enumerate(text.split()):
-            #  print(i)
             if i == 0:
                 words.append(word)
             else:
@@ -81,7 +80,10 @@ class Tokenizer:
                 else:
                     if word != words[len(words) - 1]:
                         words.append(word)
-        return ' '.join(words)
+        text = ' '.join(words)
+        """
+
+        return text
 
     def clean_str(self, text):
         text = text.lower()
@@ -148,8 +150,6 @@ class Tokenizer:
         text = text.replace('__number __', ' __number__ ')
         text = text.replace('__url __', ' __url__ ')
 
-        text = text.replace('__url__ __url__', '__url__')
-        text = text.replace('__number__ __number__', '__number__')
         text = text.replace('__number__ __url__', '__number__')
         text = text.replace('__url__ __number__', '__url__')
         text = text.replace('( __number__ )', '__number__')
@@ -160,11 +160,10 @@ class Tokenizer:
         words = [text_words[0]]
 
         for word in text_words[1:]:
-            if word in punctuations:
-                words.append(word)
-            else:
-                if word != words[len(words) - 1]:
-                    words.append(word)
+            if word in ['__number__', '__url__']:
+                if words[len(words) - 1] in ['__number__', '__url__']:
+                    continue
+            words.append(word)
 
         text = ' '.join(words)
 
