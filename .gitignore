@@ -11,6 +11,7 @@ misc/*.txt
 *.pickle
 *.tar.gz
 *.bz2
+*.xml
 
 ### log
 logs/
