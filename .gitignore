@@ -13,6 +13,9 @@ misc/*.txt
 *.bz2
 *.xml
 *.zip
+*.csv
+*.refs
+
 
 ### log
 logs/
