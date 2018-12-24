@@ -31,7 +31,7 @@ def read_convos(args, logger):
 
     logger.info('read convos...')
     n = 0
-    remove_lines = [172363, 172675, 206247]
+    remove_lines = []
     with open(args.raw_convos_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
@@ -163,10 +163,8 @@ def read_facts(args, logger):
 
             fact = sub[-1]
             data_type = sub[0]
-            #  if fact[0] not in ['<', '"', '^']:
-                #  continue
 
-            if len(fact.split()) < args.min_len or len(facts.split()) > args.f_max_len:
+            if len(fact.split()) < args.min_len or len(fact.split()) > args.f_max_len:
                 continue
 
             fact_tokens = tokenizer.tokenize(fact, html=True)
@@ -254,8 +252,8 @@ def main(args, logger):
         dialogue_turns,
         save_path=args.train_convos_path
     )
-
     """
+
     #  read facts
     facts, facts_data_types, facts_hash_values, \
         facts_subreddit_names, facts_conversation_ids, \
@@ -264,8 +262,8 @@ def main(args, logger):
     #  save raw facts to txt
     save_facts(facts, facts_data_types, facts_subreddit_names, facts_conversation_ids, \
             domain_names, args.train_facts_path)
-
     """
+
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
