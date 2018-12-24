@@ -12,6 +12,7 @@ misc/*.txt
 *.tar.gz
 *.bz2
 *.xml
+*.zip
 
 ### log
 logs/
