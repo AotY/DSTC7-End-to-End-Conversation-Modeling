@@ -5,6 +5,7 @@
 data/
 evaluation/src/3rdparty/
 misc/*.txt
+data_extraction/data-official/
 *.xlsx
 *.number
 *.txt
