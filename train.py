@@ -68,6 +68,8 @@ logger.info('f_max_len: %d' % args.f_max_len)
 
 # update turn min
 args.turn_num = args.c_max + 1
+logger.info('c_min: %d' % args.c_min)
+logger.info('c_max: %d' % args.c_max)
 logger.info('turn_num: %d' % args.turn_num)
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=6
 
 python train.py \
     --save_path data/ \
@@ -35,21 +35,21 @@ python train.py \
     --lr 0.001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 200 \
+    --batch_size 100 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
     --eval_interval 1800 \
     --log_interval 150 \
     --lr_patience 3 \
-    --es_patience 8 \
+    --es_patience 10 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type seq2seq \
-    --task evaluate \
+    --model_type kg \
+    --task train \
     --share_embedding \
     --offline_type elastic \
     # --checkpoint models/seq2seq_qc_2_1_3_2018_12_22_11:10.pth \
