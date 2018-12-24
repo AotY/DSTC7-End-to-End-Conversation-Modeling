@@ -16,9 +16,8 @@ raw.convos.txt, raw.facts.txt
 '''
 
 def merge(args, logger):
-    tmp_convos_path = 'tmp.convos.txt'
-    tmp_convos_file = open(tmp_convos_path, 'w', encoding='utf-8')
-    #  facts_file = open(args.facts_save_path, 'w', encoding='utf-8')
+    convos_file = open(args.convos_save_path, 'w', encoding='utf-8')
+    facts_file = open(args.facts_save_path, 'w', encoding='utf-8')
 
     missings = []
     for target_name, names_str in targets_dict.items():
@@ -43,14 +42,12 @@ def merge(args, logger):
                     line = line.rstrip()
 
                     if filename.endswith('convos.txt') or filename.endswith('refs.txt'):
-                        tmp_convos_file.write('%s\t%s\n' % (data_type, line))
+                        convos_file.write('%s\t%s\n' % (data_type, line))
                     elif filename.endswith('facts.txt'):
-                        #  facts_file.write('%s\t%s\n' % (data_type, line))
-                        pass
+                        facts_file.write('%s\t%s\n' % (data_type, line))
 
-    tmp_convos_file.close()
-    #  facts_file.close()
-    os.system('cat %s | uniq| sort -R > %s' % (tmp_convos_path, args.convos_save_path))
+    convos_file.close()
+    facts_file.close()
 
     #  os.system('rm -f %s' % tmp_convos_path)
     logger.info('missing: {}'.format(missings))

@@ -20,6 +20,18 @@ Read convos file.
 def read_convos(args, logger):
     convos = list()
 
+=======
+    contexts = list()
+    queries = list()
+    responses = list()
+
+    data_types = list()
+    subreddit_names = list()
+    conversation_ids = list()
+    response_scores = list()
+    dialogue_turns = list()
+    hash_values = list()
+>>>>>>> c59ed7982668f2b2fcfddf604f990c668a135c81
     hash_values_set = set()
 
     logger.info('read convos...')
@@ -44,6 +56,7 @@ def read_convos(args, logger):
                 #  continue
 
             #  print("line: %d" % n)
+
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
@@ -114,7 +127,6 @@ def read_convos(args, logger):
 
     return convos
 
-
 '''
 Read facts file.
 '''
@@ -146,10 +158,12 @@ def read_facts(args, logger):
 
             #  print(line)
 
+            #  print('line: %d' % n)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
 
             sub = line.split('\t')
+
             if len(sub) != 6:
                 print('line: %d' % n)
                 continue
@@ -221,9 +235,7 @@ def save_convos(args, convos, save_path):
 
 
 def save_facts(facts, data_types, subreddit_names, conversation_ids, domain_names, save_path):
-    with open(save_path, 'w', encoding='utf-8') as f:
-        for data_type, fact, subreddit, conversation_id, domain \
-            in zip(data_types, facts, subreddit_names, conversation_ids, domain_names):
+    with open(save_path, 'w', encoding='utf-8') as f: for data_type, fact, subreddit, conversation_id, domain \ in zip(data_types, facts, subreddit_names, conversation_ids, domain_names):
 
             if isinstance(fact, list):
                 fact = ' '.join(fact)
@@ -239,8 +251,8 @@ def main(args, logger):
         convos,
         save_path=args.train_convos_path
     )
-    """
 
+    """
     #  read facts
     facts, facts_data_types, facts_hash_values, \
         facts_subreddit_names, facts_conversation_ids, \
