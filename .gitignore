@@ -3,11 +3,10 @@
 
 ### Data
 data/
-data_extraction/
 evaluation/src/3rdparty/
+misc/*.txt
 *.xlsx
 *.number
-misc/*.txt
 *.txt
 .DS_Store
 *.DS_Store
@@ -19,7 +18,6 @@ misc/*.txt
 *.zip
 *.csv
 *.refs
-
 
 
 ### log

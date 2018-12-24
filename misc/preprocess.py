@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 import argparse
+import random
 
 from utils import Tokenizer
 from misc_opts import preprocess_opt
@@ -17,21 +18,17 @@ Read convos file.
 
 
 def read_convos(args, logger):
-    contexts = list()
-    queries = list()
-    responses = list()
+    convos = list()
 
-    data_types = list()
-    subreddit_names = list()
-    conversation_ids = list()
-    response_scores = list()
-    dialogue_turns = list()
-    hash_values = list()
     hash_values_set = set()
 
     logger.info('read convos...')
     n = 0
-    remove_lines = []
+    remove_lines = [172480, 172525, 206247, 649956, 726379, 1032984, 1032990, 1033080, \
+                    1033109, 1033112, 1033152, 1033545, 1239300, 1294540, 1733732, 1764651, \
+                    1764831, 1798849, 1798858, 1843289, 1850559, 1991542, 1991548, 1992017, \
+                    2100661, 2100695, 2100887, 2100888, 2101321, 2163997, 2164372, 2170863, \
+                    2171263, 2178114, 2178117, 2181342, 2398186, 2587101]
     with open(args.raw_convos_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.rstrip()
@@ -43,10 +40,10 @@ def read_convos(args, logger):
             #  if n >= 200:
                 #  break
 
-            #  if n <= 206247:
+            #  if n <= 2587101:
                 #  continue
 
-            print("line: %d" % n)
+            #  print("line: %d" % n)
             #  print("line: %s" % line)
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
@@ -57,6 +54,10 @@ def read_convos(args, logger):
                 continue
             else:
                 hash_values_set.add(hash_value)
+
+            if len(sub) != 8:
+                print('line: %s' % line)
+                continue
 
             data_type = sub[0]
             conversation = sub[-2]
@@ -107,20 +108,11 @@ def read_convos(args, logger):
             else:
                 response_tokens = response.split()
 
-            contexts.append(context_tokens)
-            queries.append(query_tokens)
-            responses.append(response_tokens)
+            convos.append((context_tokens, query_tokens, response_tokens, \
+                           data_type, hash_value, sub[2], sub[3], \
+                           sub[4], sub[5]))
 
-            data_types.append(data_type)
-            hash_values.append(hash_value)
-            subreddit_names.append(sub[2])
-            conversation_ids.append(sub[3])
-            response_scores.append(sub[4])
-            dialogue_turns.append(sub[5])
-
-    return contexts, queries, responses, data_types, \
-        hash_values, subreddit_names, conversation_ids, \
-        response_scores, dialogue_turns
+    return convos
 
 
 '''
@@ -149,11 +141,18 @@ def read_facts(args, logger):
             #  if n == 200:
                 #  break
 
-            #  print('line: %d' % n)
+            #  if n <= 15158440:
+                #  continue
+
+            #  print(line)
+
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
 
             sub = line.split('\t')
+            if len(sub) != 6:
+                print('line: %d' % n)
+                continue
 
             hash_value = sub[1]
             if hash_value in hash_values_set:
@@ -195,16 +194,14 @@ datas, may be contexts + responses or contexts individually.
 ''' save data to pair, conversation - response '''
 
 
-def save_convos(args, contexts, queries, responses,
-                data_types, subreddit_names, conversation_ids,
-                hash_values, scores, turns, save_path):
+def save_convos(args, convos, save_path):
+    # shuffle
+    random.shuffle(convos)
 
     '''Save data in pair format.'''
     save_file = open(save_path, 'w', encoding='utf-8')
-    for data_type, subreddit_name, conversation_id, context, \
-        query, response, hash_value, score, turn \
-        in zip(data_types, subreddit_names, conversation_ids, contexts, \
-                queries, responses, hash_values, scores, turns):
+    for context, query, response, data_type, hash_value, \
+        subreddit_name, conversation_id, score, turn in convos:
 
         if len(context) == 0:
             context = ''
@@ -235,21 +232,11 @@ def save_facts(facts, data_types, subreddit_names, conversation_ids, domain_name
                     (data_type, subreddit, conversation_id, domain, fact))
 
 def main(args, logger):
-    contexts, queries, responses, data_types, \
-    hash_values, subreddit_names, conversation_ids, \
-    response_scores, dialogue_turns = read_convos(args, logger)
+    convos = read_convos(args, logger)
 
     save_convos(
         args,
-        contexts,
-        queries,
-        responses,
-        data_types,
-        subreddit_names,
-        conversation_ids,
-        hash_values,
-        response_scores,
-        dialogue_turns,
+        convos,
         save_path=args.train_convos_path
     )
     """
@@ -262,8 +249,8 @@ def main(args, logger):
     #  save raw facts to txt
     save_facts(facts, facts_data_types, facts_subreddit_names, facts_conversation_ids, \
             domain_names, args.train_facts_path)
-    """
 
+    """
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
