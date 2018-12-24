@@ -513,13 +513,14 @@ class Dataset:
             enc_inputs = enc_inputs.transpose(0, 1).tolist()
         else:
             # [turn_num, max_len, batch_size] -> [batch_size, turn_num, max_len]
-            enc_inputs = enc_inputs.permute(2, 0, 1)
+            enc_inputs = enc_inputs.permute(2, 0, 1).tolist()
 
         if f_inputs is None or len(f_inputs) == 0:
             f_inputs = [None] * self.config.batch_size
         else:
             # [batch_size, topk, max_len]
             #  f_inputs = f_inputs.transpose(0, 1).tolist()
+
             # [batch_size, f_topk]
             f_inputs = f_inputs.tolist()
 
