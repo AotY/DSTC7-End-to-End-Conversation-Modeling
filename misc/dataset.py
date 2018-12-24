@@ -157,11 +157,9 @@ class Dataset:
                 enc_len = len(enc_ids)
                 enc_ids = enc_ids + [PAD_ID] * (q_max_len - len(enc_ids))
             else:
-                #  if len(c_ids) == 4:
-                    #  print(c_ids)
-                    #  exit(0)
                 enc_ids = list(c_ids)
                 enc_ids.append(q_ids)
+
                 turn_len = len(enc_ids)
                 enc_len = [1] * turn_num
                 padded_enc_ids = list()
@@ -172,7 +170,7 @@ class Dataset:
                     padded_enc_ids.append(ids)
                 if len(padded_enc_ids) < turn_num:
                     for _ in range(turn_num - len(padded_enc_ids)):
-                        padded_enc_ids.append([PAD_ID] * q_max_len)
+                        padded_enc_ids.append([EOS_ID] + [PAD_ID] * (q_max_len - 1))
                 enc_ids = padded_enc_ids
 
             dec_len = len(r_ids)
@@ -582,6 +580,7 @@ class Dataset:
 
                 f.write('-' * 70 + '\n')
 
+        self.logger.info('save_path: %s' % save_path)
         predicted_f.close()
         submission_f.close()
 

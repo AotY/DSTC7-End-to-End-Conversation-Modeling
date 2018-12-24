@@ -15,10 +15,10 @@ def merge_convos_facts_opt(parser):
                        required=True,
                        help="path to train, dev, valid, test")
 
-    group.add_argument('--save_convos_path', required=True,
+    group.add_argument('--convos_save_path', required=True,
                        help="Output file for the convos.")
 
-    group.add_argument('--save_facts_path', required=True,
+    group.add_argument('--facts_save_path', required=True,
                        help="Output file for the facts.")
 
 

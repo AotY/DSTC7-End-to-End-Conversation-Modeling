@@ -8,9 +8,9 @@
 
 
 python misc/build_freq.py \
-    --convos_path ./data/cleaned.2.convos.txt \
-    --facts_path ./data/cleaned.2.facts.txt \
-    --freq_path ./data/word.2.freq.txt \
+    --convos_path ./data/cleaned.3.convos.txt \
+    --facts_path ./data/cleaned.3.facts.txt \
+    --freq_path ./data/word.3.freq.txt \
 
 /
  

@@ -2,8 +2,8 @@
 
 python misc/merge_convos_facts.py \
     --data_dir ./data_extraction \
-    --save_convos_path ./data/raw.2.convos.txt \
-    --save_facts_path ./data/raw.2.facts.txt \
+    --convos_save_path ./data/raw.3.convos.txt \
+    --facts_save_path ./data/raw.3.facts.txt \
 
 
 /
