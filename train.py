@@ -335,7 +335,6 @@ def decode(model, dataset, epoch):
                 time_str
             )
 
-
 def cal_performance(pred, gold, label_smoothing=False):
     ''' Apply label smoothing if needed '''
 

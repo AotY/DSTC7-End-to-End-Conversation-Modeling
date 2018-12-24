@@ -37,17 +37,10 @@ class SessionEncoder(nn.Module):
             init_gru_orth(self.rnn)
 
 
-    def forward(self, inputs, lengths=None, sort=False):
+    def forward(self, inputs, lengths=None):
         """
         inputs: [turn_num, batch_size, hidden_size]
         """
-        if lengths is not None and not sort:
-            # sort lengths
-            lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
-            # restore to original indexes
-            _, restore_indexes = torch.sort(sorted_indexes, dim=0)
-
-            inputs = inputs.transpose(0, 1)[sorted_indexes].transpose(0, 1)
 
         if lengths is not None:
             inputs = nn.utils.rnn.pack_padded_sequence(inputs, lengths)
@@ -56,10 +49,6 @@ class SessionEncoder(nn.Module):
 
         if lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-            if not sort:
-                outputs = outputs.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
-                hidden_state = hidden_state.transpose(0, 1)[restore_indexes].transpose(0, 1).contiguous()
 
         return outputs, hidden_state
-
 

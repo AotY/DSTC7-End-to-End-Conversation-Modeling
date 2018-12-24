@@ -123,9 +123,9 @@ class KGModel(nn.Module):
 
             dec_inputs: [max_len, batch_size], first step: [sos * batch_size]
 
-            f_inputs: [f_max_len, batch_size, topk] or [batch_size, f_topk]
-            f_inputs_length: [f_max_len, batch_size, topk] or [batch_size]
-            f_topk_length: [batch_size]
+            f_inputs: [batch_size, f_topk]
+            f_inputs_length: [batch_size]
+            f_topk_length: None
         '''
         enc_type = self.config.enc_type
         if enc_type == 'q' or enc_type == 'qc':
@@ -417,8 +417,8 @@ class KGModel(nn.Module):
                           enc_inputs_length):
         """
         Args:
-            enc_inputs: [max_len, batch_size] or [turn_num, max_len, batch_size]
-            enc_inputs_length: [batch_size] or [turn_num, batch_size]
+            enc_inputs: [turn_num, max_len, batch_size]
+            enc_inputs: [turn_num, batch_size]
 
         """
         utterance_outputs = list()
@@ -432,11 +432,11 @@ class KGModel(nn.Module):
                 #  inputs, inputs_length, hidden_state)
             outputs, hidden_state = self.encoder(
                 inputs,
-                hidden_state=hidden_state
+                lengths=inputs_length,
+                hidden_state=hidden_state,
+                sort=False
             )
 
-            #  output = self.reduce_state(hidden_state)
-            #  utterance_outputs.append(output)
             utterance_outputs.append(outputs[-1].unsqueeze(0))
 
         # [turn_num, batch_size, hidden_size]

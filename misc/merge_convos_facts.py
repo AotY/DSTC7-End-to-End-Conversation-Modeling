@@ -16,8 +16,8 @@ raw.convos.txt, raw.facts.txt
 '''
 
 def merge(args, logger):
-    convos_file = open(args.save_convos_path, 'w', encoding='utf-8')
-    facts_file = open(args.save_facts_path, 'w', encoding='utf-8')
+    convos_file = open(args.convos_save_path, 'w', encoding='utf-8')
+    facts_file = open(args.facts_save_path, 'w', encoding='utf-8')
 
     missings = []
     for target_name, names_str in targets_dict.items():
