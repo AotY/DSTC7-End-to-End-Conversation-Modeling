@@ -16,9 +16,9 @@ raw.convos.txt, raw.facts.txt
 '''
 
 def merge(args, logger):
-    tmp_convos_path = '.tmp.convos.txt'
+    tmp_convos_path = 'tmp.convos.txt'
     tmp_convos_file = open(tmp_convos_path, 'w', encoding='utf-8')
-    tmp_facts_path = '.tmp.facts.txt'
+    tmp_facts_path = 'tmp.facts.txt'
     tmp_facts_path = open(tmp_facts_path, 'w', encoding='utf-8')
 
     missings = []
@@ -36,8 +36,8 @@ def merge(args, logger):
             if parts[-1] == 'REFS':
                 data_type = 'REFS'
 
-            #  logger.info("target_name: %s" % (target_name))
-            logger.info("data_type: %s" % (data_type))
+            logger.info("filename: %s" % (filename))
+            #  logger.info("data_type: %s" % (data_type))
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 for line in f:

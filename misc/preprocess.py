@@ -27,6 +27,7 @@ def read_convos(args, logger):
     response_scores = list()
     dialogue_turns = list()
     hash_values = list()
+    hash_values_set = set()
 
     logger.info('read convos...')
     n = 0
@@ -51,6 +52,11 @@ def read_convos(args, logger):
                 logger.info('read %d' % n)
 
             sub = line.split('\t')
+            hash_value = sub[1]
+            if hash_value in hash_values_set:
+                continue
+            else:
+                hash_values_set.add(hash_value)
 
             data_type = sub[0]
             conversation = sub[-2]
@@ -106,7 +112,7 @@ def read_convos(args, logger):
             responses.append(response_tokens)
 
             data_types.append(data_type)
-            hash_values.append(sub[1])
+            hash_values.append(hash_value)
             subreddit_names.append(sub[2])
             conversation_ids.append(sub[3])
             response_scores.append(sub[4])
@@ -131,6 +137,8 @@ def read_facts(args, logger):
     conversation_ids = []
     domain_names = []
 
+    hash_values_set = set()
+
     logger.info('read facts...')
     n = 0
     with open(args.raw_facts_path, 'r', encoding='utf-8') as f:
@@ -146,6 +154,13 @@ def read_facts(args, logger):
                 logger.info('read %d' % n)
 
             sub = line.split('\t')
+
+            hash_value = sub[1]
+            if hash_value in hash_values_set:
+                continue
+            else:
+                hash_values_set.add(hash_value)
+
             fact = sub[-1]
             data_type = sub[0]
             #  if fact[0] not in ['<', '"', '^']:
@@ -164,11 +179,10 @@ def read_facts(args, logger):
             facts.append(fact_tokens)
 
             data_types.append(data_type)
-            hash_values.append(sub[1])
+            hash_values.append(hash_value)
             subreddit_names.append(sub[2])
             conversation_ids.append(sub[3])
             domain_names.append(sub[4])
-
 
     return facts, data_types, hash_values, \
         subreddit_names, conversation_ids, domain_names
