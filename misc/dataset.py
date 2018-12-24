@@ -13,8 +13,6 @@ from rake_nltk import Rake
 from misc import es_helper
 from misc.utils import remove_stop_words
 
-from misc.url_tags_weight import tag_weight_dict
-from misc.url_tags_weight import default_weight
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
 
@@ -88,6 +86,10 @@ class Dataset:
                         ids = self.vocab.words_to_id(words)
                         c_ids.append(ids)
 
+                    #  if len(c_ids) == 4:
+                        #  print(c_ids)
+                        #  exit(0)
+
                     if self._data_dict.get(data_type) is None:
                         self._data_dict[data_type] = list()
 
@@ -155,18 +157,23 @@ class Dataset:
                 enc_len = len(enc_ids)
                 enc_ids = enc_ids + [PAD_ID] * (q_max_len - len(enc_ids))
             else:
-                enc_ids = []
-                c_ids.append(q_ids)
-                turn_len = len(c_ids)
+                #  if len(c_ids) == 4:
+                    #  print(c_ids)
+                    #  exit(0)
+                enc_ids = list(c_ids)
+                enc_ids.append(q_ids)
+                turn_len = len(enc_ids)
                 enc_len = [1] * turn_num
-                for i, ids in enumerate(c_ids):
+                padded_enc_ids = list()
+                for i, ids in enumerate(enc_ids):
                     ids = ids[-min(q_max_len, len(ids)):]
                     enc_len[i] = len(ids)
                     ids = ids + [PAD_ID] * (q_max_len - len(ids))
-                    enc_ids.append(ids)
-                if len(enc_ids) < turn_num:
-                    for _ in range(turn_num - len(enc_ids)):
-                        enc_ids.append([PAD_ID] * q_max_len)
+                    padded_enc_ids.append(ids)
+                if len(padded_enc_ids) < turn_num:
+                    for _ in range(turn_num - len(padded_enc_ids)):
+                        padded_enc_ids.append([PAD_ID] * q_max_len)
+                enc_ids = padded_enc_ids
 
             dec_len = len(r_ids)
             r_ids = r_ids[-min(r_max_len, len(r_ids)):]
