@@ -28,13 +28,15 @@ def merge(args, logger):
                 missings.append(filename)
                 continue
 
-            logger.info("merge: %s" % (target_name))
 
-            parts = target_name.split('_')[1]
+            parts = target_name.split('_')
             data_type = parts[1]
-            #  if target_name.endswith('REFS'):
+
             if parts[-1] == 'REFS':
                 data_type = 'REFS'
+
+            #  logger.info("target_name: %s" % (target_name))
+            logger.info("data_type: %s" % (data_type))
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 for line in f:

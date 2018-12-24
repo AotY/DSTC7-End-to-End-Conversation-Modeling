@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--submission', type=str, help='')
 parser.add_argument('--refs', type=str, help='')
+parser.add_argument('--n_lines', type=int, help='')
 #  parser.add_argument('--keys', type=str, help='')
 
 args = parser.parse_args()
@@ -47,7 +48,7 @@ with open(args.submission, 'r') as f:
 keys.close()
 
 os.system('python evaluation/src/dstc.py %s --refs %s --keys %s --n_lines %s' % \
-          (args.submission, tmp_refs_path, tmp_keys_path, -1))
+          (args.submission, tmp_refs_path, tmp_keys_path, args.n_lines))
 
 os.system('rm %s' % tmp_refs_path)
 os.system('rm %s' % tmp_keys_path)
