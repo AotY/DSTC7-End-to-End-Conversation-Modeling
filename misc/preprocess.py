@@ -6,14 +6,8 @@ import sys
 import logging
 import argparse
 
-
 from utils import Tokenizer
 from misc_opts import preprocess_opt
-
-'''
-Generate
-
-'''
 
 tokenizer = Tokenizer()
 
