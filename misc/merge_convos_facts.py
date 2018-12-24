@@ -18,8 +18,7 @@ raw.convos.txt, raw.facts.txt
 def merge(args, logger):
     tmp_convos_path = 'tmp.convos.txt'
     tmp_convos_file = open(tmp_convos_path, 'w', encoding='utf-8')
-    tmp_facts_path = 'tmp.facts.txt'
-    tmp_facts_path = open(tmp_facts_path, 'w', encoding='utf-8')
+    facts_file = open(args.facts_save_path, 'w', encoding='utf-8')
 
     missings = []
     for target_name, names_str in targets_dict.items():
@@ -46,14 +45,13 @@ def merge(args, logger):
                     if filename.endswith('convos.txt') or filename.endswith('refs.txt'):
                         tmp_convos_file.write('%s\t%s\n' % (data_type, line))
                     elif filename.endswith('facts.txt'):
-                        tmp_facts_path.write('%s\t%s\n' % (data_type, line))
+                        facts_file.write('%s\t%s\n' % (data_type, line))
 
     tmp_convos_file.close()
-    tmp_facts_path.close()
+    facts_file.close()
     os.system('cat %s | sort -R | uniq > %s' % (tmp_convos_path, args.convos_save_path))
-    os.system('cat %s | uniq > %s' % (tmp_facts_path, args.facts_save_path))
 
-    os.system('rm -f %s %s' % (tmp_convos_path, tmp_facts_path))
+    os.system('rm -f %s' % tmp_convos_path)
     logger.info('missing: {}'.format(missings))
 
 
