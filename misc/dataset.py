@@ -41,7 +41,7 @@ class Dataset:
     def read_data(self):
         """split to train, dev, valid, test"""
         self.logger.info('read data...')
-        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.2.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
+        _data_dict_path = os.path.join(self.config.save_path, '_data_dict.3.%s_%s.pkl' % (self.config.c_min, self.config.c_max))
         if not os.path.exists(_data_dict_path):
             min_len = self.config.min_len
             c_max_len, q_max_len, r_max_len = self.config.c_max_len, self.config.q_max_len, self.config.r_max_len
@@ -586,7 +586,7 @@ class Dataset:
 
     def save_ground_truth(self, task):
         enc_type = self.config.enc_type
-        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s.2.ground_truth.txt' % (
+        ground_truth_path = os.path.join(self.config.save_path, 'ground_truth/%s.3.ground_truth.txt' % (
             task
         ))
 

@@ -4,8 +4,8 @@
 import time
 import os
 
-time.sleep(3600 * 3)
+time.sleep(1600)
 
-os.system('./train.sh')
+os.system('./train.kg_q.sh')
 
 

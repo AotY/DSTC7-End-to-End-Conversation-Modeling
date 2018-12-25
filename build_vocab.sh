@@ -8,7 +8,7 @@
 
 
 python misc/build_vocab.py \
-    --dist ./data/word.3.freq.txt \
+    --freq_path ./data/word.3.freq.txt \
     --vocab_size 6e4 \
     --min_count 3 \
     --vocab_path ./data/vocab_word2idx.3.60004.dict
