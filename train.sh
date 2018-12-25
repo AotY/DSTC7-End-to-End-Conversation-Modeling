@@ -48,7 +48,7 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --task decode \
     --share_embedding \
     --offline_type elastic \
