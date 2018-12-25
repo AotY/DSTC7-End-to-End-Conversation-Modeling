@@ -61,40 +61,18 @@ def rnn_factory(rnn_type, **kwargs):
         raise ValueError("{} is not valid, ".format(rnn_type))
 
 
-def compute_recall_ks(probas):
-    recall_k = {}
-    if isinstance(probas, list):
-        probas = probas
-    elif isinstance(probas, torch.Tensor):
-        probas = probas.numpy().tolist()
-    else:
-        print("")
-    for group_size in [2, 5, 10]:
-        recall_k[group_size] = {}
-        print('group_size: %d' % group_size)
-        for k in [1, 2, 5]:
-            if k < group_size:
-                recall_k[group_size][k] = recall(probas, k, group_size)
-                print('recall@%d' % k, recall_k[group_size][k])
-    return recall_k
+def get_attn_key_pad_mask(k, q, padid):
+    '''
+        For masking out the padding part of key sequence.
+        k: [batch_size, max_len]
+        q: [batch_size, max_len]
+    '''
+    # Expand to fit the shape of key query attention matrix.
+    len_q = q.size(1)
+    padding_mask = k.eq(padid)
+    padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
 
-
-def recall(probas, k, group_size):
-    test_size = 10
-    n_batches = len(probas) // test_size
-    n_correct = 0
-    for i in range(n_batches):
-        batch = np.array(probas[i * test_size:(i + 1) * test_size])[:group_size]
-        try:
-            indices = np.argpartition(batch.reshape((-1,)), -k)[-k:]
-        except:
-            print(batch, k, group_size)
-        # indices = np.argpartition(batch, k)[:k]
-        if 0 in indices:
-            n_correct += 1
-    print(n_correct, len(probas), test_size)
-    return n_correct * 1.0 / (len(probas) / test_size)
-
+    return padding_mask
 
 if __name__ == '__main__':
     print(torch.__version__)

@@ -49,6 +49,7 @@ python train.py \
     --eval_batch 12 \
     --start_epoch 1 \
     --model_type seq2seq \
+    --f_enc_type multi_head \
     --task train \
     --share_embedding \
     --offline_type elastic \

@@ -11,9 +11,9 @@ from modules.session_encoder import SessionEncoder
 from modules.reduce_state import ReduceState
 from modules.luong_attn_decoder import LuongAttnDecoder
 from modules.beam import Beam
-#  import modules.transformer as transformer
-#  import modules.tf as tf
+import modules.transformer as transformer
 from modules.utils import init_linear_wt
+from modules.utils import get_attn_key_pad_mask
 
 from misc.vocab import PAD_ID, SOS_ID, EOS_ID
 
@@ -59,28 +59,12 @@ class KGModel(nn.Module):
 
         self.f_encoder = None
         if config.model_type == 'kg':
-            """
-            self.f_encoder = transformer.Encoder(
-                config,
-                enc_embedding,
-                has_position=False
-            )
-            """
-            """
-            self.f_encoder = tf.Models.Encoder(
-                n_src_vocab=config.vocab_size,
-                len_max_seq=config.f_topk,
-                d_word_vec=config.embedding_size,
-                n_layers=config.t_num_layers,
-                n_head=config.num_heads,
-                d_k=config.k_size,
-                d_v=config.v_size,
-                d_model=config.transformer_size,
-                d_inner=config.inner_hidden_size,
-                dropout=config.dropout
-            )
-            """
-            self.f_encoder = enc_embedding
+            self.f_embedding = enc_embedding
+
+            if config.f_enc_type == 'multi_head':
+                self.f_encoder = transformer.MultiHeadAttention(
+                    config
+                )
 
         # session encoder
         if config.enc_type.count('_h') != 0:
@@ -98,10 +82,8 @@ class KGModel(nn.Module):
         # decoder
         self.decoder = LuongAttnDecoder(config, dec_embedding)
 
-        if self.f_encoder is not None:
-            #  self.f_encoder.embedding.weight = self.encoder.embedding.weight
-            #  self.f_encoder.src_word_emb.weight = self.encoder.embedding.weight
-            self.f_encoder.weight = self.encoder.embedding.weight
+        if self.f_embedding is not None:
+            self.f_embedding.weight = self.encoder.embedding.weight
 
         # encoder, decode embedding share
         if config.share_embedding:
@@ -462,17 +444,23 @@ class KGModel(nn.Module):
             -f_inputs_length: [topk, batch_size] or [batch_size]
             -f_topk_length: [batch_size]
         """
-        #  print('f_inputs: ', f_inputs)
-
         # [batch_size, max_len, hidden_size]
         #  f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
 
-        # [batch_size, f_topk, embedding_size]
-        f_enc_outputs = self.f_encoder(f_inputs)
+        if self.config.f_enc_type == 'multi_head':
+            f_inputs_embedding = self.f_embedding(f_inputs)
+            slf_attn_mask = get_attn_key_pad_mask(seq_k=f_inputs, seq_q=src_seq)
+            f_enc_outputs, _ = self.f_encoder(
+                f_inputs_embedding,
+                f_inputs_embedding,
+                f_inputs_embedding,
+                slf_attn_mask
+            )
+        else:
+            # [batch_size, f_topk, embedding_size]
+            f_enc_outputs = self.f_embedding(f_inputs)
 
         # [max_len, batch_size, hidden_size]
         f_enc_outputs = f_enc_outputs.transpose(0, 1)
-
-        #  print('f_enc_outputs: ', f_enc_outputs.shape)
 
         return f_enc_outputs

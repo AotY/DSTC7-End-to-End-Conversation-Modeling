@@ -267,10 +267,12 @@ class Dataset:
 
     def retrieval_similarity_facts(self, offline_filename, facts_tfidf_dict):
         es = es_helper.get_connection()
-        r = Rake(
-            min_length=1,
-            max_length=self.config.f_max_len
-        )
+        f_max_len = self.config.f_max_len
+        turn_num = self.config.turn_num
+        #  rake = Rake(
+            #  min_length=1,
+            #  max_length=self.config.f_max_len
+        #  )
         facts_topk_phrases = {}
         for task, task_datas in self._data_dict.items():
             self.logger.info('retrieval similarity facts for: %s data.' % task)
@@ -288,19 +290,24 @@ class Dataset:
 
                 #  print('query_text: ', query_text)
                 query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
-                _, hit_count = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=0)
-                if hit_count == 0:
-                    continue
-                hits, _ = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=hit_count)
+                _, total = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=0)
 
                 words = set()
-                for hit in hits[:self.config.f_topk]:
-                    hit_conversation_id = hit['_source']['conversation_id']
-                    assert (conversation_id == hit_conversation_id), "%s != %s" % (
-                        conversation_id, hit_conversation_id)
-                    text = hit['_source']['text']
+                if total > 0:
+                    hits, _ = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=total)
 
-                    for word in text.split():
+                    for hit in hits[:self.config.f_topk]:
+                        hit_conversation_id = hit['_source']['conversation_id']
+                        assert (conversation_id == hit_conversation_id), "%s != %s" % (
+                            conversation_id, hit_conversation_id)
+                        text = hit['_source']['text']
+
+                        for word in text.split():
+                            words.add(word)
+                else:
+                    f_max_len = int(np.ceil(f_max_len / turn_num * (len(context_sentences) + 1)))
+
+                    for word in query_text.split():
                         words.add(word)
 
                 words_tfidf = []
@@ -309,7 +316,7 @@ class Dataset:
                     words_tfidf.append((word, value))
 
                 words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
-                words = [item[0] for item in words_tfidf[:self.config.f_max_len]]
+                words = [item[0] for item in words_tfidf[:f_max_len]]
                 #  print('words: ', words)
 
                 facts_topk_phrases[hash_value] = words

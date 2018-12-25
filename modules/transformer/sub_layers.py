@@ -53,7 +53,7 @@ class  MultiHeadAttention(nn.Module):
             q: [batch_size, max_len, _]
             k: [batch_size, max_len, _]
             v: [batch_size, max_len, _]
-            mask: []
+            mask: [batch_size, max_len, ]
         """
         residual = q
 
@@ -75,7 +75,7 @@ class  MultiHeadAttention(nn.Module):
         #  print('k size: ', k.shape)
         #  print('v size: ', v.shape)
 
-        mask = mask.repeat(self.num_heads, 1, 1) # (n*b) x .. x .. #[16, 35, 8 * 32]
+        mask = mask.repeat(self.num_heads, 1, 1) # (n*b) x .. x ..
         output, sdp_attn_weight = self.attention(q, k, v, mask=mask)
 
         output = output.view(self.num_heads, sz_b, len_q, self.v_size)

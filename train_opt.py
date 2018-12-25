@@ -251,6 +251,11 @@ def train_opt(parser):
                         type=str,
                         help='seq2seq or kg model.')
 
+    group.add_argument('--f_enc_type',
+                       type=str,
+                       default='embedding',
+                       help='')
+
     group.add_argument('--lr_patience',
                        type=int,
                        help='Number of epochs with no improvement after which learning rate will be reduced')
