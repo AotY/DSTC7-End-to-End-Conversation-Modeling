@@ -39,10 +39,12 @@ with open(args.refs, 'r') as f:
         parts = line.split('\t')
         hash_value = parts[0]
         if len(parts) > 1:
-            if hash_value in hash_values_2k:
+            if hash_value in hash_values_2k or len(parts) >= 5:
                 final_hash_values.add(hash_value)
                 tmp_refs_file.write('%s\n' % line)
 tmp_refs_file.close()
+
+final_hash_values = list(final_hash_values)
 
 # tmp submission
 tmp_submission_path = 'tmp_submission.txt'
