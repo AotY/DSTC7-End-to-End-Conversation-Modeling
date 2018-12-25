@@ -5,7 +5,7 @@ import os
 import sys
 import logging
 import argparse
-import random
+from tqdm import tqdm
 
 from utils import Tokenizer
 from misc_opts import preprocess_opt
@@ -56,8 +56,9 @@ def read_convos(args, logger):
                 #  conversation, response = line.split('\t')
 
             data_type = parts[0]
-            if data_type != 'VALID':
-                continue
+            #  if data_type != 'VALID':
+                #  continue
+
             hash_value = parts[1]
             if hash_value in hash_values_set:
                 continue
@@ -188,12 +189,6 @@ def read_facts(args, logger):
         subreddit_names, conversation_ids, domain_names
 
 
-'''
-Statistical frequency
-datas, may be contexts + responses or contexts individually.
-'''
-
-
 ''' save data to pair, conversation - response '''
 
 
@@ -206,20 +201,20 @@ def save_convos(args, convos, save_path):
 
     '''Save data in pair format.'''
     save_file = open(save_path, 'w', encoding='utf-8')
-    for context, query, response, data_type, hash_value, \
+    for c_tokens, q_tokens, r_tokens, data_type, hash_value, \
         subreddit_name, conversation_id, score, turn in convos:
 
-        if len(context) == 0:
+        if len(c_tokens) == 0:
             context = ''
         else:
             context_texts = []
-            for tokens in context:
+            for tokens in c_tokens:
                 text = ' '.join(tokens)
                 context_texts.append(text)
             context = ' EOS '.join(context_texts)
 
-        query = ' '.join(query)
-        response = ' '.join(response)
+        query = ' '.join(q_tokens)
+        response = ' '.join(r_tokens)
         save_file.write('%s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s SPLIT %s\n' % \
                 (data_type, subreddit_name, conversation_id, context, query, response, hash_value, score, turn))
 

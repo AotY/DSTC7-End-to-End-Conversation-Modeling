@@ -132,7 +132,8 @@ class KGModel(nn.Module):
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
-                enc_inputs_length
+                lengths=enc_inputs_length,
+                sort=True
             )
 
             dec_hidden = self.reduce_state(enc_hidden)
@@ -428,8 +429,6 @@ class KGModel(nn.Module):
             inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = enc_inputs_length[ti, :]  # [batch_size]
 
-            #  outputs, hidden_state = self.encoder(
-                #  inputs, inputs_length, hidden_state)
             outputs, hidden_state = self.encoder(
                 inputs,
                 lengths=inputs_length,
@@ -437,10 +436,10 @@ class KGModel(nn.Module):
                 sort=False
             )
 
-            utterance_outputs.append(outputs[-1].unsqueeze(0))
+            utterance_outputs.append(outputs[-1])
 
         # [turn_num, batch_size, hidden_size]
-        utterance_outputs = torch.cat(utterance_outputs, dim=0)
+        utterance_outputs = torch.stack(utterance_outputs, dim=0)
 
         return utterance_outputs, hidden_state
 

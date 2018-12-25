@@ -64,14 +64,13 @@ class Dataset:
                         continue
 
                     # response
-                    if data_type != 'TEST':
+                    if data_type == 'TEST':
+                        r_ids = []
+                    else:
                         r_words = [word for word in response.split() if len(word.split()) > 0]
                         r_ids = self.vocab.words_to_id(r_words)
                         if len(r_ids) < min_len:
                             continue
-                        r_ids = r_ids[:min(r_max_len, len(r_ids))]
-                    else:
-                        r_ids = []
 
                     # context split by EOS
                     c_sentences = self.parser_context(context)
@@ -85,10 +84,6 @@ class Dataset:
                         words = [word for word in sentence.split() if len(word.split()) > 0]
                         ids = self.vocab.words_to_id(words)
                         c_ids.append(ids)
-
-                    #  if len(c_ids) == 4:
-                        #  print(c_ids)
-                        #  exit(0)
 
                     if self._data_dict.get(data_type) is None:
                         self._data_dict[data_type] = list()
@@ -111,8 +106,7 @@ class Dataset:
                 if i != len(sentences) - 1:
                     context_sentences.clear()
                 continue
-            else:
-                context_sentences.append(sentence)
+            context_sentences.append(sentence)
         return context_sentences
 
     def reset_data(self, task, shuffle=True):
@@ -133,7 +127,7 @@ class Dataset:
 
         cur_indicator = self._indicator_dict[task] + batch_size
         if cur_indicator > len(self._data_dict[task]):
-            if task in ['TRAIN', 'DEV', 'VALID']:
+            if task in ['TRAIN', 'DEV', 'VALID', 'TEST']:
                 self.reset_data(task, True)
                 cur_indicator = batch_size
 
@@ -149,7 +143,7 @@ class Dataset:
                 enc_len = len(enc_ids)
                 enc_ids = enc_ids + [PAD_ID] * (q_max_len - len(enc_ids))
             elif enc_type == 'qc':
-                enc_ids = []
+                enc_ids = list()
                 for ids in c_ids:
                     enc_ids.extend(ids)
                 enc_ids.extend(q_ids)
@@ -174,7 +168,8 @@ class Dataset:
                 enc_ids = padded_enc_ids
 
             dec_len = len(r_ids)
-            r_ids = r_ids[-min(r_max_len, len(r_ids)):]
+            r_ids = r_ids[:min(r_max_len, len(r_ids))]
+            #  r_ids = r_ids[-min(r_max_len, len(r_ids)):]
             dec_ids = [SOS_ID] + r_ids + [EOS_ID] + [PAD_ID] * (r_max_len - len(r_ids))
 
             f_ids = None
