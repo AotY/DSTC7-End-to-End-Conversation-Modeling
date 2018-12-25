@@ -547,7 +547,7 @@ if __name__ == '__main__':
         elif args.offline_type == 'fasttext':
             facts_dict = None
             if not os.path.exists(offline_filename):
-                facts_dict = pickle.load(open('./data/facts_p_dict.pkl', 'rb'))
+                facts_dict = pickle.load(open('./data/facts_dict.pkl', 'rb'))
                 embedding = nn.Embedding.from_pretrained(
                     pre_trained_weight, freeze=True)
                 with torch.no_grad():
