@@ -449,7 +449,7 @@ class KGModel(nn.Module):
 
         if self.config.f_enc_type == 'multi_head':
             f_inputs_embedding = self.f_embedding(f_inputs)
-            slf_attn_mask = get_attn_key_pad_mask(seq_k=f_inputs, seq_q=src_seq)
+            slf_attn_mask = get_attn_key_pad_mask(k=f_inputs, q=f_inputs, padid=PAD_ID)
             f_enc_outputs, _ = self.f_encoder(
                 f_inputs_embedding,
                 f_inputs_embedding,

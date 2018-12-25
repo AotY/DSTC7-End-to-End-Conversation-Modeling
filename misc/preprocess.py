@@ -233,6 +233,7 @@ def save_facts(facts, data_types, subreddit_names, conversation_ids, domain_name
                     (data_type, subreddit, conversation_id, domain, fact))
 
 def main(args, logger):
+    """
     convos = read_convos(args, logger)
 
     save_convos(
@@ -251,7 +252,6 @@ def main(args, logger):
     save_facts(facts, facts_data_types, facts_subreddit_names, facts_conversation_ids, \
             domain_names, args.train_facts_path)
 
-    """
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])

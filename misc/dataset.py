@@ -250,7 +250,7 @@ class Dataset:
 
         if self.config.model_type == 'kg':
             # [batch_size, f_topk]
-            f_inputs = torch.tensort(f_inputs, dtype=torch.long, device=self.device)
+            f_inputs = torch.tensor(f_inputs, dtype=torch.long, device=self.device)
             # [batch_size]
             f_inputs_length = torch.tensor(f_inputs_length, dtype=torch.long, device=self.device)
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=2
 
 python train.py \
     --save_path data/ \
@@ -48,7 +48,7 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type seq2seq \
+    --model_type kg \
     --f_enc_type multi_head \
     --task train \
     --share_embedding \
