@@ -178,11 +178,12 @@ class Dataset:
                 words = self.facts_topk_phrases.get(hash_value, None)
                 if words is None:
                     f_len = 1
-                    f_ids = [PAD_ID] * f_max_len
+                    f_ids = [EOS_ID]  + [PAD_ID] * (f_max_len - 1)
                 else:
                     f_len = len(words)
                     if words is not None:
                         f_ids = self.vocab.words_to_id(words)
+                        f_ids = f_ids[:min(f_max_len, len(f_ids))]
                         f_ids = f_ids + [PAD_ID] * (f_max_len - len(f_ids))
 
             padded_batch_data.append((hash_value, subreddit_name, conversation_id, \
