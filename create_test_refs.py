@@ -11,6 +11,7 @@
 """
 
 import os
+import time
 import argparse
 from tqdm import tqdm
 
@@ -42,6 +43,10 @@ with open(args.convos_path) as f:
 
 test_refs_txt.close()
 
+time.sleep(1)
+
 # 2.
 os.system('cat %s | python data_extraction/src/ids2refs.py data_extraction/lists/test-multiref.sets > %s' %
           (args.test_refs_txt_path, args.test_refs_path))
+
+
