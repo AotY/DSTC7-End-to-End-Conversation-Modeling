@@ -231,11 +231,11 @@ class Dataset:
 
         if enc_type == 'q' or enc_type == 'qc':
             # [max_len, batch_size]
-            enc_inputs = torch.LongTensor(enc_inputs).to(self.device).transpose(0, 1)
+            enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).transpose(0, 1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
         else:
             # [turn_num, max_len, batch_size]
-            enc_inputs = torch.LongTensor(enc_inputs).to(self.device).permute(1, 2, 0)
+            enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).permute(1, 2, 0)
 
             # [turn_num, batch_size]
             enc_inputs_length = torch.tensor(
@@ -246,11 +246,11 @@ class Dataset:
                 enc_turn_length, dtype=torch.long, device=self.device)  # [batch_size]
 
         # decoder [max_len, batch_size]
-        dec_inputs = torch.LongTensor(dec_inputs).to(self.device).transpose(0, 1)
+        dec_inputs = torch.tensor(dec_inputs, dtype=torch.long, device=self.device).transpose(0, 1)
 
         if self.config.model_type == 'kg':
             # [batch_size, f_topk]
-            f_inputs = torch.LongTensor(f_inputs).to(self.device)
+            f_inputs = torch.tensort(f_inputs, dtype=torch.long, device=self.device)
             # [batch_size]
             f_inputs_length = torch.tensor(f_inputs_length, dtype=torch.long, device=self.device)
 
@@ -435,7 +435,7 @@ class Dataset:
 
     def get_sentence_embedded(self, ids, embedding, offline_type):
         if offline_type == 'fasttext':
-            ids = torch.LongTensor(ids).to(self.device)
+            ids = torch.tensor(ids, dtype=torch.long, device=self.device)
             embeddeds = embedding(ids)  # [len(ids), pre_embedding_size]
             mean_embedded = embeddeds.mean(dim=0)  # [pre_embedding_size]
             return mean_embedded
@@ -499,6 +499,7 @@ class Dataset:
             save_mode = 'a'
 
         dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
+        #  print('dec_inputs: ', dec_inputs)
 
         if self.config.enc_type == 'q' or \
             self.config.enc_type == 'qc':
@@ -554,9 +555,9 @@ class Dataset:
                         text = self.vocab.ids_to_text(ids)
                         f.write('> %s\n' % (text))
 
-                self.logger.info('dec_ids: ', dec_ids)
-                response_text = self.vocab.ids_to_text(dec_ids)
-                f.write('gold: %s\n' % response_text)
+                #  print('dec_ids: ', dec_ids)
+                #  response_text = self.vocab.ids_to_text(dec_ids)
+                #  f.write('gold: %s\n' % response_text)
                 f.write('\n')
 
                 f.write('greedy: %s\n' % g_text)

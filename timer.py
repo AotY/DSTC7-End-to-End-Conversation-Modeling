@@ -4,7 +4,7 @@
 import time
 import os
 
-time.sleep(1800)
+time.sleep(1000)
 
 os.system('./train.sh')
 

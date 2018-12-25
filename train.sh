@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=6
 
 python train.py \
     --save_path data/ \
@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.3.60004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc \
+    --enc_type qc_h_attn \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -35,24 +35,24 @@ python train.py \
     --lr 0.001 \
     --max_grad_norm 5.0 \
     --epochs 25 \
-    --batch_size 200 \
+    --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
     --eval_interval 1800 \
     --log_interval 150 \
     --lr_patience 3 \
-    --es_patience 10 \
+    --es_patience 8 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
     --model_type seq2seq \
-    --task decode \
+    --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/seq2seq_qc_2_1_3_2018_12_24_23:33.pth \
+    # --checkpoint models/seq2seq_qc_2_1_3_2018_12_24_23:33.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 

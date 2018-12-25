@@ -45,7 +45,7 @@ class NormalEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, lengths=None, hidden_state=None, sort=True):
+    def forward(self, inputs, lengths, hidden_state=None, sort=True):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -55,7 +55,10 @@ class NormalEncoder(nn.Module):
             max_output: [1, batch_size, hidden_size * num_directions]
             hidden_state: (h_n, c_n)
         '''
-        if lengths is not None and not sort:
+        if lengths is None:
+            raise ValueError('lengths is none.')
+
+        if not sort:
             # sort lengths
             lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
 
@@ -63,27 +66,26 @@ class NormalEncoder(nn.Module):
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
 
             # [max_len, batch_size]
-            inputs = inputs.index_select(1, lengths)
+            inputs = inputs.index_select(1, sorted_indexes)
 
         # embedded
         embedded = self.embedding(inputs)
         embedded = self.dropout(embedded)
 
-        if lengths is not None:
-            embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths)
+        embedded = nn.utils.rnn.pack_padded_sequence(embedded, lengths)
 
         if hidden_state is not None:
             outputs, hidden_state = self.rnn(embedded, hidden_state)
         else:
             outputs, hidden_state = self.rnn(embedded)
 
-        if lengths is not None:
-            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-            if not sort:
-                # [max_len, batch_size, hidden_state]
-                outputs = outputs.index_select(1, restore_indexes)
-                # [num_layer * bidirection_num, batch_size, hidden_state /
-                # bidirection_num]
-                hidden_state = hidden_state.index_select(1, restore_indexes)
+        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
+
+        if not sort:
+            # [max_len, batch_size, hidden_state]
+            outputs = outputs.index_select(1, restore_indexes)
+            # [num_layer * bidirection_num, batch_size, hidden_state /
+            # bidirection_num]
+            hidden_state = hidden_state.index_select(1, restore_indexes)
 
         return outputs, hidden_state

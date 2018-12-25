@@ -97,6 +97,11 @@ def train_epochs(model,
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
                 subreddit_names, conversation_ids, hash_values = dataset.load_data(task)
 
+            #  print(enc_inputs)
+            #  print(enc_inputs_length)
+            #  print(enc_turn_length)
+            #  print(dec_inputs)
+
             # train and get cur loss
             loss, n_correct, n_word = train(model,
                                             enc_inputs,
@@ -299,6 +304,9 @@ def decode(model, dataset, epoch):
             dec_inputs, enc_inputs, enc_inputs_length, \
                 enc_turn_length, f_inputs, f_inputs_length, f_topk_length, \
                 subreddit_names, conversation_ids, hash_values = dataset.load_data(task)
+
+            #  print(enc_inputs)
+            #  print(dec_inputs)
 
             # greedy: [batch_size, max_len]
             # beam_search: [batch_sizes, best_n, len]
