@@ -29,7 +29,6 @@ class  MultiHeadAttention(nn.Module):
 
         self.q_linear = nn.Linear(config.transformer_size, config.num_heads * config.k_size)
         self.k_linear = nn.Linear(config.transformer_size, config.num_heads * config.k_size)
-
         self.v_linear = nn.Linear(config.transformer_size, config.num_heads * config.v_size)
 
         init_wt_normal(self.q_linear.weight, (config.transformer_size + config.k_size))
