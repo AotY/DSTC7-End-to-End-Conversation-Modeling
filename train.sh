@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.3.60004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type q \
+    --enc_type qc \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
