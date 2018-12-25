@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--submission', type=str, help='')
 parser.add_argument('--refs', type=str, help='')
+parser.add_argument('--n_refs', type=str, help='', default=6)
 parser.add_argument('--keys_2k', type=str, help='')
 parser.add_argument('--n_lines', type=int, help='', default=-1)
 
@@ -38,8 +39,8 @@ with open(args.refs, 'r') as f:
         line = line.rstrip()
         parts = line.split('\t')
         hash_value = parts[0]
-        if len(parts) > 1:
-            if hash_value in hash_values_2k or len(parts) >= 5:
+        if len(parts) > (args.n_refs - 1):
+            if hash_value in hash_values_2k or len(parts) >= (args.n_refs + 2):
                 final_hash_values.add(hash_value)
                 tmp_refs_file.write('%s\n' % line)
 tmp_refs_file.close()
