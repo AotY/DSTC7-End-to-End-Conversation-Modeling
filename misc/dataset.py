@@ -293,7 +293,13 @@ class Dataset:
                 _, total = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=0)
 
                 words = set()
-                if total > 0:
+                if total == 0:
+                    f_max_len = int(np.ceil(f_max_len / turn_num * (len(context_sentences) + 1)))
+
+                    for word in query_text.split():
+                        words.add(word)
+
+                else:
                     hits, _ = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=total)
 
                     for hit in hits[:self.config.f_topk]:
@@ -304,11 +310,10 @@ class Dataset:
 
                         for word in text.split():
                             words.add(word)
-                else:
-                    f_max_len = int(np.ceil(f_max_len / turn_num * (len(context_sentences) + 1)))
 
-                    for word in query_text.split():
-                        words.add(word)
+                    if total <= self.config.min_len:
+                        for word in query_text.split():
+                            words.add(word)
 
                 words_tfidf = []
                 for word in words:

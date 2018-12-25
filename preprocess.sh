@@ -7,6 +7,7 @@ python misc/preprocess.py \
     --train_facts_path ./data/cleaned.3.facts.txt \
     --save_path ./data \
     --min_len 3 \
+    --f_min_len 8 \
     --c_max_len 210 \
     --q_max_len 280 \
     --r_max_len 160 \

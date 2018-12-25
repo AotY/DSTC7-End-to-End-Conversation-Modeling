@@ -61,6 +61,10 @@ def preprocess_opt(parser):
                        type=int,
                        help="max len of response.")
 
+    group.add_argument('--f_min_len',
+                       type=int,
+                       help="min len of response.")
+
     group.add_argument('--min_len',
                        type=int,
                        help="min len of response.")

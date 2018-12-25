@@ -167,14 +167,14 @@ def read_facts(args, logger):
             fact = parts[-1]
             data_type = parts[0]
 
-            if len(fact.split()) < args.min_len or len(fact.split()) > args.f_max_len:
+            if len(fact.split()) < args.f_min_len or len(fact.split()) > args.f_max_len:
                 continue
 
             fact_tokens = tokenizer.tokenize(fact, html=True)
             fact_len = len(fact_tokens)
 
             # skip if source has nothing
-            if fact_len < args.min_len or fact_len > args.f_max_len:
+            if fact_len < args.f_min_len or fact_len > args.f_max_len:
                 continue
 
             facts.append(fact_tokens)
