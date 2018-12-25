@@ -559,8 +559,9 @@ class Dataset:
                         text = self.vocab.ids_to_text(ids)
                         f.write('> %s\n' % (text))
 
+                self.logger.info('dec_ids: ', dec_ids)
                 response_text = self.vocab.ids_to_text(dec_ids)
-                f.write('response: %s\n' % response_text)
+                f.write('gold: %s\n' % response_text)
                 f.write('\n')
 
                 f.write('greedy: %s\n' % g_text)
@@ -580,7 +581,6 @@ class Dataset:
 
                 f.write('-' * 70 + '\n')
 
-        self.logger.info('save_path: %s' % save_path)
         predicted_f.close()
         submission_f.close()
 

@@ -24,45 +24,48 @@ def read_convos(args, logger):
 
     logger.info('read convos...')
     n = 0
-    remove_lines = [172480, 172525, 206247, 649956, 726379, 1032984, 1032990, 1033080, \
-                    1033109, 1033112, 1033152, 1033545, 1239300, 1294540, 1733732, 1764651, \
-                    1764831, 1798849, 1798858, 1843289, 1850559, 1991542, 1991548, 1992017, \
-                    2100661, 2100695, 2100887, 2100888, 2101321, 2163997, 2164372, 2170863, \
-                    2171263, 2178114, 2178117, 2181342, 2398186, 2587101]
+    #  remove_lines = [172480, 172525, 206247, 649956, 726379, 1032984, 1032990, 1033080, \
+                    #  1033109, 1033112, 1033152, 1033545, 1239300, 1294540, 1733732, 1764651, \
+                    #  1764831, 1798849, 1798858, 1843289, 1850559, 1991542, 1991548, 1992017, \
+                    #  2100661, 2100695, 2100887, 2100888, 2101321, 2163997, 2164372, 2170863, \
+                    #  2171263, 2178114, 2178117, 2181342, 2398186, 2587101]
     with open(args.raw_convos_path, 'r', encoding='utf-8') as f:
-        for line in f:
+        for line in tqdm(f):
             line = line.rstrip()
             n += 1
 
-            if n in remove_lines:
-                continue
+            #  if n in remove_lines:
+                #  continue
 
             #  if n >= 200:
                 #  break
 
-            if n <= 2550000:
+            #  if n <= 2550000:
+                #  continue
+
+            #  print("line: %d" % n)
+            #  print("line: %s" % line)
+
+            parts = line.split('\t')
+            if len(parts) != 8:
+                print('line: %s' % line)
                 continue
 
-            print("line: %d" % n)
+            #  data_type, hash_value, subreddit_name, \
+                #  conversation_id, turn, score, \
+                #  conversation, response = line.split('\t')
 
-            #  print("line: %s" % line)
-            if n % 5e4 == 0:
-                logger.info('read %d' % n)
-
-            sub = line.split('\t')
-            hash_value = sub[1]
+            data_type = parts[0]
+            if data_type != 'VALID':
+                continue
+            hash_value = parts[1]
             if hash_value in hash_values_set:
                 continue
             else:
                 hash_values_set.add(hash_value)
 
-            if len(sub) != 8:
-                print('line: %s' % line)
-                continue
-
-            data_type = sub[0]
-            conversation = sub[-2]
-            response = sub[-1]
+            conversation = parts[-2]
+            response = parts[-1]
 
             # skip if source has nothing
             if conversation == 'START' or len(conversation.rstrip()) == 0:
@@ -77,13 +80,11 @@ def read_convos(args, logger):
             elif conversation.startswith('... '):
                 conversation = conversation[4:]
 
-            sentences = conversation.split('EOS')
+            sentences = conversation.split(' EOS ')
             sentences_tokens = list()
 
             for si, sentence in enumerate(sentences):
                 if len(sentence.split()) > args.q_max_len or len(sentence.split()) < args.min_len:
-                    if si != len(sentences) - 1:
-                        sentences_tokens.clear()
                     continue
 
                 # token
@@ -110,8 +111,8 @@ def read_convos(args, logger):
                 response_tokens = response.split()
 
             convos.append((context_tokens, query_tokens, response_tokens, \
-                           data_type, hash_value, sub[2], sub[3], \
-                           sub[4], sub[5]))
+                           data_type, hash_value, parts[2], parts[3], \
+                           parts[4], parts[5]))
 
     return convos
 
@@ -150,20 +151,20 @@ def read_facts(args, logger):
             if n % 5e4 == 0:
                 logger.info('read %d' % n)
 
-            sub = line.split('\t')
+            parts = line.split('\t')
 
-            if len(sub) != 6:
+            if len(parts) != 6:
                 print('line: %d' % n)
                 continue
 
-            hash_value = sub[1]
+            hash_value = parts[1]
             if hash_value in hash_values_set:
                 continue
             else:
                 hash_values_set.add(hash_value)
 
-            fact = sub[-1]
-            data_type = sub[0]
+            fact = parts[-1]
+            data_type = parts[0]
 
             if len(fact.split()) < args.min_len or len(fact.split()) > args.f_max_len:
                 continue
@@ -179,9 +180,9 @@ def read_facts(args, logger):
 
             data_types.append(data_type)
             hash_values.append(hash_value)
-            subreddit_names.append(sub[2])
-            conversation_ids.append(sub[3])
-            domain_names.append(sub[4])
+            subreddit_names.append(parts[2])
+            conversation_ids.append(parts[3])
+            domain_names.append(parts[4])
 
     return facts, data_types, hash_values, \
         subreddit_names, conversation_ids, domain_names
@@ -198,7 +199,10 @@ datas, may be contexts + responses or contexts individually.
 
 def save_convos(args, convos, save_path):
     # shuffle
-    random.shuffle(convos)
+    #  random.shuffle(convos)
+
+    # sort by hash_value
+    convos.sort(key=lambda item: item[4], reverse=False)
 
     '''Save data in pair format.'''
     save_file = open(save_path, 'w', encoding='utf-8')

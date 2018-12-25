@@ -41,7 +41,6 @@ class SessionEncoder(nn.Module):
         """
         inputs: [turn_num, batch_size, hidden_size]
         """
-
         if lengths is not None:
             inputs = nn.utils.rnn.pack_padded_sequence(inputs, lengths)
 
@@ -51,4 +50,3 @@ class SessionEncoder(nn.Module):
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
 
         return outputs, hidden_state
-

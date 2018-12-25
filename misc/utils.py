@@ -33,9 +33,10 @@ def remove_stop_words(words):
 class Tokenizer:
     def __init__(self):
         # URLs
-        url_regex_str = r'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))'
+        #  url_regex_str = r'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))'
+        url_regex_str = r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+' # URLs
 
-        number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
+        #  number_regex_str = r'(?:(?:\d+,?)+(?:\.?\d+)?)'  # numbers
 
         #  self.url_re = re.compile(url_regex_str, re.VERBOSE | re.IGNORECASE)
         self.url_re = re.compile(url_regex_str)
@@ -208,6 +209,9 @@ if __name__ == '__main__':
     sequence = """
      ... 100,3.32 many "fsd" of the characters cited in the lawsuit . EOS as someone who 435:23 did a lot of pvp in wow and remembers people like that , fuck that guy for bringing them into pvp . it's one thing to multibox pve , but it's straight up cheating in pvp         . EOS it's so unfair that 10 pcs attacking a single pc would win 100 % of the time . coordination in pvp is cheating ! EOS but it's not coordination , it's ten char        acters being controlled simultaneously with each button press . there's a huge difference . EOS yeah , there is a difference . it's considerably easier to ruin the o        perator's macros and rotations by sending the characters scrambling with ccs and fears making it incredibly difficult , if not impossible , for him to regroup before         he's killed off . not everyone is smart enough to do that though . here's the real question though : would you single handedly try to take on and kill 10 individual         players ? if not , why complain about 1 player controlling 10 characters ? you would still lose . EOS you never actually played against these people did you ?   yes         , on many occasions over the 11 years i played the game , a good portion of which i spent inside bgs and arenas . if you ever had a problem with them it's because y        ou weren't playing intelligently .
      Great infographic about lots of things F1. https://www.reddit.com/r/formula1/comments/ignfy/ hello 432
+
+     ... there just in case ( i didn't r        eally count in atlantic city as well - it was more of me explaining how it worked , so i was being obvious , but not making any money  )         . EOS macau ( also hong kong  ) is a [ special administrative region  ] ( http://en.wikipedia.org/wiki/Special_administrative_region_\(P        eople%27s_Republic_of_China\)  ) within china . which lets it operate very differently from the rest of china . EOS is taiwan the same d        eal , or a completely different country ? i've never quite understood its ties to china ... EOS it is independent . it was never really         part of china . at times it was administered by china , other times it was a pirate island . japan won it in a war , and after wwii ch        ina got it back . chiang kai-shek , the nationalist anti-communist leader of china , fled there after he knew the communist would win t        he mainland . he brought a lot of supporters with him . for awhile it was a dictatorship . it was one of the asian tigers , and experie        nced rapid economic growth . china wants it . think of taiwan as a democratic china .   * de facto * independent ; * de jure * part of         china ( both sides actually agree on this , with taiwan claiming to be the rightful government of all china .  )
+
     """
     tokenizer = Tokenizer()
     print(sequence)

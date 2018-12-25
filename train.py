@@ -320,6 +320,10 @@ def decode(model, dataset, epoch):
                                                   decode_type='beam_search')
 
             # save sentences
+            save_path = os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % \
+                                     (args.model_type, args.enc_type, epoch, args.c_min, \
+                                      args.c_max, time_str))
+
             dataset.save_generated_texts(
                 epoch,
                 subreddit_names,
@@ -330,10 +334,11 @@ def decode(model, dataset, epoch):
                 dec_inputs,
                 greedy_texts,
                 beam_texts,
-                os.path.join(args.save_path, 'generated/%s_%s_%s_%s_%s_%s.txt' % (
-                    args.model_type, args.enc_type, epoch, args.c_min, args.c_max, time_str)),
+                save_path,
                 time_str
             )
+
+        logger.info('save_path: %s' % save_path)
 
 def cal_performance(pred, gold, label_smoothing=False):
     ''' Apply label smoothing if needed '''
