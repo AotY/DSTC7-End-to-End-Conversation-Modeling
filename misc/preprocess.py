@@ -20,18 +20,6 @@ Read convos file.
 def read_convos(args, logger):
     convos = list()
 
-=======
-    contexts = list()
-    queries = list()
-    responses = list()
-
-    data_types = list()
-    subreddit_names = list()
-    conversation_ids = list()
-    response_scores = list()
-    dialogue_turns = list()
-    hash_values = list()
->>>>>>> c59ed7982668f2b2fcfddf604f990c668a135c81
     hash_values_set = set()
 
     logger.info('read convos...')
@@ -52,10 +40,10 @@ def read_convos(args, logger):
             #  if n >= 200:
                 #  break
 
-            #  if n <= 2587101:
-                #  continue
+            if n <= 2550000:
+                continue
 
-            #  print("line: %d" % n)
+            print("line: %d" % n)
 
             #  print("line: %s" % line)
             if n % 5e4 == 0:
@@ -235,7 +223,9 @@ def save_convos(args, convos, save_path):
 
 
 def save_facts(facts, data_types, subreddit_names, conversation_ids, domain_names, save_path):
-    with open(save_path, 'w', encoding='utf-8') as f: for data_type, fact, subreddit, conversation_id, domain \ in zip(data_types, facts, subreddit_names, conversation_ids, domain_names):
+    with open(save_path, 'w', encoding='utf-8') as f:
+        for data_type, fact, subreddit, conversation_id, domain \
+            in zip(data_types, facts, subreddit_names, conversation_ids, domain_names):
 
             if isinstance(fact, list):
                 fact = ' '.join(fact)

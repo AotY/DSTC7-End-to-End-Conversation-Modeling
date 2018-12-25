@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--facts_path', type=str, help='', default='')
 parser.add_argument('--f_min_len', type=int, help='', default='')
-parser.add_argument('--save_path', type=str, help='', default='')
+parser.add_argument('--save_dir', type=str, help='', default='')
 
 args = parser.parse_args()
 
@@ -369,12 +369,15 @@ def facts_stas():
     """
     total : 2139145
     avg : 110.3164
+
+    total facts: 3189004
+    avg facts: 103.3244
     """
 
     save_distribution(count_dict, 'facts_count')
     save_distribution(len_dict, 'facts_len')
 
-    facts_save_path = os.path.join(args.save_path, 'facts_dict.pkl')
+    facts_save_path = os.path.join(args.save_dir, 'facts_dict.pkl')
     pickle.dump(facts_dict, open(facts_save_path, 'wb'))
 
 
@@ -425,7 +428,7 @@ def facts_tag_stats():
 
 def save_distribution(distribution, name):
     distribution_list = sorted(distribution.items(), key=lambda item: item[1], reverse=True)
-    with open(os.path.join(args.save_path, name + '.dist.txt'), 'w', encoding="utf-8") as f:
+    with open(os.path.join(args.save_dir, name + '.dist.txt'), 'w', encoding="utf-8") as f:
         for i, j in distribution_list:
             f.write('%s\t%s\n' % (str(i), str(j)))
 
