@@ -178,7 +178,8 @@ class Dataset:
                 words = self.facts_topk_phrases.get(hash_value, None)
                 if words is None:
                     f_len = 1
-                    f_ids = [EOS_ID]  + [PAD_ID] * (f_max_len - 1)
+                    #  f_ids = [EOS_ID]  + [PAD_ID] * (f_max_len - 1)
+                    f_ids = [PAD_ID] * f_max_len
                 else:
                     f_len = len(words)
                     if words is not None:
@@ -295,10 +296,12 @@ class Dataset:
 
                 words = set()
                 if total == 0:
-                    f_max_len = int(np.ceil(f_max_len / turn_num * (len(context_sentences) + 1)))
+                    #  f_max_len = int(np.ceil(f_max_len / turn_num * (len(context_sentences) + 1)))
 
-                    for word in query_text.split():
-                        words.add(word)
+                    #  for word in query_text.split():
+                        #  words.add(word)
+
+                    continue
 
                 else:
                     hits, _ = es_helper.search(es, es_helper.index, es_helper.fact_type, query_body, size=total)
@@ -318,7 +321,11 @@ class Dataset:
 
                 words_tfidf = []
                 for word in words:
-                    value = facts_tfidf_dict[conversation_id].get(word, 0.0)
+                    try:
+                        value = facts_tfidf_dict[conversation_id].get(word, 0.0)
+                    except Exception as e:
+                        value = 0.0
+                        print('conversation_id: %s' % conversation_id)
                     words_tfidf.append((word, value))
 
                 words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)

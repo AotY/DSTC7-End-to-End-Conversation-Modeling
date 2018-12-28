@@ -549,7 +549,7 @@ if __name__ == '__main__':
     if args.model_type == 'kg':
         """ computing similarity between conversation and fact """
         offline_filename = os.path.join(
-            args.save_path, 'facts_topk_phrases.%s.pkl.bak' % args.offline_type)
+            args.save_path, 'facts_topk_phrases.%s.pkl' % args.offline_type)
 
         facts_tfidf_dict = pickle.load(open('./data/facts_tfidf_dict.pkl', 'rb'))
         if args.offline_type in ['elastic', 'elastic_tag']:
