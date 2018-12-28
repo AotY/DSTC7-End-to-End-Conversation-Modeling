@@ -115,7 +115,6 @@ class KGModel(nn.Module):
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
                 lengths=enc_inputs_length,
-                sort=True
             )
 
             dec_hidden = self.reduce_state(enc_hidden)
@@ -417,6 +416,9 @@ class KGModel(nn.Module):
                 hidden_state=hidden_state,
                 sort=False
             )
+                
+            if self.config.enc_type.count('_seq') == 0:
+                hidden_state = None
 
             utterance_outputs.append(outputs[-1])
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=2
 
 python train.py \
     --save_path data/ \
     --convos_path ./data/cleaned.3.convos.txt \
-    --vocab_path data/vocab_word2idx.3.60004.dict \
+    --vocab_path data/vocab_word2idx.3.40004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc_h \
+    --enc_type q \
     --rnn_type GRU \
-    --embedding_size 512 \
+    --embedding_size 256 \
     --hidden_size 512 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
@@ -20,7 +20,7 @@ python train.py \
     --inner_hidden_size 1024 \
     --k_size 64 \
     --v_size 64 \
-    --dropout 0.2 \
+    --dropout 0.3 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
@@ -34,22 +34,22 @@ python train.py \
     --best_n 3 \
     --lr 0.001 \
     --max_grad_norm 5.0 \
-    --epochs 25 \
+    --epochs 15 \
     --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
-    --eval_interval 1800 \
-    --log_interval 150 \
-    --lr_patience 3 \
-    --es_patience 8 \
+    --eval_interval 1900 \
+    --log_interval 190 \
+    --lr_patience 2 \
+    --es_patience 5 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type kg \
-    --f_enc_type multi_head \
+    --model_type seq2seq \
+    --f_enc_type embedding \
     --task train \
     --share_embedding \
     --offline_type elastic \

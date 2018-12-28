@@ -13,7 +13,7 @@ from rake_nltk import Rake
 from misc import es_helper
 from misc.utils import remove_stop_words
 
-from misc.vocab import PAD_ID, SOS_ID, EOS_ID
+from misc.vocab import PAD_ID, SOS_ID, EOS_ID, UNK_ID
 
 
 class Dataset:
@@ -65,7 +65,7 @@ class Dataset:
 
                     # response
                     if data_type == 'TEST':
-                        r_ids = []
+                        r_ids = [UNK_ID]
                     else:
                         r_words = [word for word in response.split() if len(word.split()) > 0]
                         r_ids = self.vocab.words_to_id(r_words)
@@ -141,7 +141,7 @@ class Dataset:
             if enc_type == 'q':
                 enc_ids = q_ids[-min(q_max_len, len(q_ids)):]
                 enc_len = len(enc_ids)
-                enc_ids = enc_ids + [PAD_ID] * (q_max_len - len(enc_ids))
+                enc_ids = enc_ids + [PAD_ID] * (q_max_len - enc_len)
             elif enc_type == 'qc':
                 enc_ids = list()
                 for ids in c_ids:
@@ -149,26 +149,32 @@ class Dataset:
                 enc_ids.extend(q_ids)
                 enc_ids = enc_ids[-min(q_max_len, len(enc_ids)):]
                 enc_len = len(enc_ids)
-                enc_ids = enc_ids + [PAD_ID] * (q_max_len - len(enc_ids))
+                enc_ids = enc_ids + [PAD_ID] * (q_max_len - enc_len)
             else:
-                enc_ids = list(c_ids)
+                enc_ids = list()
+                for ids in c_ids:
+                    enc_ids.append(ids)
                 enc_ids.append(q_ids)
 
                 turn_len = len(enc_ids)
                 enc_len = [1] * turn_num
+
                 padded_enc_ids = list()
                 for i, ids in enumerate(enc_ids):
                     ids = ids[-min(q_max_len, len(ids)):]
                     enc_len[i] = len(ids)
                     ids = ids + [PAD_ID] * (q_max_len - len(ids))
                     padded_enc_ids.append(ids)
+
                 if len(padded_enc_ids) < turn_num:
                     for _ in range(turn_num - len(padded_enc_ids)):
                         padded_enc_ids.append([EOS_ID] + [PAD_ID] * (q_max_len - 1))
+
                 enc_ids = padded_enc_ids
 
-            dec_len = len(r_ids)
             r_ids = r_ids[:min(r_max_len, len(r_ids))]
+            dec_len = len(r_ids)
+
             #  r_ids = r_ids[-min(r_max_len, len(r_ids)):]
             dec_ids = [SOS_ID] + r_ids + [EOS_ID] + [PAD_ID] * (r_max_len - len(r_ids))
 
@@ -181,11 +187,11 @@ class Dataset:
                     #  f_ids = [EOS_ID]  + [PAD_ID] * (f_max_len - 1)
                     f_ids = [PAD_ID] * f_max_len
                 else:
-                    f_len = len(words)
-                    if words is not None:
-                        f_ids = self.vocab.words_to_id(words)
-                        f_ids = f_ids[:min(f_max_len, len(f_ids))]
-                        f_ids = f_ids + [PAD_ID] * (f_max_len - len(f_ids))
+                    f_ids = self.vocab.words_to_id(words)
+                    f_ids = f_ids[:min(f_max_len, len(f_ids))]
+                    f_len = len(f_ids)
+
+                    f_ids = f_ids + [PAD_ID] * (f_max_len - len(f_ids))
 
             padded_batch_data.append((hash_value, subreddit_name, conversation_id, \
                                       enc_ids, enc_len, turn_len, dec_ids, dec_len, \
@@ -209,13 +215,13 @@ class Dataset:
 
         """sort batch_data"""
         if enc_type == 'q' or enc_type == 'qc':
-            padded_batch_data = sorted(padded_batch_data, key=lambda item: item[4], reverse=True)
+            sorted_batch_data = sorted(padded_batch_data, key=lambda item: item[4], reverse=True)
         else:
-            padded_batch_data = sorted(padded_batch_data, key=lambda item: item[5], reverse=True)
+            sorted_batch_data = sorted(padded_batch_data, key=lambda item: item[5], reverse=True)
 
-        for i, (hash_value, subreddit_name, conversation_id, \
+        for hash_value, subreddit_name, conversation_id, \
                 enc_ids, enc_len, turn_len, dec_ids, dec_len, \
-                f_ids, f_len) in enumerate(padded_batch_data):
+                f_ids, f_len in sorted_batch_data:
 
             hash_values.append(hash_value)
             subreddit_names.append(subreddit_name)
@@ -289,6 +295,7 @@ class Dataset:
                     context_sentences.append(sentence)
 
                 query_text = query + ' ' + ' '.join(context_sentences)
+                query_text = ' '.join(remove_stop_words(query_text.split()))
 
                 #  print('query_text: ', query_text)
                 query_body = es_helper.assemble_search_fact_body(conversation_id, query_text)
@@ -297,10 +304,8 @@ class Dataset:
                 words = set()
                 if total == 0:
                     #  f_max_len = int(np.ceil(f_max_len / turn_num * (len(context_sentences) + 1)))
-
                     #  for word in query_text.split():
                         #  words.add(word)
-
                     continue
 
                 else:
