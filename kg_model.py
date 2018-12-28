@@ -58,6 +58,7 @@ class KGModel(nn.Module):
         )
 
         self.f_encoder = None
+        self.f_embedding = None
         if config.model_type == 'kg':
             self.f_embedding = enc_embedding
 
@@ -416,7 +417,7 @@ class KGModel(nn.Module):
                 hidden_state=hidden_state,
                 sort=False
             )
-                
+
             if self.config.enc_type.count('_seq') == 0:
                 hidden_state = None
 
