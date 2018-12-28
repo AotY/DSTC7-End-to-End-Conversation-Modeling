@@ -8,7 +8,7 @@
 
 
 python auto_eval.py \
-    --submission data/submission/seq2seq_qc_6_1_3_2018_12_25_15:06.txt \
+    --submission data/submission/kg_qc_9_1_3_2018_12_25_18\:12.txt \
     --refs data_extraction/test.refs \
     --keys_2k evaluation/src/keys/test.2k.txt \
     --n_lines -1 \
