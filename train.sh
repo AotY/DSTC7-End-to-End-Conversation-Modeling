@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.3.40004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc \
+    --enc_type q \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -41,8 +41,8 @@ python train.py \
     --device cuda \
     --eval_interval 1900 \
     --log_interval 190 \
-    --lr_patience 2 \
-    --es_patience 5 \
+    --lr_patience 3 \
+    --es_patience 6 \
     --log_path ./logs/{}_{}_{}_{}_{}.log \
     --model_path ./models \
     --test_split 0.08 \
