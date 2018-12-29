@@ -138,11 +138,11 @@ class Dataset:
             enc_len = None
             turn_len = None
             enc_ids = None
-            if enc_type == 'q':
+            if enc_type in ['q', 'q_attn']:
                 enc_ids = q_ids[-min(q_max_len, len(q_ids)):]
                 enc_len = len(enc_ids)
                 enc_ids = enc_ids + [PAD_ID] * (q_max_len - enc_len)
-            elif enc_type == 'qc':
+            elif enc_type  in ['qc', 'qc_attn']:
                 enc_ids = list()
                 for ids in c_ids:
                     enc_ids.extend(ids)
@@ -214,7 +214,7 @@ class Dataset:
         f_topk_length = list()
 
         """sort batch_data"""
-        if enc_type == 'q' or enc_type == 'qc':
+        if enc_type in ['q', 'q_attn', 'qc', 'qc_attn']:
             sorted_batch_data = sorted(padded_batch_data, key=lambda item: item[4], reverse=True)
         else:
             sorted_batch_data = sorted(padded_batch_data, key=lambda item: item[5], reverse=True)
@@ -237,7 +237,7 @@ class Dataset:
                 f_inputs.append(f_ids)
                 f_inputs_length.append(f_len)
 
-        if enc_type == 'q' or enc_type == 'qc':
+        if enc_type in ['q', 'q_attn', 'qc', 'qc_attn']:
             # [max_len, batch_size]
             enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).transpose(0, 1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)

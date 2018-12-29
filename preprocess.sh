@@ -3,7 +3,7 @@
 python misc/preprocess.py \
     --raw_convos_path ./data/raw.3.convos.txt \
     --raw_facts_path ./data/raw.3.facts.txt \
-    --train_convos_path ./data/cleaned.3.convos.txt \
+    --train_convos_path ./data/cleaned.3.convos.TEST.txt \
     --train_facts_path ./data/cleaned.3.facts.txt \
     --save_path ./data \
     --min_len 3 \

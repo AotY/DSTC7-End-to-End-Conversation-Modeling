@@ -38,7 +38,7 @@ class Attention(nn.Module):
     Examples::
     """
 
-    def __init__(self, hidden_size):
+    def __init__(self, hidden_state):
         super(Attention, self).__init__()
         #  self.linear_out = nn.Linear(hidden_size * 2, hidden_size)
         #  init_linear_wt(self.linear_out)

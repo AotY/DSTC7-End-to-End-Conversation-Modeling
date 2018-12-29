@@ -10,7 +10,7 @@ python train.py \
     --c_min 1 \
     --enc_type qc \
     --rnn_type GRU \
-    --embedding_size 256 \
+    --embedding_size 512 \
     --hidden_size 512 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
@@ -49,7 +49,7 @@ python train.py \
     --eval_batch 12 \
     --start_epoch 1 \
     --model_type kg \
-    --f_enc_type multi_head \
+    --f_enc_type embedding \
     --task train \
     --share_embedding \
     --offline_type elastic \

@@ -111,7 +111,7 @@ class KGModel(nn.Module):
             f_topk_length: None
         '''
         enc_type = self.config.enc_type
-        if enc_type == 'q' or enc_type == 'qc':
+        if enc_type in ['q', 'q_attn', 'qc', 'qc_attn']:
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
@@ -152,9 +152,8 @@ class KGModel(nn.Module):
                 dec_hidden = self.reduce_state(enc_hidden)
 
         # [q_attn, qc_attn, qc_seq_attn, qc_seq_h_attn]
-        if enc_type not in ['q', 'qc']:
-            if enc_type.count('attn') == 0:
-                enc_outputs = None
+        if enc_type.count('attn') == 0:
+            enc_outputs = None
 
         # fact encoder
         f_enc_outputs = None
@@ -192,8 +191,7 @@ class KGModel(nn.Module):
                f_topk_length):
 
         enc_type = self.config.enc_type
-        if enc_type == 'q' or \
-                enc_type == 'qc':
+        if enc_type in ['q', 'q_attn', 'qc', 'qc_attn']:
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
@@ -234,9 +232,8 @@ class KGModel(nn.Module):
                 dec_hidden = self.reduce_state(enc_hidden)
 
         # [q_attn, qc_attn, qc_seq_attn, qc_seq_h_attn]
-        if enc_type not in ['q', 'qc']:
-            if enc_type.count('attn') == 0:
-                enc_outputs = None
+        if enc_type.count('attn') == 0:
+            enc_outputs = None
 
         # fact encoder
         f_enc_outputs = None

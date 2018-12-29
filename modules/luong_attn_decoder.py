@@ -26,7 +26,7 @@ class LuongAttnDecoder(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
         enc_type = config.enc_type
 
-        if enc_type.count('attn') != 0 or enc_type in ['q', 'qc']:
+        if enc_type.count('attn') != 0:
             self.enc_attn = Attention(config.hidden_size)
 
         # f_attn
@@ -47,19 +47,18 @@ class LuongAttnDecoder(nn.Module):
             init_gru_orth(self.rnn)
 
         # linear  [q, c, f]
+        in_features = 0
         if config.model_type == 'kg':
-            #  if enc_type.count('attn') != 0:
-            if enc_type.count('attn') != 0 or enc_type in ['q', 'qc']:
-                self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
+            if enc_type.count('attn') != 0:
+                in_features = config.hidden_size * 3
             else:
-                self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
+                in_features = config.hidden_size * 2
         else:
-            #  if enc_type.count('attn') != 0:
-            if enc_type.count('attn') != 0 or enc_type in ['q', 'qc']:
-                self.linear = nn.Linear(config.hidden_size * 2, config.vocab_size)
+            if enc_type.count('attn') != 0:
+                in_features = config.hidden_size * 2
             else:
-                self.linear = nn.Linear(config.hidden_size * 1, config.vocab_size)
-        #  self.linear = nn.Linear(config.hidden_size * 3, config.vocab_size)
+                in_features = config.hidden_size
+        self.linear = nn.Linear(in_features, config.vocab_size)
         init_linear_wt(self.linear)
 
     def forward(self,
@@ -91,7 +90,10 @@ class LuongAttnDecoder(nn.Module):
         f_context = None
         if f_enc_outputs is not None:
             # [1, batch_size, hidden_size]
-            f_context, _ = self.f_attn(output, f_enc_outputs, f_enc_length)
+            if enc_context is not None:
+                f_context, _ = self.f_attn(enc_context, f_enc_outputs, f_enc_length)
+            else:
+                f_context, _ = self.f_attn(output, f_enc_outputs, f_enc_length)
 
         output_list = [output]
 

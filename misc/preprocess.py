@@ -24,23 +24,13 @@ def read_convos(args, logger):
 
     logger.info('read convos...')
     n = 0
-    #  remove_lines = [172480, 172525, 206247, 649956, 726379, 1032984, 1032990, 1033080, \
-                    #  1033109, 1033112, 1033152, 1033545, 1239300, 1294540, 1733732, 1764651, \
-                    #  1764831, 1798849, 1798858, 1843289, 1850559, 1991542, 1991548, 1992017, \
-                    #  2100661, 2100695, 2100887, 2100888, 2101321, 2163997, 2164372, 2170863, \
-                    #  2171263, 2178114, 2178117, 2181342, 2398186, 2587101]
+
     with open(args.raw_convos_path, 'r', encoding='utf-8') as f:
         for line in tqdm(f):
             line = line.rstrip()
             n += 1
 
-            #  if n in remove_lines:
-                #  continue
-
-            #  if n >= 200:
-                #  break
-
-            #  if n <= 2550000:
+            #  if n <= 2000000:
                 #  continue
 
             #  print("line: %d" % n)
@@ -51,12 +41,8 @@ def read_convos(args, logger):
                 print('line: %s' % line)
                 continue
 
-            #  data_type, hash_value, subreddit_name, \
-                #  conversation_id, turn, score, \
-                #  conversation, response = line.split('\t')
-
             data_type = parts[0]
-            #  if data_type != 'VALID':
+            #  if data_type != 'TEST':
                 #  continue
 
             hash_value = parts[1]
@@ -233,7 +219,6 @@ def save_facts(facts, data_types, subreddit_names, conversation_ids, domain_name
                     (data_type, subreddit, conversation_id, domain, fact))
 
 def main(args, logger):
-    """
     convos = read_convos(args, logger)
 
     save_convos(
@@ -251,6 +236,7 @@ def main(args, logger):
     #  save raw facts to txt
     save_facts(facts, facts_data_types, facts_subreddit_names, facts_conversation_ids, \
             domain_names, args.train_facts_path)
+    """
 
 
 if __name__ == '__main__':
