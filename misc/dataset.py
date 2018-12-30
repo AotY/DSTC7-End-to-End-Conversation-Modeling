@@ -526,8 +526,7 @@ class Dataset:
         dec_inputs = dec_inputs.transpose(0, 1).tolist()  # [batch_size, max_len]
         #  print('dec_inputs: ', dec_inputs)
 
-        if self.config.enc_type == 'q' or \
-            self.config.enc_type == 'qc':
+        if self.config.enc_type in ['q', 'q_attn', 'qc', 'qc_attn']:
             # [max_len, batch_size] -> [batch_size, max_len]
             enc_inputs = enc_inputs.transpose(0, 1).tolist()
         else:
