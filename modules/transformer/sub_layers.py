@@ -36,7 +36,7 @@ class  MultiHeadAttention(nn.Module):
 
         init_wt_normal(self.v_linear.weight, (config.transformer_size + config.v_size))
 
-        self.attention = ScaleDotProductAttention(temperature=np.power(config.k_size, 0.5))
+        self.attention = ScaleDotProductAttention(temperature=np.power(config.k_size, 0.5), dropout=config.dropout)
 
         # Applies Layer Normalization over a mini-batch of inputs
         self.layer_norm = nn.LayerNorm(config.transformer_size)

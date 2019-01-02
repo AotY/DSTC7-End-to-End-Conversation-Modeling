@@ -10,24 +10,24 @@ python train.py \
     --c_min 1 \
     --enc_type qc \
     --rnn_type GRU \
-    --embedding_size 512 \
+    --embedding_size 256 \
     --hidden_size 512 \
     --encoder_num_layers 2 \
     --decoder_num_layers 2 \
     --t_num_layers 1 \
     --num_heads 1 \
-    --transformer_size 512 \
-    --inner_hidden_size 1024 \
+    --transformer_size 256 \
+    --inner_hidden_size 512 \
     --k_size 64 \
     --v_size 64 \
-    --dropout 0.3 \
+    --dropout 0.1 \
     --bidirectional \
     --tied \
     --decode_type beam_search \
     --q_max_len 60 \
     --c_max_len 55 \
     --r_max_len 38 \
-    --f_max_len 10 \
+    --f_max_len 15 \
     --f_topk 15 \
     --min_len 3 \
     --beam_size 8 \

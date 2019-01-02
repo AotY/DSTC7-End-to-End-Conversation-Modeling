@@ -20,22 +20,21 @@ class LuongAttnDecoder(nn.Module):
 
         # embedding
         self.embedding = embedding
-        self.embedding_size = embedding.embedding_dim
 
         # dropout
         self.dropout = nn.Dropout(config.dropout)
         enc_type = config.enc_type
 
         if enc_type.count('attn') != 0:
-            self.enc_attn = Attention(config.hidden_size)
+            self.enc_attn = Attention(config)
 
         # f_attn
         if config.model_type == 'kg':
-            self.f_attn = Attention(config.hidden_size)
+            self.f_attn = Attention(config)
 
         self.rnn = rnn_factory(
             config.rnn_type,
-            input_size=self.embedding_size,
+            input_size=config.embedding_size,
             hidden_size=config.hidden_size,
             num_layers=config.decoder_num_layers,
             dropout=config.dropout
@@ -48,6 +47,7 @@ class LuongAttnDecoder(nn.Module):
 
         # linear  [q, c, f]
         in_features = 0
+
         if config.model_type == 'kg':
             if enc_type.count('attn') != 0:
                 in_features = config.hidden_size * 3
@@ -58,6 +58,7 @@ class LuongAttnDecoder(nn.Module):
                 in_features = config.hidden_size * 2
             else:
                 in_features = config.hidden_size
+
         self.linear = nn.Linear(in_features, config.vocab_size)
         init_linear_wt(self.linear)
 
@@ -90,9 +91,6 @@ class LuongAttnDecoder(nn.Module):
         f_context = None
         if f_enc_outputs is not None:
             # [1, batch_size, hidden_size]
-            #  if enc_context is not None:
-                #  f_context, _ = self.f_attn(enc_context, f_enc_outputs, f_enc_length)
-            #  else:
             f_context, _ = self.f_attn(rnn_output, f_enc_outputs, f_enc_length)
 
         output_list = list()

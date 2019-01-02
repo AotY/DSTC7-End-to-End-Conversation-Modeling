@@ -64,6 +64,7 @@ class NormalEncoder(nn.Module):
 
         #  print('inputs: ', inputs)
         #  print('lengths: ', lengths)
+        sorted_lengths = lengths
         if not sort:
             # sort lengths
             sorted_lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)

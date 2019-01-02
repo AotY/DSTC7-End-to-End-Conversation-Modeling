@@ -67,6 +67,10 @@ class KGModel(nn.Module):
                     config
                 )
 
+            if config.embedding_size != config.hidden_size:
+                self.eh_linear = nn.Linear(config.embedding_size, config.hidden_size)
+                init_linear_wt(self.eh_linear)
+
         # session encoder
         if config.enc_type.count('_h') != 0:
             self.session_encoder = SessionEncoder(config)
@@ -464,5 +468,8 @@ class KGModel(nn.Module):
 
         # [max_len, batch_size, hidden_size]
         f_enc_outputs = f_enc_outputs.transpose(0, 1)
+
+        if self.config.embedding_size != self.config.hidden_size:
+            f_enc_outputs = self.eh_linear(f_enc_outputs)
 
         return f_enc_outputs

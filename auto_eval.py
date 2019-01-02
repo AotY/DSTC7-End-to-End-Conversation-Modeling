@@ -75,4 +75,4 @@ print('submission: %s' % args.submission)
 
 time.sleep(1)
 
-os.system('rm -rf tmp_*')
+#  os.system('rm -rf tmp_*')

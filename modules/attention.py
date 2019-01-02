@@ -38,19 +38,26 @@ class Attention(nn.Module):
     Examples::
     """
 
-    def __init__(self, hidden_state):
+    def __init__(self, config):
         super(Attention, self).__init__()
         #  self.linear_out = nn.Linear(hidden_size * 2, hidden_size)
         #  init_linear_wt(self.linear_out)
 
+
     def forward(self, output, encoder_outputs, lengths=None):
         """
-        output: maybe [r_len, batch_size, hidden_size] or [1, batch_size, hidden_size]
-        encoder_outputs: [c_len, batch_size, hidden_size]
+        output: maybe [r_len, batch_size, input_size] or [1, batch_size, input_size]
+        encoder_outputs: [c_len, batch_size, input_size]
         """
 
-        output_len, batch_size, hidden_size = output.shape
-        input_size = encoder_outputs.size(0)
+        output_len, batch_size, output_size = output.shape
+        input_len, _, input_size = encoder_outputs.shape
+
+        #  if input_size != output_size:
+            #  encoder_outputs = self.eh_linear(encoder_outputs)
+        assert output_size == input_size, 'input_size: %d != output_size: %d ' % (input_size, output_size)
+
+        hidden_size = output_size
 
         # (batch, out_len, hidden_size) * (batch, hidden_size, in_len) -> (batch, out_len, in_len)
         attn = torch.bmm(output.transpose(0, 1), encoder_outputs.permute(1, 2, 0))
@@ -61,7 +68,7 @@ class Attention(nn.Module):
             attn.data.masked_fill_(1 - mask, -float('inf'))
 
         # [batch, out_len, in_len]
-        attn = torch.softmax(attn.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
+        attn = torch.softmax(attn.view(-1, input_len), dim=1).view(batch_size, -1, input_len)
 
         # (batch, out_len, in_len) * (batch, in_len, hidden_size) -> (batch, out_len, hidden_size)
         context = torch.bmm(attn, encoder_outputs.transpose(0, 1))
