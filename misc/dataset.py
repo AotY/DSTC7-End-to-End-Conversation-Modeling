@@ -168,7 +168,8 @@ class Dataset:
 
                 if len(padded_enc_ids) < turn_num:
                     for _ in range(turn_num - len(padded_enc_ids)):
-                        padded_enc_ids.append([EOS_ID] + [PAD_ID] * (q_max_len - 1))
+                        padded_enc_ids.append([PAD_ID] * q_max_len)
+                        #  padded_enc_ids.append([EOS_ID] + [PAD_ID] * (q_max_len - 1))
 
                 enc_ids = padded_enc_ids
 
@@ -242,10 +243,10 @@ class Dataset:
             enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).transpose(0, 1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
         else:
-            # [turn_num, max_len, batch_size]
+            # [batch_sizes, turn_num, max_len] -> [turn_num, max_len, batch_size]
             enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).permute(1, 2, 0)
 
-            # [turn_num, batch_size]
+            # [batch_size, turn_num] -> [turn_num, batch_size]
             enc_inputs_length = torch.tensor(
                 enc_inputs_length, dtype=torch.long, device=self.device).transpose(0, 1)
 

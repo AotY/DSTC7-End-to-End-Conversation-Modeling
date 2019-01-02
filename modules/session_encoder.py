@@ -36,17 +36,16 @@ class SessionEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-
-    def forward(self, inputs, lengths=None):
-        """
+    def forward(self, inputs, lengths): """
         inputs: [turn_num, batch_size, hidden_size]
         """
-        if lengths is not None:
-            inputs = nn.utils.rnn.pack_padded_sequence(inputs, lengths)
+        if lengths is None:
+            raise ValueError('lengths is none.')
+
+        inputs = nn.utils.rnn.pack_padded_sequence(inputs, lengths)
 
         outputs, hidden_state = self.rnn(inputs)
 
-        if lengths is not None:
-            outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
+        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
 
         return outputs, hidden_state

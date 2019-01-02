@@ -126,7 +126,6 @@ class KGModel(nn.Module):
                 enc_inputs,
                 enc_inputs_length
             )
-            enc_length = enc_turn_length
 
             if enc_type.count('_h') != 0:  # hierarchical
                 # [turn_num, batch_size, hidden_size]
@@ -134,6 +133,8 @@ class KGModel(nn.Module):
                     enc_outputs,
                     enc_turn_length
                 )
+
+            enc_length = enc_turn_length
 
             # [qc_concat, qc_sum, qc_concat_h, qc_sum_h]
             if enc_type.count('sum') != 0:
@@ -408,6 +409,7 @@ class KGModel(nn.Module):
             inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = enc_inputs_length[ti, :]  # [batch_size]
 
+            print('sort-------------> False')
             outputs, hidden_state = self.encoder(
                 inputs,
                 lengths=inputs_length,
