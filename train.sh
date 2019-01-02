@@ -24,10 +24,10 @@ python train.py \
     --bidirectional \
     --tied \
     --decode_type beam_search \
-    --q_max_len 60 \
-    --c_max_len 55 \
-    --r_max_len 38 \
-    --f_max_len 15 \
+    --q_max_len 5 \
+    --c_max_len 5 \
+    --r_max_len 5 \
+    --f_max_len 5 \
     --f_topk 15 \
     --min_len 3 \
     --beam_size 8 \
@@ -35,7 +35,7 @@ python train.py \
     --lr 0.0005 \
     --max_grad_norm 5.0 \
     --epochs 15 \
-    --batch_size 128 \
+    --batch_size 5 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \

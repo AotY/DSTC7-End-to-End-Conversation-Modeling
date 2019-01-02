@@ -80,22 +80,24 @@ class LuongAttnDecoder(nn.Module):
         embedded = self.embedding(dec_input)  # [1, batch_size, embedding_size]
         embedded = self.dropout(embedded)
 
-        output, dec_hidden = self.rnn(embedded, dec_hidden)
+        rnn_output, dec_hidden = self.rnn(embedded, dec_hidden)
 
         enc_context = None
         if enc_outputs is not None:
             # [1, batch_size, hidden_size]
-            enc_context, _ = self.enc_attn(output, enc_outputs, enc_length)
+            enc_context, _ = self.enc_attn(rnn_output, enc_outputs, enc_length)
 
         f_context = None
         if f_enc_outputs is not None:
             # [1, batch_size, hidden_size]
-            if enc_context is not None:
-                f_context, _ = self.f_attn(enc_context, f_enc_outputs, f_enc_length)
-            else:
-                f_context, _ = self.f_attn(output, f_enc_outputs, f_enc_length)
+            #  if enc_context is not None:
+                #  f_context, _ = self.f_attn(enc_context, f_enc_outputs, f_enc_length)
+            #  else:
+            f_context, _ = self.f_attn(rnn_output, f_enc_outputs, f_enc_length)
 
-        output_list = [output]
+        output_list = list()
+
+        output_list.append(rnn_output)
 
         if enc_context is not None:
             output_list.append(enc_context)
@@ -103,10 +105,10 @@ class LuongAttnDecoder(nn.Module):
         if f_context is not None:
             output_list.append(f_context)
 
-        output = torch.cat(output_list, dim=2)
+        concat_output = torch.cat(output_list, dim=2)
 
         # [, batch_size, vocab_size]
-        #  print('output: ', output.shape)
-        output = self.linear(output)
+        #  print('concat_output: ', concat_output.shape)
+        output = self.linear(concat_output)
 
         return output, dec_hidden, None
