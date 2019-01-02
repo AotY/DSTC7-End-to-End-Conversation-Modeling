@@ -47,7 +47,7 @@ class NormalEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, lengths, hidden_state=None, max_len=None, sort=True):
+    def forward(self, inputs, lengths, hidden_state=None, sort=True):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -59,6 +59,8 @@ class NormalEncoder(nn.Module):
         '''
         if lengths is None:
             raise ValueError('lengths is none.')
+
+        total_length = inputs.size(0)
 
         #  print('inputs: ', inputs)
         #  print('lengths: ', lengths)
@@ -90,7 +92,7 @@ class NormalEncoder(nn.Module):
             outputs, hidden_state = self.rnn(embedded)
 
         #  print('outputs: ', outputs)
-        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, padding_value=PAD_ID, total_length=max_len)
+        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, padding_value=PAD_ID, total_length=total_length)
         #  print('outputs: ', outputs)
 
         if not sort:

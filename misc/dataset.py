@@ -321,11 +321,11 @@ class Dataset:
                         for word in text.split():
                             words.add(word)
 
-                    if total <= self.config.min_len:
-                        for word in query_text.split():
-                            words.add(word)
+                    #  if total <= self.config.min_len:
+                        #  for word in query_text.split():
+                            #  words.add(word)
 
-                words_tfidf = []
+                words_tfidf = list()
                 for word in words:
                     try:
                         value = facts_tfidf_dict[conversation_id].get(word, 0.0)
@@ -336,7 +336,6 @@ class Dataset:
 
                 words_tfidf = sorted(words_tfidf, key=lambda item: item[1], reverse=True)
                 words = [item[0] for item in words_tfidf[:f_max_len]]
-                #  print('words: ', words)
 
                 facts_topk_phrases[hash_value] = words
 
