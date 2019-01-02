@@ -124,15 +124,15 @@ class KGModel(nn.Module):
 
             dec_hidden = self.reduce_state(enc_hidden)
             enc_length = enc_inputs_length
-        else:  # []
+        else:
             # [turn_num, batch_size, hidden_size]
             enc_outputs, enc_hidden = self.utterance_forward(
                 enc_inputs,
                 enc_inputs_length
             )
 
+            # [turn_num, batch_size, hidden_size]
             if enc_type.count('_h') != 0:  # hierarchical
-                # [turn_num, batch_size, hidden_size]
                 enc_outputs, enc_hidden = self.inter_utterance_forward(
                     enc_outputs,
                     enc_turn_length
@@ -404,7 +404,6 @@ class KGModel(nn.Module):
         Args:
             enc_inputs: [turn_num, max_len, batch_size]
             enc_inputs: [turn_num, batch_size]
-
         """
         utterance_outputs = list()
 
@@ -413,7 +412,8 @@ class KGModel(nn.Module):
             inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = enc_inputs_length[ti, :]  # [batch_size]
 
-            #  print('sort-------------> False')
+            # [max_len, batch_size, hidden_size]
+            # [num_layer * bi_num, batch_size, hidden_size // 2]
             outputs, hidden_state = self.encoder(
                 inputs,
                 lengths=inputs_length,
@@ -421,10 +421,15 @@ class KGModel(nn.Module):
                 sort=False
             )
 
-            if self.config.enc_type.count('_seq') == 0:
-                hidden_state = None
+            final_output = self.reduce_state(hidden_state)
+            final_output = final_output.sum(dim=0)
+            #  final_output = final_output[-1]
+            #  print('final_output: ', final_output.shape)
+            utterance_outputs.append(final_output)
 
-            utterance_outputs.append(outputs[-1])
+            if self.config.enc_type.count('_seq') == 0 and \
+                ti != (self.config.turn_num - 1):
+                hidden_state = None
 
         # [turn_num, batch_size, hidden_size]
         utterance_outputs = torch.stack(utterance_outputs, dim=0)
@@ -450,9 +455,6 @@ class KGModel(nn.Module):
             -f_inputs_length: [topk, batch_size] or [batch_size]
             -f_topk_length: [batch_size]
         """
-        # [batch_size, max_len, hidden_size]
-        #  f_enc_outputs = self.f_encoder(f_inputs, f_inputs_length)
-
         if self.config.f_enc_type == 'multi_head':
             f_inputs_embedding = self.f_embedding(f_inputs)
             slf_attn_mask = get_attn_key_pad_mask(k=f_inputs, q=f_inputs, padid=PAD_ID)

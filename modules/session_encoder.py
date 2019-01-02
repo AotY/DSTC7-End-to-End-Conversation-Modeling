@@ -43,6 +43,12 @@ class SessionEncoder(nn.Module):
         if lengths is None:
             raise ValueError('lengths is none.')
 
+        #  print('inputs: ', inputs)
+        #  print('lengths: ', lengths)
+
+        #  print('inputs shape: ', inputs.shape)
+        #  print('lengths shape: ', lengths.shape)
+
         inputs = nn.utils.rnn.pack_padded_sequence(inputs, lengths)
 
         outputs, hidden_state = self.rnn(inputs)

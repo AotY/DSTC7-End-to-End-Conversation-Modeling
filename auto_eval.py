@@ -39,8 +39,8 @@ with open(args.refs, 'r') as f:
         line = line.rstrip()
         parts = line.split('\t')
         hash_value = parts[0]
-        if len(parts) > (args.n_refs - 1):
-            if hash_value in hash_values_2k or len(parts) >= (args.n_refs + 2):
+        if len(parts) >= args.n_refs:
+            if hash_value in hash_values_2k or len(parts) > (args.n_refs + 2):
                 final_hash_values.add(hash_value)
                 tmp_refs_file.write('%s\n' % line)
 tmp_refs_file.close()
