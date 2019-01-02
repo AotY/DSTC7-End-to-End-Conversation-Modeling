@@ -74,7 +74,8 @@ class NormalEncoder(nn.Module):
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
             #  print('restore_indexes: ', restore_indexes)
-# [max_len, batch_size]
+
+            # [max_len, batch_size]
             inputs = inputs.index_select(1, sorted_indexes)
             #  print('inputs: ', inputs)
 

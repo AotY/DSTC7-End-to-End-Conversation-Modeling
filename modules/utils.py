@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import torch
 import numpy as np
-import torch.nn as nn
+jmport torch.nn as nn
 
 """
     Utils
