@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.3.40004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc \
+    --enc_type qc_seq_h \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -24,10 +24,10 @@ python train.py \
     --bidirectional \
     --tied \
     --decode_type beam_search \
-    --q_max_len 5 \
-    --c_max_len 5 \
-    --r_max_len 5 \
-    --f_max_len 5 \
+    --q_max_len 60 \
+    --c_max_len 55 \
+    --r_max_len 38 \
+    --f_max_len 15 \
     --f_topk 15 \
     --min_len 3 \
     --beam_size 8 \
@@ -35,7 +35,7 @@ python train.py \
     --lr 0.0005 \
     --max_grad_norm 5.0 \
     --epochs 15 \
-    --batch_size 5 \
+    --batch_size 128 \
     --teacher_forcing_ratio 1.0 \
     --seed 23 \
     --device cuda \
@@ -48,7 +48,7 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type kg \
+    --model_type seq2seq \
     --f_enc_type multi_head \
     --task train \
     --share_embedding \

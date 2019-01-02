@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from modules.utils import rnn_factory
 from modules.utils import init_gru_orth, init_lstm_orth
+from misc.vocab import PAD_ID
 
 
 class NormalEncoder(nn.Module):
@@ -37,7 +38,8 @@ class NormalEncoder(nn.Module):
             hidden_size=self.hidden_size,
             num_layers=config.encoder_num_layers,
             bidirectional=config.bidirectional,
-            dropout=config.dropout
+            dropout=config.dropout,
+            #  bias=False
         )
 
         if config.rnn_type == 'LSTM':
@@ -45,7 +47,7 @@ class NormalEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, lengths, hidden_state=None, sort=True):
+    def forward(self, inputs, lengths, hidden_state=None, max_len=None, sort=True):
         '''
         params:
             inputs: [seq_len, batch_size]  LongTensor
@@ -58,25 +60,27 @@ class NormalEncoder(nn.Module):
         if lengths is None:
             raise ValueError('lengths is none.')
 
-        print('inputs: ', inputs)
-        print('lengths: ', lengths)
+        #  print('inputs: ', inputs)
+        #  print('lengths: ', lengths)
         if not sort:
             # sort lengths
             sorted_lengths, sorted_indexes = torch.sort(lengths, dim=0, descending=True)
-            print('sorted_lengths: ', sorted_lengths)
-            print('sorted_indexes: ', sorted_indexes)
+            #  print('sorted_lengths: ', sorted_lengths)
+            #  print('sorted_indexes: ', sorted_indexes)
 
             # restore to original indexes
             _, restore_indexes = torch.sort(sorted_indexes, dim=0)
-            print('restore_indexes: ', restore_indexes)
+            #  print('restore_indexes: ', restore_indexes)
 
             # [max_len, batch_size]
             inputs = inputs.index_select(1, sorted_indexes)
-            print('inputs: ', inputs)
+            #  print('inputs: ', inputs)
 
         # embedded
         embedded = self.embedding(inputs)
+        #  print('embedded: ', embedded)
         embedded = self.dropout(embedded)
+        #  print('embedded: ', embedded)
 
         embedded = nn.utils.rnn.pack_padded_sequence(embedded, sorted_lengths)
 
@@ -85,18 +89,18 @@ class NormalEncoder(nn.Module):
         else:
             outputs, hidden_state = self.rnn(embedded)
 
-        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs)
-        print('outputs: ', outputs)
+        #  print('outputs: ', outputs)
+        outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, padding_value=PAD_ID, total_length=max_len)
+        #  print('outputs: ', outputs)
 
         if not sort:
             # [max_len, batch_size, hidden_state]
             outputs = outputs.index_select(1, restore_indexes)
-            print('outputs: ', outputs)
+            #  print('outputs: ', outputs)
 
             # [num_layer * bidirection_num, batch_size, hidden_state /
             # bidirection_num]
             hidden_state = hidden_state.index_select(1, restore_indexes)
-            print('outputs: ', hidden_state)
-
+            #  print('hidden_state: ', hidden_state)
 
         return outputs, hidden_state

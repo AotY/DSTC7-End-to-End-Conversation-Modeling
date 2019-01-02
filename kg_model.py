@@ -116,6 +116,7 @@ class KGModel(nn.Module):
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
                 lengths=enc_inputs_length,
+                max_len=self.config.q_max_len
             )
 
             dec_hidden = self.reduce_state(enc_hidden)
@@ -196,7 +197,8 @@ class KGModel(nn.Module):
             # [max_len, batch_size]
             enc_outputs, enc_hidden = self.encoder(
                 enc_inputs,
-                enc_inputs_length
+                enc_inputs_length,
+                max_len=self.config.q_max_len
             )
 
             dec_hidden = self.reduce_state(enc_hidden)
@@ -409,11 +411,12 @@ class KGModel(nn.Module):
             inputs = enc_inputs[ti, :, :]  # [max_len, batch_size]
             inputs_length = enc_inputs_length[ti, :]  # [batch_size]
 
-            print('sort-------------> False')
+            #  print('sort-------------> False')
             outputs, hidden_state = self.encoder(
                 inputs,
                 lengths=inputs_length,
                 hidden_state=hidden_state,
+                max_len=self.config.q_max_len,
                 sort=False
             )
 

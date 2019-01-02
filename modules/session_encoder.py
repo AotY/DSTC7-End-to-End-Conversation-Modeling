@@ -36,7 +36,8 @@ class SessionEncoder(nn.Module):
         else:
             init_gru_orth(self.rnn)
 
-    def forward(self, inputs, lengths): """
+    def forward(self, inputs, lengths):
+        """
         inputs: [turn_num, batch_size, hidden_size]
         """
         if lengths is None:
