@@ -67,6 +67,8 @@ for hash_value in final_hash_values:
 
 tmp_keys_file.close()
 
+print('submission: %s' % args.submission)
+
 os.system('python evaluation/src/dstc.py %s --refs %s --keys %s --n_lines %s' % \
           (tmp_submission_path, tmp_refs_path, tmp_keys_path, args.n_lines))
 

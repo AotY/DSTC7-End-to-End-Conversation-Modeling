@@ -570,8 +570,7 @@ class Dataset:
                 f.write('conversation_id: %s\n' % conversation_id)
                 f.write('hash_value: %s\n' % hash_value)
 
-                if self.config.enc_type == 'q' or \
-                    self.config.enc_type == 'qc':
+                if self.config.enc_type in ['q', 'q_attn', 'qc', 'qc_attn']:
                     text = self.vocab.ids_to_text(enc_ids)
                     f.write('> %s\n' % (text))
                 else:

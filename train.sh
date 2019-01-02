@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=3
 
 python train.py \
     --save_path data/ \
@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.3.40004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc_attn \
+    --enc_type q_attn \
     --rnn_type GRU \
     --embedding_size 512 \
     --hidden_size 512 \
@@ -48,12 +48,12 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type kg \
-    --f_enc_type embedding \
+    --model_type seq2seq \
+    --f_enc_type mutli_head \
     --task train \
     --share_embedding \
     --offline_type elastic \
-    --checkpoint models/kg_qc_attn_1_1_3_2018_12_29_12:58.pth \
+    --checkpoint models/seq2seq_q_attn_2_1_3_2018_12_30_15:20.pth \
     # --label_smoothing \
     # --pre_embedding_size 300 \
     # --fasttext_vec /home/taoqing/Research/data/crawl-300d-2M-subword.vec.bin \ 
