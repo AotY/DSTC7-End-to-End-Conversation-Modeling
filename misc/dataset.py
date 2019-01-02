@@ -195,8 +195,8 @@ class Dataset:
                     f_ids = f_ids + [PAD_ID] * (f_max_len - len(f_ids))
 
             padded_batch_data.append((hash_value, subreddit_name, conversation_id, \
-                                      enc_ids, enc_len, turn_len, dec_ids, dec_len, \
-                                      f_ids, f_len))
+                                      enc_ids, enc_len, turn_len, dec_ids, \
+                                      dec_len, f_ids, f_len))
 
         # To Tensor
         enc_inputs = list()
@@ -243,7 +243,7 @@ class Dataset:
             enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).transpose(0, 1)
             enc_inputs_length = torch.tensor(enc_inputs_length, dtype=torch.long, device=self.device)
         else:
-            # [batch_sizes, turn_num, max_len] -> [turn_num, max_len, batch_size]
+            # [batch_size, turn_num, max_len] -> [turn_num, max_len, batch_size]
             enc_inputs = torch.tensor(enc_inputs, dtype=torch.long, device=self.device).permute(1, 2, 0)
 
             # [batch_size, turn_num] -> [turn_num, batch_size]
