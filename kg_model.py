@@ -146,7 +146,7 @@ class KGModel(nn.Module):
                 dec_input = enc_outputs.sum(dim=0).unsqueeze(0)
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
-            elif enc_type.count('concat') != 0:
+            elif enc_type.count('concat') != 0: # 
                 dec_hidden = enc_outputs.transpose(0, 1).contiguous().view(self.config.batch_size, -1)
                 # [1, batch_size, hidden_size]
                 dec_hidden = self.concat_linear(dec_hidden).unsqueeze(0)
