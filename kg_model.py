@@ -147,10 +147,10 @@ class KGModel(nn.Module):
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
             elif enc_type.count('concat') != 0:
-                dec_hidden = enc_outputs.transpose(0, 1).view(self.config.turn_num, -1)
+                dec_hidden = enc_outputs.transpose(0, 1).contiguous().view(self.config.batch_size, -1)
                 # [1, batch_size, hidden_size]
-                # [num_layers, batch_size, hidden_size]
                 dec_hidden = self.concat_linear(dec_hidden).unsqueeze(0)
+                # [num_layers, batch_size, hidden_size]
                 dec_hidden = dec_hidden.repeat(self.config.decoder_num_layers, 1, 1)
             else:
                 # [qc_seq, qc_seq_h]
@@ -228,11 +228,11 @@ class KGModel(nn.Module):
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
             elif enc_type.count('concat') != 0:
-                dec_hidden = enc_outputs.transpose(
-                    0, 1).view(self.config.batch_size, -1)
-                dec_input = self.concat_linear(dec_input)
-                dec_hidden = dec_input.repeat(
-                    self.config.decoder_num_layers, 1, 1)
+                dec_hidden = enc_outputs.transpose(0, 1).view(self.config.batch_size, -1)
+                # [1, batch_size, hidden_size]
+                dec_hidden = self.concat_linear(dec_hidden).unsqueeze(0)
+                # [num_layers, batch_size, hidden_size]
+                dec_hidden = dec_hidden.repeat(self.config.decoder_num_layers, 1, 1)
             else:
                 # [qc_seq, qc_seq_h]
                 dec_hidden = self.reduce_state(enc_hidden)
@@ -442,12 +442,12 @@ class KGModel(nn.Module):
                                 utterance_outputs,
                                 enc_turn_length):
         # [turn_num, batch_size, hidden_size]
-        outputs, hidden_state = self.session_encoder(
+        inter_outputs, hidden_state = self.session_encoder(
             utterance_outputs,
             enc_turn_length
         )
 
-        return outputs, hidden_state
+        return inter_outputs, hidden_state
 
     def f_forward(self,
                   f_inputs,
