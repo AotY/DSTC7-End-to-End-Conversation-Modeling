@@ -77,7 +77,7 @@ class KGModel(nn.Module):
 
         if config.enc_type.count('concat') != 0:
             self.concat_linear = nn.Linear(
-                (config.turn_num) * config.hidden_size,
+                config.turn_num * config.hidden_size,
                 config.hidden_size
             )
             init_linear_wt(self.concat_linear)
@@ -147,11 +147,11 @@ class KGModel(nn.Module):
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
             elif enc_type.count('concat') != 0:
-                dec_input = enc_outputs.transpose(
-                    0, 1).view(self.config.turn_num, -1)
-                dec_input = self.concat_linear(dec_input)
-                dec_hidden = dec_input.repeat(
-                    self.config.decoder_num_layers, 1, 1)
+                dec_hidden = enc_outputs.transpose(0, 1).view(self.config.turn_num, -1)
+                # [1, batch_size, hidden_size]
+                # [num_layers, batch_size, hidden_size]
+                dec_hidden = self.concat_linear(dec_hidden).unsqueeze(0)
+                dec_hidden = dec_hidden.repeat(self.config.decoder_num_layers, 1, 1)
             else:
                 # [qc_seq, qc_seq_h]
                 dec_hidden = self.reduce_state(enc_hidden)
@@ -211,7 +211,6 @@ class KGModel(nn.Module):
                 enc_inputs,
                 enc_inputs_length
             )
-            enc_length = enc_turn_length
 
             if enc_type.count('_h') != 0:  # hierarchical
                 # [turn_num, batch_size, hidden_size]
@@ -220,6 +219,8 @@ class KGModel(nn.Module):
                     enc_turn_length
                 )
 
+            enc_length = enc_turn_length
+
             # [qc_concat, qc_sum, qc_concat_h, qc_sum_h]
             if enc_type.count('sum') != 0:
                 # [1, batch_size, hidden_size]
@@ -227,8 +228,8 @@ class KGModel(nn.Module):
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
             elif enc_type.count('concat') != 0:
-                dec_input = enc_outputs.transpose(
-                    0, 1).view(self.config.turn_num, -1)
+                dec_hidden = enc_outputs.transpose(
+                    0, 1).view(self.config.batch_size, -1)
                 dec_input = self.concat_linear(dec_input)
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
@@ -422,8 +423,9 @@ class KGModel(nn.Module):
             )
 
             final_output = self.reduce_state(hidden_state)
-            final_output = final_output.sum(dim=0)
-            #  final_output = final_output[-1]
+            #  final_output = final_output.sum(dim=0)
+            final_output = final_output[-1]
+
             #  print('final_output: ', final_output.shape)
             utterance_outputs.append(final_output)
 
@@ -441,7 +443,9 @@ class KGModel(nn.Module):
                                 enc_turn_length):
         # [turn_num, batch_size, hidden_size]
         outputs, hidden_state = self.session_encoder(
-            utterance_outputs, enc_turn_length)
+            utterance_outputs,
+            enc_turn_length
+        )
 
         return outputs, hidden_state
 
