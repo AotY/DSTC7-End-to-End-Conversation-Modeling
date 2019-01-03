@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=5
 
 python train.py \
     --save_path data/ \
@@ -8,7 +8,7 @@ python train.py \
     --vocab_path data/vocab_word2idx.3.40004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc_h_attn \
+    --enc_type qc_seq \
     --rnn_type GRU \
     --embedding_size 256 \
     --hidden_size 512 \
@@ -27,7 +27,7 @@ python train.py \
     --q_max_len 60 \
     --c_max_len 55 \
     --r_max_len 38 \
-    --f_max_len 15 \
+    --f_max_len 10 \
     --f_topk 15 \
     --min_len 3 \
     --beam_size 8 \
