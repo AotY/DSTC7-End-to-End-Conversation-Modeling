@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=7
 
 python train.py \
     --save_path data/ \
     --convos_path ./data/cleaned.3.convos.txt \
-    --vocab_path data/vocab_word2idx.3.40004.dict \
+    --vocab_path data/vocab_word2idx.3.60004.dict \
     --c_max 3 \
     --c_min 1 \
-    --enc_type qc_seq_h_concat \
+    --enc_type qc_attn \
     --rnn_type GRU \
     --embedding_size 256 \
     --hidden_size 512 \
@@ -48,7 +48,7 @@ python train.py \
     --test_split 0.08 \
     --eval_batch 12 \
     --start_epoch 1 \
-    --model_type seq2seq \
+    --model_type kg \
     --f_enc_type embedding \
     --task train \
     --share_embedding \
