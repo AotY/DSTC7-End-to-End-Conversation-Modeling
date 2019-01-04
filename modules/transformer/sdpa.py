@@ -34,7 +34,9 @@ class ScaleDotProductAttention(nn.Module):
         attn = attn / self.temperature
 
         if mask is not None:
-            attn = attn.masked_fill(mask, -np.inf)
+            attn.data.masked_fill(mask, -float('inf'))
+            #  attn = attn.masked_fill(mask, -np.inf)
+            #  attn.data.masked_fill_(1 - mask, -float('inf'))
 
         # [b, q_len, k_len]
         attn = self.softmax(attn)
