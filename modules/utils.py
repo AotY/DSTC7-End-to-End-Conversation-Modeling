@@ -70,7 +70,7 @@ def get_attn_key_pad_mask(k, q, padid):
     # Expand to fit the shape of key query attention matrix.
     len_q = q.size(1)
     padding_mask = k.eq(padid)
-    padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
+    padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1).contiguous()  # b x lq x lk
 
     return padding_mask
 
