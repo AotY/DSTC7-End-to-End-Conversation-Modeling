@@ -58,7 +58,7 @@ if args.seed:
     torch.manual_seed(args.seed)
 
 # update max_len
-if args.enc_type == 'qc':
+if args.enc_type in ['qc', 'qc_attn']:
     args.q_max_len = args.q_max_len + args.c_max_len * args.c_max
 
 logger.info('c_max_len: %d' % args.c_max_len)
