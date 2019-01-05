@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 # export CUDA_LAUNCH_BLOCKING=1
+mkdir -p models
+mkdir -p logs
+mkdir -p data
+mkdir -p data/predicted
+mkdir -p data/generated
+mkdir -p data/submission
+
 export CUDA_VISIBLE_DEVICES=3
 
 python train.py \
