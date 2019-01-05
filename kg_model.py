@@ -146,7 +146,7 @@ class KGModel(nn.Module):
                 dec_input = enc_outputs.sum(dim=0).unsqueeze(0)
                 dec_hidden = dec_input.repeat(
                     self.config.decoder_num_layers, 1, 1)
-            elif enc_type.count('concat') != 0: # 
+            elif enc_type.count('concat') != 0: #
                 dec_hidden = enc_outputs.transpose(0, 1).contiguous().view(self.config.batch_size, -1)
                 # [1, batch_size, hidden_size]
                 dec_hidden = self.concat_linear(dec_hidden).unsqueeze(0)
@@ -459,18 +459,18 @@ class KGModel(nn.Module):
             -f_inputs_length: [topk, batch_size] or [batch_size]
             -f_topk_length: [batch_size]
         """
-        print('f_inputs: ', f_inputs)
+        #  print('f_inputs: ', f_inputs)
         if self.config.f_enc_type == 'multi_head':
             f_inputs_embedding = self.f_embedding(f_inputs)
             slf_attn_mask = get_attn_key_pad_mask(k=f_inputs, q=f_inputs, padid=PAD_ID)
-            print('slf_attn_mask: ', slf_attn_mask)
+            #  print('slf_attn_mask: ', slf_attn_mask)
             f_enc_outputs, _ = self.f_encoder(
                 f_inputs_embedding,
                 f_inputs_embedding,
                 f_inputs_embedding,
                 slf_attn_mask
             )
-            print('f_enc_outputs: ', f_enc_outputs)
+            #  print('f_enc_outputs: ', f_enc_outputs)
         else:
             # [batch_size, f_topk, embedding_size]
             f_enc_outputs = self.f_embedding(f_inputs)
