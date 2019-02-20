@@ -85,4 +85,4 @@ class Transformer(nn.Module):
         # [batch_size, max_len, vocab_size]
         output = self.output_linear(dec_output) * self.x_logit_scale
         # [batch_size * max_len, vocab_size]
-        return output.view(-1, output.size(2))<Paste>
+        return output.view(-1, output.size(2))
